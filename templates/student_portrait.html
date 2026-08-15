@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生能力画像 - 灵智尚人</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+        }
+        .back-btn {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 18px;
+            border-bottom: 2px solid #f0f0f5;
+            padding-bottom: 10px;
+        }
+        .full-width { grid-column: 1 / -1; }
+        .radar-container {
+            position: relative;
+            height: 400px;
+        }
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+        }
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+        .competence-list {
+            list-style: none;
+        }
+        .competence-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f5;
+        }
+        .competence-name {
+            font-size: 14px;
+            color: #333;
+        }
+        .competence-bar {
+            flex: 1;
+            margin: 0 15px;
+            height: 8px;
+            background: #f0f0f5;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .competence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 4px;
+            transition: width 0.5s;
+        }
+        .competence-score {
+            font-weight: bold;
+            color: #667eea;
+            min-width: 50px;
+            text-align: right;
+        }
+        .job-card {
+            background: #f8f9fc;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .job-name {
+            font-weight: 600;
+            color: #333;
+        }
+        .job-match {
+            font-size: 20px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .gap-item, .strength-item {
+            background: #f8f9fc;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .gap-item { border-left: 3px solid #ff6b6b; }
+        .strength-item { border-left: 3px solid #51cf66; }
+        .chart-container {
+            height: 300px;
+        }
+        select, input {
+            padding: 8px 15px;
+            border: 2px solid #e0e0e8;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .control-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 学生能力画像</h1>
+            <a href="/" class="back-btn">← 返回主页</a>
+        </div>
+
+        <div class="card full-width" style="margin-bottom: 20px;">
+            <div class="control-row">
+                <label>学生姓名：</label>
+                <select id="studentSelect">
+                    <option value="">加载中...</option>
+                </select>
+                <button onclick="loadAllData()" style="padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer;">刷新</button>
+            </div>
+        </div>
+
+        <div class="stat-grid" id="statGrid">
+            <div class="stat-box">
+                <div class="stat-value" id="totalQuestions">0</div>
+                <div class="stat-label">累计提问</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="avgScore">0</div>
+                <div class="stat-label">综合能力</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="topCategory">-</div>
+                <div class="stat-label">最强领域</div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h2>🎯 12维能力雷达图</h2>
+                <div class="radar-container">
+                    <canvas id="radarChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📚 能力分类汇总</h2>
+                <div id="categorySummary"></div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h2>📈 学习曲线（最近30天）</h2>
+                <div class="chart-container">
+                    <canvas id="curveChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>💼 岗位匹配度</h2>
+                <div id="jobMatchList"></div>
+            </div>
+        </div>
+
+        <div class="card full-width" style="margin-top: 20px;">
+            <h2>📋 能力详情</h2>
+            <ul class="competence-list" id="competenceList"></ul>
+        </div>
+
+        <div class="card full-width" style="margin-top: 20px;">
+            <h2>🎓 岗位差距分析</h2>
+            <div class="control-row">
+                <label>选择岗位：</label>
+                <select id="jobSelect">
+                    <option value="通信工程师">通信工程师</option>
+                    <option value="网络优化工程师">网络优化工程师</option>
+                    <option value="射频工程师">射频工程师</option>
+                    <option value="研发工程师">研发工程师</option>
+                </select>
+                <button onclick="loadJobMatch()" style="padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer;">分析</button>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <h3 style="color: #ff6b6b; margin-bottom: 10px;">⚠️ 待提升能力</h3>
+                    <div id="gapsList"></div>
+                </div>
+                <div>
+                    <h3 style="color: #51cf66; margin-bottom: 10px;">✅ 优势能力</h3>
+                    <div id="strengthsList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let radarChart = null;
+        let curveChart = null;
+        let currentStudent = '';
+
+        // 加载学生列表
+        async function loadStudents() {
+            try {
+                const response = await fetch('/api/students');
+                const data = await response.json();
+                const select = document.getElementById('studentSelect');
+                select.innerHTML = '<option value="">请选择学生</option>';
+                
+                if (data.students && data.students.length > 0) {
+                    data.students.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s.name;
+                        opt.textContent = s.name + (s.class_name ? ' (' + s.class_name + ')' : '');
+                        select.appendChild(opt);
+                    });
+                }
+            } catch (error) {
+                console.error('加载学生列表失败:', error);
+            }
+        }
+
+        document.getElementById('studentSelect').addEventListener('change', (e) => {
+            currentStudent = e.target.value;
+            if (currentStudent) {
+                loadAllData();
+            }
+        });
+
+        async function loadAllData() {
+            if (!currentStudent) return;
+            await Promise.all([
+                loadRadarData(),
+                loadLearningCurve(),
+                loadJobMatch()
+            ]);
+        }
+
+        async function loadRadarData() {
+            try {
+                const response = await fetch(`/api/competence-radar?student_name=${encodeURIComponent(currentStudent)}`);
+                const data = await response.json();
+                
+                if (data.radar_data) {
+                    renderRadar(data.radar_data);
+                    renderCompetenceList(data.radar_data);
+                    renderCategorySummary(data.category_summary);
+                    updateStats(data.radar_data);
+                }
+            } catch (error) {
+                console.error('加载雷达图数据失败:', error);
+            }
+        }
+
+        function renderRadar(data) {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            
+            if (radarChart) radarChart.destroy();
+            
+            radarChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: data.map(d => d.name),
+                    datasets: [{
+                        label: '能力分数',
+                        data: data.map(d => d.score),
+                        backgroundColor: 'rgba(102, 126, 234, 0.2)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: 'rgba(102, 126, 234, 1)',
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { stepSize: 20 }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        function renderCompetenceList(data) {
+            const list = document.getElementById('competenceList');
+            list.innerHTML = data.map(item => `
+                <li class="competence-item">
+                    <span class="competence-name">${item.name} <span style="color: #999; font-size: 12px;">(${item.category})</span></span>
+                    <div class="competence-bar">
+                        <div class="competence-fill" style="width: ${Math.min(item.score, 100)}%"></div>
+                    </div>
+                    <span class="competence-score">${item.score}分</span>
+                </li>
+            `).join('');
+        }
+
+        function renderCategorySummary(summary) {
+            const container = document.getElementById('categorySummary');
+            container.innerHTML = Object.entries(summary).map(([cat, data]) => {
+                const pct = (data.total_score / data.max) * 100;
+                return `
+                    <div style="margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span style="font-weight: 600; color: #333;">${cat}</span>
+                            <span style="color: #667eea; font-weight: bold;">${pct.toFixed(1)}%</span>
+                        </div>
+                        <div style="height: 10px; background: #f0f0f5; border-radius: 5px; overflow: hidden;">
+                            <div style="height: 100%; width: ${pct}%; background: linear-gradient(90deg, #667eea, #764ba2); border-radius: 5px;"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateStats(data) {
+            const totalCount = data.reduce((sum, d) => sum + d.count, 0);
+            const avgScore = data.reduce((sum, d) => sum + d.score * d.weight, 0);
+            const topArea = data.reduce((max, d) => d.score > max.score ? d : max, data[0]);
+            
+            document.getElementById('totalQuestions').textContent = totalCount;
+            document.getElementById('avgScore').textContent = avgScore.toFixed(1);
+            document.getElementById('topCategory').textContent = topArea ? topArea.name : '-';
+        }
+
+        async function loadLearningCurve() {
+            try {
+                const response = await fetch(`/api/learning-curve?student_name=${encodeURIComponent(currentStudent)}&days=30`);
+                const data = await response.json();
+                
+                const ctx = document.getElementById('curveChart').getContext('2d');
+                if (curveChart) curveChart.destroy();
+                
+                curveChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.curve.map(d => d.date),
+                        datasets: [{
+                            label: '提问数',
+                            data: data.curve.map(d => d.questions),
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            tension: 0.3,
+                            fill: true
+                        }, {
+                            label: '正确率(%)',
+                            data: data.curve.map(d => d.accuracy),
+                            borderColor: '#51cf66',
+                            backgroundColor: 'rgba(81, 207, 102, 0.1)',
+                            tension: 0.3,
+                            fill: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('加载学习曲线失败:', error);
+            }
+        }
+
+        async function loadJobMatch() {
+            try {
+                const response = await fetch(`/api/job-match?student_name=${encodeURIComponent(currentStudent)}`);
+                const data = await response.json();
+                
+                if (data.all_jobs) {
+                    renderJobMatchList(data.all_jobs);
+                }
+            } catch (error) {
+                console.error('加载岗位匹配失败:', error);
+            }
+        }
+
+        function renderJobMatchList(jobs) {
+            const container = document.getElementById('jobMatchList');
+            const sorted = Object.entries(jobs).sort((a, b) => b[1] - a[1]);
+            container.innerHTML = sorted.map(([job, rate]) => `
+                <div class="job-card">
+                    <span class="job-name">${job}</span>
+                    <span class="job-match" style="color: ${rate >= 70 ? '#51cf66' : rate >= 50 ? '#ffa94d' : '#ff6b6b'};">${rate}%</span>
+                </div>
+            `).join('');
+        }
+
+        async function loadJobGaps() {
+            const jobName = document.getElementById('jobSelect').value;
+            try {
+                const response = await fetch(`/api/job-match?student_name=${encodeURIComponent(currentStudent)}&job_name=${encodeURIComponent(jobName)}`);
+                const data = await response.json();
+                
+                const gapsList = document.getElementById('gapsList');
+                const strengthsList = document.getElementById('strengthsList');
+                
+                if (data.gaps && data.gaps.length > 0) {
+                    gapsList.innerHTML = data.gaps.map(g => `
+                        <div class="gap-item">
+                            <span>${g.area}</span>
+                            <span style="color: #ff6b6b;">差距 ${(g.gap * 100).toFixed(0)}%</span>
+                        </div>
+                    `).join('');
+                } else {
+                    gapsList.innerHTML = '<div style="color: #51cf66; padding: 10px;">🎉 无明显差距</div>';
+                }
+                
+                if (data.strengths && data.strengths.length > 0) {
+                    strengthsList.innerHTML = data.strengths.map(s => `
+                        <div class="strength-item">
+                            <span>${s.area}</span>
+                            <span style="color: #51cf66;">超出 ${((s.current - s.required) * 100).toFixed(0)}%</span>
+                        </div>
+                    `).join('');
+                } else {
+                    strengthsList.innerHTML = '<div style="color: #999; padding: 10px;">暂无明显优势项</div>';
+                }
+            } catch (error) {
+                console.error('加载岗位差距分析失败:', error);
+            }
+        }
+
+        // 默认选择当前用户
+        async function init() {
+            await loadStudents();
+            try {
+                const userRes = await fetch('/current-user');
+                const userData = await userRes.json();
+                if (userData.student_name) {
+                    document.getElementById('studentSelect').value = userData.student_name;
+                    currentStudent = userData.student_name;
+                    loadAllData();
+                    loadJobGaps();
+                } else if (userData.role === 'teacher') {
+                    // 老师默认选择第一个学生
+                    const firstOpt = document.querySelector('#studentSelect option:nth-child(2)');
+                    if (firstOpt) {
+                        firstOpt.selected = true;
+                        currentStudent = firstOpt.value;
+                        loadAllData();
+                        loadJobGaps();
+                    }
+                }
+            } catch (error) {
+                console.error('初始化失败:', error);
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

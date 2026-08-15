@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>剧情演绎 - 灵智尚人</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .scenarios-panel {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            padding: 25px;
+            height: 80vh;
+            overflow-y: auto;
+        }
+
+        .chat-panel {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .back-btn {
+            padding: 10px 20px;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            color: #667eea;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .back-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .panel-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .custom-scenario-section {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            border: 2px dashed #667eea;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .custom-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-group {
+            margin-bottom: 12px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 6px;
+        }
+
+        .input-group input, .input-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e0e0e8;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus, .input-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .input-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .start-custom-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .start-custom-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .start-custom-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 25px 0;
+            color: #999;
+            font-size: 13px;
+        }
+
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e0e0e8;
+        }
+
+        .scenario-card {
+            border: 2px solid #e8e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .scenario-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .scenario-card.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        }
+
+        .scenario-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .scenario-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .difficulty-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .difficulty-badge.simple {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .difficulty-badge.medium {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .difficulty-badge.hard {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .scenario-description {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .scenario-tasks {
+            background: #f8f9fc;
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .task-item {
+            font-size: 13px;
+            color: #555;
+            padding: 5px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .task-item::before {
+            content: "📋";
+        }
+
+        .start-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .start-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chat-icon {
+            font-size: 32px;
+        }
+
+        .chat-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .chat-subtitle {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-top: 2px;
+        }
+
+        .messages-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fc;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 12px;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .message.user .avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .message.assistant .avatar {
+            background: #e9eff6;
+            color: #667eea;
+        }
+
+        .message-content {
+            max-width: 72%;
+            padding: 14px 18px;
+            border-radius: 16px;
+            line-height: 1.6;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-top-right-radius: 4px;
+        }
+
+        .message.assistant .message-content {
+            background: white;
+            color: #333;
+            border-top-left-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .message-content pre {
+            background: #1a1a2e;
+            color: #e8e8e8;
+            padding: 14px 16px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 12px 0;
+            font-family: 'SF Mono', Consolas, Monaco, 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .message-content code {
+            font-family: 'SF Mono', Consolas, Monaco, 'Courier New', monospace;
+        }
+
+        .typing-indicator .message-content {
+            padding: 18px 20px;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .typing-dots span {
+            width: 8px;
+            height: 8px;
+            background: #667eea;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite;
+        }
+
+        .typing-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes bounce {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-8px);
+            }
+        }
+
+        .input-area {
+            padding: 16px 20px;
+            background: white;
+            border-top: 1px solid #e8e8f0;
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .image-preview {
+            max-width: 60px;
+            max-height: 60px;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 2px solid #667eea;
+            display: none;
+        }
+
+        .image-preview.show {
+            display: block;
+        }
+
+        .image-preview.remove {
+            cursor: pointer;
+            opacity: 0.7;
+        }
+
+        .image-preview.remove:hover {
+            opacity: 1;
+        }
+
+        .upload-btn {
+            padding: 10px 14px;
+            background: #f0f2f5;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-btn:hover {
+            background: #e8e8f0;
+        }
+
+        .input-box {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f0f2f5;
+            border-radius: 12px;
+        }
+
+        .input-box textarea {
+            width: 100%;
+            padding: 14px 16px;
+            border: none;
+            background: transparent;
+            font-size: 16px;
+            resize: none;
+            max-height: 120px;
+            outline: none;
+            font-family: inherit;
+            border-radius: 12px;
+        }
+
+        .send-btn {
+            padding: 14px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .send-btn:active {
+            transform: translateY(0);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .empty-chat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #999;
+            text-align: center;
+        }
+
+        .empty-chat-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .empty-chat-text {
+            font-size: 18px;
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .scenarios-panel, .chat-panel {
+                height: auto;
+                min-height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 场景选择面板 -->
+        <div class="scenarios-panel">
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 20px;">
+                <a href="/" class="back-btn">← 返回</a>
+                <button class="nav-btn" onclick="clearChatHistory()" style="margin: 0; padding: 8px 16px; font-size: 14px;">🗑️ 清除记录</button>
+                <button class="nav-btn logout-btn" onclick="doLogout()" style="margin: 0; padding: 8px 16px; font-size: 14px;">🔓 退出登录</button>
+            </div>
+            <h2 class="panel-title">🎬 剧情演绎</h2>
+            
+            <!-- 自定义场景 -->
+            <div class="custom-scenario-section">
+                <div class="custom-title">✏️ 创建自定义场景</div>
+                <div class="input-group">
+                    <label>场景标题</label>
+                    <input type="text" id="customTitle" placeholder="例如：数据中心网络运维工程师">
+                </div>
+                <div class="input-group">
+                    <label>场景描述</label>
+                    <textarea id="customDescription" placeholder="描述你想体验的工作场景，例如：你是一名数据中心的网络运维工程师，今天负责排查服务器连接中断的问题..."></textarea>
+                </div>
+                <div class="input-group">
+                    <label>预期任务（每行一个，可选）</label>
+                    <textarea id="customTasks" placeholder="1. 检查网络设备状态&#10;2. 分析网络拓扑&#10;3. 提出解决方案"></textarea>
+                </div>
+                <button class="start-custom-btn" onclick="startCustomScenario()">🚀 开始自定义场景</button>
+            </div>
+            
+            <div class="divider">或选择预设场景</div>
+            
+            <div id="scenariosList">
+                <div class="empty-chat">
+                    <div class="empty-chat-icon">📖</div>
+                    <div class="empty-chat-text">加载中...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 聊天面板 -->
+        <div class="chat-panel">
+            <div class="chat-header">
+                <div class="chat-icon">🤖</div>
+                <div>
+                    <div class="chat-title">灵智尚人</div>
+                    <div class="chat-subtitle">职业导师</div>
+                </div>
+            </div>
+            
+            <div class="messages-area" id="messagesArea">
+                <div class="empty-chat" id="emptyState">
+                    <div class="empty-chat-icon">🎯</div>
+                    <div class="empty-chat-text">选择一个剧情开始吧！</div>
+                </div>
+            </div>
+
+            <div class="input-area" id="inputArea" style="display: none;">
+                <img id="imagePreview" class="image-preview" src="" alt="预览">
+                <input type="file" id="imageUpload" style="display: none;" accept="image/*">
+                <button class="upload-btn" onclick="document.getElementById('imageUpload').click()">
+                    📷
+                </button>
+                <div class="input-box">
+                    <textarea id="userInput" placeholder="请输入...（按Enter发送，Shift+Enter换行）" rows="1" onkeydown="handleKeyDown(event)" oninput="autoResize()"></textarea>
+                </div>
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()">发送</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedScenario = null;
+        let isGenerating = false;
+        let chatHistory = [];
+        let selectedImage = null;
+        let imageUpload = document.getElementById('imageUpload');
+        let imagePreview = document.getElementById('imagePreview');
+        
+        // 本地存储键名
+        const STORAGE_KEY = 'lingzhi_scenario_history';
+        
+        // 图片上传处理
+        imageUpload.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                if (!file.type.startsWith('image/')) {
+                    alert('请选择图片文件！');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    selectedImage = event.target.result;
+                    imagePreview.src = selectedImage;
+                    imagePreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // 删除已选图片
+        imagePreview.addEventListener('click', function() {
+            if (selectedImage) {
+                if (confirm('确定要删除这张图片吗？')) {
+                    selectedImage = null;
+                    imageUpload.value = '';
+                    imagePreview.src = '';
+                    imagePreview.style.display = 'none';
+                }
+            }
+        });
+        
+        // 保存聊天记录
+        function saveChatHistory() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(chatHistory));
+            } catch (e) {
+                console.error('保存聊天记录失败:', e);
+            }
+        }
+        
+        // 加载聊天记录
+        function loadChatHistory() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    chatHistory = JSON.parse(saved);
+                    renderChatHistory();
+                }
+            } catch (e) {
+                console.error('加载聊天记录失败:', e);
+            }
+        }
+        
+        // 渲染聊天记录
+        function renderChatHistory() {
+            if (chatHistory.length === 0) return;
+            
+            // 显示聊天输入区
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('inputArea').style.display = 'flex';
+            
+            // 渲染保存的消息
+            chatHistory.forEach(msg => {
+                addMessage(msg.content, msg.isUser);
+            });
+        }
+        
+        // 清除聊天记录
+        function clearChatHistory() {
+            if (confirm('确定要清除所有聊天记录吗？')) {
+                chatHistory = [];
+                saveChatHistory();
+                location.reload();
+            }
+        }
+
+        // 加载场景列表
+        async function loadScenarios() {
+            try {
+                const response = await fetch('/scenarios');
+                const data = await response.json();
+                renderScenarios(data.scenarios || []);
+            } catch (error) {
+                console.error('加载场景失败:', error);
+                document.getElementById('scenariosList').innerHTML = `
+                    <div class="empty-chat">
+                        <div class="empty-chat-icon">❌</div>
+                        <div class="empty-chat-text">加载失败</div>
+                    </div>
+                `;
+            }
+        }
+
+        // 渲染场景列表
+        function renderScenarios(scenarios) {
+            const container = document.getElementById('scenariosList');
+            
+            if (scenarios.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-chat">
+                        <div class="empty-chat-icon">📭</div>
+                        <div class="empty-chat-text">暂无剧情</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = scenarios.map(scenario => `
+                <div class="scenario-card" data-id="${scenario.id}" onclick="selectScenario(${scenario.id})">
+                    <div class="scenario-header">
+                        <div class="scenario-title">${scenario.title}</div>
+                        <span class="difficulty-badge ${getDifficultyClass(scenario.difficulty)}">${scenario.difficulty}</span>
+                    </div>
+                    <div class="scenario-description">${scenario.description}</div>
+                    <div class="scenario-tasks">
+                        ${scenario.tasks.map(task => `<div class="task-item">${task}</div>`).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 获取难度对应的样式类
+        function getDifficultyClass(difficulty) {
+            if (difficulty === '简单') return 'simple';
+            if (difficulty === '中等') return 'medium';
+            return 'hard';
+        }
+
+        // 开始自定义场景
+        async function startCustomScenario() {
+            const title = document.getElementById('customTitle').value.trim();
+            const description = document.getElementById('customDescription').value.trim();
+            const tasksText = document.getElementById('customTasks').value.trim();
+            
+            if (!title) {
+                alert('请输入场景标题！');
+                return;
+            }
+            
+            if (!description) {
+                alert('请输入场景描述！');
+                return;
+            }
+            
+            // 解析任务
+            const tasks = tasksText.split('\n').filter(task => task.trim()).map(task => task.trim());
+            
+            // 创建自定义场景对象
+            const customScenario = {
+                id: 'custom',
+                title: title,
+                description: description,
+                tasks: tasks.length > 0 ? tasks : ['探索这个场景', '提出你的想法'],
+                is_custom: true
+            };
+            
+            // 清除所有预设场景的选中状态
+            document.querySelectorAll('.scenario-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            
+            // 开始自定义场景
+            selectedScenario = customScenario;
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('inputArea').style.display = 'flex';
+            
+            // 构建欢迎消息
+            let welcomeMessage = `欢迎来到【${selectedScenario.title}】！\n\n${selectedScenario.description}`;
+            if (selectedScenario.tasks.length > 0) {
+                welcomeMessage += `\n\n你的目标：\n${selectedScenario.tasks.map((task, i) => `${i + 1}. ${task}`).join('\n')}`;
+            }
+            welcomeMessage += '\n\n让我们开始吧！你可以先告诉我你的想法。';
+            
+            addMessage(welcomeMessage, false);
+        }
+
+        // 选择场景
+        async function selectScenario(scenarioId) {
+            // 更新UI
+            document.querySelectorAll('.scenario-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            document.querySelector(`.scenario-card[data-id="${scenarioId}"]`).classList.add('active');
+            
+            // 开始场景
+            try {
+                const response = await fetch('/start-scenario', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ scenario_id: scenarioId })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    selectedScenario = data.scenario;
+                    document.getElementById('emptyState').style.display = 'none';
+                    document.getElementById('inputArea').style.display = 'flex';
+                    
+                    // 添加欢迎消息
+                    let welcomeMessage = `欢迎来到【${selectedScenario.title}】！\n\n${selectedScenario.description}`;
+                    if (selectedScenario.tasks && selectedScenario.tasks.length > 0) {
+                        welcomeMessage += `\n\n你的目标：\n${selectedScenario.tasks.map((task, i) => `${i + 1}. ${task}`).join('\n')}`;
+                    }
+                    welcomeMessage += '\n\n让我们开始吧！你可以先告诉我你的想法。';
+                    
+                    addMessage(welcomeMessage, false);
+                }
+            } catch (error) {
+                console.error('开始场景失败:', error);
+            }
+        }
+
+        // 添加消息
+        function addMessage(content, isUser, imageBase64 = null) {
+            // 保存到聊天历史
+            chatHistory.push({
+                content: content,
+                isUser: isUser,
+                image: imageBase64,
+                timestamp: Date.now()
+            });
+            saveChatHistory();
+            
+            const messagesArea = document.getElementById('messagesArea');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ' + (isUser ? 'user' : 'assistant');
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar';
+            avatar.textContent = isUser ? '👤' : '🤖';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            
+            let htmlContent = formatMessage(content);
+            if (imageBase64) {
+                htmlContent = `<img src="data:image/png;base64,${imageBase64}" alt="图片" style="max-width: 100%; border-radius: 8px; margin-bottom: 10px;">` + htmlContent;
+            }
+            contentDiv.innerHTML = htmlContent;
+            
+            // 为AI消息添加操作按钮（追问）
+            if (!isUser && content) {
+                const actionsDiv = document.createElement('div');
+                actionsDiv.style.display = 'flex';
+                actionsDiv.style.gap = '8px';
+                actionsDiv.style.marginTop = '12px';
+                actionsDiv.style.opacity = '0';
+                actionsDiv.style.transition = 'opacity 0.2s';
+                
+                const followBtn = document.createElement('button');
+                followBtn.style.padding = '6px 14px';
+                followBtn.style.background = '#f0f2f5';
+                followBtn.style.border = 'none';
+                followBtn.style.borderRadius = '16px';
+                followBtn.style.fontSize = '13px';
+                followBtn.style.cursor = 'pointer';
+                followBtn.style.transition = 'all 0.2s';
+                followBtn.style.display = 'flex';
+                followBtn.style.alignItems = 'center';
+                followBtn.style.gap = '6px';
+                followBtn.style.color = '#666';
+                followBtn.innerHTML = '🔄 追问';
+                followBtn.onclick = function() {
+                    const userInput = document.getElementById('userInput');
+                    userInput.value = `针对你的回答，我想追问：${content.substring(0, 50)}...`;
+                    userInput.style.height = 'auto';
+                    userInput.style.height = Math.min(userInput.scrollHeight, 120) + 'px';
+                    userInput.focus();
+                    userInput.scrollTop = userInput.scrollHeight;
+                };
+                
+                followBtn.addEventListener('mouseenter', () => {
+                    followBtn.style.background = '#667eea';
+                    followBtn.style.color = 'white';
+                });
+                followBtn.addEventListener('mouseleave', () => {
+                    followBtn.style.background = '#f0f2f5';
+                    followBtn.style.color = '#666';
+                });
+                
+                const copyBtn = document.createElement('button');
+                copyBtn.style.padding = '6px 14px';
+                copyBtn.style.background = '#f0f2f5';
+                copyBtn.style.border = 'none';
+                copyBtn.style.borderRadius = '16px';
+                copyBtn.style.fontSize = '13px';
+                copyBtn.style.cursor = 'pointer';
+                copyBtn.style.transition = 'all 0.2s';
+                copyBtn.style.display = 'flex';
+                copyBtn.style.alignItems = 'center';
+                copyBtn.style.gap = '6px';
+                copyBtn.style.color = '#666';
+                copyBtn.innerHTML = '📋 复制';
+                copyBtn.onclick = function() {
+                    navigator.clipboard.writeText(content).then(() => {
+                        copyBtn.innerHTML = '✓ 已复制';
+                        setTimeout(() => {
+                            copyBtn.innerHTML = '📋 复制';
+                        }, 2000);
+                    });
+                };
+                
+                copyBtn.addEventListener('mouseenter', () => {
+                    copyBtn.style.background = '#667eea';
+                    copyBtn.style.color = 'white';
+                });
+                copyBtn.addEventListener('mouseleave', () => {
+                    copyBtn.style.background = '#f0f2f5';
+                    copyBtn.style.color = '#666';
+                });
+                
+                actionsDiv.appendChild(followBtn);
+                actionsDiv.appendChild(copyBtn);
+                contentDiv.appendChild(actionsDiv);
+                
+                // 悬停显示按钮
+                messageDiv.addEventListener('mouseenter', () => {
+                    actionsDiv.style.opacity = '1';
+                });
+                messageDiv.addEventListener('mouseleave', () => {
+                    actionsDiv.style.opacity = '0';
+                });
+            }
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(contentDiv);
+            messagesArea.appendChild(messageDiv);
+            
+            scrollToBottom();
+            return contentDiv;
+        }
+
+        // 格式化消息
+        function formatMessage(content) {
+            return content
+                .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+                .replace(/\n/g, '<br>');
+        }
+
+        // 添加打字指示器
+        function addTypingIndicator() {
+            const messagesArea = document.getElementById('messagesArea');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message assistant';
+            messageDiv.id = 'typingIndicator';
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar';
+            avatar.textContent = '🤖';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content typing-indicator';
+            contentDiv.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(contentDiv);
+            messagesArea.appendChild(messageDiv);
+            
+            scrollToBottom();
+            return messageDiv;
+        }
+
+        // 移除打字指示器
+        function removeTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+
+        // 滚动到底部
+        function scrollToBottom() {
+            const messagesArea = document.getElementById('messagesArea');
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        }
+
+        // 发送消息
+        async function sendMessage() {
+            if (isGenerating) return;
+            
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            
+            if (!message && !selectedImage) {
+                addMessage('请描述这张图片', true, selectedImage);
+            } else if (!message) {
+                return;
+            } else {
+                addMessage(message, true, selectedImage);
+            }
+            
+            input.value = '';
+            input.style.height = 'auto';
+            selectedImage = null;
+            imagePreview.src = '';
+            imagePreview.style.display = 'none';
+            imageUpload.value = '';
+            
+            setInputDisabled(true);
+            addTypingIndicator();
+            isGenerating = true;
+            
+            try {
+                const requestBody = { 
+                    message: message,
+                    image: selectedImage,
+                    is_scenario: true,
+                    stream: true
+                };
+                
+                // 如果有选中的场景，传递场景信息
+                if (selectedScenario) {
+                    requestBody.scenario_info = {
+                        title: selectedScenario.title,
+                        description: selectedScenario.description,
+                        tasks: selectedScenario.tasks || []
+                    };
+                }
+                
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                if (!response.ok) {
+                    throw new Error('请求失败');
+                }
+                
+                removeTypingIndicator();
+                const messageContentDiv = addMessage('', false);
+                
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n\n');
+                    
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            try {
+                                const data = JSON.parse(line.slice(6));
+                                if (data.content) {
+                                    messageContentDiv.innerHTML = formatMessage(messageContentDiv.innerHTML + data.content);
+                                    scrollToBottom();
+                                } else if (data.error) {
+                                    messageContentDiv.innerHTML = data.error;
+                                }
+                            } catch (e) {
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                removeTypingIndicator();
+                addMessage('请求出错，请稍后重试', false);
+            } finally {
+                isGenerating = false;
+                setInputDisabled(false);
+                input.focus();
+            }
+        }
+
+        // 设置输入框禁用状态
+        function setInputDisabled(disabled) {
+            document.getElementById('userInput').disabled = disabled;
+            document.getElementById('sendBtn').disabled = disabled;
+        }
+
+        // 处理键盘事件
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // 自动调整输入框高度
+        function autoResize() {
+            const input = document.getElementById('userInput');
+            input.style.height = 'auto';
+            input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+        }
+
+        // 初始化
+        loadScenarios();
+        loadChatHistory();
+    </script>
+</body>
+</html>

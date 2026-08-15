@@ -1,0 +1,4196 @@
+[
+  {
+    "id": "1",
+    "name": "lii",
+    "class_name": "",
+    "created_at": "2026-05-10 10:43:57",
+    "competence_analysis": {},
+    "conversation_history": []
+  },
+  {
+    "id": "2",
+    "name": "lh",
+    "class_name": "1",
+    "created_at": "2026-05-14 10:14:15",
+    "competence_analysis": {},
+    "conversation_history": []
+  },
+  {
+    "id": "3",
+    "name": "1",
+    "class_name": "",
+    "created_at": "2026-05-14 20:44:54",
+    "competence_analysis": {},
+    "conversation_history": []
+  },
+  {
+    "id": "4",
+    "name": "刘明远",
+    "class_name": "软工4",
+    "created_at": "2026-05-27 20:53:34",
+    "competence_analysis": {},
+    "conversation_history": []
+  },
+  {
+    "id": "5",
+    "name": "全球",
+    "class_name": "懂懂懂",
+    "created_at": "2026-05-27 20:54:28",
+    "competence_analysis": {},
+    "conversation_history": []
+  },
+  {
+    "id": "冯双月",
+    "name": "冯双月",
+    "class_name": "123",
+    "created_at": "2026-06-10 22:24:47",
+    "competence_analysis": {
+      "signal_system": {
+        "count": 0,
+        "score": 0.0
+      },
+      "communication_principle": {
+        "count": 0,
+        "score": 0.0
+      },
+      "digital_signal": {
+        "count": 0,
+        "score": 0.0
+      },
+      "network_protocol": {
+        "count": 0,
+        "score": 0.0
+      },
+      "modulation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "rf_engineering": {
+        "count": 0,
+        "score": 0.0
+      },
+      "troubleshooting": {
+        "count": 0,
+        "score": 0.0
+      }
+    },
+    "conversation_history": []
+  },
+  {
+    "id": "7",
+    "student_no": "2505080703000",
+    "name": "lh",
+    "class_name": "3",
+    "created_at": "2026-06-14 19:21:14",
+    "competence_analysis": {},
+    "conversation_history": [
+      {
+        "message": "你好",
+        "is_question": true,
+        "timestamp": "2026-06-14 19:21:25"
+      },
+      {
+        "message": "请给我解释一下什么是通信工程",
+        "is_question": true,
+        "timestamp": "2026-06-14 19:21:42"
+      },
+      {
+        "message": "请给我解释一下什么是通信工程",
+        "is_question": true,
+        "timestamp": "2026-06-14 19:22:06"
+      },
+      {
+        "message": "你好",
+        "is_question": true,
+        "timestamp": "2026-06-14 19:32:13"
+      },
+      {
+        "message": "你会干什么",
+        "is_question": true,
+        "timestamp": "2026-06-14 19:32:23"
+      },
+      {
+        "message": "问你除了知识库的东西你会吗",
+        "is_question": true,
+        "timestamp": "2026-06-14 19:32:47"
+      }
+    ]
+  },
+  {
+    "id": "8",
+    "student_no": "2024001001001",
+    "name": "测试学生",
+    "class_name": "",
+    "created_at": "2026-06-14 19:29:34",
+    "competence_analysis": {},
+    "conversation_history": [
+      {
+        "message": "hello",
+        "is_question": true,
+        "timestamp": "2026-06-14 19:29:36"
+      },
+      {
+        "message": "hello",
+        "is_question": true,
+        "timestamp": "2026-06-14 19:30:29"
+      }
+    ]
+  },
+  {
+    "id": "9",
+    "student_no": "2024001001002",
+    "name": "测试学生2",
+    "class_name": "",
+    "created_at": "2026-06-14 19:35:42",
+    "competence_analysis": {
+      "signal_system": {
+        "count": 1,
+        "score": 0.25
+      },
+      "communication_principle": {
+        "count": 0,
+        "score": 0.0
+      },
+      "digital_signal": {
+        "count": 0,
+        "score": 0.0
+      },
+      "network_protocol": {
+        "count": 0,
+        "score": 0.0
+      },
+      "modulation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "rf_engineering": {
+        "count": 0,
+        "score": 0.0
+      },
+      "troubleshooting": {
+        "count": 0,
+        "score": 0.0
+      }
+    },
+    "conversation_history": [
+      {
+        "message": "傅里叶变换和拉普拉斯变换有什么区别",
+        "is_question": true,
+        "timestamp": "2026-06-14 19:35:44"
+      }
+    ]
+  },
+  {
+    "id": "10",
+    "student_no": "2024000000001",
+    "name": "????A",
+    "class_name": "??1?",
+    "created_at": "2026-06-26 17:59:42",
+    "competence_analysis": {
+      "signal_system": {
+        "count": 0,
+        "score": 0.0
+      },
+      "communication_principle": {
+        "count": 0,
+        "score": 0.0
+      },
+      "digital_signal": {
+        "count": 0,
+        "score": 0.0
+      },
+      "network_protocol": {
+        "count": 0,
+        "score": 0.0
+      },
+      "modulation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "rf_engineering": {
+        "count": 0,
+        "score": 0.0
+      },
+      "antenna_design": {
+        "count": 0,
+        "score": 0.0
+      },
+      "troubleshooting": {
+        "count": 0,
+        "score": 0.0
+      },
+      "equipment_operation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "safety_awareness": {
+        "count": 0,
+        "score": 0.0
+      },
+      "innovation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "teamwork": {
+        "count": 0,
+        "score": 0.0
+      }
+    },
+    "conversation_history": [],
+    "last_login": "2026-08-07 09:43:57",
+    "survey_completed": true,
+    "survey_answers": {},
+    "survey_result": [
+      {
+        "job_name": "通信工程师",
+        "score": 0,
+        "icon": "🔧",
+        "description": "负责通信网络设备的安装、调试、运维与故障排查",
+        "salary_range": "8K-25K",
+        "match_level": "低"
+      },
+      {
+        "job_name": "网络优化工程师",
+        "score": 0,
+        "icon": "🌐",
+        "description": "负责无线网络规划、优化与性能分析，提升网络质量",
+        "salary_range": "10K-30K",
+        "match_level": "低"
+      },
+      {
+        "job_name": "射频工程师",
+        "score": 0,
+        "icon": "📡",
+        "description": "负责射频电路设计、天线开发与电磁仿真",
+        "salary_range": "12K-35K",
+        "match_level": "低"
+      },
+      {
+        "job_name": "研发工程师",
+        "score": 0,
+        "icon": "🔬",
+        "description": "负责通信系统算法研发、仿真验证与新产品开发",
+        "salary_range": "15K-40K",
+        "match_level": "低"
+      }
+    ]
+  },
+  {
+    "id": "11",
+    "student_no": "2024999999999",
+    "name": "测试新学生",
+    "class_name": "通信测试班",
+    "created_at": "2026-08-07 09:44:36",
+    "last_login": "2026-08-07 09:45:03",
+    "competence_analysis": {
+      "signal_system": {
+        "count": 0,
+        "score": 0.0
+      },
+      "communication_principle": {
+        "count": 0,
+        "score": 0.0
+      },
+      "digital_signal": {
+        "count": 0,
+        "score": 0.0
+      },
+      "network_protocol": {
+        "count": 0,
+        "score": 0.0
+      },
+      "modulation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "rf_engineering": {
+        "count": 0,
+        "score": 0.0
+      },
+      "antenna_design": {
+        "count": 0,
+        "score": 0.0
+      },
+      "troubleshooting": {
+        "count": 0,
+        "score": 0.0
+      },
+      "equipment_operation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "safety_awareness": {
+        "count": 0,
+        "score": 0.0
+      },
+      "innovation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "teamwork": {
+        "count": 0,
+        "score": 0.0
+      }
+    },
+    "conversation_history": [],
+    "survey_completed": true,
+    "survey_answers": {
+      "q1": "rf",
+      "q2": "design",
+      "q3": [
+        "signal",
+        "em"
+      ],
+      "q4": "lab",
+      "q5": "expert"
+    },
+    "survey_result": [
+      {
+        "job_name": "射频工程师",
+        "score": 13,
+        "icon": "📡",
+        "description": "负责射频电路设计、天线开发与电磁仿真",
+        "salary_range": "12K-35K",
+        "match_level": "高"
+      },
+      {
+        "job_name": "研发工程师",
+        "score": 11,
+        "icon": "🔬",
+        "description": "负责通信系统算法研发、仿真验证与新产品开发",
+        "salary_range": "15K-40K",
+        "match_level": "高"
+      },
+      {
+        "job_name": "网络优化工程师",
+        "score": 1,
+        "icon": "🌐",
+        "description": "负责无线网络规划、优化与性能分析，提升网络质量",
+        "salary_range": "10K-30K",
+        "match_level": "低"
+      },
+      {
+        "job_name": "通信工程师",
+        "score": 0,
+        "icon": "🔧",
+        "description": "负责通信网络设备的安装、调试、运维与故障排查",
+        "salary_range": "8K-25K",
+        "match_level": "低"
+      }
+    ],
+    "target_job": "射频工程师",
+    "target_set_time": "2026-08-07 09:45:03",
+    "weekly_tasks": {
+      "week_1": {
+        "week_num": 1,
+        "generated_at": "2026-08-07 09:45:03",
+        "target_job": "射频工程师",
+        "tasks": [
+          {
+            "id": "task_1_rf_engineering_0",
+            "title": "学习阻抗匹配原理",
+            "detail": "Smith圆图的使用方法，完成匹配电路设计练习",
+            "estimated_time": "60分钟",
+            "area": "射频工程",
+            "area_id": "rf_engineering",
+            "current_score": 0.0,
+            "required_score": 0.95,
+            "gap": 0.95,
+            "completed": true
+          },
+          {
+            "id": "task_1_rf_engineering_1",
+            "title": "复习射频放大器",
+            "detail": "PA与LNA的设计要点与非线性指标",
+            "estimated_time": "50分钟",
+            "area": "射频工程",
+            "area_id": "rf_engineering",
+            "current_score": 0.0,
+            "required_score": 0.95,
+            "gap": 0.95,
+            "completed": false
+          },
+          {
+            "id": "task_1_antenna_design_2",
+            "title": "学习天线基础参数",
+            "detail": "增益、方向图、极化、带宽等概念",
+            "estimated_time": "40分钟",
+            "area": "天线设计",
+            "area_id": "antenna_design",
+            "current_score": 0.0,
+            "required_score": 0.9,
+            "gap": 0.9,
+            "completed": false
+          },
+          {
+            "id": "task_1_antenna_design_3",
+            "title": "了解MIMO天线技术",
+            "detail": "多天线技术在5G中的应用原理",
+            "estimated_time": "50分钟",
+            "area": "天线设计",
+            "area_id": "antenna_design",
+            "current_score": 0.0,
+            "required_score": 0.9,
+            "gap": 0.9,
+            "completed": false
+          },
+          {
+            "id": "task_1_safety_awareness_4",
+            "title": "学习通信安全规范",
+            "detail": "防雷接地、EMC防护、高压安全操作规程",
+            "estimated_time": "30分钟",
+            "area": "安全意识",
+            "area_id": "safety_awareness",
+            "current_score": 0.0,
+            "required_score": 0.9,
+            "gap": 0.9,
+            "completed": false
+          },
+          {
+            "id": "task_1_safety_awareness_5",
+            "title": "应急处理流程",
+            "detail": "通信中断应急处理流程与上报机制",
+            "estimated_time": "30分钟",
+            "area": "安全意识",
+            "area_id": "safety_awareness",
+            "current_score": 0.0,
+            "required_score": 0.9,
+            "gap": 0.9,
+            "completed": false
+          },
+          {
+            "id": "task_1_network_protocol_6",
+            "title": "深入理解TCP/IP协议栈",
+            "detail": "绘制OSI七层模型图，标注每层关键协议",
+            "estimated_time": "40分钟",
+            "area": "网络协议",
+            "area_id": "network_protocol",
+            "current_score": 0.0,
+            "required_score": 0.5,
+            "gap": 0.5,
+            "completed": false
+          },
+          {
+            "id": "task_1_network_protocol_7",
+            "title": "学习路由协议",
+            "detail": "OSPF与BGP的基本原理与配置",
+            "estimated_time": "50分钟",
+            "area": "网络协议",
+            "area_id": "network_protocol",
+            "current_score": 0.0,
+            "required_score": 0.5,
+            "gap": 0.5,
+            "completed": false
+          }
+        ],
+        "total_tasks": 8,
+        "completed_tasks": 1
+      }
+    }
+  },
+  {
+    "id": "12",
+    "student_no": "2505080703042",
+    "name": "连旱",
+    "class_name": "1",
+    "created_at": "2026-08-07 09:46:33",
+    "last_login": "2026-08-07 09:46:33",
+    "competence_analysis": {
+      "signal_system": {
+        "count": 0,
+        "score": 0.0
+      },
+      "communication_principle": {
+        "count": 0,
+        "score": 0.0
+      },
+      "digital_signal": {
+        "count": 0,
+        "score": 0.0
+      },
+      "network_protocol": {
+        "count": 0,
+        "score": 0.0
+      },
+      "modulation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "rf_engineering": {
+        "count": 0,
+        "score": 0.0
+      },
+      "antenna_design": {
+        "count": 0,
+        "score": 0.0
+      },
+      "troubleshooting": {
+        "count": 0,
+        "score": 0.0
+      },
+      "equipment_operation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "safety_awareness": {
+        "count": 0,
+        "score": 0.0
+      },
+      "innovation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "teamwork": {
+        "count": 0,
+        "score": 0.0
+      }
+    },
+    "conversation_history": [],
+    "survey_completed": true,
+    "survey_answers": {
+      "q1": "network",
+      "q2": "hands_on",
+      "q3": [
+        "em"
+      ],
+      "q4": "lab",
+      "q5": "manager"
+    },
+    "survey_result": [
+      {
+        "job_name": "射频工程师",
+        "score": 7,
+        "icon": "📡",
+        "description": "负责射频电路设计、天线开发与电磁仿真",
+        "salary_range": "12K-35K",
+        "match_level": "中"
+      },
+      {
+        "job_name": "通信工程师",
+        "score": 6,
+        "icon": "🔧",
+        "description": "负责通信网络设备的安装、调试、运维与故障排查",
+        "salary_range": "8K-25K",
+        "match_level": "中"
+      },
+      {
+        "job_name": "网络优化工程师",
+        "score": 5,
+        "icon": "🌐",
+        "description": "负责无线网络规划、优化与性能分析，提升网络质量",
+        "salary_range": "10K-30K",
+        "match_level": "中"
+      },
+      {
+        "job_name": "研发工程师",
+        "score": 3,
+        "icon": "🔬",
+        "description": "负责通信系统算法研发、仿真验证与新产品开发",
+        "salary_range": "15K-40K",
+        "match_level": "低"
+      }
+    ],
+    "target_job": "通信工程师",
+    "target_set_time": "2026-08-07 09:47:04",
+    "weekly_tasks": {
+      "week_1": {
+        "week_num": 1,
+        "generated_at": "2026-08-07 09:47:05",
+        "target_job": "通信工程师",
+        "tasks": [
+          {
+            "id": "task_1_communication_principle_0",
+            "title": "学习香农定理",
+            "detail": "理解信道容量公式C=Blog2(1+SNR)，完成计算练习",
+            "estimated_time": "40分钟",
+            "area": "通信原理",
+            "area_id": "communication_principle",
+            "current_score": 0.0,
+            "required_score": 0.9,
+            "gap": 0.9,
+            "completed": false
+          },
+          {
+            "id": "task_1_communication_principle_1",
+            "title": "复习信道编码",
+            "detail": "掌握汉明码、卷积码的基本原理",
+            "estimated_time": "50分钟",
+            "area": "通信原理",
+            "area_id": "communication_principle",
+            "current_score": 0.0,
+            "required_score": 0.9,
+            "gap": 0.9,
+            "completed": false
+          },
+          {
+            "id": "task_1_troubleshooting_2",
+            "title": "学习通信故障排查流程",
+            "detail": "掌握分层排查方法，分析3个典型案例",
+            "estimated_time": "45分钟",
+            "area": "故障排查",
+            "area_id": "troubleshooting",
+            "current_score": 0.0,
+            "required_score": 0.9,
+            "gap": 0.9,
+            "completed": false
+          },
+          {
+            "id": "task_1_troubleshooting_3",
+            "title": "常见基站故障分析",
+            "detail": "学习基站告警分析与处理流程",
+            "estimated_time": "40分钟",
+            "area": "故障排查",
+            "area_id": "troubleshooting",
+            "current_score": 0.0,
+            "required_score": 0.9,
+            "gap": 0.9,
+            "completed": false
+          },
+          {
+            "id": "task_1_safety_awareness_4",
+            "title": "学习通信安全规范",
+            "detail": "防雷接地、EMC防护、高压安全操作规程",
+            "estimated_time": "30分钟",
+            "area": "安全意识",
+            "area_id": "safety_awareness",
+            "current_score": 0.0,
+            "required_score": 0.9,
+            "gap": 0.9,
+            "completed": false
+          },
+          {
+            "id": "task_1_safety_awareness_5",
+            "title": "应急处理流程",
+            "detail": "通信中断应急处理流程与上报机制",
+            "estimated_time": "30分钟",
+            "area": "安全意识",
+            "area_id": "safety_awareness",
+            "current_score": 0.0,
+            "required_score": 0.9,
+            "gap": 0.9,
+            "completed": false
+          },
+          {
+            "id": "task_1_innovation_6",
+            "title": "阅读通信前沿技术文献",
+            "detail": "阅读1篇6G或卫星通信相关的最新论文",
+            "estimated_time": "60分钟",
+            "area": "创新思维",
+            "area_id": "innovation",
+            "current_score": 0.0,
+            "required_score": 0.6,
+            "gap": 0.6,
+            "completed": false
+          },
+          {
+            "id": "task_1_innovation_7",
+            "title": "设计一个创新方案",
+            "detail": "针对当前通信痛点提出一个改进方案",
+            "estimated_time": "45分钟",
+            "area": "创新思维",
+            "area_id": "innovation",
+            "current_score": 0.0,
+            "required_score": 0.6,
+            "gap": 0.6,
+            "completed": false
+          }
+        ],
+        "total_tasks": 8,
+        "completed_tasks": 0
+      }
+    }
+  },
+  {
+    "id": "13",
+    "student_no": "2024001000001",
+    "name": "test",
+    "class_name": "",
+    "created_at": "2026-08-07 09:53:54",
+    "last_login": "2026-08-07 09:53:54",
+    "competence_analysis": {
+      "signal_system": {
+        "count": 0,
+        "score": 0.0
+      },
+      "communication_principle": {
+        "count": 0,
+        "score": 0.0
+      },
+      "digital_signal": {
+        "count": 0,
+        "score": 0.0
+      },
+      "network_protocol": {
+        "count": 0,
+        "score": 0.0
+      },
+      "modulation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "rf_engineering": {
+        "count": 0,
+        "score": 0.0
+      },
+      "antenna_design": {
+        "count": 0,
+        "score": 0.0
+      },
+      "troubleshooting": {
+        "count": 0,
+        "score": 0.0
+      },
+      "equipment_operation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "safety_awareness": {
+        "count": 0,
+        "score": 0.0
+      },
+      "innovation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "teamwork": {
+        "count": 0,
+        "score": 0.0
+      }
+    },
+    "conversation_history": [],
+    "target_job": "通信工程师",
+    "target_set_time": "2026-08-07 09:53:54",
+    "weekly_tasks": {
+      "week_1": {
+        "week_num": 1,
+        "generated_at": "2026-08-07 09:53:54",
+        "target_job": "FPGA工程师",
+        "tasks": [
+          {
+            "id": "task_1_basic_0",
+            "title": "认识信号与系统",
+            "detail": "了解什么是信号、系统的基本概念，阅读教材前3章",
+            "estimated_time": "45分钟",
+            "area": "信号与系统",
+            "area_id": "signal_system",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_1",
+            "title": "通信原理入门",
+            "detail": "了解通信系统的基本组成：信源、信道、信宿",
+            "estimated_time": "40分钟",
+            "area": "通信原理",
+            "area_id": "communication_principle",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_2",
+            "title": "数字信号处理基础",
+            "detail": "了解采样定理的基本内容，尝试手动计算一个采样例子",
+            "estimated_time": "45分钟",
+            "area": "数字信号处理",
+            "area_id": "digital_signal",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_3",
+            "title": "网络协议概览",
+            "detail": "了解OSI七层模型和TCP/IP四层模型的对应关系",
+            "estimated_time": "30分钟",
+            "area": "网络协议",
+            "area_id": "network_protocol",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_4",
+            "title": "调制技术简介",
+            "detail": "了解ASK、FSK、PSK三种基本调制方式的区别",
+            "estimated_time": "35分钟",
+            "area": "调制技术",
+            "area_id": "modulation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_5",
+            "title": "射频工程基础",
+            "detail": "了解射频信号的基本特征：频率、波长、阻抗",
+            "estimated_time": "40分钟",
+            "area": "射频工程",
+            "area_id": "rf_engineering",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_6",
+            "title": "天线设计入门",
+            "detail": "了解天线的基本参数：增益、方向图、极化",
+            "estimated_time": "30分钟",
+            "area": "天线设计",
+            "area_id": "antenna_design",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_7",
+            "title": "故障排查思维",
+            "detail": "学习分层故障排查法：从物理层到应用层逐层排查",
+            "estimated_time": "35分钟",
+            "area": "故障排查",
+            "area_id": "troubleshooting",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_8",
+            "title": "常见仪器介绍",
+            "detail": "认识频谱仪、示波器、信号源的基本用途",
+            "estimated_time": "30分钟",
+            "area": "设备操作",
+            "area_id": "equipment_operation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_9",
+            "title": "通信安全意识",
+            "detail": "了解通信工程中的基本安全规范：防雷、接地、防静电",
+            "estimated_time": "25分钟",
+            "area": "安全意识",
+            "area_id": "safety_awareness",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_10",
+            "title": "创新思维训练",
+            "detail": "思考一个问题：5G相比4G有哪些创新？写出3点",
+            "estimated_time": "30分钟",
+            "area": "创新思维",
+            "area_id": "innovation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_11",
+            "title": "团队协作案例",
+            "detail": "了解一个真实的通信工程团队协作案例",
+            "estimated_time": "30分钟",
+            "area": "团队协作",
+            "area_id": "teamwork",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          }
+        ],
+        "total_tasks": 12,
+        "completed_tasks": 0,
+        "stage": "basic",
+        "analysis_summary": "",
+        "weak_areas": []
+      }
+    }
+  },
+  {
+    "id": "14",
+    "student_no": "1234567891111",
+    "name": "11111",
+    "class_name": "1",
+    "created_at": "2026-08-07 09:54:45",
+    "last_login": "2026-08-07 09:54:45",
+    "competence_analysis": {
+      "signal_system": {
+        "count": 0,
+        "score": 0.0
+      },
+      "communication_principle": {
+        "count": 0,
+        "score": 0.0
+      },
+      "digital_signal": {
+        "count": 0,
+        "score": 0.0
+      },
+      "network_protocol": {
+        "count": 0,
+        "score": 0.0
+      },
+      "modulation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "rf_engineering": {
+        "count": 0,
+        "score": 0.0
+      },
+      "antenna_design": {
+        "count": 0,
+        "score": 0.0
+      },
+      "troubleshooting": {
+        "count": 0,
+        "score": 0.0
+      },
+      "equipment_operation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "safety_awareness": {
+        "count": 0,
+        "score": 0.0
+      },
+      "innovation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "teamwork": {
+        "count": 0,
+        "score": 0.0
+      }
+    },
+    "conversation_history": [],
+    "survey_completed": true,
+    "survey_answers": {
+      "q1": "rf",
+      "q2": "hands_on",
+      "q3": [
+        "signal"
+      ],
+      "q4": "lab",
+      "q5": "expert"
+    },
+    "survey_result": [
+      {
+        "job_name": "射频工程师",
+        "score": 10,
+        "icon": "📡",
+        "description": "负责射频电路设计、天线开发与电磁仿真",
+        "salary_range": "12K-35K",
+        "match_level": "高"
+      },
+      {
+        "job_name": "研发工程师",
+        "score": 9,
+        "icon": "🔬",
+        "description": "负责通信系统算法研发、仿真验证与新产品开发",
+        "salary_range": "15K-40K",
+        "match_level": "高"
+      },
+      {
+        "job_name": "通信工程师",
+        "score": 3,
+        "icon": "🔧",
+        "description": "负责通信网络设备的安装、调试、运维与故障排查",
+        "salary_range": "8K-25K",
+        "match_level": "低"
+      },
+      {
+        "job_name": "网络优化工程师",
+        "score": 0,
+        "icon": "🌐",
+        "description": "负责无线网络规划、优化与性能分析，提升网络质量",
+        "salary_range": "10K-30K",
+        "match_level": "低"
+      }
+    ],
+    "target_job": "通信工程师",
+    "target_set_time": "2026-08-07 09:55:02",
+    "weekly_tasks": {
+      "week_1": {
+        "week_num": 1,
+        "generated_at": "2026-08-07 09:55:03",
+        "target_job": "通信工程师",
+        "tasks": [
+          {
+            "id": "task_1_basic_0",
+            "title": "认识信号与系统",
+            "detail": "了解什么是信号、系统的基本概念，阅读教材前3章",
+            "estimated_time": "45分钟",
+            "area": "信号与系统",
+            "area_id": "signal_system",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_1",
+            "title": "通信原理入门",
+            "detail": "了解通信系统的基本组成：信源、信道、信宿",
+            "estimated_time": "40分钟",
+            "area": "通信原理",
+            "area_id": "communication_principle",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_2",
+            "title": "数字信号处理基础",
+            "detail": "了解采样定理的基本内容，尝试手动计算一个采样例子",
+            "estimated_time": "45分钟",
+            "area": "数字信号处理",
+            "area_id": "digital_signal",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_3",
+            "title": "网络协议概览",
+            "detail": "了解OSI七层模型和TCP/IP四层模型的对应关系",
+            "estimated_time": "30分钟",
+            "area": "网络协议",
+            "area_id": "network_protocol",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_4",
+            "title": "调制技术简介",
+            "detail": "了解ASK、FSK、PSK三种基本调制方式的区别",
+            "estimated_time": "35分钟",
+            "area": "调制技术",
+            "area_id": "modulation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_5",
+            "title": "射频工程基础",
+            "detail": "了解射频信号的基本特征：频率、波长、阻抗",
+            "estimated_time": "40分钟",
+            "area": "射频工程",
+            "area_id": "rf_engineering",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_6",
+            "title": "天线设计入门",
+            "detail": "了解天线的基本参数：增益、方向图、极化",
+            "estimated_time": "30分钟",
+            "area": "天线设计",
+            "area_id": "antenna_design",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_7",
+            "title": "故障排查思维",
+            "detail": "学习分层故障排查法：从物理层到应用层逐层排查",
+            "estimated_time": "35分钟",
+            "area": "故障排查",
+            "area_id": "troubleshooting",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_8",
+            "title": "常见仪器介绍",
+            "detail": "认识频谱仪、示波器、信号源的基本用途",
+            "estimated_time": "30分钟",
+            "area": "设备操作",
+            "area_id": "equipment_operation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_9",
+            "title": "通信安全意识",
+            "detail": "了解通信工程中的基本安全规范：防雷、接地、防静电",
+            "estimated_time": "25分钟",
+            "area": "安全意识",
+            "area_id": "safety_awareness",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_10",
+            "title": "创新思维训练",
+            "detail": "思考一个问题：5G相比4G有哪些创新？写出3点",
+            "estimated_time": "30分钟",
+            "area": "创新思维",
+            "area_id": "innovation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_11",
+            "title": "团队协作案例",
+            "detail": "了解一个真实的通信工程团队协作案例",
+            "estimated_time": "30分钟",
+            "area": "团队协作",
+            "area_id": "teamwork",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          }
+        ],
+        "total_tasks": 12,
+        "completed_tasks": 0,
+        "stage": "basic",
+        "analysis_summary": "",
+        "weak_areas": []
+      }
+    }
+  },
+  {
+    "id": "15",
+    "student_no": "2024010100001",
+    "name": "??",
+    "class_name": "??2024-1?",
+    "created_at": "2026-08-07 10:06:25",
+    "last_login": "2026-08-15 11:11:25",
+    "competence_analysis": {
+      "signal_system": {
+        "count": 1,
+        "score": 0.8,
+        "last_quiz_score": 100,
+        "quiz_attempts": 1,
+        "ai_conversations": 0
+      },
+      "communication_principle": {
+        "count": 0,
+        "score": 0.0
+      },
+      "digital_signal": {
+        "count": 0,
+        "score": 0.0
+      },
+      "network_protocol": {
+        "count": 0,
+        "score": 0.0
+      },
+      "modulation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "rf_engineering": {
+        "count": 0,
+        "score": 0.0
+      },
+      "antenna_design": {
+        "count": 0,
+        "score": 0.0
+      },
+      "troubleshooting": {
+        "count": 0,
+        "score": 0.0
+      },
+      "equipment_operation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "safety_awareness": {
+        "count": 0,
+        "score": 0.0
+      },
+      "innovation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "teamwork": {
+        "count": 0,
+        "score": 0.0
+      }
+    },
+    "conversation_history": [],
+    "target_job": "通信工程师",
+    "target_set_time": "2026-08-07 10:06:25",
+    "weekly_tasks": {
+      "week_1": {
+        "week_num": 1,
+        "generated_at": "2026-08-07 10:06:25",
+        "target_job": "通信工程师",
+        "tasks": [
+          {
+            "id": "task_1_basic_0",
+            "title": "认识信号与系统",
+            "detail": "了解什么是信号、系统的基本概念，阅读教材前3章",
+            "estimated_time": "45分钟",
+            "area": "信号与系统",
+            "area_id": "signal_system",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": true,
+            "quiz_passed": true,
+            "quiz_score": 100,
+            "quiz_attempts": 1
+          },
+          {
+            "id": "task_1_basic_1",
+            "title": "通信原理入门",
+            "detail": "了解通信系统的基本组成：信源、信道、信宿",
+            "estimated_time": "40分钟",
+            "area": "通信原理",
+            "area_id": "communication_principle",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_2",
+            "title": "数字信号处理基础",
+            "detail": "了解采样定理的基本内容，尝试手动计算一个采样例子",
+            "estimated_time": "45分钟",
+            "area": "数字信号处理",
+            "area_id": "digital_signal",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_3",
+            "title": "网络协议概览",
+            "detail": "了解OSI七层模型和TCP/IP四层模型的对应关系",
+            "estimated_time": "30分钟",
+            "area": "网络协议",
+            "area_id": "network_protocol",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_4",
+            "title": "调制技术简介",
+            "detail": "了解ASK、FSK、PSK三种基本调制方式的区别",
+            "estimated_time": "35分钟",
+            "area": "调制技术",
+            "area_id": "modulation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_5",
+            "title": "射频工程基础",
+            "detail": "了解射频信号的基本特征：频率、波长、阻抗",
+            "estimated_time": "40分钟",
+            "area": "射频工程",
+            "area_id": "rf_engineering",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_6",
+            "title": "天线设计入门",
+            "detail": "了解天线的基本参数：增益、方向图、极化",
+            "estimated_time": "30分钟",
+            "area": "天线设计",
+            "area_id": "antenna_design",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_7",
+            "title": "故障排查思维",
+            "detail": "学习分层故障排查法：从物理层到应用层逐层排查",
+            "estimated_time": "35分钟",
+            "area": "故障排查",
+            "area_id": "troubleshooting",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_8",
+            "title": "常见仪器介绍",
+            "detail": "认识频谱仪、示波器、信号源的基本用途",
+            "estimated_time": "30分钟",
+            "area": "设备操作",
+            "area_id": "equipment_operation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_9",
+            "title": "通信安全意识",
+            "detail": "了解通信工程中的基本安全规范：防雷、接地、防静电",
+            "estimated_time": "25分钟",
+            "area": "安全意识",
+            "area_id": "safety_awareness",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_10",
+            "title": "创新思维训练",
+            "detail": "思考一个问题：5G相比4G有哪些创新？写出3点",
+            "estimated_time": "30分钟",
+            "area": "创新思维",
+            "area_id": "innovation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_11",
+            "title": "团队协作案例",
+            "detail": "了解一个真实的通信工程团队协作案例",
+            "estimated_time": "30分钟",
+            "area": "团队协作",
+            "area_id": "teamwork",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          }
+        ],
+        "total_tasks": 12,
+        "completed_tasks": 1,
+        "stage": "basic",
+        "analysis_summary": "",
+        "weak_areas": []
+      },
+      "week_2": {
+        "week_num": 2,
+        "generated_at": "2026-08-15 09:21:40",
+        "target_job": "通信工程师",
+        "tasks": [
+          {
+            "id": "task_2_basic_0",
+            "title": "傅里叶变换深入",
+            "detail": "理解傅里叶变换的时域频域对应关系，做5道计算题",
+            "estimated_time": "60分钟",
+            "area": "信号与系统",
+            "area_id": "signal_system",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_2_basic_1",
+            "title": "信道容量与香农定理",
+            "detail": "学习C=Blog2(1+SNR)公式，理解信噪比与信道容量的关系",
+            "estimated_time": "45分钟",
+            "area": "通信原理",
+            "area_id": "communication_principle",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_2_basic_2",
+            "title": "FFT算法实践",
+            "detail": "用Python实现一个简单的FFT，对比DFT的计算效率",
+            "estimated_time": "60分钟",
+            "area": "数字信号处理",
+            "area_id": "digital_signal",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_2_basic_3",
+            "title": "IP地址与路由",
+            "detail": "学习IP地址分类、子网划分、基本路由配置",
+            "estimated_time": "45分钟",
+            "area": "网络协议",
+            "area_id": "network_protocol",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_2_basic_4",
+            "title": "星座图分析",
+            "detail": "绘制QPSK和16QAM的星座图，理解调制阶数的意义",
+            "estimated_time": "40分钟",
+            "area": "调制技术",
+            "area_id": "modulation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_2_basic_5",
+            "title": "Smith圆图入门",
+            "detail": "认识Smith圆图的基本结构，学会读取阻抗点",
+            "estimated_time": "50分钟",
+            "area": "射频工程",
+            "area_id": "rf_engineering",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_2_basic_6",
+            "title": "天线方向图",
+            "detail": "阅读一个天线方向图，分析其主瓣、旁瓣特性",
+            "estimated_time": "35分钟",
+            "area": "天线设计",
+            "area_id": "antenna_design",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_2_basic_7",
+            "title": "基站告警分析",
+            "detail": "了解常见的基站告警类型及其处理方法",
+            "estimated_time": "40分钟",
+            "area": "故障排查",
+            "area_id": "troubleshooting",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_2_basic_8",
+            "title": "频谱仪使用",
+            "detail": "学习频谱仪的基本操作：中心频率、SPAN、RBW的设置",
+            "estimated_time": "45分钟",
+            "area": "设备操作",
+            "area_id": "equipment_operation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_2_basic_9",
+            "title": "高压安全规程",
+            "detail": "学习高压设备操作的安全距离和防护措施",
+            "estimated_time": "30分钟",
+            "area": "安全意识",
+            "area_id": "safety_awareness",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_2_basic_10",
+            "title": "6G前沿调研",
+            "detail": "查阅资料了解6G的关键技术方向，写一份简要报告",
+            "estimated_time": "60分钟",
+            "area": "创新思维",
+            "area_id": "innovation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_2_basic_11",
+            "title": "模拟团队项目",
+            "detail": "假设你在一个5G建设团队中，列出你的角色和职责",
+            "estimated_time": "40分钟",
+            "area": "团队协作",
+            "area_id": "teamwork",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          }
+        ],
+        "total_tasks": 12,
+        "completed_tasks": 0,
+        "stage": "basic",
+        "analysis_summary": "",
+        "weak_areas": []
+      }
+    },
+    "quiz_attempts": {
+      "task_1_basic_0": {
+        "attempt_count": 1,
+        "passed": true,
+        "best_score": 100,
+        "last_score": 100,
+        "passed_at": "2026-08-07 10:06:25"
+      }
+    },
+    "task_reports": {
+      "task_2_basic_0": {
+        "success": true,
+        "task_id": "task_2_basic_0",
+        "task_title": "傅里叶变换深入",
+        "area_name": "信号与系统",
+        "area_id": "signal_system",
+        "student_name": "",
+        "generated_at": "2026-08-15 09:21:40",
+        "fault_scenario": {
+          "name": "未注入故障",
+          "description": "",
+          "level": "info"
+        },
+        "operation_log": [],
+        "root_cause_analysis": "",
+        "capability_assessment": {
+          "proficiency": "精通",
+          "competence_score": 0.8,
+          "quiz_attempts": 0,
+          "best_score": 0,
+          "final_score": 0,
+          "safety_score": 100,
+          "safety_assessment": "操作规范，安全意识良好",
+          "ai_conversations": 0
+        },
+        "competency_profile": {
+          "overall_score": 0.06,
+          "level": "D",
+          "level_desc": "待提升",
+          "target_job": "通信工程师",
+          "radar_data": [
+            {
+              "dimension": "technical",
+              "name": "技术能力",
+              "icon": "🔧",
+              "color": "#52c41a",
+              "score": 0.1,
+              "sub_dimensions": [
+                "理论基础",
+                "专业核心",
+                "工程实践"
+              ]
+            },
+            {
+              "dimension": "communication",
+              "name": "沟通协作",
+              "icon": "💬",
+              "color": "#1890ff",
+              "score": 0.0,
+              "sub_dimensions": [
+                "口头表达",
+                "书面表达",
+                "团队协作",
+                "跨部门沟通"
+              ]
+            },
+            {
+              "dimension": "project_management",
+              "name": "项目管理",
+              "icon": "📋",
+              "color": "#fa8c16",
+              "score": 0.0,
+              "sub_dimensions": [
+                "需求分析",
+                "进度规划",
+                "资源管理",
+                "风险管控",
+                "质量保障"
+              ]
+            },
+            {
+              "dimension": "safety_ethics",
+              "name": "安全伦理",
+              "icon": "🛡️",
+              "color": "#eb2f96",
+              "score": 0.15,
+              "sub_dimensions": [
+                "安全意识",
+                "操作规范",
+                "应急处置",
+                "职业伦理"
+              ]
+            },
+            {
+              "dimension": "innovation",
+              "name": "创新思维",
+              "icon": "💡",
+              "color": "#722ed1",
+              "score": 0.0,
+              "sub_dimensions": [
+                "问题分析",
+                "方案设计",
+                "技术创新",
+                "持续改进"
+              ]
+            }
+          ],
+          "dimension_scores": {
+            "technical": 0.1,
+            "communication": 0.0,
+            "project_management": 0.0,
+            "safety_ethics": 0.15,
+            "innovation": 0.0
+          },
+          "strengths": [],
+          "weaknesses": [
+            {
+              "dimension": "项目管理",
+              "score": 0.0
+            },
+            {
+              "dimension": "创新思维",
+              "score": 0.0
+            }
+          ],
+          "pos_weights_used": {
+            "technical": 0.3,
+            "communication": 0.15,
+            "project_management": 0.2,
+            "safety_ethics": 0.2,
+            "innovation": 0.15
+          }
+        },
+        "recommendation": "建议复习《信号与系统》教材的前4章，重点掌握傅里叶变换、卷积和系统响应。可以使用MATLAB进行仿真练习。"
+      }
+    },
+    "ethics_debates": {
+      "comm_case_1": {
+        "answers": [
+          "应该考虑用户权益，同时也要考虑责任，寻找可行的方案，遵守伦理道德"
+        ],
+        "analysis": {
+          "score": 35,
+          "dimensions": {
+            "user_perspective": 40,
+            "responsibility": 20,
+            "feasibility": 40,
+            "ethics_awareness": 40
+          },
+          "feedback": [
+            "「responsibility」维度较弱，建议多从该角度思考问题"
+          ]
+        },
+        "submitted_at": "2026-08-15 09:37:00"
+      }
+    },
+    "teacher_interventions": [
+      {
+        "teacher": "",
+        "teacher_name": "",
+        "type": "emotional",
+        "reason": "情绪疏导",
+        "note": "学生连续3次测验失败，需要心理干预",
+        "status": "closed",
+        "created_at": "2026-08-15 09:38:02",
+        "closed_at": "2026-08-15 09:38:02"
+      }
+    ]
+  },
+  {
+    "id": "16",
+    "student_no": "2024010100002",
+    "name": "Test User 2",
+    "class_name": "",
+    "created_at": "2026-08-07 10:06:48",
+    "last_login": "2026-08-07 10:06:48",
+    "competence_analysis": {
+      "signal_system": {
+        "count": 0,
+        "score": 0.0
+      },
+      "communication_principle": {
+        "count": 0,
+        "score": 0.0
+      },
+      "digital_signal": {
+        "count": 0,
+        "score": 0.0
+      },
+      "network_protocol": {
+        "count": 0,
+        "score": 0.0
+      },
+      "modulation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "rf_engineering": {
+        "count": 0,
+        "score": 0.0
+      },
+      "antenna_design": {
+        "count": 0,
+        "score": 0.0
+      },
+      "troubleshooting": {
+        "count": 0,
+        "score": 0.0
+      },
+      "equipment_operation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "safety_awareness": {
+        "count": 0,
+        "score": 0.0
+      },
+      "innovation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "teamwork": {
+        "count": 0,
+        "score": 0.0
+      }
+    },
+    "conversation_history": [],
+    "target_job": "网络工程师",
+    "target_set_time": "2026-08-07 10:06:48"
+  },
+  {
+    "id": "17",
+    "student_no": "2024010100003",
+    "name": "测试",
+    "class_name": "测试班",
+    "created_at": "2026-08-07 10:07:05",
+    "last_login": "2026-08-15 11:42:03",
+    "competence_analysis": {
+      "signal_system": {
+        "count": 0,
+        "score": 0.0
+      },
+      "communication_principle": {
+        "count": 0,
+        "score": 0.0
+      },
+      "digital_signal": {
+        "count": 0,
+        "score": 0.0
+      },
+      "network_protocol": {
+        "count": 0,
+        "score": 0.0
+      },
+      "modulation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "rf_engineering": {
+        "count": 0,
+        "score": 0.0
+      },
+      "antenna_design": {
+        "count": 0,
+        "score": 0.0
+      },
+      "troubleshooting": {
+        "count": 0,
+        "score": 0.0
+      },
+      "equipment_operation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "safety_awareness": {
+        "count": 0,
+        "score": 0.0
+      },
+      "innovation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "teamwork": {
+        "count": 0,
+        "score": 0.0
+      }
+    },
+    "conversation_history": [],
+    "target_job": "射频工程师",
+    "target_set_time": "2026-08-07 10:07:05",
+    "weekly_tasks": {
+      "week_1": {
+        "week_num": 1,
+        "generated_at": "2026-08-07 10:07:05",
+        "target_job": "射频工程师",
+        "tasks": [
+          {
+            "id": "task_1_basic_0",
+            "title": "认识信号与系统",
+            "detail": "了解什么是信号、系统的基本概念，阅读教材前3章",
+            "estimated_time": "45分钟",
+            "area": "信号与系统",
+            "area_id": "signal_system",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false,
+            "quiz_passed": false,
+            "quiz_score": 0,
+            "quiz_attempts": 1
+          },
+          {
+            "id": "task_1_basic_1",
+            "title": "通信原理入门",
+            "detail": "了解通信系统的基本组成：信源、信道、信宿",
+            "estimated_time": "40分钟",
+            "area": "通信原理",
+            "area_id": "communication_principle",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_2",
+            "title": "数字信号处理基础",
+            "detail": "了解采样定理的基本内容，尝试手动计算一个采样例子",
+            "estimated_time": "45分钟",
+            "area": "数字信号处理",
+            "area_id": "digital_signal",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_3",
+            "title": "网络协议概览",
+            "detail": "了解OSI七层模型和TCP/IP四层模型的对应关系",
+            "estimated_time": "30分钟",
+            "area": "网络协议",
+            "area_id": "network_protocol",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_4",
+            "title": "调制技术简介",
+            "detail": "了解ASK、FSK、PSK三种基本调制方式的区别",
+            "estimated_time": "35分钟",
+            "area": "调制技术",
+            "area_id": "modulation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_5",
+            "title": "射频工程基础",
+            "detail": "了解射频信号的基本特征：频率、波长、阻抗",
+            "estimated_time": "40分钟",
+            "area": "射频工程",
+            "area_id": "rf_engineering",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_6",
+            "title": "天线设计入门",
+            "detail": "了解天线的基本参数：增益、方向图、极化",
+            "estimated_time": "30分钟",
+            "area": "天线设计",
+            "area_id": "antenna_design",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_7",
+            "title": "故障排查思维",
+            "detail": "学习分层故障排查法：从物理层到应用层逐层排查",
+            "estimated_time": "35分钟",
+            "area": "故障排查",
+            "area_id": "troubleshooting",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_8",
+            "title": "常见仪器介绍",
+            "detail": "认识频谱仪、示波器、信号源的基本用途",
+            "estimated_time": "30分钟",
+            "area": "设备操作",
+            "area_id": "equipment_operation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_9",
+            "title": "通信安全意识",
+            "detail": "了解通信工程中的基本安全规范：防雷、接地、防静电",
+            "estimated_time": "25分钟",
+            "area": "安全意识",
+            "area_id": "safety_awareness",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_10",
+            "title": "创新思维训练",
+            "detail": "思考一个问题：5G相比4G有哪些创新？写出3点",
+            "estimated_time": "30分钟",
+            "area": "创新思维",
+            "area_id": "innovation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_11",
+            "title": "团队协作案例",
+            "detail": "了解一个真实的通信工程团队协作案例",
+            "estimated_time": "30分钟",
+            "area": "团队协作",
+            "area_id": "teamwork",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          }
+        ],
+        "total_tasks": 12,
+        "completed_tasks": 0,
+        "stage": "basic",
+        "analysis_summary": "",
+        "weak_areas": []
+      },
+      "week_2": {
+        "week_num": 2,
+        "generated_at": "2026-08-15 11:41:37",
+        "target_job": "射频工程师",
+        "tasks": [
+          {
+            "id": "task_2_basic_0",
+            "title": "傅里叶变换深入",
+            "detail": "理解傅里叶变换的时域频域对应关系，做5道计算题",
+            "estimated_time": "60分钟",
+            "area": "信号与系统",
+            "area_id": "signal_system",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_2_basic_1",
+            "title": "信道容量与香农定理",
+            "detail": "学习C=Blog2(1+SNR)公式，理解信噪比与信道容量的关系",
+            "estimated_time": "45分钟",
+            "area": "通信原理",
+            "area_id": "communication_principle",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_2_basic_2",
+            "title": "FFT算法实践",
+            "detail": "用Python实现一个简单的FFT，对比DFT的计算效率",
+            "estimated_time": "60分钟",
+            "area": "数字信号处理",
+            "area_id": "digital_signal",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_2_basic_3",
+            "title": "IP地址与路由",
+            "detail": "学习IP地址分类、子网划分、基本路由配置",
+            "estimated_time": "45分钟",
+            "area": "网络协议",
+            "area_id": "network_protocol",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_2_basic_4",
+            "title": "星座图分析",
+            "detail": "绘制QPSK和16QAM的星座图，理解调制阶数的意义",
+            "estimated_time": "40分钟",
+            "area": "调制技术",
+            "area_id": "modulation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_2_basic_5",
+            "title": "Smith圆图入门",
+            "detail": "认识Smith圆图的基本结构，学会读取阻抗点",
+            "estimated_time": "50分钟",
+            "area": "射频工程",
+            "area_id": "rf_engineering",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_2_basic_6",
+            "title": "天线方向图",
+            "detail": "阅读一个天线方向图，分析其主瓣、旁瓣特性",
+            "estimated_time": "35分钟",
+            "area": "天线设计",
+            "area_id": "antenna_design",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_2_basic_7",
+            "title": "基站告警分析",
+            "detail": "了解常见的基站告警类型及其处理方法",
+            "estimated_time": "40分钟",
+            "area": "故障排查",
+            "area_id": "troubleshooting",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_2_basic_8",
+            "title": "频谱仪使用",
+            "detail": "学习频谱仪的基本操作：中心频率、SPAN、RBW的设置",
+            "estimated_time": "45分钟",
+            "area": "设备操作",
+            "area_id": "equipment_operation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_2_basic_9",
+            "title": "高压安全规程",
+            "detail": "学习高压设备操作的安全距离和防护措施",
+            "estimated_time": "30分钟",
+            "area": "安全意识",
+            "area_id": "safety_awareness",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_2_basic_10",
+            "title": "6G前沿调研",
+            "detail": "查阅资料了解6G的关键技术方向，写一份简要报告",
+            "estimated_time": "60分钟",
+            "area": "创新思维",
+            "area_id": "innovation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_2_basic_11",
+            "title": "模拟团队项目",
+            "detail": "假设你在一个5G建设团队中，列出你的角色和职责",
+            "estimated_time": "40分钟",
+            "area": "团队协作",
+            "area_id": "teamwork",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          }
+        ],
+        "total_tasks": 12,
+        "completed_tasks": 0,
+        "stage": "basic",
+        "analysis_summary": "",
+        "weak_areas": []
+      }
+    },
+    "quiz_attempts": {
+      "task_1_basic_0": {
+        "attempt_count": 1,
+        "passed": false,
+        "best_score": 0,
+        "last_score": 0
+      }
+    }
+  },
+  {
+    "id": "18",
+    "student_no": "2024010100004",
+    "name": "Test User 4",
+    "class_name": "",
+    "created_at": "2026-08-07 10:07:23",
+    "last_login": "2026-08-07 10:07:23",
+    "competence_analysis": {
+      "signal_system": {
+        "count": 1,
+        "score": 0.8,
+        "last_quiz_score": 100,
+        "quiz_attempts": 1,
+        "ai_conversations": 0
+      },
+      "communication_principle": {
+        "count": 0,
+        "score": 0.0
+      },
+      "digital_signal": {
+        "count": 0,
+        "score": 0.0
+      },
+      "network_protocol": {
+        "count": 0,
+        "score": 0.0
+      },
+      "modulation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "rf_engineering": {
+        "count": 0,
+        "score": 0.0
+      },
+      "antenna_design": {
+        "count": 0,
+        "score": 0.0
+      },
+      "troubleshooting": {
+        "count": 0,
+        "score": 0.0
+      },
+      "equipment_operation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "safety_awareness": {
+        "count": 0,
+        "score": 0.0
+      },
+      "innovation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "teamwork": {
+        "count": 0,
+        "score": 0.0
+      }
+    },
+    "conversation_history": [],
+    "target_job": "通信工程师",
+    "target_set_time": "2026-08-07 10:07:23",
+    "weekly_tasks": {
+      "week_1": {
+        "week_num": 1,
+        "generated_at": "2026-08-07 10:07:23",
+        "target_job": "通信工程师",
+        "tasks": [
+          {
+            "id": "task_1_basic_0",
+            "title": "认识信号与系统",
+            "detail": "了解什么是信号、系统的基本概念，阅读教材前3章",
+            "estimated_time": "45分钟",
+            "area": "信号与系统",
+            "area_id": "signal_system",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": true,
+            "quiz_passed": true,
+            "quiz_score": 100,
+            "quiz_attempts": 1
+          },
+          {
+            "id": "task_1_basic_1",
+            "title": "通信原理入门",
+            "detail": "了解通信系统的基本组成：信源、信道、信宿",
+            "estimated_time": "40分钟",
+            "area": "通信原理",
+            "area_id": "communication_principle",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_2",
+            "title": "数字信号处理基础",
+            "detail": "了解采样定理的基本内容，尝试手动计算一个采样例子",
+            "estimated_time": "45分钟",
+            "area": "数字信号处理",
+            "area_id": "digital_signal",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_3",
+            "title": "网络协议概览",
+            "detail": "了解OSI七层模型和TCP/IP四层模型的对应关系",
+            "estimated_time": "30分钟",
+            "area": "网络协议",
+            "area_id": "network_protocol",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_4",
+            "title": "调制技术简介",
+            "detail": "了解ASK、FSK、PSK三种基本调制方式的区别",
+            "estimated_time": "35分钟",
+            "area": "调制技术",
+            "area_id": "modulation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_5",
+            "title": "射频工程基础",
+            "detail": "了解射频信号的基本特征：频率、波长、阻抗",
+            "estimated_time": "40分钟",
+            "area": "射频工程",
+            "area_id": "rf_engineering",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_6",
+            "title": "天线设计入门",
+            "detail": "了解天线的基本参数：增益、方向图、极化",
+            "estimated_time": "30分钟",
+            "area": "天线设计",
+            "area_id": "antenna_design",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_7",
+            "title": "故障排查思维",
+            "detail": "学习分层故障排查法：从物理层到应用层逐层排查",
+            "estimated_time": "35分钟",
+            "area": "故障排查",
+            "area_id": "troubleshooting",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_8",
+            "title": "常见仪器介绍",
+            "detail": "认识频谱仪、示波器、信号源的基本用途",
+            "estimated_time": "30分钟",
+            "area": "设备操作",
+            "area_id": "equipment_operation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_9",
+            "title": "通信安全意识",
+            "detail": "了解通信工程中的基本安全规范：防雷、接地、防静电",
+            "estimated_time": "25分钟",
+            "area": "安全意识",
+            "area_id": "safety_awareness",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_10",
+            "title": "创新思维训练",
+            "detail": "思考一个问题：5G相比4G有哪些创新？写出3点",
+            "estimated_time": "30分钟",
+            "area": "创新思维",
+            "area_id": "innovation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_11",
+            "title": "团队协作案例",
+            "detail": "了解一个真实的通信工程团队协作案例",
+            "estimated_time": "30分钟",
+            "area": "团队协作",
+            "area_id": "teamwork",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          }
+        ],
+        "total_tasks": 12,
+        "completed_tasks": 1,
+        "stage": "basic",
+        "analysis_summary": "",
+        "weak_areas": []
+      }
+    },
+    "quiz_attempts": {
+      "task_1_basic_0": {
+        "attempt_count": 1,
+        "passed": true,
+        "best_score": 100,
+        "last_score": 100,
+        "passed_at": "2026-08-07 10:07:23"
+      }
+    }
+  },
+  {
+    "id": "19",
+    "student_no": "1231231313131",
+    "name": "1112",
+    "class_name": "2",
+    "created_at": "2026-08-07 10:12:31",
+    "last_login": "2026-08-07 10:12:31",
+    "competence_analysis": {
+      "signal_system": {
+        "count": 2,
+        "score": 0.725,
+        "last_quiz_score": 80,
+        "quiz_attempts": 2,
+        "ai_conversations": 0
+      },
+      "communication_principle": {
+        "count": 0,
+        "score": 0.0
+      },
+      "digital_signal": {
+        "count": 0,
+        "score": 0.0
+      },
+      "network_protocol": {
+        "count": 0,
+        "score": 0.0
+      },
+      "modulation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "rf_engineering": {
+        "count": 0,
+        "score": 0.0
+      },
+      "antenna_design": {
+        "count": 0,
+        "score": 0.0
+      },
+      "troubleshooting": {
+        "count": 0,
+        "score": 0.0
+      },
+      "equipment_operation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "safety_awareness": {
+        "count": 0,
+        "score": 0.0
+      },
+      "innovation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "teamwork": {
+        "count": 0,
+        "score": 0.0
+      }
+    },
+    "conversation_history": [],
+    "survey_completed": true,
+    "survey_answers": {
+      "q1": "rf",
+      "q2": "maintenance",
+      "q3": [
+        "embedded"
+      ],
+      "q4": "mix",
+      "q5": "entrepreneur"
+    },
+    "survey_result": [
+      {
+        "job_name": "通信工程师",
+        "score": 7,
+        "icon": "🔧",
+        "description": "负责通信网络设备的安装、调试、运维与故障排查",
+        "salary_range": "8K-25K",
+        "match_level": "中"
+      },
+      {
+        "job_name": "射频工程师",
+        "score": 5,
+        "icon": "📡",
+        "description": "负责射频电路设计、天线开发与电磁仿真",
+        "salary_range": "12K-35K",
+        "match_level": "中"
+      },
+      {
+        "job_name": "网络优化工程师",
+        "score": 3,
+        "icon": "🌐",
+        "description": "负责无线网络规划、优化与性能分析，提升网络质量",
+        "salary_range": "10K-30K",
+        "match_level": "低"
+      },
+      {
+        "job_name": "研发工程师",
+        "score": 3,
+        "icon": "🔬",
+        "description": "负责通信系统算法研发、仿真验证与新产品开发",
+        "salary_range": "15K-40K",
+        "match_level": "低"
+      }
+    ],
+    "target_job": "通信工程师",
+    "target_set_time": "2026-08-07 10:12:44",
+    "weekly_tasks": {
+      "week_1": {
+        "week_num": 1,
+        "generated_at": "2026-08-07 10:12:45",
+        "target_job": "通信工程师",
+        "tasks": [
+          {
+            "id": "task_1_basic_0",
+            "title": "认识信号与系统",
+            "detail": "了解什么是信号、系统的基本概念，阅读教材前3章",
+            "estimated_time": "45分钟",
+            "area": "信号与系统",
+            "area_id": "signal_system",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false,
+            "quiz_passed": true,
+            "quiz_score": 80,
+            "quiz_attempts": 2
+          },
+          {
+            "id": "task_1_basic_1",
+            "title": "通信原理入门",
+            "detail": "了解通信系统的基本组成：信源、信道、信宿",
+            "estimated_time": "40分钟",
+            "area": "通信原理",
+            "area_id": "communication_principle",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_2",
+            "title": "数字信号处理基础",
+            "detail": "了解采样定理的基本内容，尝试手动计算一个采样例子",
+            "estimated_time": "45分钟",
+            "area": "数字信号处理",
+            "area_id": "digital_signal",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_3",
+            "title": "网络协议概览",
+            "detail": "了解OSI七层模型和TCP/IP四层模型的对应关系",
+            "estimated_time": "30分钟",
+            "area": "网络协议",
+            "area_id": "network_protocol",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_4",
+            "title": "调制技术简介",
+            "detail": "了解ASK、FSK、PSK三种基本调制方式的区别",
+            "estimated_time": "35分钟",
+            "area": "调制技术",
+            "area_id": "modulation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_5",
+            "title": "射频工程基础",
+            "detail": "了解射频信号的基本特征：频率、波长、阻抗",
+            "estimated_time": "40分钟",
+            "area": "射频工程",
+            "area_id": "rf_engineering",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_6",
+            "title": "天线设计入门",
+            "detail": "了解天线的基本参数：增益、方向图、极化",
+            "estimated_time": "30分钟",
+            "area": "天线设计",
+            "area_id": "antenna_design",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_7",
+            "title": "故障排查思维",
+            "detail": "学习分层故障排查法：从物理层到应用层逐层排查",
+            "estimated_time": "35分钟",
+            "area": "故障排查",
+            "area_id": "troubleshooting",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_8",
+            "title": "常见仪器介绍",
+            "detail": "认识频谱仪、示波器、信号源的基本用途",
+            "estimated_time": "30分钟",
+            "area": "设备操作",
+            "area_id": "equipment_operation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_9",
+            "title": "通信安全意识",
+            "detail": "了解通信工程中的基本安全规范：防雷、接地、防静电",
+            "estimated_time": "25分钟",
+            "area": "安全意识",
+            "area_id": "safety_awareness",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_10",
+            "title": "创新思维训练",
+            "detail": "思考一个问题：5G相比4G有哪些创新？写出3点",
+            "estimated_time": "30分钟",
+            "area": "创新思维",
+            "area_id": "innovation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_11",
+            "title": "团队协作案例",
+            "detail": "了解一个真实的通信工程团队协作案例",
+            "estimated_time": "30分钟",
+            "area": "团队协作",
+            "area_id": "teamwork",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          }
+        ],
+        "total_tasks": 12,
+        "completed_tasks": 0,
+        "stage": "basic",
+        "analysis_summary": "",
+        "weak_areas": []
+      }
+    },
+    "quiz_attempts": {
+      "task_1_basic_0": {
+        "attempt_count": 2,
+        "passed": true,
+        "best_score": 80,
+        "last_score": 80,
+        "passed_at": "2026-08-07 10:13:22"
+      }
+    }
+  },
+  {
+    "id": "20",
+    "student_no": "2024010100005",
+    "name": "Fault Test User",
+    "class_name": "",
+    "created_at": "2026-08-14 21:41:44",
+    "last_login": "2026-08-14 21:41:44",
+    "competence_analysis": {
+      "signal_system": {
+        "count": 2,
+        "score": 0.915,
+        "last_quiz_score": 100,
+        "last_final_score": 98,
+        "last_safety_score": 90,
+        "quiz_attempts": 2,
+        "ai_conversations": 0,
+        "fault_scenario": "信号衰减异常"
+      },
+      "communication_principle": {
+        "count": 0,
+        "score": 0.0
+      },
+      "digital_signal": {
+        "count": 0,
+        "score": 0.0
+      },
+      "network_protocol": {
+        "count": 0,
+        "score": 0.0
+      },
+      "modulation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "rf_engineering": {
+        "count": 0,
+        "score": 0.0
+      },
+      "antenna_design": {
+        "count": 0,
+        "score": 0.0
+      },
+      "troubleshooting": {
+        "count": 0,
+        "score": 0.0
+      },
+      "equipment_operation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "safety_awareness": {
+        "count": 0,
+        "score": 0.0
+      },
+      "innovation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "teamwork": {
+        "count": 0,
+        "score": 0.0
+      }
+    },
+    "conversation_history": [],
+    "target_job": "射频工程师",
+    "target_set_time": "2026-08-14 21:41:44",
+    "weekly_tasks": {
+      "week_1": {
+        "week_num": 1,
+        "generated_at": "2026-08-14 21:41:44",
+        "target_job": "射频工程师",
+        "tasks": [
+          {
+            "id": "task_1_basic_0",
+            "title": "认识信号与系统",
+            "detail": "了解什么是信号、系统的基本概念，阅读教材前3章",
+            "estimated_time": "45分钟",
+            "area": "信号与系统",
+            "area_id": "signal_system",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false,
+            "quiz_passed": true,
+            "quiz_score": 98,
+            "quiz_raw_score": 100,
+            "quiz_safety_score": 90,
+            "quiz_attempts": 2,
+            "fault_scenario_id": "sig_fault_2",
+            "fault_scenario_name": "信号衰减异常"
+          },
+          {
+            "id": "task_1_basic_1",
+            "title": "通信原理入门",
+            "detail": "了解通信系统的基本组成：信源、信道、信宿",
+            "estimated_time": "40分钟",
+            "area": "通信原理",
+            "area_id": "communication_principle",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_2",
+            "title": "数字信号处理基础",
+            "detail": "了解采样定理的基本内容，尝试手动计算一个采样例子",
+            "estimated_time": "45分钟",
+            "area": "数字信号处理",
+            "area_id": "digital_signal",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_3",
+            "title": "网络协议概览",
+            "detail": "了解OSI七层模型和TCP/IP四层模型的对应关系",
+            "estimated_time": "30分钟",
+            "area": "网络协议",
+            "area_id": "network_protocol",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_4",
+            "title": "调制技术简介",
+            "detail": "了解ASK、FSK、PSK三种基本调制方式的区别",
+            "estimated_time": "35分钟",
+            "area": "调制技术",
+            "area_id": "modulation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_5",
+            "title": "射频工程基础",
+            "detail": "了解射频信号的基本特征：频率、波长、阻抗",
+            "estimated_time": "40分钟",
+            "area": "射频工程",
+            "area_id": "rf_engineering",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_6",
+            "title": "天线设计入门",
+            "detail": "了解天线的基本参数：增益、方向图、极化",
+            "estimated_time": "30分钟",
+            "area": "天线设计",
+            "area_id": "antenna_design",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_7",
+            "title": "故障排查思维",
+            "detail": "学习分层故障排查法：从物理层到应用层逐层排查",
+            "estimated_time": "35分钟",
+            "area": "故障排查",
+            "area_id": "troubleshooting",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_8",
+            "title": "常见仪器介绍",
+            "detail": "认识频谱仪、示波器、信号源的基本用途",
+            "estimated_time": "30分钟",
+            "area": "设备操作",
+            "area_id": "equipment_operation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_9",
+            "title": "通信安全意识",
+            "detail": "了解通信工程中的基本安全规范：防雷、接地、防静电",
+            "estimated_time": "25分钟",
+            "area": "安全意识",
+            "area_id": "safety_awareness",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_10",
+            "title": "创新思维训练",
+            "detail": "思考一个问题：5G相比4G有哪些创新？写出3点",
+            "estimated_time": "30分钟",
+            "area": "创新思维",
+            "area_id": "innovation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_11",
+            "title": "团队协作案例",
+            "detail": "了解一个真实的通信工程团队协作案例",
+            "estimated_time": "30分钟",
+            "area": "团队协作",
+            "area_id": "teamwork",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          }
+        ],
+        "total_tasks": 12,
+        "completed_tasks": 0,
+        "stage": "basic",
+        "analysis_summary": "",
+        "weak_areas": []
+      }
+    },
+    "quiz_attempts": {
+      "task_1_basic_0": {
+        "attempt_count": 2,
+        "passed": true,
+        "best_score": 100,
+        "last_score": 100,
+        "final_score": 98,
+        "safety_score": 90,
+        "fault_scenario_id": "sig_fault_2",
+        "fault_scenario_name": "信号衰减异常",
+        "passed_at": "2026-08-14 21:41:44"
+      }
+    }
+  },
+  {
+    "id": "21",
+    "student_no": "2024010100006",
+    "name": "Full Test User",
+    "class_name": "",
+    "created_at": "2026-08-14 22:02:46",
+    "last_login": "2026-08-14 22:02:46",
+    "competence_analysis": {
+      "signal_system": {
+        "count": 1,
+        "score": 1.0,
+        "last_quiz_score": 100,
+        "last_final_score": 100,
+        "last_safety_score": 100,
+        "quiz_attempts": 1,
+        "ai_conversations": 0,
+        "fault_scenario": "信号失真故障"
+      },
+      "communication_principle": {
+        "count": 0,
+        "score": 0.0
+      },
+      "digital_signal": {
+        "count": 0,
+        "score": 0.0
+      },
+      "network_protocol": {
+        "count": 0,
+        "score": 0.0
+      },
+      "modulation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "rf_engineering": {
+        "count": 0,
+        "score": 0.0
+      },
+      "antenna_design": {
+        "count": 0,
+        "score": 0.0
+      },
+      "troubleshooting": {
+        "count": 0,
+        "score": 0.0
+      },
+      "equipment_operation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "safety_awareness": {
+        "count": 0,
+        "score": 0.0
+      },
+      "innovation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "teamwork": {
+        "count": 0,
+        "score": 0.0
+      }
+    },
+    "conversation_history": [],
+    "target_job": "通信工程师",
+    "target_set_time": "2026-08-14 22:02:46",
+    "weekly_tasks": {
+      "week_1": {
+        "week_num": 1,
+        "generated_at": "2026-08-14 22:02:46",
+        "target_job": "通信工程师",
+        "tasks": [
+          {
+            "id": "task_1_basic_0",
+            "title": "认识信号与系统",
+            "detail": "了解什么是信号、系统的基本概念，阅读教材前3章",
+            "estimated_time": "45分钟",
+            "area": "信号与系统",
+            "area_id": "signal_system",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": true,
+            "quiz_passed": true,
+            "quiz_score": 100,
+            "quiz_raw_score": 100,
+            "quiz_safety_score": 100,
+            "quiz_attempts": 1,
+            "fault_scenario_id": "sig_fault_1",
+            "fault_scenario_name": "信号失真故障"
+          },
+          {
+            "id": "task_1_basic_1",
+            "title": "通信原理入门",
+            "detail": "了解通信系统的基本组成：信源、信道、信宿",
+            "estimated_time": "40分钟",
+            "area": "通信原理",
+            "area_id": "communication_principle",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_2",
+            "title": "数字信号处理基础",
+            "detail": "了解采样定理的基本内容，尝试手动计算一个采样例子",
+            "estimated_time": "45分钟",
+            "area": "数字信号处理",
+            "area_id": "digital_signal",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_3",
+            "title": "网络协议概览",
+            "detail": "了解OSI七层模型和TCP/IP四层模型的对应关系",
+            "estimated_time": "30分钟",
+            "area": "网络协议",
+            "area_id": "network_protocol",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_4",
+            "title": "调制技术简介",
+            "detail": "了解ASK、FSK、PSK三种基本调制方式的区别",
+            "estimated_time": "35分钟",
+            "area": "调制技术",
+            "area_id": "modulation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_5",
+            "title": "射频工程基础",
+            "detail": "了解射频信号的基本特征：频率、波长、阻抗",
+            "estimated_time": "40分钟",
+            "area": "射频工程",
+            "area_id": "rf_engineering",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_6",
+            "title": "天线设计入门",
+            "detail": "了解天线的基本参数：增益、方向图、极化",
+            "estimated_time": "30分钟",
+            "area": "天线设计",
+            "area_id": "antenna_design",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_7",
+            "title": "故障排查思维",
+            "detail": "学习分层故障排查法：从物理层到应用层逐层排查",
+            "estimated_time": "35分钟",
+            "area": "故障排查",
+            "area_id": "troubleshooting",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_8",
+            "title": "常见仪器介绍",
+            "detail": "认识频谱仪、示波器、信号源的基本用途",
+            "estimated_time": "30分钟",
+            "area": "设备操作",
+            "area_id": "equipment_operation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_9",
+            "title": "通信安全意识",
+            "detail": "了解通信工程中的基本安全规范：防雷、接地、防静电",
+            "estimated_time": "25分钟",
+            "area": "安全意识",
+            "area_id": "safety_awareness",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_10",
+            "title": "创新思维训练",
+            "detail": "思考一个问题：5G相比4G有哪些创新？写出3点",
+            "estimated_time": "30分钟",
+            "area": "创新思维",
+            "area_id": "innovation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_11",
+            "title": "团队协作案例",
+            "detail": "了解一个真实的通信工程团队协作案例",
+            "estimated_time": "30分钟",
+            "area": "团队协作",
+            "area_id": "teamwork",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          }
+        ],
+        "total_tasks": 12,
+        "completed_tasks": 1,
+        "stage": "basic",
+        "analysis_summary": "",
+        "weak_areas": []
+      }
+    },
+    "quiz_attempts": {
+      "task_1_basic_0": {
+        "attempt_count": 1,
+        "passed": true,
+        "best_score": 100,
+        "last_score": 100,
+        "final_score": 100,
+        "safety_score": 100,
+        "fault_scenario_id": "sig_fault_1",
+        "fault_scenario_name": "信号失真故障",
+        "passed_at": "2026-08-14 22:23:21"
+      }
+    },
+    "task_reports": {
+      "task_1_basic_0": {
+        "success": true,
+        "task_id": "task_1_basic_0",
+        "task_title": "认识信号与系统",
+        "area_name": "信号与系统",
+        "area_id": "signal_system",
+        "student_name": "Full Test User",
+        "generated_at": "2026-08-14 22:23:21",
+        "fault_scenario": {
+          "name": "信号失真故障",
+          "description": "您负责的基站接收到的信号波形出现明显失真，频谱分析显示谐波分量异常。",
+          "level": "warning"
+        },
+        "operation_log": [
+          {
+            "time": "2026-08-14 22:23:21",
+            "action": "前置自检",
+            "result": "通过",
+            "detail": "故障场景：信号失真故障"
+          },
+          {
+            "time": "2026-08-14 22:23:21",
+            "action": "测验答题",
+            "result": "得分 100分",
+            "detail": "尝试次数：1"
+          },
+          {
+            "time": "2026-08-14 22:23:21",
+            "action": "任务完成",
+            "result": "完成",
+            "detail": "综合评分：100"
+          }
+        ],
+        "root_cause_analysis": "故障「信号失真故障」的根因分析：您负责的基站接收到的信号波形出现明显失真，频谱分析显示谐波分量异常。 根因可能是馈线接头密封不良导致进水，或射频模块老化导致增益下降。建议检查防水胶带和馈线VSWR指标。",
+        "capability_assessment": {
+          "proficiency": "精通",
+          "competence_score": 1.0,
+          "quiz_attempts": 1,
+          "best_score": 100,
+          "final_score": 100,
+          "safety_score": 100,
+          "safety_assessment": "操作规范，安全意识良好",
+          "ai_conversations": 0
+        },
+        "recommendation": "建议复习《信号与系统》教材的前4章，重点掌握傅里叶变换、卷积和系统响应。可以使用MATLAB进行仿真练习。"
+      }
+    },
+    "task_evaluations": {
+      "task_1_basic_0": {
+        "success": true,
+        "mode": "review",
+        "task_title": "认识信号与系统",
+        "area_name": "信号与系统",
+        "fault_scenario": {
+          "name": "信号失真故障",
+          "description": "您负责的基站接收到的信号波形出现明显失真，频谱分析显示谐波分量异常。",
+          "level": "warning"
+        },
+        "timeline": [
+          {
+            "phase": "故障注入",
+            "event": "系统注入故障「信号失真故障」",
+            "detail": "您负责的基站接收到的信号波形出现明显失真，频谱分析显示谐波分量异常。"
+          },
+          {
+            "phase": "前置自检",
+            "event": "安全操作规范确认",
+            "detail": "安全评分：100/100"
+          },
+          {
+            "phase": "知识测验",
+            "event": "答题得分：100/100",
+            "detail": "尝试 1 次"
+          }
+        ],
+        "root_cause": "您负责的基站接收到的信号波形出现明显失真，频谱分析显示谐波分量异常。",
+        "lessons_learned": [
+          "表现优异，一次通过且安全操作规范完整"
+        ],
+        "improvement_actions": [
+          "定期复习「信号与系统」领域知识，保持技能熟练度"
+        ],
+        "stress_test_questions": [
+          "如果「信号失真故障」在凌晨3点复发，且备件用完，你会如何应急处理？",
+          "在处理该故障时，如果同时出现另一个紧急告警，你如何排优先级？",
+          "请详细解释该故障的根因机理，以及为什么你的修复方案是有效的？"
+        ]
+      }
+    }
+  },
+  {
+    "id": "22",
+    "student_no": "2024010100008",
+    "name": "Full Test User 8",
+    "class_name": "",
+    "created_at": "2026-08-15 09:08:39",
+    "last_login": "2026-08-15 09:08:39",
+    "competence_analysis": {
+      "signal_system": {
+        "count": 1,
+        "score": 1.0,
+        "last_quiz_score": 100,
+        "last_final_score": 100,
+        "last_safety_score": 100,
+        "quiz_attempts": 1,
+        "ai_conversations": 0,
+        "fault_scenario": "信号失真故障"
+      },
+      "communication_principle": {
+        "count": 0,
+        "score": 0.0
+      },
+      "digital_signal": {
+        "count": 0,
+        "score": 0.0
+      },
+      "network_protocol": {
+        "count": 0,
+        "score": 0.0
+      },
+      "modulation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "rf_engineering": {
+        "count": 0,
+        "score": 0.0
+      },
+      "antenna_design": {
+        "count": 0,
+        "score": 0.0
+      },
+      "troubleshooting": {
+        "count": 0,
+        "score": 0.0
+      },
+      "equipment_operation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "safety_awareness": {
+        "count": 0,
+        "score": 0.0
+      },
+      "innovation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "teamwork": {
+        "count": 0,
+        "score": 0.0
+      }
+    },
+    "conversation_history": [],
+    "target_job": "通信工程师",
+    "target_set_time": "2026-08-15 09:08:39",
+    "weekly_tasks": {
+      "week_1": {
+        "week_num": 1,
+        "generated_at": "2026-08-15 09:08:39",
+        "target_job": "通信工程师",
+        "tasks": [
+          {
+            "id": "task_1_basic_0",
+            "title": "认识信号与系统",
+            "detail": "了解什么是信号、系统的基本概念，阅读教材前3章",
+            "estimated_time": "45分钟",
+            "area": "信号与系统",
+            "area_id": "signal_system",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": true,
+            "quiz_passed": true,
+            "quiz_score": 100,
+            "quiz_raw_score": 100,
+            "quiz_safety_score": 100,
+            "quiz_attempts": 1,
+            "fault_scenario_id": "sig_fault_1",
+            "fault_scenario_name": "信号失真故障"
+          },
+          {
+            "id": "task_1_basic_1",
+            "title": "通信原理入门",
+            "detail": "了解通信系统的基本组成：信源、信道、信宿",
+            "estimated_time": "40分钟",
+            "area": "通信原理",
+            "area_id": "communication_principle",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_2",
+            "title": "数字信号处理基础",
+            "detail": "了解采样定理的基本内容，尝试手动计算一个采样例子",
+            "estimated_time": "45分钟",
+            "area": "数字信号处理",
+            "area_id": "digital_signal",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_3",
+            "title": "网络协议概览",
+            "detail": "了解OSI七层模型和TCP/IP四层模型的对应关系",
+            "estimated_time": "30分钟",
+            "area": "网络协议",
+            "area_id": "network_protocol",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_4",
+            "title": "调制技术简介",
+            "detail": "了解ASK、FSK、PSK三种基本调制方式的区别",
+            "estimated_time": "35分钟",
+            "area": "调制技术",
+            "area_id": "modulation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_5",
+            "title": "射频工程基础",
+            "detail": "了解射频信号的基本特征：频率、波长、阻抗",
+            "estimated_time": "40分钟",
+            "area": "射频工程",
+            "area_id": "rf_engineering",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_6",
+            "title": "天线设计入门",
+            "detail": "了解天线的基本参数：增益、方向图、极化",
+            "estimated_time": "30分钟",
+            "area": "天线设计",
+            "area_id": "antenna_design",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_7",
+            "title": "故障排查思维",
+            "detail": "学习分层故障排查法：从物理层到应用层逐层排查",
+            "estimated_time": "35分钟",
+            "area": "故障排查",
+            "area_id": "troubleshooting",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_8",
+            "title": "常见仪器介绍",
+            "detail": "认识频谱仪、示波器、信号源的基本用途",
+            "estimated_time": "30分钟",
+            "area": "设备操作",
+            "area_id": "equipment_operation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_9",
+            "title": "通信安全意识",
+            "detail": "了解通信工程中的基本安全规范：防雷、接地、防静电",
+            "estimated_time": "25分钟",
+            "area": "安全意识",
+            "area_id": "safety_awareness",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_10",
+            "title": "创新思维训练",
+            "detail": "思考一个问题：5G相比4G有哪些创新？写出3点",
+            "estimated_time": "30分钟",
+            "area": "创新思维",
+            "area_id": "innovation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_11",
+            "title": "团队协作案例",
+            "detail": "了解一个真实的通信工程团队协作案例",
+            "estimated_time": "30分钟",
+            "area": "团队协作",
+            "area_id": "teamwork",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          }
+        ],
+        "total_tasks": 12,
+        "completed_tasks": 1,
+        "stage": "basic",
+        "analysis_summary": "",
+        "weak_areas": []
+      }
+    },
+    "quiz_attempts": {
+      "task_1_basic_0": {
+        "attempt_count": 1,
+        "passed": true,
+        "best_score": 100,
+        "last_score": 100,
+        "final_score": 100,
+        "safety_score": 100,
+        "fault_scenario_id": "sig_fault_1",
+        "fault_scenario_name": "信号失真故障",
+        "passed_at": "2026-08-15 09:09:09"
+      }
+    },
+    "task_reports": {
+      "task_1_basic_0": {
+        "success": true,
+        "task_id": "task_1_basic_0",
+        "task_title": "认识信号与系统",
+        "area_name": "信号与系统",
+        "area_id": "signal_system",
+        "student_name": "Full Test User 8",
+        "generated_at": "2026-08-15 09:09:09",
+        "fault_scenario": {
+          "name": "信号失真故障",
+          "description": "您负责的基站接收到的信号波形出现明显失真，频谱分析显示谐波分量异常。",
+          "level": "warning"
+        },
+        "operation_log": [
+          {
+            "time": "2026-08-15 09:09:09",
+            "action": "前置自检",
+            "result": "通过",
+            "detail": "故障场景：信号失真故障"
+          },
+          {
+            "time": "2026-08-15 09:09:09",
+            "action": "测验答题",
+            "result": "得分 100分",
+            "detail": "尝试次数：1"
+          },
+          {
+            "time": "2026-08-15 09:09:09",
+            "action": "任务完成",
+            "result": "完成",
+            "detail": "综合评分：100"
+          }
+        ],
+        "root_cause_analysis": "故障「信号失真故障」的根因分析：您负责的基站接收到的信号波形出现明显失真，频谱分析显示谐波分量异常。 根因可能是馈线接头密封不良导致进水，或射频模块老化导致增益下降。建议检查防水胶带和馈线VSWR指标。",
+        "capability_assessment": {
+          "proficiency": "精通",
+          "competence_score": 1.0,
+          "quiz_attempts": 1,
+          "best_score": 100,
+          "final_score": 100,
+          "safety_score": 100,
+          "safety_assessment": "操作规范，安全意识良好",
+          "ai_conversations": 0
+        },
+        "recommendation": "建议复习《信号与系统》教材的前4章，重点掌握傅里叶变换、卷积和系统响应。可以使用MATLAB进行仿真练习。"
+      }
+    },
+    "task_evaluations": {
+      "task_1_basic_0": {
+        "success": true,
+        "mode": "review",
+        "task_title": "认识信号与系统",
+        "area_name": "信号与系统",
+        "fault_scenario": {
+          "name": "信号失真故障",
+          "description": "您负责的基站接收到的信号波形出现明显失真，频谱分析显示谐波分量异常。",
+          "level": "warning"
+        },
+        "timeline": [
+          {
+            "phase": "故障注入",
+            "event": "系统注入故障「信号失真故障」",
+            "detail": "您负责的基站接收到的信号波形出现明显失真，频谱分析显示谐波分量异常。"
+          },
+          {
+            "phase": "前置自检",
+            "event": "安全操作规范确认",
+            "detail": "安全评分：100/100"
+          },
+          {
+            "phase": "知识测验",
+            "event": "答题得分：100/100",
+            "detail": "尝试 1 次"
+          }
+        ],
+        "root_cause": "您负责的基站接收到的信号波形出现明显失真，频谱分析显示谐波分量异常。",
+        "lessons_learned": [
+          "表现优异，一次通过且安全操作规范完整"
+        ],
+        "improvement_actions": [
+          "定期复习「信号与系统」领域知识，保持技能熟练度"
+        ],
+        "stress_test_questions": [
+          "如果「信号失真故障」在凌晨3点复发，且备件用完，你会如何应急处理？",
+          "在处理该故障时，如果同时出现另一个紧急告警，你如何排优先级？",
+          "请详细解释该故障的根因机理，以及为什么你的修复方案是有效的？"
+        ]
+      }
+    }
+  },
+  {
+    "id": "23",
+    "student_no": "2024010100010",
+    "name": "Lock Test User 2",
+    "class_name": "",
+    "created_at": "2026-08-15 09:10:36",
+    "last_login": "2026-08-15 09:10:36",
+    "competence_analysis": {
+      "signal_system": {
+        "count": 0,
+        "score": 0.0
+      },
+      "communication_principle": {
+        "count": 0,
+        "score": 0.0
+      },
+      "digital_signal": {
+        "count": 0,
+        "score": 0.0
+      },
+      "network_protocol": {
+        "count": 0,
+        "score": 0.0
+      },
+      "modulation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "rf_engineering": {
+        "count": 0,
+        "score": 0.0
+      },
+      "antenna_design": {
+        "count": 0,
+        "score": 0.0
+      },
+      "troubleshooting": {
+        "count": 0,
+        "score": 0.0
+      },
+      "equipment_operation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "safety_awareness": {
+        "count": 0,
+        "score": 0.0
+      },
+      "innovation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "teamwork": {
+        "count": 0,
+        "score": 0.0
+      }
+    },
+    "conversation_history": [],
+    "target_job": "网络工程师",
+    "target_set_time": "2026-08-15 09:10:36",
+    "weekly_tasks": {
+      "week_1": {
+        "week_num": 1,
+        "generated_at": "2026-08-15 09:10:36",
+        "target_job": "网络工程师",
+        "tasks": [
+          {
+            "id": "task_1_basic_0",
+            "title": "认识信号与系统",
+            "detail": "了解什么是信号、系统的基本概念，阅读教材前3章",
+            "estimated_time": "45分钟",
+            "area": "信号与系统",
+            "area_id": "signal_system",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false,
+            "quiz_passed": false,
+            "quiz_score": 20,
+            "quiz_raw_score": 0,
+            "quiz_safety_score": 100,
+            "quiz_attempts": 3,
+            "fault_scenario_id": "sig_fault_1",
+            "fault_scenario_name": "信号失真故障"
+          },
+          {
+            "id": "task_1_basic_1",
+            "title": "通信原理入门",
+            "detail": "了解通信系统的基本组成：信源、信道、信宿",
+            "estimated_time": "40分钟",
+            "area": "通信原理",
+            "area_id": "communication_principle",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_2",
+            "title": "数字信号处理基础",
+            "detail": "了解采样定理的基本内容，尝试手动计算一个采样例子",
+            "estimated_time": "45分钟",
+            "area": "数字信号处理",
+            "area_id": "digital_signal",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_3",
+            "title": "网络协议概览",
+            "detail": "了解OSI七层模型和TCP/IP四层模型的对应关系",
+            "estimated_time": "30分钟",
+            "area": "网络协议",
+            "area_id": "network_protocol",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_4",
+            "title": "调制技术简介",
+            "detail": "了解ASK、FSK、PSK三种基本调制方式的区别",
+            "estimated_time": "35分钟",
+            "area": "调制技术",
+            "area_id": "modulation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_5",
+            "title": "射频工程基础",
+            "detail": "了解射频信号的基本特征：频率、波长、阻抗",
+            "estimated_time": "40分钟",
+            "area": "射频工程",
+            "area_id": "rf_engineering",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_6",
+            "title": "天线设计入门",
+            "detail": "了解天线的基本参数：增益、方向图、极化",
+            "estimated_time": "30分钟",
+            "area": "天线设计",
+            "area_id": "antenna_design",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_7",
+            "title": "故障排查思维",
+            "detail": "学习分层故障排查法：从物理层到应用层逐层排查",
+            "estimated_time": "35分钟",
+            "area": "故障排查",
+            "area_id": "troubleshooting",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_8",
+            "title": "常见仪器介绍",
+            "detail": "认识频谱仪、示波器、信号源的基本用途",
+            "estimated_time": "30分钟",
+            "area": "设备操作",
+            "area_id": "equipment_operation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_9",
+            "title": "通信安全意识",
+            "detail": "了解通信工程中的基本安全规范：防雷、接地、防静电",
+            "estimated_time": "25分钟",
+            "area": "安全意识",
+            "area_id": "safety_awareness",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_10",
+            "title": "创新思维训练",
+            "detail": "思考一个问题：5G相比4G有哪些创新？写出3点",
+            "estimated_time": "30分钟",
+            "area": "创新思维",
+            "area_id": "innovation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_11",
+            "title": "团队协作案例",
+            "detail": "了解一个真实的通信工程团队协作案例",
+            "estimated_time": "30分钟",
+            "area": "团队协作",
+            "area_id": "teamwork",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          }
+        ],
+        "total_tasks": 12,
+        "completed_tasks": 0,
+        "stage": "basic",
+        "analysis_summary": "",
+        "weak_areas": []
+      }
+    },
+    "quiz_attempts": {
+      "task_1_basic_0": {
+        "attempt_count": 3,
+        "passed": false,
+        "best_score": 20,
+        "last_score": 0,
+        "final_score": 20,
+        "safety_score": 100,
+        "fault_scenario_id": "sig_fault_1",
+        "fault_scenario_name": "信号失真故障"
+      }
+    },
+    "task_locks": {
+      "task_1_basic_0": {
+        "locked": false,
+        "unlocked_at": "2026-08-15 09:10:36"
+      }
+    }
+  },
+  {
+    "id": "24",
+    "student_no": "2505058103112",
+    "name": "lh",
+    "class_name": "1",
+    "created_at": "2026-08-15 09:13:28",
+    "last_login": "2026-08-15 12:32:15",
+    "competence_analysis": {
+      "signal_system": {
+        "count": 0,
+        "score": 0.0
+      },
+      "communication_principle": {
+        "count": 0,
+        "score": 0.0
+      },
+      "digital_signal": {
+        "count": 0,
+        "score": 0.0
+      },
+      "network_protocol": {
+        "count": 0,
+        "score": 0.0
+      },
+      "modulation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "rf_engineering": {
+        "count": 0,
+        "score": 0.0
+      },
+      "antenna_design": {
+        "count": 0,
+        "score": 0.0
+      },
+      "troubleshooting": {
+        "count": 0,
+        "score": 0.0
+      },
+      "equipment_operation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "safety_awareness": {
+        "count": 0,
+        "score": 0.0
+      },
+      "innovation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "teamwork": {
+        "count": 0,
+        "score": 0.0
+      }
+    },
+    "conversation_history": [],
+    "survey_completed": true,
+    "survey_answers": {
+      "q1": "rf",
+      "q2": "hands_on",
+      "q3": [
+        "signal"
+      ],
+      "q4": "lab",
+      "q5": "expert"
+    },
+    "survey_result": [
+      {
+        "job_name": "射频工程师",
+        "score": 10,
+        "icon": "📡",
+        "description": "负责射频电路设计、天线开发与电磁仿真",
+        "salary_range": "12K-35K",
+        "match_level": "高"
+      },
+      {
+        "job_name": "研发工程师",
+        "score": 9,
+        "icon": "🔬",
+        "description": "负责通信系统算法研发、仿真验证与新产品开发",
+        "salary_range": "15K-40K",
+        "match_level": "高"
+      },
+      {
+        "job_name": "通信工程师",
+        "score": 3,
+        "icon": "🔧",
+        "description": "负责通信网络设备的安装、调试、运维与故障排查",
+        "salary_range": "8K-25K",
+        "match_level": "低"
+      },
+      {
+        "job_name": "网络优化工程师",
+        "score": 0,
+        "icon": "🌐",
+        "description": "负责无线网络规划、优化与性能分析，提升网络质量",
+        "salary_range": "10K-30K",
+        "match_level": "低"
+      }
+    ],
+    "target_job": "射频工程师",
+    "target_set_time": "2026-08-15 09:14:06",
+    "weekly_tasks": {
+      "week_1": {
+        "week_num": 1,
+        "generated_at": "2026-08-15 09:14:07",
+        "target_job": "射频工程师",
+        "tasks": [
+          {
+            "id": "task_1_basic_0",
+            "title": "认识信号与系统",
+            "detail": "了解什么是信号、系统的基本概念，阅读教材前3章",
+            "estimated_time": "45分钟",
+            "area": "信号与系统",
+            "area_id": "signal_system",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_1",
+            "title": "通信原理入门",
+            "detail": "了解通信系统的基本组成：信源、信道、信宿",
+            "estimated_time": "40分钟",
+            "area": "通信原理",
+            "area_id": "communication_principle",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_2",
+            "title": "数字信号处理基础",
+            "detail": "了解采样定理的基本内容，尝试手动计算一个采样例子",
+            "estimated_time": "45分钟",
+            "area": "数字信号处理",
+            "area_id": "digital_signal",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_3",
+            "title": "网络协议概览",
+            "detail": "了解OSI七层模型和TCP/IP四层模型的对应关系",
+            "estimated_time": "30分钟",
+            "area": "网络协议",
+            "area_id": "network_protocol",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_4",
+            "title": "调制技术简介",
+            "detail": "了解ASK、FSK、PSK三种基本调制方式的区别",
+            "estimated_time": "35分钟",
+            "area": "调制技术",
+            "area_id": "modulation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_5",
+            "title": "射频工程基础",
+            "detail": "了解射频信号的基本特征：频率、波长、阻抗",
+            "estimated_time": "40分钟",
+            "area": "射频工程",
+            "area_id": "rf_engineering",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_6",
+            "title": "天线设计入门",
+            "detail": "了解天线的基本参数：增益、方向图、极化",
+            "estimated_time": "30分钟",
+            "area": "天线设计",
+            "area_id": "antenna_design",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_7",
+            "title": "故障排查思维",
+            "detail": "学习分层故障排查法：从物理层到应用层逐层排查",
+            "estimated_time": "35分钟",
+            "area": "故障排查",
+            "area_id": "troubleshooting",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_8",
+            "title": "常见仪器介绍",
+            "detail": "认识频谱仪、示波器、信号源的基本用途",
+            "estimated_time": "30分钟",
+            "area": "设备操作",
+            "area_id": "equipment_operation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_9",
+            "title": "通信安全意识",
+            "detail": "了解通信工程中的基本安全规范：防雷、接地、防静电",
+            "estimated_time": "25分钟",
+            "area": "安全意识",
+            "area_id": "safety_awareness",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_10",
+            "title": "创新思维训练",
+            "detail": "思考一个问题：5G相比4G有哪些创新？写出3点",
+            "estimated_time": "30分钟",
+            "area": "创新思维",
+            "area_id": "innovation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_1_basic_11",
+            "title": "团队协作案例",
+            "detail": "了解一个真实的通信工程团队协作案例",
+            "estimated_time": "30分钟",
+            "area": "团队协作",
+            "area_id": "teamwork",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          }
+        ],
+        "total_tasks": 12,
+        "completed_tasks": 0,
+        "stage": "basic",
+        "analysis_summary": "",
+        "weak_areas": []
+      }
+    },
+    "task_evaluations": {
+      "task_1_basic_0": {
+        "success": true,
+        "mode": "review",
+        "task_title": "认识信号与系统",
+        "area_name": "信号与系统",
+        "fault_scenario": {
+          "name": "",
+          "description": "",
+          "level": "info"
+        },
+        "timeline": [],
+        "root_cause": "",
+        "lessons_learned": [
+          "整体表现合格，建议继续巩固相关知识点"
+        ],
+        "improvement_actions": [
+          "定期复习「信号与系统」领域知识，保持技能熟练度"
+        ],
+        "stress_test_questions": []
+      }
+    }
+  },
+  {
+    "id": "25",
+    "student_no": "1234567890123",
+    "name": "测试学生",
+    "class_name": "测试班",
+    "created_at": "2026-08-15 11:35:58",
+    "last_login": "2026-08-15 11:36:52",
+    "competence_analysis": {
+      "signal_system": {
+        "count": 0,
+        "score": 0.0
+      },
+      "communication_principle": {
+        "count": 0,
+        "score": 0.0
+      },
+      "digital_signal": {
+        "count": 0,
+        "score": 0.0
+      },
+      "network_protocol": {
+        "count": 0,
+        "score": 0.0
+      },
+      "modulation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "rf_engineering": {
+        "count": 0,
+        "score": 0.0
+      },
+      "antenna_design": {
+        "count": 0,
+        "score": 0.0
+      },
+      "troubleshooting": {
+        "count": 0,
+        "score": 0.0
+      },
+      "equipment_operation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "safety_awareness": {
+        "count": 0,
+        "score": 0.0
+      },
+      "innovation": {
+        "count": 0,
+        "score": 0.0
+      },
+      "teamwork": {
+        "count": 0,
+        "score": 0.0
+      }
+    },
+    "conversation_history": []
+  }
+]

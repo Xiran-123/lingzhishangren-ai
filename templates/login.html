@@ -53,7 +53,52 @@
         .subtitle {
             color: #666;
             font-size: 14px;
-            margin-bottom: 32px;
+            margin-bottom: 24px;
+        }
+
+        .role-section {
+            margin-bottom: 24px;
+        }
+
+        .role-title {
+            display: block;
+            text-align: left;
+            color: #333;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+
+        .role-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .role-btn {
+            flex: 1;
+            padding: 14px;
+            border: 2px solid #e8e8f0;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .role-btn:hover {
+            border-color: #667eea;
+            background: #f8f9fc;
+        }
+
+        .role-btn.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            color: #667eea;
         }
 
         .input-group {
@@ -128,16 +173,294 @@
             color: #999;
             font-size: 12px;
         }
+
+        .student-info {
+            display: none;
+        }
+
+        .student-info.show {
+            display: block;
+        }
+
+        .teacher-info {
+            display: none;
+        }
+
+        .teacher-info.show {
+            display: block;
+        }
+
+        /* ===== 使用说明弹窗 ===== */
+        .guide-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.55);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+            animation: fadeIn 0.3s;
+            padding: 20px;
+        }
+
+        .guide-modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 720px;
+            width: 100%;
+            max-height: 86vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+            animation: guideSlide 0.4s;
+        }
+
+        @keyframes guideSlide {
+            from { transform: translateY(20px) scale(0.95); opacity: 0; }
+            to   { transform: translateY(0) scale(1); opacity: 1; }
+        }
+
+        .guide-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px 28px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .guide-header-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+        }
+
+        .guide-header-text h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .guide-header-text p {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .guide-close {
+            margin-left: auto;
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .guide-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .guide-body {
+            padding: 24px 28px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .guide-section {
+            margin-bottom: 22px;
+        }
+
+        .guide-section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #f0f2f5;
+        }
+
+        .guide-step-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .guide-step {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            background: #f8f9fc;
+            border-radius: 10px;
+            padding: 12px 14px;
+        }
+
+        .guide-step-num {
+            width: 26px;
+            height: 26px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .guide-step-text {
+            flex: 1;
+            font-size: 13px;
+            color: #444;
+            line-height: 1.6;
+        }
+
+        .guide-step-text strong {
+            color: #1a1a1a;
+        }
+
+        .guide-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .guide-tag {
+            background: linear-gradient(135deg, #e8ecfd, #f0e6ff);
+            color: #5144ad;
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .guide-footer {
+            padding: 16px 28px;
+            border-top: 1px solid #f0f2f5;
+            background: #fafbfc;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .guide-footer label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #888;
+            cursor: pointer;
+        }
+
+        .guide-footer label input {
+            cursor: pointer;
+        }
+
+        .guide-footer .btn-got-it {
+            margin-left: auto;
+            padding: 10px 26px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .guide-footer .btn-got-it:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        .guide-trigger {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            padding: 7px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            backdrop-filter: blur(4px);
+        }
+
+        .guide-trigger:hover {
+            background: rgba(255, 255, 255, 0.28);
+            transform: translateY(-1px);
+        }
+
+        .login-container {
+            position: relative;
+        }
     </style>
 </head>
 <body>
     <div class="login-container">
+        <button class="guide-trigger" onclick="showGuide()">📖 使用说明</button>
         <div class="icon">🤖</div>
         <h1>灵智尚人</h1>
-        <p class="subtitle">请输入访问密码</p>
+        <p class="subtitle">请选择角色并登录</p>
         
+        <!-- 角色选择 -->
+        <div class="role-section">
+            <span class="role-title">选择角色</span>
+            <div class="role-buttons">
+                <button class="role-btn selected" id="studentBtn" onclick="selectRole('student')">
+                    👨‍🎓 学生
+                </button>
+                <button class="role-btn" id="teacherBtn" onclick="selectRole('teacher')">
+                    👨‍🏫 老师
+                </button>
+            </div>
+        </div>
+        
+        <!-- 学生信息 -->
+        <div class="student-info" id="studentInfo">
+            <div class="input-group">
+                <label for="studentNo">学号</label>
+                <input type="text" id="studentNo" placeholder="请输入您的学号">
+            </div>
+            <div class="input-group">
+                <label for="studentName">学生姓名</label>
+                <input type="text" id="studentName" placeholder="请输入您的姓名">
+            </div>
+            <div class="input-group">
+                <label for="className">班级（可选）</label>
+                <input type="text" id="className" placeholder="请输入班级">
+            </div>
+        </div>
+        
+        <!-- 老师信息 -->
+        <div class="teacher-info" id="teacherInfo">
+            <div class="input-group">
+                <label for="teacherName">老师账号</label>
+                <input type="text" id="teacherName" placeholder="请输入老师账号（如：teacher1）">
+            </div>
+        </div>
+        
+        <!-- 密码 -->
         <div class="input-group">
-            <label for="password">访问密码</label>
+            <label for="password" id="passwordLabel">访问密码</label>
             <input type="password" id="password" placeholder="请输入密码" onkeypress="handleKeyPress(event)">
         </div>
         
@@ -154,63 +477,282 @@
 
     <script>
         const passwordInput = document.getElementById('password');
+        const passwordLabel = document.getElementById('passwordLabel');
         const loginBtn = document.getElementById('loginBtn');
         const errorMsg = document.getElementById('errorMsg');
-
-        function handleKeyPress(event) {
-            if (event.key === 'Enter') {
-                doLogin();
+        const studentBtn = document.getElementById('studentBtn');
+        const teacherBtn = document.getElementById('teacherBtn');
+        const studentInfo = document.getElementById('studentInfo');
+        const teacherInfo = document.getElementById('teacherInfo');
+        const studentNoInput = document.getElementById('studentNo');
+        const studentNameInput = document.getElementById('studentName');
+        const classNameInput = document.getElementById('className');
+        const teacherNameInput = document.getElementById('teacherName');
+        
+        let selectedRole = 'student';
+        
+        function selectRole(role) {
+            selectedRole = role;
+            
+            // 更新按钮样式
+            studentBtn.classList.remove('selected');
+            teacherBtn.classList.remove('selected');
+            if (role === 'student') {
+                studentBtn.classList.add('selected');
+                studentInfo.classList.add('show');
+                teacherInfo.classList.remove('show');
+                passwordLabel.textContent = '访问密码';
+                passwordInput.placeholder = '请输入访问密码';
+            } else {
+                teacherBtn.classList.add('selected');
+                studentInfo.classList.remove('show');
+                teacherInfo.classList.add('show');
+                passwordLabel.textContent = '老师密码';
+                passwordInput.placeholder = '请输入老师密码';
             }
         }
-
+        
         async function doLogin() {
             const password = passwordInput.value.trim();
+            const studentNo = studentNoInput.value.trim();
+            const studentName = studentNameInput.value.trim();
+            const className = classNameInput.value.trim();
+            const teacherName = teacherNameInput.value.trim();
             
             if (!password) {
                 showError('请输入密码');
                 return;
             }
             
+            if (selectedRole === 'student') {
+                if (!studentNo) {
+                    showError('学生请输入学号');
+                    return;
+                }
+                // 验证学号必须是13位数字
+                if (!/^\d{13}$/.test(studentNo)) {
+                    showError('学号必须是13位数字');
+                    return;
+                }
+                if (!studentName) {
+                    showError('学生请输入姓名');
+                    return;
+                }
+            } else {
+                if (!teacherName) {
+                    showError('老师请输入账号');
+                    return;
+                }
+            }
+            
             loginBtn.disabled = true;
-            loginBtn.textContent = '登录中...';
-            hideError();
             
             try {
                 const response = await fetch('/login', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ password: password }),
+                    body: JSON.stringify({
+                        password: password,
+                        role: selectedRole,
+                        student_no: studentNo,
+                        student_name: selectedRole === 'student' ? studentName : teacherName,
+                        class_name: className
+                    })
                 });
                 
                 const data = await response.json();
                 
                 if (data.success) {
-                    window.location.reload();
+                    if (data.is_new_user) {
+                        showWelcome(data.student_name);
+                    } else {
+                        window.location.href = '/';
+                    }
                 } else {
-                    showError(data.error || '登录失败');
-                    passwordInput.value = '';
-                    passwordInput.focus();
+                    showError(data.message || '登录失败');
                 }
             } catch (error) {
-                showError('网络错误，请稍后重试');
+                showError('网络错误，请重试');
             } finally {
                 loginBtn.disabled = false;
-                loginBtn.textContent = '登录';
             }
         }
-
+        
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                doLogin();
+            }
+        }
+        
         function showError(message) {
             errorMsg.textContent = message;
             errorMsg.classList.add('show');
+            setTimeout(() => {
+                errorMsg.classList.remove('show');
+            }, 3000);
+        }
+        
+        function showWelcome(name) {
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;justify-content:center;align-items:center;z-index:9999;animation:fadeIn 0.3s;';
+            
+            const modal = document.createElement('div');
+            modal.style.cssText = 'background:white;border-radius:20px;padding:40px;max-width:440px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:slideUp 0.4s;';
+            
+            modal.innerHTML = `
+                <div style="width:72px;height:72px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:36px;">🎉</div>
+                <h2 style="color:#1a1a1a;font-size:24px;margin-bottom:8px;">欢迎加入，${name}！</h2>
+                <p style="color:#666;font-size:14px;margin-bottom:24px;line-height:1.6;">这是您首次登录灵智尚人学习平台<br>系统已为您创建学习档案，开始探索吧！</p>
+                <div style="background:#f8f9fc;border-radius:12px;padding:16px;margin-bottom:24px;text-align:left;">
+                    <div style="font-size:13px;color:#999;margin-bottom:8px;">您可以体验以下功能：</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                        <span style="background:#e8ecfd;color:#667eea;padding:4px 10px;border-radius:8px;font-size:12px;">📚 知识学习</span>
+                        <span style="background:#e8ecfd;color:#667eea;padding:4px 10px;border-radius:8px;font-size:12px;">✏️ 在线练习</span>
+                        <span style="background:#e8ecfd;color:#667eea;padding:4px 10px;border-radius:8px;font-size:12px;">🤖 智能问答</span>
+                        <span style="background:#e8ecfd;color:#667eea;padding:4px 10px;border-radius:8px;font-size:12px;">📊 能力分析</span>
+                        <span style="background:#e8ecfd;color:#667eea;padding:4px 10px;border-radius:8px;font-size:12px;">💼 岗位招聘</span>
+                    </div>
+                </div>
+                <button onclick="window.location.href='/survey-page'" style="width:100%;padding:14px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;transition:transform 0.2s;">开始职业问卷</button>
+                <button onclick="window.location.href='/'" style="width:100%;padding:12px;background:#f0f2f5;color:#666;border:none;border-radius:12px;font-size:14px;font-weight:500;cursor:pointer;margin-top:8px;transition:transform 0.2s;">稍后再填</button>
+            `;
+            
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+        }
+        
+        // 添加动画样式
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        `;
+        document.head.appendChild(style);
+
+        // ===== 使用说明弹窗 =====
+        const GUIDE_STORAGE_KEY = 'lzr_login_guide_shown';
+
+        function getGuideHtml() {
+            return `
+                <div class="guide-overlay" id="guideOverlay" onclick="if(event.target===this) closeGuide()">
+                    <div class="guide-modal">
+                        <div class="guide-header">
+                            <div class="guide-header-icon">📖</div>
+                            <div class="guide-header-text">
+                                <h2>平台使用说明</h2>
+                                <p>灵智尚人 · 通信工程智能学习平台</p>
+                            </div>
+                            <button class="guide-close" onclick="closeGuide()">×</button>
+                        </div>
+                        <div class="guide-body">
+                            <div class="guide-section">
+                                <div class="guide-section-title">🚀 新学员快速上手流程</div>
+                                <div class="guide-step-list">
+                                    <div class="guide-step">
+                                        <div class="guide-step-num">1</div>
+                                        <div class="guide-step-text"><strong>选择角色并登录</strong>：学生输入 13 位学号、姓名和访问密码（<code>tongxin2024</code>），首次登录会自动创建学习档案。</div>
+                                    </div>
+                                    <div class="guide-step">
+                                        <div class="guide-step-num">2</div>
+                                        <div class="guide-step-text"><strong>完成职业问卷</strong>：登录后系统会引导您填写职业问卷，系统会据此<strong>推荐匹配的岗位</strong>，也可以<strong>自定义意向岗位</strong>。</div>
+                                    </div>
+                                    <div class="guide-step">
+                                        <div class="guide-step-num">3</div>
+                                        <div class="guide-step-text"><strong>完成基础摸底任务（1-2 周）</strong>：前 2 周为基础摸底，每周 12 个任务覆盖 12 大能力领域，帮助系统摸清您的薄弱环节。</div>
+                                    </div>
+                                    <div class="guide-step">
+                                        <div class="guide-step-num">4</div>
+                                        <div class="guide-step-text"><strong>精准提升阶段（第 3 周起）</strong>：系统基于摸底结果分析<strong>能力差距</strong>，智能生成个性化任务卡，有针对性地补齐短板。</div>
+                                    </div>
+                                    <div class="guide-step">
+                                        <div class="guide-step-num">5</div>
+                                        <div class="guide-step-text"><strong>进入任务详情页</strong>：点击任务卡片 → 查看 <strong>PPT/知识库</strong>（缺失会给出学习建议）→ 打开「<strong>口语化排障助手</strong>」描述故障现象 → 完成<strong>前置自检</strong> → 通过<strong>问答题测验</strong>（60 分及格）→ 自动生成<strong>工程报告</strong>和<strong>闭环评价</strong>。</div>
+                                    </div>
+                                    <div class="guide-step">
+                                        <div class="guide-step-num">6</div>
+                                        <div class="guide-step-text"><strong>查看岗位胜任力画像</strong>：点击页面「🎯 胜任力画像」按钮，查看 <strong>技术/沟通/项目管理/安全伦理/创新思维</strong> 5 维雷达图，以及优势维度、短板和学习路径规划。</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="guide-section">
+                                <div class="guide-section-title">⚙️ 核心功能一览</div>
+                                <div class="guide-tags">
+                                    <span class="guide-tag">📚 知识图谱学习</span>
+                                    <span class="guide-tag">✏️ 在线练习题库</span>
+                                    <span class="guide-tag">🤖 AI 智能问答助手</span>
+                                    <span class="guide-tag">📋 每周任务卡</span>
+                                    <span class="guide-tag">🔧 动态故障注入</span>
+                                    <span class="guide-tag">🛡️ 前置安全自检</span>
+                                    <span class="guide-tag">💬 口语化排障</span>
+                                    <span class="guide-tag">🔒 失败锁定机制</span>
+                                    <span class="guide-tag">📄 自动工程报告</span>
+                                    <span class="guide-tag">🔄 事故复盘评价</span>
+                                    <span class="guide-tag">🎯 5 维胜任力画像</span>
+                                    <span class="guide-tag">💼 岗位招聘匹配</span>
+                                </div>
+                            </div>
+
+                            <div class="guide-section">
+                                <div class="guide-section-title">⚠️ 注意事项</div>
+                                <div class="guide-step-list">
+                                    <div class="guide-step">
+                                        <div class="guide-step-num" style="background:#ff4d4f;">!</div>
+                                        <div class="guide-step-text"><strong>访问密码</strong>：默认访问密码为 <code style="background:#fff2f0;color:#ff4d4f;padding:2px 6px;border-radius:4px;">tongxin2024</code>，老师账号请在后台配置。</div>
+                                    </div>
+                                    <div class="guide-step">
+                                        <div class="guide-step-num" style="background:#fa8c16;">!</div>
+                                        <div class="guide-step-text"><strong>连续 3 次测验不及格</strong>将触发<strong>失败锁定（5 分钟冷却）</strong>，请先复习知识点再重试。</div>
+                                    </div>
+                                    <div class="guide-step">
+                                        <div class="guide-step-num" style="background:#52c41a;">✓</div>
+                                        <div class="guide-step-text"><strong>前置自检必须项</strong>未确认将阻止任务进行，请严格按操作规范执行，安全分纳入综合成绩。</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="guide-footer">
+                            <label>
+                                <input type="checkbox" id="guideDontShow"> 下次不再自动弹出
+                            </label>
+                            <button class="btn-got-it" onclick="closeGuide(true)">我知道了，开始使用</button>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
-        function hideError() {
-            errorMsg.classList.remove('show');
+        function showGuide() {
+            if (document.getElementById('guideOverlay')) return;
+            const wrap = document.createElement('div');
+            wrap.innerHTML = getGuideHtml();
+            document.body.appendChild(wrap.firstElementChild);
         }
 
-        passwordInput.focus();
+        function closeGuide(fromGotIt) {
+            const overlay = document.getElementById('guideOverlay');
+            if (!overlay) return;
+            if (fromGotIt) {
+                const cb = document.getElementById('guideDontShow');
+                if (cb && cb.checked) {
+                    try { localStorage.setItem(GUIDE_STORAGE_KEY, '1'); } catch (e) {}
+                }
+            }
+            overlay.style.animation = 'fadeIn 0.2s reverse';
+            setTimeout(() => overlay.remove(), 180);
+        }
+
+        // 登录前自动弹出使用说明（除非用户勾选了不再提示）
+        (function autoShowGuide() {
+            try {
+                if (localStorage.getItem(GUIDE_STORAGE_KEY) === '1') return;
+            } catch (e) {}
+            window.addEventListener('load', () => {
+                setTimeout(showGuide, 400);
+            });
+        })();
     </script>
 </body>
 </html>

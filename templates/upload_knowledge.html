@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>上传知识库文件</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 650px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 50px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9fc;
+        }
+        
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: #f0f0f5;
+        }
+        
+        .upload-area.success {
+            border-color: #4caf50;
+            background: #e8f5e9;
+            animation: pulse 2s infinite;
+        }
+        
+        .upload-area.duplicate {
+            border-color: #ff9800;
+            background: #fff3e0;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+        }
+        
+        .upload-icon {
+            font-size: 64px;
+            margin-bottom: 15px;
+        }
+        
+        .upload-text {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .upload-hint {
+            font-size: 14px;
+            color: #999;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background: #e0e0e8;
+            border-radius: 5px;
+            margin: 20px 0;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .status {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+            font-size: 16px;
+        }
+        
+        .status.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            display: block;
+            border: 2px solid #c8e6c9;
+        }
+        
+        .status.error {
+            background: #ffebee;
+            color: #c62828;
+            display: block;
+            border: 2px solid #ffcdd2;
+        }
+        
+        .status.duplicate {
+            background: #fff3e0;
+            color: #e65100;
+            display: block;
+            border: 2px solid #ffe0b2;
+        }
+        
+        .status-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .success-details {
+            margin-top: 10px;
+            padding: 15px;
+            background: rgba(76, 175, 80, 0.1);
+            border-radius: 8px;
+            text-align: left;
+            font-size: 14px;
+            color: #388e3c;
+        }
+        
+        .multi-result-list {
+            margin-top: 10px;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        
+        .multi-result-item {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+        
+        .multi-result-item.success {
+            border-left: 3px solid #4caf50;
+        }
+        
+        .multi-result-item.duplicate {
+            border-left: 3px solid #ff9800;
+        }
+        
+        .multi-result-item.failed {
+            border-left: 3px solid #f44336;
+        }
+        
+        .kb-stats {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .kb-stats h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .stat-item {
+            display: inline-block;
+            margin: 0 20px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .selected-files {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .selected-files h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .selected-files-list {
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        
+        .selected-file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+        
+        .selected-file-name {
+            color: #333;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex: 1;
+            margin-right: 10px;
+        }
+        
+        .selected-file-size {
+            color: #999;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn.success-btn {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+        }
+        
+        .btn.success-btn:hover {
+            box-shadow: 0 8px 20px rgba(76, 175, 80, 0.4);
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn-group .btn {
+            flex: 1;
+            margin-top: 0;
+        }
+        
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            text-decoration: none;
+        }
+        
+        .back-link:hover {
+            color: #667eea;
+        }
+        
+        .upload-history {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 12px;
+        }
+        
+        .upload-history h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .history-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .history-item {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+        
+        .history-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .history-item.success {
+            border-left-color: #4caf50;
+        }
+        
+        .history-item.failed {
+            border-left-color: #f44336;
+        }
+        
+        .history-info {
+            flex: 1;
+        }
+        
+        .history-filename {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .history-meta {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .history-status {
+            font-size: 14px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        
+        .history-status.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .history-status.failed {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .no-history {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+            font-size: 14px;
+        }
+        
+        .history-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .history-stat {
+            text-align: center;
+        }
+        
+        .history-stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #667eea;
+        }
+        
+        .history-stat-label {
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📤 上传知识库文件</h1>
+        <p class="subtitle">支持 Word (.docx/.doc)、PPT (.pptx/.ppt)、TXT 文件，可一次性选择多个文件</p>
+        
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon" id="uploadIcon">📁</div>
+            <div class="upload-text" id="uploadText">点击或拖拽文件到此处</div>
+            <div class="upload-hint">支持 .docx .doc .pptx .ppt .txt 格式，可多选</div>
+        </div>
+        
+        <input type="file" id="fileInput" class="file-input" accept=".docx,.doc,.pptx,.ppt,.txt" multiple>
+        
+        <div class="selected-files" id="selectedFiles">
+            <h4>📁 已选择文件</h4>
+            <div class="selected-files-list" id="selectedFilesList"></div>
+        </div>
+        
+        <div class="progress-bar" id="progressBar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        
+        <div class="status" id="status">
+            <div class="status-icon" id="statusIcon"></div>
+            <div id="statusText"></div>
+            <div class="success-details" id="successDetails"></div>
+        </div>
+        
+        <div class="kb-stats" id="kbStats">
+            <h3>📚 知识库统计</h3>
+            <div class="stat-item">
+                <div class="stat-value" id="charCount">-</div>
+                <div class="stat-label">字符数</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="lineCount">-</div>
+                <div class="stat-label">行数</div>
+            </div>
+        </div>
+        
+        <button class="btn" id="uploadBtn" onclick="document.getElementById('fileInput').click()">选择文件上传</button>
+        <button class="btn success-btn" id="startUploadBtn" onclick="startUpload()" style="display: none;">🚀 开始上传</button>
+        
+        <div class="btn-group" id="successActions" style="display: none;">
+            <button class="btn success-btn" onclick="resetAll()">📤 继续上传</button>
+            <button class="btn" onclick="window.location.href='/'">💬 去聊天测试</button>
+        </div>
+        
+        <div class="upload-history" id="uploadHistory">
+            <h3>📋 上传历史记录</h3>
+            <div class="history-stats">
+                <div class="history-stat">
+                    <div class="history-stat-value" id="totalUploads">-</div>
+                    <div class="history-stat-label">总上传</div>
+                </div>
+                <div class="history-stat">
+                    <div class="history-stat-value" id="successUploads">-</div>
+                    <div class="history-stat-label">成功</div>
+                </div>
+            </div>
+            <div class="history-list" id="historyList">
+                <div class="no-history">暂无上传记录</div>
+            </div>
+        </div>
+        
+        <a href="/" class="back-link">← 返回主页面</a>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const progressBar = document.getElementById('progressBar');
+        const progressFill = document.getElementById('progressFill');
+        const status = document.getElementById('status');
+        const statusIcon = document.getElementById('statusIcon');
+        const statusText = document.getElementById('statusText');
+        const successDetails = document.getElementById('successDetails');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const startUploadBtn = document.getElementById('startUploadBtn');
+        const successActions = document.getElementById('successActions');
+        const uploadIcon = document.getElementById('uploadIcon');
+        const uploadText = document.getElementById('uploadText');
+        const historyList = document.getElementById('historyList');
+        const totalUploads = document.getElementById('totalUploads');
+        const successUploads = document.getElementById('successUploads');
+        const selectedFilesDiv = document.getElementById('selectedFiles');
+        const selectedFilesList = document.getElementById('selectedFilesList');
+
+        let selectedFiles = [];
+
+        loadKBStats();
+        loadUploadHistory();
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#764ba2';
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.borderColor = '#667eea';
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#667eea';
+            const files = Array.from(e.dataTransfer.files);
+            if (files.length > 0) {
+                handleFiles(files);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFiles(Array.from(e.target.files));
+            }
+        });
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        function handleFiles(files) {
+            const allowedExtensions = ['.docx', '.doc', '.pptx', '.ppt', '.txt'];
+            
+            selectedFiles = files.filter(file => {
+                const fileName = file.name.toLowerCase();
+                return allowedExtensions.some(ext => fileName.endsWith(ext));
+            });
+
+            if (selectedFiles.length === 0) {
+                showStatus('❌ 没有支持的文件格式！', 'error');
+                return;
+            }
+
+            displaySelectedFiles();
+            
+            if (selectedFiles.length === 1) {
+                startUpload();
+            } else {
+                uploadBtn.style.display = 'none';
+                startUploadBtn.style.display = 'block';
+                status.style.display = 'none';
+                uploadArea.classList.remove('success', 'duplicate');
+                uploadIcon.textContent = '📁';
+                uploadText.textContent = `已选择 ${selectedFiles.length} 个文件`;
+            }
+        }
+
+        function displaySelectedFiles() {
+            selectedFilesDiv.style.display = 'block';
+            selectedFilesList.innerHTML = selectedFiles.map(file => `
+                <div class="selected-file-item">
+                    <span class="selected-file-name">📄 ${file.name}</span>
+                    <span class="selected-file-size">${formatFileSize(file.size)}</span>
+                </div>
+            `).join('');
+        }
+
+        async function startUpload() {
+            if (selectedFiles.length === 0) {
+                showStatus('❌ 请先选择文件！', 'error');
+                return;
+            }
+
+            progressBar.style.display = 'block';
+            progressFill.style.width = '20%';
+            status.style.display = 'none';
+            uploadBtn.style.display = 'none';
+            startUploadBtn.style.display = 'none';
+            successActions.style.display = 'none';
+            uploadArea.classList.remove('success', 'duplicate');
+            uploadIcon.textContent = '⏳';
+            uploadText.textContent = '正在上传中...';
+
+            const formData = new FormData();
+            selectedFiles.forEach(file => {
+                formData.append('files', file);
+            });
+
+            try {
+                progressFill.style.width = '50%';
+                
+                const response = await fetch('/api/knowledge/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                progressFill.style.width = '100%';
+
+                const result = await response.json();
+                
+                if (result.results && result.results.length > 1) {
+                    showMultiResult(result);
+                } else if (result.success) {
+                    showSuccess(result, selectedFiles[0].name);
+                } else if (result.duplicate) {
+                    showDuplicate(result.error);
+                } else {
+                    showStatus('❌ 上传失败: ' + result.error, 'error');
+                    resetUI();
+                }
+                
+                loadKBStats();
+                loadUploadHistory();
+                
+            } catch (error) {
+                showStatus('❌ 上传失败: ' + error.message, 'error');
+                resetUI();
+            } finally {
+                setTimeout(() => {
+                    progressFill.style.width = '0%';
+                    progressBar.style.display = 'none';
+                }, 500);
+            }
+        }
+
+        function showMultiResult(result) {
+            uploadArea.classList.add('success');
+            uploadIcon.textContent = '✅';
+            uploadText.textContent = '上传完成！';
+            
+            statusIcon.textContent = '📊';
+            statusText.innerHTML = `<strong>${result.message}</strong>`;
+            
+            let detailsHTML = '<div class="multi-result-list">';
+            result.results.forEach(item => {
+                let statusClass = 'failed';
+                let statusIcon = '❌';
+                let statusText = item.error || '失败';
+                
+                if (item.success) {
+                    statusClass = 'success';
+                    statusIcon = '✅';
+                    statusText = '成功 - ' + item.extracted_length.toLocaleString() + ' 字符';
+                } else if (item.duplicate) {
+                    statusClass = 'duplicate';
+                    statusIcon = '⚠️';
+                    statusText = '内容已存在';
+                }
+                
+                detailsHTML += `
+                    <div class="multi-result-item ${statusClass}">
+                        <span>${statusIcon} ${item.filename}</span>
+                        <span>${statusText}</span>
+                    </div>
+                `;
+            });
+            detailsHTML += '</div>';
+            
+            successDetails.innerHTML = detailsHTML;
+            
+            status.className = 'status success';
+            uploadBtn.style.display = 'none';
+            successActions.style.display = 'flex';
+        }
+
+        function showSuccess(result, fileName) {
+            uploadArea.classList.add('success');
+            uploadIcon.textContent = '✅';
+            uploadText.textContent = '上传成功！';
+            
+            statusIcon.textContent = '🎉';
+            statusText.innerHTML = `<strong>${fileName}</strong> 已成功导入知识库！`;
+            
+            successDetails.innerHTML = `
+                <div><strong>📄 文件名：</strong>${fileName}</div>
+                <div><strong>📝 提取字符数：</strong>${result.extracted_length.toLocaleString()} 字符</div>
+                <div><strong>⏰ 导入时间：</strong>${new Date().toLocaleString()}</div>
+            `;
+            
+            status.className = 'status success';
+            uploadBtn.style.display = 'none';
+            successActions.style.display = 'flex';
+        }
+
+        function showDuplicate(message) {
+            uploadArea.classList.add('duplicate');
+            uploadIcon.textContent = '⚠️';
+            uploadText.textContent = '内容已存在';
+            
+            statusIcon.textContent = '⚠️';
+            statusText.innerHTML = message;
+            
+            successDetails.innerHTML = `
+                <div style="color: #e65100;">💡 提示：文件内容已存在于知识库中，无需重复上传</div>
+                <div style="color: #e65100;">📌 如果需要更新内容，请先删除知识库中的旧内容</div>
+            `;
+            
+            status.className = 'status duplicate';
+            uploadBtn.style.display = 'block';
+            successActions.style.display = 'none';
+        }
+
+        function showStatus(message, type) {
+            statusIcon.textContent = '';
+            successDetails.innerHTML = '';
+            statusText.textContent = message;
+            status.className = 'status ' + type;
+        }
+
+        function resetUI() {
+            uploadBtn.style.display = 'block';
+            startUploadBtn.style.display = 'none';
+            successActions.style.display = 'none';
+            uploadArea.classList.remove('success', 'duplicate');
+            uploadIcon.textContent = '📁';
+            uploadText.textContent = '点击或拖拽文件到此处';
+        }
+
+        function resetAll() {
+            selectedFiles = [];
+            fileInput.value = '';
+            selectedFilesDiv.style.display = 'none';
+            status.style.display = 'none';
+            resetUI();
+        }
+
+        async function loadKBStats() {
+            try {
+                const response = await fetch('/api/knowledge/count');
+                const result = await response.json();
+                if (result.success) {
+                    document.getElementById('charCount').textContent = result.char_count.toLocaleString();
+                    document.getElementById('lineCount').textContent = result.line_count.toLocaleString();
+                }
+            } catch (error) {
+                console.log('获取知识库统计失败:', error);
+            }
+        }
+
+        async function loadUploadHistory() {
+            try {
+                const response = await fetch('/api/knowledge/history');
+                const result = await response.json();
+                if (result.success) {
+                    renderHistory(result.history);
+                    totalUploads.textContent = result.total_count;
+                    successUploads.textContent = result.history.filter(h => h.status === 'success').length;
+                }
+            } catch (error) {
+                console.log('获取上传历史失败:', error);
+            }
+        }
+
+        function renderHistory(history) {
+            if (!history || history.length === 0) {
+                historyList.innerHTML = '<div class="no-history">暂无上传记录</div>';
+                return;
+            }
+
+            historyList.innerHTML = history.map(item => `
+                <div class="history-item ${item.status}">
+                    <div class="history-info">
+                        <div class="history-filename">📄 ${item.filename}</div>
+                        <div class="history-meta">
+                            <span>👤 ${item.uploader}</span>
+                            <span> · </span>
+                            <span>⏰ ${item.upload_time}</span>
+                            <span> · </span>
+                            <span>📝 ${item.extracted_length.toLocaleString()} 字符</span>
+                        </div>
+                    </div>
+                    <div class="history-status ${item.status}">
+                        ${item.status === 'success' ? '✅ 成功' : '❌ 失败'}
+                    </div>
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>

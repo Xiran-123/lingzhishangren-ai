@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生分析报告 - 灵智尚人</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 10px;
+        }
+
+        .back-btn {
+            padding: 10px 20px;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            color: #667eea;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .nav-btn {
+            padding: 10px 16px;
+            background: rgba(102, 126, 234, 0.1);
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            color: #667eea;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .nav-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .logout-btn {
+            background: rgba(211, 47, 47, 0.1);
+            border-color: #d32f2f;
+            color: #d32f2f;
+        }
+
+        .logout-btn:hover {
+            background: #d32f2f;
+            color: white;
+        }
+
+        .title {
+            font-size: 28px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        /* 学生列表卡片 */
+        .students-section {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .add-btn {
+            margin-left: auto;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .students-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .student-card {
+            background: #f8f9fc;
+            border: 2px solid #e8e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .student-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .student-card.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        }
+
+        .student-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 12px;
+            object-fit: cover;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .student-avatar.upload-btn {
+            cursor: pointer;
+            opacity: 0.7;
+        }
+
+        .student-avatar.upload-btn:hover {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+
+        .student-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .student-class {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 12px;
+        }
+
+        .student-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 13px;
+            color: #888;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* 报告卡片 */
+        .report-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .report-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            padding: 25px;
+        }
+
+        .report-card.full-width {
+            grid-column: span 2;
+        }
+
+        .report-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* 能力雷达图区域 */
+        .radar-container {
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* 短板列表 */
+        .weakness-list, .strength-list {
+            list-style: none;
+        }
+
+        .weakness-item, .strength-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+            background: #fff3e0;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .strength-item {
+            background: #e8f5e9;
+        }
+
+        .item-name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .item-score {
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* 建议列表 */
+        .suggestion-list {
+            list-style: none;
+        }
+
+        .suggestion-item {
+            padding: 15px;
+            background: #f8f9fc;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            line-height: 1.6;
+            color: #333;
+            font-size: 14px;
+        }
+
+        /* 推荐场景 */
+        .scenario-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .scenario-card {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .scenario-card:hover {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        }
+
+        .scenario-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .scenario-reason {
+            font-size: 13px;
+            color: #667eea;
+        }
+
+        /* 模态框 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 450px;
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 8px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e8;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .modal-btn.cancel {
+            background: #f0f2f5;
+            color: #666;
+        }
+
+        .modal-btn.cancel:hover {
+            background: #e0e0e8;
+        }
+
+        .modal-btn.confirm {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .modal-btn.confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .empty-state-text {
+            font-size: 18px;
+        }
+
+        /* 进度条 */
+        .progress-bar {
+            height: 8px;
+            background: #f0f2f5;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        @media (max-width: 768px) {
+            .report-section {
+                grid-template-columns: 1fr;
+            }
+
+            .report-card.full-width {
+                grid-column: span 1;
+            }
+
+            .scenario-list {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <a href="/" class="back-btn">← 返回</a>
+                <h1 class="title" id="pageTitle">📊 学生分析报告</h1>
+            </div>
+            <div class="header-right">
+                <button class="nav-btn logout-btn" onclick="doLogout()">🔓 退出登录</button>
+            </div>
+        </div>
+
+        <!-- 学生列表（仅老师可见） -->
+        <div class="students-section" id="studentsSection">
+            <div class="section-title">
+                👥 学生列表
+                <button class="add-btn" onclick="showAddModal()">+ 添加学生</button>
+            </div>
+            <div class="students-grid" id="studentsGrid">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📝</div>
+                    <div class="empty-state-text">暂无学生，请添加</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 分析报告 -->
+        <div class="report-section" id="reportSection" style="display: none;">
+            <div class="report-card full-width">
+                <div class="report-title">🎯 学生概览</div>
+                <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 36px; font-weight: 700; color: #667eea;" id="studentName">--</div>
+                        <div style="font-size: 14px; color: #666; margin-top: 5px;">学生姓名</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 36px; font-weight: 700; color: #667eea;" id="totalConversations">0</div>
+                        <div style="font-size: 14px; color: #666; margin-top: 5px;">对话次数</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="report-card">
+                <div class="report-title">⚠️ 能力短板</div>
+                <ul class="weakness-list" id="weaknessList">
+                    <li class="empty-state" style="padding: 20px;">暂无数据</li>
+                </ul>
+            </div>
+
+            <div class="report-card">
+                <div class="report-title">✅ 优势领域</div>
+                <ul class="strength-list" id="strengthList">
+                    <li class="empty-state" style="padding: 20px;">暂无数据</li>
+                </ul>
+            </div>
+
+            <div class="report-card full-width">
+                <div class="report-title">📖 补习建议</div>
+                <ul class="suggestion-list" id="suggestionList">
+                    <li class="empty-state" style="padding: 20px;">暂无建议</li>
+                </ul>
+            </div>
+
+            <div class="report-card full-width">
+                <div class="report-title">🎬 推荐场景</div>
+                <div class="scenario-list" id="scenarioList">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🎭</div>
+                        <div class="empty-state-text">暂无推荐场景</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加学生模态框 -->
+    <div class="modal-overlay" id="addModal">
+        <div class="modal">
+            <h3 class="modal-title">+ 添加学生</h3>
+            <div class="form-group" style="text-align: center;">
+                <label style="display: block; margin-bottom: 10px;">头像（可选）</label>
+                <img id="avatarPreview" class="student-avatar" src="" alt="头像" style="cursor: pointer; margin: 0 auto;" onclick="document.getElementById('avatarUpload').click()">
+                <input type="file" id="avatarUpload" style="display: none;" accept="image/*">
+                <p style="font-size: 12px; color: #999; margin-top: 8px;">点击头像上传</p>
+            </div>
+            <div class="form-group">
+                <label>学生姓名</label>
+                <input type="text" id="studentNameInput" placeholder="请输入学生姓名">
+            </div>
+            <div class="form-group">
+                <label>学号（可选，13位数字）</label>
+                <input type="text" id="studentNoInput" placeholder="请输入13位学号，一个学号只能注册一个账号" maxlength="13">
+            </div>
+            <div class="form-group">
+                <label>班级（可选）</label>
+                <input type="text" id="classNameInput" placeholder="请输入班级">
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn cancel" onclick="hideAddModal()">取消</button>
+                <button class="modal-btn confirm" onclick="addStudent()">添加</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedStudentId = null;
+        let currentUser = { role: 'student', student_name: '' };
+
+        // 退出登录
+        async function doLogout() {
+            if (confirm('确定要退出登录吗？')) {
+                try {
+                    const response = await fetch('/logout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    
+                    if (response.ok) {
+                        localStorage.removeItem('lingzhi_chat_history');
+                        localStorage.removeItem('lingzhi_scenario_history');
+                        window.location.href = '/';
+                    }
+                } catch (error) {
+                    console.error('退出失败:', error);
+                    localStorage.removeItem('lingzhi_chat_history');
+                    localStorage.removeItem('lingzhi_scenario_history');
+                    window.location.href = '/';
+                }
+            }
+        }
+
+        // 获取当前用户信息
+        async function loadCurrentUser() {
+            try {
+                const response = await fetch('/current-user');
+                if (response.ok) {
+                    const data = await response.json();
+                    currentUser = data;
+                    initializePage();
+                }
+            } catch (error) {
+                console.error('获取用户信息失败:', error);
+            }
+        }
+
+        // 初始化页面
+        async function initializePage() {
+            if (currentUser.role === 'student') {
+                // 学生端：隐藏学生列表，直接显示自己的报告
+                document.getElementById('studentsSection').style.display = 'none';
+                document.getElementById('pageTitle').textContent = '📊 我的学习报告';
+                
+                // 从URL参数获取姓名，或者使用session中的姓名
+                const urlParams = new URLSearchParams(window.location.search);
+                const studentName = urlParams.get('name') || currentUser.student_name;
+                
+                if (studentName) {
+                    // 通过姓名查找学生并显示报告
+                    await loadStudentReportByName(studentName);
+                }
+            } else {
+                // 老师端：显示学生列表
+                document.getElementById('studentsSection').style.display = 'block';
+                document.getElementById('pageTitle').textContent = '📊 学生分析报告';
+                loadStudents();
+            }
+        }
+
+        // 通过姓名获取学生报告
+        async function loadStudentReportByName(studentName) {
+            try {
+                const response = await fetch('/students');
+                const data = await response.json();
+                const student = data.students.find(s => s.name === studentName);
+                
+                if (student) {
+                    const reportResponse = await fetch(`/students/${student.id}/report`);
+                    const reportData = await reportResponse.json();
+                    renderReport(reportData);
+                } else {
+                    document.getElementById('reportSection').style.display = 'block';
+                    document.getElementById('studentName').textContent = studentName;
+                    document.getElementById('totalConversations').textContent = '0';
+                    document.getElementById('weaknessList').innerHTML = '<li style="text-align: center; padding: 20px; color: #999;">暂无学习数据，请先进行对话</li>';
+                    document.getElementById('strengthList').innerHTML = '<li style="text-align: center; padding: 20px; color: #999;">需要更多互动才能分析优势</li>';
+                    document.getElementById('suggestionList').innerHTML = '<li style="text-align: center; padding: 20px; color: #999;">暂无建议</li>';
+                    document.getElementById('scenarioList').innerHTML = '<div class="empty-state"><div class="empty-state-icon">🎭</div><div class="empty-state-text">暂无推荐场景</div></div>';
+                }
+            } catch (error) {
+                console.error('获取报告失败:', error);
+            }
+        }
+
+        // 加载学生列表（老师端）
+        async function loadStudents() {
+            try {
+                const response = await fetch('/students');
+                const data = await response.json();
+                renderStudents(data.students || []);
+            } catch (error) {
+                console.error('加载学生失败:', error);
+            }
+        }
+
+        // 渲染学生列表
+        function renderStudents(students) {
+            const grid = document.getElementById('studentsGrid');
+            
+            if (students.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📝</div>
+                        <div class="empty-state-text">暂无学生，请添加</div>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = students.map(student => {
+                const convCount = student.conversation_history ? student.conversation_history.length : 0;
+                const avatarSrc = student.avatar ? `data:image/png;base64,${student.avatar}` : '';
+                const avatarLetter = student.name ? student.name.charAt(0) : '?';
+                const studentNo = student.student_no ? student.student_no : '暂无学号';
+                return `
+                    <div class="student-card" data-id="${student.id}" onclick="selectStudent('${student.id}')">
+                        ${avatarSrc ? 
+                            `<img class="student-avatar" src="${avatarSrc}" alt="${student.name}">` : 
+                            `<div class="student-avatar">${avatarLetter}</div>`
+                        }
+                        <div class="student-name">${student.name}</div>
+                        <div class="student-class" style="font-size: 11px; color: #888;">🎓 ${studentNo}</div>
+                        <div class="student-class">${student.class_name || '未指定班级'}</div>
+                        <div class="student-stats">
+                            <span class="stat-item">💬 ${convCount}</span>
+                            <span class="stat-item">📅 ${student.created_at?.split(' ')[0] || '-'}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 选择学生
+        async function selectStudent(studentId) {
+            // 更新选中状态
+            document.querySelectorAll('.student-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.querySelector(`[data-id="${studentId}"]`).classList.add('selected');
+            
+            selectedStudentId = studentId;
+            
+            // 获取报告
+            try {
+                const response = await fetch(`/students/${studentId}/report`);
+                const data = await response.json();
+                renderReport(data);
+            } catch (error) {
+                console.error('获取报告失败:', error);
+            }
+        }
+
+        // 渲染报告
+        function renderReport(report) {
+            if (report.error) {
+                document.getElementById('reportSection').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('reportSection').style.display = 'grid';
+            document.getElementById('studentName').textContent = report.student;
+            document.getElementById('totalConversations').textContent = report.total_conversations;
+
+            // 渲染短板
+            const weaknessList = document.getElementById('weaknessList');
+            if (report.weaknesses && report.weaknesses.length > 0) {
+                weaknessList.innerHTML = report.weaknesses.map(w => `
+                    <li class="weakness-item">
+                        <span class="item-name">${w.area}</span>
+                        <div style="text-align: right;">
+                            <div class="item-score">掌握度: ${Math.round(w.score * 100)}%</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${w.score * 100}%"></div>
+                            </div>
+                        </div>
+                    </li>
+                `).join('');
+            } else {
+                weaknessList.innerHTML = '<li style="text-align: center; padding: 20px; color: #2e7d32;">🎉 暂无明显短板！</li>';
+            }
+
+            // 渲染优势
+            const strengthList = document.getElementById('strengthList');
+            if (report.strengths && report.strengths.length > 0) {
+                strengthList.innerHTML = report.strengths.map(s => `
+                    <li class="strength-item">
+                        <span class="item-name">${s.area}</span>
+                        <div style="text-align: right;">
+                            <div class="item-score">掌握度: ${Math.round(s.score * 100)}%</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${s.score * 100}%"></div>
+                            </div>
+                        </div>
+                    </li>
+                `).join('');
+            } else {
+                strengthList.innerHTML = '<li style="text-align: center; padding: 20px; color: #999;">需要更多互动才能分析优势</li>';
+            }
+
+            // 渲染建议
+            const suggestionList = document.getElementById('suggestionList');
+            if (report.suggestions && report.suggestions.length > 0) {
+                suggestionList.innerHTML = report.suggestions.map((s, i) => `
+                    <li class="suggestion-item">
+                        <span style="font-weight: 600; color: #667eea;">${i + 1}.</span> ${s}
+                    </li>
+                `).join('');
+            } else {
+                suggestionList.innerHTML = '<li style="text-align: center; padding: 20px; color: #999;">暂无建议</li>';
+            }
+
+            // 渲染推荐场景
+            const scenarioList = document.getElementById('scenarioList');
+            if (report.recommended_scenarios && report.recommended_scenarios.length > 0) {
+                scenarioList.innerHTML = report.recommended_scenarios.map(s => `
+                    <div class="scenario-card">
+                        <div class="scenario-title">🎬 ${s.title}</div>
+                        <div class="scenario-reason">💡 ${s.reason}</div>
+                    </div>
+                `).join('');
+            } else {
+                scenarioList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🎭</div>
+                        <div class="empty-state-text">暂无推荐场景</div>
+                    </div>
+                `;
+            }
+        }
+
+        // 添加学生
+        async function addStudent() {
+            const name = document.getElementById('studentNameInput').value.trim();
+            const studentNo = document.getElementById('studentNoInput').value.trim();
+            const className = document.getElementById('classNameInput').value.trim();
+            const avatarPreview = document.getElementById('avatarPreview');
+            const avatar = avatarPreview.src ? avatarPreview.src.split(',')[1] : null;
+            
+            if (!name) {
+                alert('请输入学生姓名');
+                return;
+            }
+            
+            if (studentNo && (!/^\d+$/.test(studentNo) || studentNo.length !== 13)) {
+                alert('学号必须是13位数字');
+                return;
+            }
+
+            try {
+                const response = await fetch('/students', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, student_no: studentNo, class_name: className, avatar: avatar })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    hideAddModal();
+                    loadStudents();
+                    alert('添加成功！');
+                } else {
+                    alert(data.error || '添加失败');
+                }
+            } catch (error) {
+                alert('添加失败');
+            }
+        }
+
+        // 头像上传处理
+        document.getElementById('avatarUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    document.getElementById('avatarPreview').src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 显示/隐藏模态框
+        function showAddModal() {
+            document.getElementById('addModal').classList.add('show');
+            document.getElementById('avatarPreview').src = '';
+            document.getElementById('studentNameInput').value = '';
+            document.getElementById('studentNoInput').value = '';
+            document.getElementById('classNameInput').value = '';
+            document.getElementById('avatarUpload').value = '';
+        }
+
+        function hideAddModal() {
+            document.getElementById('addModal').classList.remove('show');
+            document.getElementById('studentNameInput').value = '';
+            document.getElementById('studentNoInput').value = '';
+            document.getElementById('classNameInput').value = '';
+            document.getElementById('avatarPreview').src = '';
+            document.getElementById('avatarUpload').value = '';
+        }
+
+        // 初始化
+        loadCurrentUser();
+    </script>
+</body>
+</html>

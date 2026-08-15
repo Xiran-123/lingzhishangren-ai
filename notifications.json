@@ -1,0 +1,140 @@
+[
+  {
+    "id": 1,
+    "title": "1",
+    "content": "1",
+    "class_name": "1",
+    "sender": "老师",
+    "created_at": "2026-06-07 10:06:22",
+    "read": false,
+    "attachments": [
+      {
+        "filename": "01_.pptx",
+        "stored_filename": "7dbe2970933b4756bbbcfcd332956d3d_01_.pptx",
+        "file_path": "uploads\\7dbe2970933b4756bbbcfcd332956d3d_01_.pptx",
+        "file_size": 3066074,
+        "type": "document"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "title": "1",
+    "content": "1",
+    "class_name": "1",
+    "sender": "老师",
+    "created_at": "2026-06-07 10:06:24",
+    "read": false,
+    "attachments": [
+      {
+        "filename": "01_.pptx",
+        "stored_filename": "ad22b55d9d1843729dec6b4f18535554_01_.pptx",
+        "file_path": "uploads\\ad22b55d9d1843729dec6b4f18535554_01_.pptx",
+        "file_size": 3066074,
+        "type": "document"
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "title": "1",
+    "content": "1",
+    "class_name": "1",
+    "sender": "老师",
+    "created_at": "2026-06-07 10:06:27",
+    "read": false,
+    "attachments": [
+      {
+        "filename": "01_.pptx",
+        "stored_filename": "87f50a59f0ff4cd2a50acd7e21ba9ae0_01_.pptx",
+        "file_path": "uploads\\87f50a59f0ff4cd2a50acd7e21ba9ae0_01_.pptx",
+        "file_size": 3066074,
+        "type": "document"
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "title": "1",
+    "content": "1",
+    "class_name": "1",
+    "sender": "老师",
+    "created_at": "2026-06-07 10:06:27",
+    "read": false,
+    "attachments": [
+      {
+        "filename": "01_.pptx",
+        "stored_filename": "535bd42c699a4c16a6cf3b9eeed2b7dc_01_.pptx",
+        "file_path": "uploads\\535bd42c699a4c16a6cf3b9eeed2b7dc_01_.pptx",
+        "file_size": 3066074,
+        "type": "document"
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "title": "1",
+    "content": "1",
+    "class_name": "1",
+    "sender": "老师",
+    "created_at": "2026-06-07 10:06:27",
+    "read": false,
+    "attachments": [
+      {
+        "filename": "01_.pptx",
+        "stored_filename": "b2eb5b50eb0a4cb0a5d060c67c791a2d_01_.pptx",
+        "file_path": "uploads\\b2eb5b50eb0a4cb0a5d060c67c791a2d_01_.pptx",
+        "file_size": 3066074,
+        "type": "document"
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "title": "1",
+    "content": "1",
+    "class_name": "1",
+    "sender": "老师",
+    "created_at": "2026-06-07 10:06:27",
+    "read": false,
+    "attachments": [
+      {
+        "filename": "01_.pptx",
+        "stored_filename": "193de0cb362542f3a796c32d54efc9e5_01_.pptx",
+        "file_path": "uploads\\193de0cb362542f3a796c32d54efc9e5_01_.pptx",
+        "file_size": 3066074,
+        "type": "document"
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "title": "1",
+    "content": "李昊宸牛逼",
+    "class_name": "123",
+    "sender": "老师",
+    "created_at": "2026-06-10 22:25:31",
+    "read": false,
+    "attachments": []
+  },
+  {
+    "id": 8,
+    "title": "1",
+    "content": "第一条通知",
+    "class_name": "1",
+    "sender": "teacher1",
+    "created_at": "2026-06-11 09:54:29",
+    "read": false,
+    "attachments": []
+  },
+  {
+    "id": 9,
+    "title": "1",
+    "content": "123456",
+    "class_name": "1",
+    "sender": "teacher1",
+    "created_at": "2026-06-11 10:03:22",
+    "read": true,
+    "attachments": []
+  }
+]

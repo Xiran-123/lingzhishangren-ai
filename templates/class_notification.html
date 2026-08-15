@@ -1,0 +1,1562 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>班级管理与通知 - 灵智尚人</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .tab {
+            background: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tab:hover:not(.active) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .content {
+            background: white;
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0f2f5;
+        }
+
+        .class-form {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .input {
+            flex: 1;
+            padding: 14px 18px;
+            border: 2px solid #e8e8f0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-danger {
+            background: #ff4757;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #ff3344;
+        }
+
+        .class-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .class-card {
+            background: #f8f9fc;
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .class-card:hover {
+            border-color: #667eea;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.15);
+        }
+
+        .class-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .class-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .class-count {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .class-meta {
+            font-size: 13px;
+            color: #999;
+            margin-bottom: 16px;
+        }
+
+        .class-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 13px;
+            flex: 1;
+            min-width: 80px;
+        }
+
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
+
+        .modal.show {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 28px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #999;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .modal-close:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .student-list {
+            margin-bottom: 24px;
+        }
+
+        .student-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #f8f9fc;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .student-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .student-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+        }
+
+        .student-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .student-date {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .btn-remove {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-remove:hover {
+            background: #ff3838;
+        }
+
+        .add-student-form {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .add-student-form input {
+            flex: 1;
+        }
+
+        .empty-students {
+            text-align: center;
+            padding: 32px;
+            color: #999;
+        }
+
+        .empty-students-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .notification-form {
+            background: #f8f9fc;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e8e8f0;
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 120px;
+            transition: all 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        select {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e8e8f0;
+            border-radius: 10px;
+            font-size: 15px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* 文件上传区域样式 */
+        .file-upload-area {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+
+        .file-upload-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            background: white;
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .file-upload-btn:hover {
+            background: rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .file-upload-btn:active {
+            transform: translateY(0);
+        }
+
+        .file-upload-btn span {
+            font-size: 20px;
+        }
+
+        .file-preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .file-preview-item {
+            background: white;
+            border-radius: 10px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid #e8e8f0;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .file-thumbnail {
+            width: 50px;
+            height: 50px;
+            background: #f0f2f5;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .file-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-name {
+            font-weight: 600;
+            font-size: 13px;
+            color: #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-size {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .file-remove-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+        .file-remove-btn:hover {
+            background: #ff3344;
+            transform: scale(1.1);
+        }
+
+        .image-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .image-preview-item {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid #e8e8f0;
+        }
+
+        .image-preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-preview-item .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .video-preview-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .video-preview-item {
+            background: white;
+            border-radius: 10px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 2px solid #e8e8f0;
+        }
+
+        .video-icon {
+            width: 60px;
+            height: 60px;
+            background: #f0f2f5;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            flex-shrink: 0;
+        }
+
+        .notification-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .notification-item {
+            background: #f8f9fc;
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .notification-item.unread {
+            border-left-color: #ff4757;
+            background: #fff5f5;
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .notification-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .notification-badge {
+            background: #ff4757;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .notification-content {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .notification-images {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e8e8f0;
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .image-item {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .preview-image {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .image-caption {
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-size: 12px;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .notification-attachments {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e8e8f0;
+        }
+
+        .attachment-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .attachment-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .attachment-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 6px;
+            text-decoration: none;
+            color: #667eea;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .attachment-item:hover {
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        .notification-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+            color: #999;
+        }
+
+        .notification-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e8e8f0;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state-text {
+            font-size: 16px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .success-message {
+            background: #4CAF50;
+            color: white;
+            padding: 14px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .error-message {
+            background: #ff4757;
+            color: white;
+            padding: 14px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button class="nav-btn" onclick="goBack()" style="background: rgba(255, 255, 255, 0.15);">← 返回</button>
+                <h1>📚 班级管理与通知</h1>
+            </div>
+            <div class="nav-buttons">
+                <a href="/" class="nav-btn">💬 AI对话</a>
+                <a href="/scenario-page" class="nav-btn">🎬 剧情演绎</a>
+                <a href="/search-logs-page" class="nav-btn">📚 搜索日志</a>
+                <a href="/student-report-page" class="nav-btn">📊 学生分析</a>
+                <button class="nav-btn" onclick="doLogout()">🔓 退出登录</button>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('classes')">🏫 班级管理</button>
+            <button class="tab" onclick="switchTab('notifications')">📢 发送通知</button>
+            <button class="tab" onclick="switchTab('history')">📋 通知历史</button>
+        </div>
+
+        <div class="content">
+            <!-- 班级管理 -->
+            <div id="classesSection">
+                <div class="section-title">🏫 班级列表</div>
+                
+                <div class="class-form">
+                    <input type="text" id="classNameInput" class="input" placeholder="输入新班级名称...">
+                    <button class="btn btn-primary" onclick="createClass()">➕ 创建班级</button>
+                </div>
+
+                <div id="classList" class="class-grid"></div>
+            </div>
+
+            <!-- 发送通知 -->
+            <div id="notificationsSection" class="hidden">
+                <div class="section-title">📢 发送通知</div>
+                
+                <div class="notification-form">
+                    <div id="messageArea"></div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">通知标题</label>
+                        <input type="text" id="notificationTitle" class="input" placeholder="输入通知标题...">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">选择班级</label>
+                        <select id="notificationClass">
+                            <option value="">请选择班级</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">通知内容</label>
+                        <textarea id="notificationContent" placeholder="输入通知内容..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">添加附件</label>
+                        <div class="file-upload-area">
+                            <label class="file-upload-btn">
+                                <span>📷</span> 上传图片
+                                <input type="file" id="imageUpload" style="display: none;" accept="image/*" multiple onchange="handleImageUpload(event)">
+                            </label>
+                            <label class="file-upload-btn">
+                                <span>📁</span> 上传文件
+                                <input type="file" id="fileUpload" style="display: none;" multiple onchange="handleFileUpload(event)">
+                            </label>
+                            <label class="file-upload-btn">
+                                <span>🎬</span> 上传视频
+                                <input type="file" id="videoUpload" style="display: none;" accept="video/*" multiple onchange="handleVideoUpload(event)">
+                            </label>
+                        </div>
+
+                        <!-- 图片预览 -->
+                        <div id="imagePreviewGrid" class="image-preview-grid"></div>
+
+                        <!-- 文件预览 -->
+                        <div id="filePreviewContainer" class="file-preview-container"></div>
+
+                        <!-- 视频预览 -->
+                        <div id="videoPreviewContainer" class="video-preview-container"></div>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="sendNotification()" style="width: 100%;">
+                        🚀 发送通知
+                    </button>
+                </div>
+            </div>
+
+            <!-- 通知历史 -->
+            <div id="historySection" class="hidden">
+                <div class="section-title">📋 通知历史</div>
+                <div id="notificationList" class="notification-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 班级成员模态框 -->
+    <div id="studentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">班级成员</div>
+                <button class="modal-close" onclick="closeStudentModal()">&times;</button>
+            </div>
+            <div id="studentList" class="student-list"></div>
+            <div class="form-group">
+                <label class="form-label">添加新学生</label>
+                <div class="add-student-form">
+                    <input type="text" id="newStudentName" class="input" placeholder="输入学生姓名...">
+                    <button class="btn btn-primary" onclick="addStudent()">➕ 添加</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = { role: 'student', student_name: '', class_name: '' };
+        let selectedImages = [];
+        let selectedFiles = [];
+        let selectedVideos = [];
+        let currentClassId = null;
+        let currentClassName = '';
+
+        async function loadCurrentUser() {
+            try {
+                const response = await fetch('/current-user');
+                if (response.ok) {
+                    const data = await response.json();
+                    currentUser = data;
+                    
+                    if (currentUser.role !== 'teacher') {
+                        document.getElementById('classesSection').classList.add('hidden');
+                        document.getElementById('notificationsSection').classList.add('hidden');
+                        document.querySelector('[onclick="switchTab(\'classes\')"]').classList.add('hidden');
+                        document.querySelector('[onclick="switchTab(\'notifications\')"]').classList.add('hidden');
+                        switchTab('history');
+                    }
+                }
+            } catch (error) {
+                console.error('获取用户信息失败:', error);
+            }
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
+            
+            document.getElementById('classesSection').classList.add('hidden');
+            document.getElementById('notificationsSection').classList.add('hidden');
+            document.getElementById('historySection').classList.add('hidden');
+            
+            if (tab === 'classes') {
+                document.getElementById('classesSection').classList.remove('hidden');
+                loadClasses();
+            } else if (tab === 'notifications') {
+                document.getElementById('notificationsSection').classList.remove('hidden');
+                loadClassesForNotification();
+            } else if (tab === 'history') {
+                document.getElementById('historySection').classList.remove('hidden');
+                loadNotifications();
+            }
+        }
+
+        function handleImageUpload(event) {
+            const files = Array.from(event.target.files);
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    selectedImages.push({
+                        name: file.name,
+                        data: e.target.result,
+                        size: formatFileSize(file.size)
+                    });
+                    renderImagePreview();
+                };
+                reader.readAsDataURL(file);
+            });
+            event.target.value = '';
+        }
+
+        function removeImage(index) {
+            selectedImages.splice(index, 1);
+            renderImagePreview();
+        }
+
+        function renderImagePreview() {
+            const grid = document.getElementById('imagePreviewGrid');
+            if (selectedImages.length === 0) {
+                grid.style.display = 'none';
+                return;
+            }
+            grid.style.display = 'grid';
+            grid.innerHTML = selectedImages.map((img, index) => `
+                <div class="image-preview-item">
+                    <img src="${img.data}" alt="${escapeHtml(img.name)}">
+                    <button class="remove-btn" onclick="removeImage(${index})">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function handleFileUpload(event) {
+            const files = Array.from(event.target.files);
+            files.forEach(file => {
+                selectedFiles.push({
+                    name: file.name,
+                    size: formatFileSize(file.size),
+                    file: file
+                });
+            });
+            renderFilePreview();
+            event.target.value = '';
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            renderFilePreview();
+        }
+
+        function renderFilePreview() {
+            const container = document.getElementById('filePreviewContainer');
+            if (selectedFiles.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+            container.style.display = 'flex';
+            container.innerHTML = selectedFiles.map((file, index) => `
+                <div class="file-preview-item">
+                    <div class="file-thumbnail">📄</div>
+                    <div class="file-info">
+                        <div class="file-name">${escapeHtml(file.name)}</div>
+                        <div class="file-size">${file.size}</div>
+                    </div>
+                    <button class="file-remove-btn" onclick="removeFile(${index})">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function handleVideoUpload(event) {
+            const files = Array.from(event.target.files);
+            files.forEach(file => {
+                selectedVideos.push({
+                    name: file.name,
+                    size: formatFileSize(file.size),
+                    file: file
+                });
+            });
+            renderVideoPreview();
+            event.target.value = '';
+        }
+
+        function removeVideo(index) {
+            selectedVideos.splice(index, 1);
+            renderVideoPreview();
+        }
+
+        function renderVideoPreview() {
+            const container = document.getElementById('videoPreviewContainer');
+            if (selectedVideos.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+            container.style.display = 'flex';
+            container.innerHTML = selectedVideos.map((video, index) => `
+                <div class="video-preview-item">
+                    <div class="video-icon">🎬</div>
+                    <div class="file-info">
+                        <div class="file-name">${escapeHtml(video.name)}</div>
+                        <div class="file-size">${video.size}</div>
+                    </div>
+                    <button class="file-remove-btn" onclick="removeVideo(${index})">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        async function loadClasses() {
+            try {
+                const response = await fetch('/api/classes');
+                const data = await response.json();
+                
+                const classList = document.getElementById('classList');
+                
+                if (data.classes.length === 0) {
+                    classList.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🏫</div>
+                            <div class="empty-state-text">暂无班级，点击上方按钮创建</div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                classList.innerHTML = data.classes.map(cls => `
+                    <div class="class-card">
+                        <div class="class-header">
+                            <div class="class-name">${escapeHtml(cls.name)}</div>
+                            <div class="class-count">${cls.student_count || 0} 人</div>
+                        </div>
+                        <div class="class-meta">创建于 ${cls.created_at}</div>
+                        <div class="class-actions">
+                            <button class="btn btn-primary btn-sm" onclick="viewClassStudents(${cls.id}, '${escapeHtml(cls.name)}')">👥 成员</button>
+                            <button class="btn btn-primary btn-sm" onclick="editClass(${cls.id}, '${escapeHtml(cls.name)}')">✏️ 编辑</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteClass(${cls.id})">🗑️ 删除</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('加载班级失败:', error);
+            }
+        }
+
+        async function createClass() {
+            const className = document.getElementById('classNameInput').value.trim();
+            
+            if (!className) {
+                alert('请输入班级名称');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/classes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: className })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('classNameInput').value = '';
+                    showMessage('班级创建成功！', 'success');
+                    loadClasses();
+                } else {
+                    showMessage(data.error || '创建失败', 'error');
+                }
+            } catch (error) {
+                console.error('创建班级失败:', error);
+                showMessage('创建失败，请重试', 'error');
+            }
+        }
+
+        function editClass(classId, currentName) {
+            const newName = prompt('请输入新的班级名称:', currentName);
+            
+            if (newName && newName.trim() !== currentName) {
+                fetch(`/api/classes/${classId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: newName.trim() })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showMessage('班级更新成功！', 'success');
+                        loadClasses();
+                    } else {
+                        showMessage(data.error || '更新失败', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('更新班级失败:', error);
+                    showMessage('更新失败，请重试', 'error');
+                });
+            }
+        }
+
+        function deleteClass(classId) {
+            if (confirm('确定要删除这个班级吗？')) {
+                fetch(`/api/classes/${classId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showMessage('班级删除成功！', 'success');
+                        loadClasses();
+                    } else {
+                        showMessage(data.error || '删除失败', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('删除班级失败:', error);
+                    showMessage('删除失败，请重试', 'error');
+                });
+            }
+        }
+
+        // 查看班级成员
+        async function viewClassStudents(classId, className) {
+            currentClassId = classId;
+            currentClassName = className;
+            
+            document.getElementById('modalTitle').textContent = `${className} - 班级成员`;
+            document.getElementById('studentModal').classList.add('show');
+            
+            await loadClassStudents(classId);
+        }
+
+        // 加载班级成员列表
+        async function loadClassStudents(classId) {
+            try {
+                const response = await fetch(`/api/classes/${classId}/students`);
+                const data = await response.json();
+                
+                const studentList = document.getElementById('studentList');
+                
+                if (data.students.length === 0) {
+                    studentList.innerHTML = `
+                        <div class="empty-students">
+                            <div class="empty-students-icon">👥</div>
+                            <div>暂无成员，请添加学生</div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                studentList.innerHTML = data.students.map(student => `
+                    <div class="student-item">
+                        <div class="student-info">
+                            <div class="student-avatar">${student.name.charAt(0)}</div>
+                            <div>
+                                <div class="student-name">${escapeHtml(student.name)}</div>
+                                <div class="student-date">加入时间: ${student.created_at || '未知'}</div>
+                            </div>
+                        </div>
+                        <button class="btn-remove" onclick="removeStudent('${student.id}')">移除</button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('加载班级成员失败:', error);
+                showMessage('加载成员失败', 'error');
+            }
+        }
+
+        // 添加学生
+        async function addStudent() {
+            const studentName = document.getElementById('newStudentName').value.trim();
+            
+            if (!studentName) {
+                showMessage('请输入学生姓名', 'error');
+                return;
+            }
+            
+            if (!currentClassId) {
+                showMessage('请先选择班级', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/classes/${currentClassId}/students`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: studentName })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('newStudentName').value = '';
+                    showMessage(data.message || '添加成功', 'success');
+                    await loadClassStudents(currentClassId);
+                    loadClasses(); // 刷新班级列表以更新学生数量
+                } else {
+                    showMessage(data.error || '添加失败', 'error');
+                }
+            } catch (error) {
+                console.error('添加学生失败:', error);
+                showMessage('添加失败，请重试', 'error');
+            }
+        }
+
+        // 移除学生
+        async function removeStudent(studentId) {
+            if (!confirm('确定要将该学生从班级移除吗？')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/classes/${currentClassId}/students/${encodeURIComponent(studentId)}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage(data.message || '移除成功', 'success');
+                    await loadClassStudents(currentClassId);
+                    loadClasses(); // 刷新班级列表以更新学生数量
+                } else {
+                    showMessage(data.error || '移除失败', 'error');
+                }
+            } catch (error) {
+                console.error('移除学生失败:', error);
+                showMessage('移除失败，请重试', 'error');
+            }
+        }
+
+        // 关闭模态框
+        function closeStudentModal() {
+            document.getElementById('studentModal').classList.remove('show');
+            currentClassId = null;
+            currentClassName = '';
+        }
+
+        // 点击模态框外部关闭
+        document.getElementById('studentModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeStudentModal();
+            }
+        });
+
+        async function loadClassesForNotification() {
+            try {
+                const response = await fetch('/api/classes');
+                const data = await response.json();
+                
+                const select = document.getElementById('notificationClass');
+                select.innerHTML = '<option value="">请选择班级</option>';
+                
+                data.classes.forEach(cls => {
+                    const option = document.createElement('option');
+                    option.value = cls.name;
+                    option.textContent = `${cls.name} (${cls.student_count || 0}人)`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('加载班级列表失败:', error);
+            }
+        }
+
+        async function sendNotification() {
+            const title = document.getElementById('notificationTitle').value.trim();
+            const content = document.getElementById('notificationContent').value.trim();
+            const className = document.getElementById('notificationClass').value;
+            
+            // 验证：标题不能为空
+            if (!title) {
+                showMessage('请填写通知标题', 'error');
+                return;
+            }
+            
+            // 验证：必须选择班级
+            if (!className) {
+                showMessage('请选择班级', 'error');
+                return;
+            }
+            
+            // 验证：内容或附件至少有一个
+            if (!content && selectedImages.length === 0 && selectedFiles.length === 0 && selectedVideos.length === 0) {
+                showMessage('通知内容和附件至少填写一项', 'error');
+                return;
+            }
+            
+            try {
+                const formData = new FormData();
+                formData.append('title', title);
+                formData.append('content', content);
+                formData.append('class_name', className);
+                
+                selectedImages.forEach(img => {
+                    const byteString = atob(img.data.split(',')[1]);
+                    const mimeString = img.data.split(',')[0].split(':')[1].split(';')[0];
+                    const ab = new ArrayBuffer(byteString.length);
+                    const ia = new Uint8Array(ab);
+                    for (let i = 0; i < byteString.length; i++) {
+                        ia[i] = byteString.charCodeAt(i);
+                    }
+                    const blob = new Blob([ab], { type: mimeString });
+                    formData.append('images', blob, img.name);
+                });
+                
+                selectedFiles.forEach(file => {
+                    formData.append('documents', file.file);
+                });
+                
+                selectedVideos.forEach(video => {
+                    formData.append('videos', video.file);
+                });
+                
+                const response = await fetch('/api/notifications', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('notificationTitle').value = '';
+                    document.getElementById('notificationContent').value = '';
+                    document.getElementById('notificationClass').value = '';
+                    selectedImages = [];
+                    selectedFiles = [];
+                    selectedVideos = [];
+                    renderImagePreview();
+                    renderFilePreview();
+                    renderVideoPreview();
+                    showMessage('通知发送成功！', 'success');
+                } else {
+                    showMessage(data.error || '发送失败', 'error');
+                }
+            } catch (error) {
+                console.error('发送通知失败:', error);
+                showMessage('发送失败，请重试', 'error');
+            }
+        }
+
+        async function loadNotifications() {
+            try {
+                const response = await fetch('/api/notifications');
+                const data = await response.json();
+                
+                const list = document.getElementById('notificationList');
+                
+                if (data.notifications.length === 0) {
+                    list.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <div class="empty-state-text">暂无通知</div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                list.innerHTML = data.notifications.map(notif => {
+                    let attachmentsHtml = '';
+                    if (notif.attachments && notif.attachments.length > 0) {
+                        const imageAttachments = notif.attachments.filter(att => att.type === 'image');
+                        const otherAttachments = notif.attachments.filter(att => att.type !== 'image');
+                        
+                        let imageHtml = '';
+                        if (imageAttachments.length > 0) {
+                            imageHtml = `
+                                <div class="notification-images">
+                                    <div class="attachment-title">🖼️ 图片</div>
+                                    <div class="image-grid">
+                                        ${imageAttachments.map(att => `
+                                            <div class="image-item">
+                                                <img src="/images/${att.stored_filename}" alt="${escapeHtml(att.filename)}" class="preview-image">
+                                                <div class="image-caption">${escapeHtml(att.filename)}</div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        
+                        let otherHtml = '';
+                        if (otherAttachments.length > 0) {
+                            otherHtml = `
+                                <div class="notification-attachments">
+                                    <div class="attachment-title">📎 附件</div>
+                                    <div class="attachment-list">
+                                        ${otherAttachments.map(att => `
+                                            <a href="/uploads/${att.stored_filename}" class="attachment-item" target="_blank">
+                                                ${getFileIcon(att.type)} ${escapeHtml(att.filename)}
+                                            </a>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        
+                        attachmentsHtml = imageHtml + otherHtml;
+                    }
+                    return `
+                    <div class="notification-item ${notif.read ? '' : 'unread'}">
+                        <div class="notification-header">
+                            <div class="notification-title">${escapeHtml(notif.title)}</div>
+                            ${notif.read ? '' : '<span class="notification-badge">未读</span>'}
+                        </div>
+                        <div class="notification-content">${escapeHtml(notif.content)}</div>
+                        ${attachmentsHtml}
+                        <div class="notification-meta">
+                            <span>📁 ${notif.class_name}</span>
+                            <span>📅 ${notif.created_at}</span>
+                            ${currentUser.role === 'teacher' ? `<span>👤 ${notif.sender}</span>` : ''}
+                        </div>
+                        <div class="notification-actions">
+                            ${!notif.read && currentUser.role === 'student' ? 
+                                `<button class="btn btn-primary btn-sm" onclick="markAsRead(${notif.id})">✓ 标记已读</button>` : 
+                                ''}
+                            ${currentUser.role === 'teacher' ? 
+                                `<button class="btn btn-danger btn-sm" onclick="deleteNotification(${notif.id})">🗑️ 删除</button>` : 
+                                ''}
+                        </div>
+                    </div>
+                `}).join('');
+            } catch (error) {
+                console.error('加载通知失败:', error);
+            }
+        }
+
+        function getFileIcon(type) {
+            if (type.startsWith('image')) return '📷';
+            if (type.startsWith('video')) return '🎬';
+            return '📄';
+        }
+
+        async function markAsRead(notificationId) {
+            try {
+                await fetch(`/api/notifications/${notificationId}`, {
+                    method: 'PUT'
+                });
+                loadNotifications();
+            } catch (error) {
+                console.error('标记已读失败:', error);
+            }
+        }
+
+        async function deleteNotification(notificationId) {
+            if (confirm('确定要删除这条通知吗？')) {
+                try {
+                    const response = await fetch(`/api/notifications/${notificationId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        showMessage('通知已删除', 'success');
+                        loadNotifications();
+                    } else {
+                        showMessage(data.error || '删除失败', 'error');
+                    }
+                } catch (error) {
+                    console.error('删除通知失败:', error);
+                    showMessage('删除失败，请重试', 'error');
+                }
+            }
+        }
+
+        function showMessage(text, type) {
+            const messageArea = document.getElementById('messageArea');
+            messageArea.innerHTML = `<div class="${type}-message">${text}</div>`;
+            setTimeout(() => {
+                messageArea.innerHTML = '';
+            }, 3000);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function goBack() {
+            // 如果有历史记录，返回上一页，否则返回首页
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = '/';
+            }
+        }
+
+        async function doLogout() {
+            if (confirm('确定要退出登录吗？')) {
+                try {
+                    const response = await fetch('/logout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    
+                    if (response.ok) {
+                        localStorage.removeItem('lingzhi_chat_history');
+                        localStorage.removeItem('lingzhi_scenario_history');
+                        window.location.href = '/';
+                    }
+                } catch (error) {
+                    console.error('退出失败:', error);
+                    window.location.href = '/';
+                }
+            }
+        }
+
+        loadCurrentUser();
+    </script>
+</body>
+</html>

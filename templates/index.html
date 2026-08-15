@@ -39,7 +39,36 @@
             padding: 20px 24px;
             display: flex;
             align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
             gap: 16px;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            padding: 10px 16px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
         }
 
         .header-icon {
@@ -187,6 +216,37 @@
             margin-top: 12px;
         }
 
+        .message-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .message:hover .message-actions {
+            opacity: 1;
+        }
+
+        .action-btn {
+            padding: 6px 14px;
+            background: #f0f2f5;
+            border: none;
+            border-radius: 16px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #666;
+        }
+
+        .action-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
         .input-area {
             padding: 16px 24px;
             background: white;
@@ -331,16 +391,160 @@
         .messages-area::-webkit-scrollbar-thumb:hover {
             background: #bcbcc4;
         }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-close {
+            margin-left: auto;
+            font-size: 24px;
+            color: #999;
+            cursor: pointer;
+        }
+
+        .modal-close:hover {
+            color: #666;
+        }
+
+        .upload-area {
+            border: 2px dashed #e0e0e8;
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover,
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #f8f9fc;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .upload-text {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .upload-hint {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-progress {
+            display: none;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #e0e0e8;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid;
+        }
+
+        .modal-btn.cancel {
+            background: white;
+            border-color: #ddd;
+            color: #666;
+        }
+
+        .modal-btn.cancel:hover {
+            background: #f5f5f5;
+        }
     </style>
 </head>
 <body>
     <div class="chat-container">
         <div class="header">
-            <div class="header-icon">🤖</div>
-            <div class="header-text">
-                <h1>灵智尚人</h1>
-                <p>智能对话，随时为您服务</p>
+            <div class="header-left">
+                <div class="header-icon">🤖</div>
+                <div class="header-text">
+                    <h1>灵智尚人</h1>
+                    <p>智能对话，随时为您服务</p>
+                </div>
             </div>
+            <div class="header-right" id="headerRight">
+                <!-- 动态生成导航按钮 -->
+            </div>
+            <button class="notification-bell" id="notificationBell" onclick="showNotificationModal()" style="margin-left: 15px; background: rgba(255,255,255,0.2); border: none; border-radius: 10px; padding: 10px 16px; color: white; font-size: 24px; cursor: pointer;">
+                🔔
+                <span id="notificationBadge" class="notification-badge" style="position: absolute; top: 10px; right: 10px; background: #ff4757; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; display: none; align-items: center; justify-content: center;">0</span>
+            </button>
         </div>
 
         <div class="mode-selector">
@@ -386,6 +590,290 @@
         let selectedImage = null;
         let currentMode = 'fast';
         let isGenerating = false;
+        let chatHistory = [];
+        let conversationHistory = [];  // 用于API的对话历史
+        let currentUser = { role: 'student', student_name: '', class_name: '' };
+        
+        // 本地存储键名
+        const STORAGE_KEY = 'lingzhi_chat_history';
+        
+        // 获取当前用户信息
+        async function loadCurrentUser() {
+            try {
+                const response = await fetch('/current-user');
+                if (response.ok) {
+                    const data = await response.json();
+                    currentUser = data;
+                    renderNavigation();
+                    updateHeaderTitle();
+                    loadNotificationCount();
+                }
+            } catch (error) {
+                console.error('获取用户信息失败:', error);
+            }
+        }
+        
+        // 加载未读通知数量
+        async function loadNotificationCount() {
+            try {
+                const response = await fetch('/api/notifications');
+                const data = await response.json();
+                
+                if (data.notifications) {
+                    const unreadCount = data.notifications.filter(n => !n.read).length;
+                    const badge = document.getElementById('notificationBadge');
+                    
+                    if (unreadCount > 0) {
+                        badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+                        badge.style.display = 'flex';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+            } catch (error) {
+                console.error('加载通知数量失败:', error);
+            }
+        }
+        
+        // 显示通知弹窗
+        async function showNotificationModal() {
+            try {
+                const response = await fetch('/api/notifications');
+                const data = await response.json();
+                
+                let content = '';
+                
+                if (!data.notifications || data.notifications.length === 0) {
+                    content = `
+                        <div style="text-align: center; padding: 40px; color: #999;">
+                            <div style="font-size: 48px;">📭</div>
+                            <p>暂无通知</p>
+                        </div>
+                    `;
+                } else {
+                    content = data.notifications.map(notif => `
+                        <div style="background: ${notif.read ? '#f8f9fc' : '#fff5f5'}; border-radius: 10px; padding: 16px; margin-bottom: 12px; border-left: 4px solid ${notif.read ? '#667eea' : '#ff4757'};">
+                            <div style="font-weight: 600; color: #333; margin-bottom: 8px;">${escapeHtml(notif.title)}</div>
+                            <div style="font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 10px;">${escapeHtml(notif.content)}</div>
+                            <div style="font-size: 12px; color: #999;">
+                                <span>📁 ${notif.class_name || '未指定班级'}</span> &nbsp;
+                                <span>📅 ${notif.created_at}</span>
+                            </div>
+                            ${!notif.read && currentUser.role === 'student' ? 
+                                `<button onclick="markNotificationRead(${notif.id})" style="margin-top: 10px; padding: 6px 12px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">✓ 标记已读</button>` : 
+                                ''}
+                        </div>
+                    `).join('');
+                }
+                
+                const modal = document.createElement('div');
+                modal.id = 'notificationModal';
+                modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;';
+                modal.innerHTML = `
+                    <div style="background: white; border-radius: 16px; max-width: 500px; width: 90%; max-height: 80vh; overflow: hidden;">
+                        <div style="padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                            <h3 style="margin: 0;">📢 我的通知</h3>
+                            <button onclick="closeNotificationModal()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">✕</button>
+                        </div>
+                        <div style="padding: 20px; max-height: 60vh; overflow-y: auto;">
+                            ${content}
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) closeNotificationModal();
+                });
+                
+                loadNotificationCount();
+            } catch (error) {
+                console.error('加载通知失败:', error);
+            }
+        }
+        
+        function closeNotificationModal() {
+            const modal = document.getElementById('notificationModal');
+            if (modal) modal.remove();
+        }
+        
+        async function markNotificationRead(notificationId) {
+            try {
+                await fetch(`/api/notifications/${notificationId}`, {
+                    method: 'PUT'
+                });
+                showNotificationModal();
+            } catch (error) {
+                console.error('标记已读失败:', error);
+            }
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // 渲染导航菜单
+        function renderNavigation() {
+            const headerRight = document.getElementById('headerRight');
+            let navHTML = '';
+            
+            // 学生端导航
+            if (currentUser.role === 'student') {
+                navHTML = `
+                    <a href="/scenario-page" class="nav-btn">🎬 剧情演绎</a>
+                    <a href="/exercise-page" class="nav-btn" style="background: rgba(67, 233, 123, 0.8);">✏️ 互动练习</a>
+                    <a href="/student-portrait-page" class="nav-btn" style="background: rgba(102, 126, 234, 0.8);">🎯 我的能力</a>
+                    <a href="/weekly-tasks-page" class="nav-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">📋 每周任务</a>
+                    <a href="/wrong-questions-page" class="nav-btn" style="background: rgba(245, 87, 108, 0.8);">📝 错题本</a>
+                    <a href="/knowledge-graph-page" class="nav-btn" style="background: rgba(42, 82, 152, 0.8);">🕸️ 知识图谱</a>
+                    <a href="/job-recruitment-page" class="nav-btn" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">💼 岗位招聘</a>
+                    <button class="nav-btn" style="background: linear-gradient(135deg, #fa541c, #eb2f96);" onclick="showEthicsDebate()">⚖️ 伦理辩论</button>
+                    <button class="nav-btn" style="background: linear-gradient(135deg, #13c2c2, #1890ff);" onclick="showPlatformGuide()">📖 使用说明</button>
+                    <button class="nav-btn" onclick="viewMyReport()">📊 我的报告</button>
+                    <button class="nav-btn" onclick="clearChatHistory()">🗑️ 清除记录</button>
+                    <button class="nav-btn logout-btn" onclick="doLogout()">🔓 退出登录</button>
+                `;
+            } else {
+                // 老师端导航
+                navHTML = `
+                    <a href="/scenario-page" class="nav-btn">🎬 剧情演绎</a>
+                    <a href="/exercise-page" class="nav-btn" style="background: rgba(67, 233, 123, 0.8);">✏️ 互动练习</a>
+                    <a href="/search-logs-page" class="nav-btn">📚 搜索日志</a>
+                    <a href="/student-report-page" class="nav-btn">📊 学生分析</a>
+                    <a href="/student-portrait-page" class="nav-btn" style="background: rgba(102, 126, 234, 0.8);">🎯 能力画像</a>
+                    <a href="/knowledge-graph-page" class="nav-btn" style="background: rgba(42, 82, 152, 0.8);">🕸️ 知识图谱</a>
+                    <a href="/job-recruitment-page" class="nav-btn" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">💼 岗位招聘</a>
+                    <a href="/class-notification-page" class="nav-btn">📢 班级通知</a>
+                    <a href="/upload-knowledge-page" class="nav-btn" style="background: rgba(17, 153, 142, 0.8);">📤 上传知识库</a>
+                    <button class="nav-btn" style="background: linear-gradient(135deg,#fa541c,#fa8c16);" onclick="showExerciseManager()">📝 练习题管理</button>
+                    <button class="nav-btn" style="background: linear-gradient(135deg,#ff4d4f,#fa541c);" onclick="showTeacherDashboard()">🎛️ 教师驾驶舱</button>
+                    <button class="nav-btn" style="background: linear-gradient(135deg,#722ed1,#13c2c2);" onclick="showAgentConfig()">🤖 AI助教配置</button>
+                    <button class="nav-btn" style="background: linear-gradient(135deg, #13c2c2, #1890ff);" onclick="showPlatformGuide()">📖 使用说明</button>
+                    <button class="nav-btn" onclick="clearChatHistory()">🗑️ 清除记录</button>
+                    <button class="nav-btn logout-btn" onclick="doLogout()">🔓 退出登录</button>
+                `;
+            }
+            
+            headerRight.innerHTML = navHTML;
+        }
+        
+        // 退出登录
+        async function doLogout() {
+            if (confirm('确定要退出登录吗？')) {
+                try {
+                    const response = await fetch('/logout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    
+                    if (response.ok) {
+                        // 清除本地存储
+                        localStorage.removeItem(STORAGE_KEY);
+                        window.location.href = '/';
+                    }
+                } catch (error) {
+                    console.error('退出失败:', error);
+                    // 即使请求失败，也跳转到登录页面
+                    localStorage.removeItem(STORAGE_KEY);
+                    window.location.href = '/';
+                }
+            }
+        }
+        
+        // 更新头部标题
+        function updateHeaderTitle() {
+            const headerText = document.querySelector('.header-text p');
+            if (currentUser.role === 'student' && currentUser.student_name) {
+                headerText.textContent = `欢迎, ${currentUser.student_name}！`;
+            } else if (currentUser.role === 'teacher') {
+                headerText.textContent = '教师端 - 智能对话，随时为您服务';
+            }
+        }
+        
+        // 学生查看自己的报告
+        function viewMyReport() {
+            if (currentUser.student_name) {
+                // 通过姓名查找学生ID并跳转到报告页面
+                window.location.href = `/student-report-page?name=${encodeURIComponent(currentUser.student_name)}`;
+            }
+        }
+        
+        // 保存聊天记录
+        function saveChatHistory() {
+            try {
+                const dataToSave = JSON.stringify(chatHistory);
+                // 检查大小，超过4MB就删除最早的记录
+                if (dataToSave.length > 4 * 1024 * 1024) {
+                    chatHistory = chatHistory.slice(-20); // 保留最近20条
+                    saveChatHistory();
+                    return;
+                }
+                localStorage.setItem(STORAGE_KEY, dataToSave);
+            } catch (e) {
+                console.error('保存聊天记录失败:', e);
+                // 如果是配额不足，删除一半的旧记录
+                if (e.name === 'QuotaExceededError') {
+                    chatHistory = chatHistory.slice(-Math.floor(chatHistory.length / 2));
+                    try {
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(chatHistory));
+                    } catch (e2) {
+                        console.error('再次保存失败:', e2);
+                        chatHistory = [];
+                    }
+                }
+            }
+        }
+        
+        // 加载聊天记录
+        function loadChatHistory() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    chatHistory = JSON.parse(saved);
+                    // 验证数据格式
+                    if (!Array.isArray(chatHistory)) {
+                        chatHistory = [];
+                    }
+                    renderChatHistory();
+                }
+            } catch (e) {
+                console.error('加载聊天记录失败:', e);
+                chatHistory = [];
+            }
+        }
+        
+        // 渲染聊天记录
+        function renderChatHistory() {
+            if (chatHistory.length === 0) return;
+            
+            // 重置conversationHistory
+            conversationHistory = [];
+            
+            // 清除所有消息（包括默认消息和之前的聊天）
+            const allMessages = messagesArea.querySelectorAll('.message');
+            allMessages.forEach(msg => {
+                if (!msg.id || !msg.id.includes('typing')) {
+                    msg.remove();
+                }
+            });
+            
+            // 渲染保存的消息
+            chatHistory.forEach(msg => {
+                addMessage(msg.content, msg.isUser, msg.image);
+            });
+        }
+        
+        // 清除聊天记录
+        function clearChatHistory() {
+            if (confirm('确定要清除所有聊天记录吗？')) {
+                chatHistory = [];
+                conversationHistory = [];
+                saveChatHistory();
+                location.reload();
+            }
+        }
 
         function switchMode(mode) {
             currentMode = mode;
@@ -402,7 +890,7 @@
                 reader.onload = function(event) {
                     imagePreview.src = event.target.result;
                     imagePreview.classList.add('show', 'remove');
-                    selectedImage = event.target.result.split(',')[1];
+                    selectedImage = event.target.result;  // 保存完整的Data URL，包括类型信息
                 };
                 reader.readAsDataURL(file);
             }
@@ -422,7 +910,43 @@
             userInput.style.height = Math.min(userInput.scrollHeight, 120) + 'px';
         }
 
-        function addMessage(content, isUser, imageBase64 = null) {
+        function addMessage(content, isUser, imageBase64 = null, saveToHistory = true) {
+            // 保存到聊天历史（可以选择不立即保存）
+            if (saveToHistory) {
+                // 确保图片数据完整（包含data URL前缀）
+                let imageDataToSave = null;
+                if (imageBase64) {
+                    if (imageBase64.startsWith('data:image/')) {
+                        imageDataToSave = imageBase64;
+                    } else {
+                        // 如果没有前缀，添加PNG前缀
+                        imageDataToSave = `data:image/png;base64,${imageBase64}`;
+                    }
+                }
+                
+                chatHistory.push({
+                    content: content,
+                    isUser: isUser,
+                    image: imageDataToSave,
+                    timestamp: Date.now()
+                });
+                saveChatHistory();
+            }
+            
+            // 维护API对话历史（用户消息总是立即添加）
+            if (isUser) {
+                conversationHistory.push({
+                    role: 'user',
+                    content: content
+                });
+            } else if (saveToHistory) {
+                // AI消息在saveToHistory=true时也立即添加（非流式情况）
+                conversationHistory.push({
+                    role: 'assistant',
+                    content: content
+                });
+            }
+            
             const messageDiv = document.createElement('div');
             messageDiv.className = 'message ' + (isUser ? 'user' : 'assistant');
             
@@ -435,9 +959,51 @@
             
             let htmlContent = formatMessage(content);
             if (imageBase64) {
-                htmlContent = `<img src="data:image/png;base64,${imageBase64}" alt="图片"><br><br>` + htmlContent;
+                // 检查是否是完整的Data URL
+                if (imageBase64.startsWith('data:image/')) {
+                    // 已经是完整的Data URL，直接使用
+                    htmlContent = `<img src="${imageBase64}" alt="图片" style="max-width: 100%; border-radius: 8px; margin: 10px 0;"><br>` + htmlContent;
+                } else {
+                    // 假设是base64编码的数据，默认使用PNG格式
+                    htmlContent = `<img src="data:image/png;base64,${imageBase64}" alt="图片" style="max-width: 100%; border-radius: 8px; margin: 10px 0;"><br>` + htmlContent;
+                }
             }
             contentDiv.innerHTML = htmlContent;
+            
+            // 为AI消息添加操作按钮（追问）
+            if (!isUser && content) {
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'message-actions';
+                
+                const followBtn = document.createElement('button');
+                followBtn.className = 'action-btn';
+                followBtn.innerHTML = '🔄 追问';
+                followBtn.onclick = function() {
+                    // 将当前消息内容作为上下文，自动填充到输入框
+                    const userInput = document.getElementById('userInput');
+                    userInput.value = `针对你的回答，我想追问：${content.substring(0, 50)}...`;
+                    userInput.style.height = 'auto';
+                    userInput.style.height = Math.min(userInput.scrollHeight, 120) + 'px';
+                    userInput.focus();
+                    userInput.scrollTop = userInput.scrollHeight;
+                };
+                
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'action-btn';
+                copyBtn.innerHTML = '📋 复制';
+                copyBtn.onclick = function() {
+                    navigator.clipboard.writeText(content).then(() => {
+                        copyBtn.innerHTML = '✓ 已复制';
+                        setTimeout(() => {
+                            copyBtn.innerHTML = '📋 复制';
+                        }, 2000);
+                    });
+                };
+                
+                actionsDiv.appendChild(followBtn);
+                actionsDiv.appendChild(copyBtn);
+                contentDiv.appendChild(actionsDiv);
+            }
             
             messageDiv.appendChild(avatar);
             messageDiv.appendChild(contentDiv);
@@ -496,14 +1062,18 @@
             
             const message = userInput.value.trim();
             
+            // 验证：必须有消息或图片
             if (!message && !selectedImage) {
-                addMessage('请描述这张图片', true, selectedImage);
-            } else if (!message) {
                 return;
-            } else {
-                addMessage(message, true, selectedImage);
             }
             
+            // 保存图片数据（因为后面会清空）
+            const imageToSend = selectedImage;
+            
+            // 添加用户消息
+            addMessage(message || '请描述这张图片', true, selectedImage);
+            
+            // 清空输入，但不清空 selectedImage（留到 finally）
             userInput.value = '';
             userInput.style.height = 'auto';
             imagePreview.src = '';
@@ -517,17 +1087,24 @@
             let messageContentDiv = null;
             
             try {
+                // 限制历史记录数量，只发送最近的6条（3轮对话），提高响应速度
+                const maxHistoryLength = 6;
+                const recentHistory = conversationHistory.slice(-maxHistoryLength - 1, -1) || [];
+                
+                const requestBody = { 
+                    message: message,
+                    image: imageToSend,
+                    mode: currentMode,
+                    stream: true,
+                    conversation_history: recentHistory
+                };
+                
                 const response = await fetch('/chat', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ 
-                        message: message,
-                        image: selectedImage,
-                        mode: currentMode,
-                        stream: true
-                    }),
+                    body: JSON.stringify(requestBody),
                 });
                 
                 if (!response.ok) {
@@ -535,7 +1112,8 @@
                 }
                 
                 removeTypingIndicator();
-                messageContentDiv = addMessage('', false, null);
+                // 创建AI消息容器，但不立即添加到conversationHistory
+                messageContentDiv = addMessage('', false, null, false);
                 
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
@@ -549,8 +1127,12 @@
                     
                     for (const line of lines) {
                         if (line.startsWith('data: ')) {
+                            const dataStr = line.slice(6);
+                            if (dataStr === '[DONE]') {
+                                break;
+                            }
                             try {
-                                const data = JSON.parse(line.slice(6));
+                                const data = JSON.parse(dataStr);
                                 if (data.content) {
                                     fullResponse += data.content;
                                     messageContentDiv.innerHTML = formatMessage(fullResponse);
@@ -562,6 +1144,34 @@
                                 // 忽略解析错误
                             }
                         }
+                    }
+                }
+                
+                // 流式完成后，将完整消息保存到历史
+                if (fullResponse) {
+                    // 更新聊天历史中的最后一条AI消息
+                    const lastIndex = chatHistory.length - 1;
+                    if (lastIndex >= 0 && !chatHistory[lastIndex].isUser) {
+                        chatHistory[lastIndex].content = fullResponse;
+                    } else {
+                        chatHistory.push({
+                            content: fullResponse,
+                            isUser: false,
+                            image: null,
+                            timestamp: Date.now()
+                        });
+                    }
+                    saveChatHistory();
+                    
+                    // 更新API对话历史中的最后一条AI消息
+                    const convLastIndex = conversationHistory.length - 1;
+                    if (convLastIndex >= 0 && conversationHistory[convLastIndex].role === 'assistant') {
+                        conversationHistory[convLastIndex].content = fullResponse;
+                    } else {
+                        conversationHistory.push({
+                            role: 'assistant',
+                            content: fullResponse
+                        });
                     }
                 }
                 
@@ -587,7 +1197,742 @@
             }
         }
 
+        // 页面加载时恢复聊天记录并获取用户信息
+        loadChatHistory();
+        loadCurrentUser();
+        
+        // 从URL参数获取关键词，自动填充到输入框
+        function getUrlParam(name) {
+            const params = new URLSearchParams(window.location.search);
+            return params.get(name);
+        }
+        
+        const keyword = getUrlParam('keyword');
+        if (keyword) {
+            const decodedKeyword = decodeURIComponent(keyword);
+            const userInput = document.getElementById('userInput');
+            if (userInput) {
+                userInput.value = '请详细讲解一下' + decodedKeyword + '这个知识点';
+                userInput.focus();
+            }
+        }
+        
         userInput.focus();
+
+        // 知识库文件上传相关
+        function openUploadModal() {
+            document.getElementById('uploadModal').classList.add('active');
+        }
+
+        function closeUploadModal() {
+            document.getElementById('uploadModal').classList.remove('active');
+            document.getElementById('fileInput').value = '';
+            document.getElementById('uploadProgress').style.display = 'none';
+            document.getElementById('progressFill').style.width = '0%';
+        }
+
+        document.getElementById('uploadArea').addEventListener('click', function() {
+            document.getElementById('fileInput').click();
+        });
+
+        document.getElementById('uploadArea').addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('dragover');
+        });
+
+        document.getElementById('uploadArea').addEventListener('dragleave', function() {
+            this.classList.remove('dragover');
+        });
+
+        document.getElementById('uploadArea').addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        async function handleFile(file) {
+            const allowedExtensions = ['.docx', '.doc', '.pptx', '.ppt', '.txt'];
+            
+            const fileName = file.name.toLowerCase();
+            const isAllowed = allowedExtensions.some(ext => fileName.endsWith(ext));
+            
+            if (!isAllowed) {
+                alert('不支持的文件格式！请上传 .docx, .doc, .pptx, .ppt 或 .txt 文件');
+                return;
+            }
+
+            const progressDiv = document.getElementById('uploadProgress');
+            const progressFill = document.getElementById('progressFill');
+            
+            progressDiv.style.display = 'block';
+            progressFill.style.width = '30%';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                progressFill.style.width = '60%';
+                
+                const response = await fetch('/api/knowledge/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                progressFill.style.width = '100%';
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(result.message);
+                    closeUploadModal();
+                } else {
+                    alert('上传失败: ' + result.error);
+                }
+            } catch (error) {
+                alert('上传失败: ' + error.message);
+            } finally {
+                setTimeout(() => {
+                    progressDiv.style.display = 'none';
+                    progressFill.style.width = '0%';
+                }, 500);
+            }
+        }
+
+        // ===== 使用说明弹窗 =====
+        function showPlatformGuide() {
+            if (document.getElementById('guideOverlay')) return;
+            if (!document.getElementById('guideAnimStyle')) {
+                const s = document.createElement('style');
+                s.id = 'guideAnimStyle';
+                s.textContent = `@keyframes guideSlide { from { transform: translateY(20px) scale(0.95); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }`;
+                document.head.appendChild(s);
+            }
+            const steps = [
+                ['1', '选择角色并登录', '学生输入 13 位学号、姓名和访问密码（<code>tongxin2024</code>），首次登录自动创建学习档案。'],
+                ['2', '完成职业问卷', '登录后填写问卷，系统<strong>推荐匹配岗位</strong>，也可<strong>自定义意向岗位</strong>。'],
+                ['3', '基础摸底任务（1-2 周）', '前 2 周共 24 个任务覆盖 12 大能力领域，完成后系统分析薄弱项。'],
+                ['4', '精准提升阶段（第 3 周起）', '基于能力差距分析，智能生成个性化任务卡，针对性补齐短板。'],
+                ['5', '任务详情学习流程', '点击任务卡片 → 查看 <strong>PPT/知识库</strong> → 使用「<strong>口语化排障助手</strong>」→ 完成<strong>前置自检</strong> → 通过<strong>问答题测验</strong>（60 分及格）→ 自动生成<strong>工程报告</strong>和<strong>闭环评价</strong>。'],
+                ['6', '岗位胜任力画像', '点击「🎯 胜任力画像」查看 <strong>技术/沟通/项目管理/安全伦理/创新思维</strong> 5 维雷达图，优势、短板和学习路径规划。']
+            ];
+            const tags = ['📚 知识图谱学习','✏️ 在线练习题库','🤖 AI 智能问答','📋 每周任务卡','🔧 动态故障注入','🛡️ 前置安全自检','💬 口语化排障','🔒 失败锁定机制','📄 自动工程报告','🔄 事故复盘评价','🎯 5维胜任力画像','💼 岗位招聘匹配'];
+            const notes = [
+                ['#ff4d4f','!','访问密码', '默认访问密码为 <code style="background:#fff2f0;color:#ff4d4f;padding:2px 6px;border-radius:4px;">tongxin2024</code>。'],
+                ['#fa8c16','!','失败锁定机制', '连续 3 次测验不及格触发<strong>5 分钟冷却锁定</strong>，请先复习再重试。'],
+                ['#52c41a','✓','安全操作规范', '前置自检<strong>必须项未确认将阻止任务进行</strong>，安全分占综合成绩 20%。'],
+                ['#722ed1','i','学习建议', '若知识库暂无 PPT，系统给出推荐学习路径，配合 AI 问答快速掌握。']
+            ];
+            const html = `
+                <div id="guideOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.55);display:flex;justify-content:center;align-items:center;z-index:99999;padding:20px;" onclick="if(event.target===this) closeGuide()">
+                    <div style="background:white;border-radius:20px;max-width:720px;width:100%;max-height:86vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 30px 80px rgba(0,0,0,0.35);animation:guideSlide 0.4s;">
+                        <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:24px 28px;display:flex;align-items:center;gap:14px;">
+                            <div style="width:48px;height:48px;background:rgba(255,255,255,0.2);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;">📖</div>
+                            <div style="flex:1;"><h2 style="font-size:20px;font-weight:600;margin-bottom:2px;">平台使用说明</h2><p style="font-size:13px;opacity:0.9;">灵智尚人 · 通信工程智能学习平台</p></div>
+                            <button onclick="closeGuide()" style="width:36px;height:36px;background:rgba(255,255,255,0.15);border:none;border-radius:50%;color:white;font-size:18px;cursor:pointer;">×</button>
+                        </div>
+                        <div style="padding:24px 28px;overflow-y:auto;flex:1;">
+                            <div style="margin-bottom:22px;">
+                                <div style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;color:#1a1a1a;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #f0f2f5;">🚀 新学员快速上手流程</div>
+                                ${steps.map(s => `
+                                    <div style="display:flex;gap:12px;align-items:flex-start;background:#f8f9fc;border-radius:10px;padding:12px 14px;margin-bottom:10px;">
+                                        <div style="width:26px;height:26px;background:linear-gradient(135deg,#667eea,#764ba2);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0;">${s[0]}</div>
+                                        <div style="flex:1;font-size:13px;color:#444;line-height:1.6;"><strong>${s[1]}</strong>：${s[2]}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div style="margin-bottom:22px;">
+                                <div style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;color:#1a1a1a;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #f0f2f5;">⚙️ 核心功能一览</div>
+                                <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                                    ${tags.map(t => `<span style="background:linear-gradient(135deg,#e8ecfd,#f0e6ff);color:#5144ad;padding:6px 12px;border-radius:10px;font-size:12px;font-weight:500;">${t}</span>`).join('')}
+                                </div>
+                            </div>
+                            <div>
+                                <div style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;color:#1a1a1a;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #f0f2f5;">⚠️ 注意事项</div>
+                                ${notes.map(n => `
+                                    <div style="display:flex;gap:12px;align-items:flex-start;background:#f8f9fc;border-radius:10px;padding:12px 14px;margin-bottom:10px;">
+                                        <div style="width:26px;height:26px;background:${n[0]};color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0;">${n[1]}</div>
+                                        <div style="flex:1;font-size:13px;color:#444;line-height:1.6;"><strong>${n[2]}</strong>：${n[3]}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <div style="padding:16px 28px;border-top:1px solid #f0f2f5;background:#fafbfc;display:flex;justify-content:flex-end;">
+                            <button onclick="closeGuide()" style="padding:10px 26px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;">我知道了</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            const wrap = document.createElement('div');
+            wrap.innerHTML = html;
+            document.body.appendChild(wrap.firstElementChild);
+        }
+
+        function closeGuide() {
+            const o = document.getElementById('guideOverlay');
+            if (o) o.remove();
+        }
+
+        // ===== 教师驾驶舱 =====
+        async function showTeacherDashboard() {
+            if (document.getElementById('dashboardOverlay')) return;
+            const overlay = document.createElement('div');
+            overlay.id = 'dashboardOverlay';
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:99999;display:flex;justify-content:center;align-items:center;padding:20px;';
+            overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+            overlay.innerHTML = '<div style="color:#fff;font-size:16px;">加载教师驾驶舱中...</div>';
+            document.body.appendChild(overlay);
+
+            try {
+                const res = await fetch('/api/double-teacher/dashboard');
+                const data = await res.json();
+                if (!data.success) { overlay.innerHTML = '<div style="color:#fff;">' + (data.error || '加载失败') + '</div>'; return; }
+
+                const cs = data.class_stats || {};
+                const alerts = data.risk_alerts || [];
+                let classCards = Object.entries(cs).map(([cls, info]) => `
+                    <div style="background:#f8f9fc;border-radius:10px;padding:14px;flex:1;min-width:180px;">
+                        <div style="font-weight:bold;color:#333;margin-bottom:8px;">${cls}</div>
+                        <div style="font-size:12px;color:#666;margin-bottom:4px;">👥 ${info.student_count} 名学生</div>
+                        <div style="font-size:12px;color:#666;margin-bottom:4px;">📊 平均分: ${(info.avg_score*100).toFixed(0)}</div>
+                        <div style="background:#f0f0f0;border-radius:4px;height:6px;overflow:hidden;margin-top:6px;">
+                            <div style="width:${(info.completion_rate*100).toFixed(0)}%;background:#52c41a;height:100%;border-radius:4px;"></div>
+                        </div>
+                        <div style="font-size:11px;color:#888;margin-top:4px;">完成率: ${(info.completion_rate*100).toFixed(0)}%</div>
+                    </div>
+                `).join('');
+
+                let alertHtml = alerts.length > 0 ? alerts.map(a => `
+                    <div style="background:${a.level==='high'?'#fff2f0':'#fffbe6'};border-left:4px solid ${a.level==='high'?'#ff4d4f':'#faad14'};padding:10px 14px;border-radius:8px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+                        <div>
+                            <span style="color:${a.level==='high'?'#ff4d4f':'#faad14'};font-weight:bold;">${a.level==='high'?'🚨':'⚠️'}</span>
+                            <span style="margin-left:8px;font-size:13px;">${a.msg}</span>
+                        </div>
+                        <button class="btn btn-primary" style="padding:4px 12px;font-size:12px;" onclick="doTakeover('${a.student_no}','${a.msg}')">一键接管</button>
+                    </div>
+                `).join('') : '<div style="color:#52c41a;padding:20px;text-align:center;">✅ 暂无风险预警</div>';
+
+                overlay.innerHTML = `
+                    <div style="background:#fff;border-radius:16px;max-width:900px;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;">
+                        <div style="background:linear-gradient(135deg,#ff4d4f,#fa541c);color:#fff;padding:20px 24px;display:flex;justify-content:space-between;align-items:center;">
+                            <div><h2 style="font-size:20px;font-weight:bold;margin:0;">🎛️ 教师智能驾驶舱</h2><p style="font-size:12px;opacity:0.9;margin:4px 0 0;">数据驱动教学 · 风险预警 · 双师协同</p></div>
+                            <div style="display:flex;gap:12px;">
+                                <div style="background:rgba(255,255,255,0.2);padding:8px 16px;border-radius:10px;text-align:center;">
+                                    <div style="font-size:22px;font-weight:bold;">${data.total_students}</div><div style="font-size:11px;">学生总数</div>
+                                </div>
+                                <div style="background:rgba(255,255,255,0.2);padding:8px 16px;border-radius:10px;text-align:center;">
+                                    <div style="font-size:22px;font-weight:bold;">${data.alert_count}</div><div style="font-size:11px;">风险预警</div>
+                                </div>
+                            </div>
+                            <button onclick="document.getElementById('dashboardOverlay').remove()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:20px;cursor:pointer;border-radius:50%;width:32px;height:32px;">×</button>
+                        </div>
+                        <div style="padding:20px 24px;overflow-y:auto;flex:1;">
+                            <div style="margin-bottom:20px;">
+                                <div style="font-size:14px;font-weight:bold;margin-bottom:12px;">📊 班级概况</div>
+                                <div style="display:flex;flex-wrap:wrap;gap:12px;">${classCards}</div>
+                            </div>
+                            <div style="margin-bottom:16px;">
+                                <div style="font-size:14px;font-weight:bold;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+                                    <span>🚨 风险预警</span>
+                                    <button class="btn btn-secondary" style="padding:4px 12px;font-size:12px;" onclick="refreshDashboard()">🔄 刷新</button>
+                                </div>
+                                ${alertHtml}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } catch (err) {
+                overlay.innerHTML = '<div style="color:#fff;">加载失败：' + err.message + '</div>';
+            }
+        }
+
+        async function refreshDashboard() { document.getElementById('dashboardOverlay')?.remove(); showTeacherDashboard(); }
+
+        async function doTakeover(studentNo, reason) {
+            if (!confirm('确认接管学生 ' + studentNo + ' 的学习支持？')) return;
+            try {
+                const res = await fetch('/api/double-teacher/takeover', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({student_no: studentNo, reason: reason, type: 'emotional', note: 'AI预警自动触发'})
+                });
+                const data = await res.json();
+                alert(data.message);
+                refreshDashboard();
+            } catch (err) { alert('接管失败：' + err.message); }
+        }
+
+        // ===== AI助教配置 =====
+        async function showAgentConfig() {
+            if (document.getElementById('agentCfgOverlay')) return;
+            const overlay = document.createElement('div');
+            overlay.id = 'agentCfgOverlay';
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:99999;display:flex;justify-content:center;align-items:center;padding:20px;';
+            overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+            overlay.innerHTML = '<div style="color:#fff;">加载配置...</div>';
+            document.body.appendChild(overlay);
+
+            const styles = [['supportive','支持型（耐心鼓励）'],['strict','严格型（高标准要求）'],['socratic','苏格拉底式（引导思考）'],['encouraging','激励型（正面强化）']];
+            const lengths = [['short','简洁（要点式）'],['medium','适中（适度展开）'],['detailed','详细（深入讲解）']];
+            const humors = [['low','严肃'],['moderate','适中'],['high','幽默']];
+            const subjects = ['基站工程','网络优化','核心网工程','传输工程','网络安全','FPGA工程','信号系统','通信原理','数字信号处理'];
+
+            try {
+                const res = await fetch('/api/double-teacher/ai-agent/config');
+                const data = await res.json();
+                const cfg = data.config || {};
+
+                let subjectChecks = subjects.map(s => {
+                    const checked = (cfg.subject_focus || []).includes(s) ? 'checked' : '';
+                    return `<label style="display:inline-flex;align-items:center;gap:4px;margin:4px;padding:4px 10px;background:#f0f0f0;border-radius:6px;font-size:12px;"><input type="checkbox" ${checked} class="subject-cb" value="${s}">${s}</label>`;
+                }).join('');
+
+                const selOpts = (items, val) => items.map(([v, l]) => `<option value="${v}" ${v===val?'selected':''}>${l}</option>`).join('');
+
+                overlay.innerHTML = `
+                    <div style="background:#fff;border-radius:16px;max-width:600px;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;">
+                        <div style="background:linear-gradient(135deg,#722ed1,#13c2c2);color:#fff;padding:20px 24px;display:flex;justify-content:space-between;align-items:center;">
+                            <div><h2 style="font-size:20px;font-weight:bold;margin:0;">🤖 定制专属教学智能体</h2><p style="font-size:12px;opacity:0.9;margin:4px 0 0;">按您的教学理念打造专属AI助教</p></div>
+                            <button onclick="document.getElementById('agentCfgOverlay').remove()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:20px;cursor:pointer;border-radius:50%;width:32px;height:32px;">×</button>
+                        </div>
+                        <div style="padding:20px 24px;overflow-y:auto;flex:1;">
+                            <div style="margin-bottom:16px;">
+                                <label style="font-size:13px;font-weight:bold;display:block;margin-bottom:6px;">助教名称</label>
+                                <input type="text" id="agentName" value="${cfg.agent_name||'智学AI助教'}" style="width:100%;padding:10px 14px;border:2px solid #e8e8f0;border-radius:10px;font-size:14px;outline:none;">
+                            </div>
+                            <div style="margin-bottom:16px;">
+                                <label style="font-size:13px;font-weight:bold;display:block;margin-bottom:6px;">教学风格</label>
+                                <select id="agentStyle" style="width:100%;padding:10px 14px;border:2px solid #e8e8f0;border-radius:10px;font-size:14px;outline:none;">
+                                    ${selOpts(styles, cfg.teaching_style)}
+                                </select>
+                            </div>
+                            <div style="margin-bottom:16px;">
+                                <label style="font-size:13px;font-weight:bold;display:block;margin-bottom:6px;">学科侧重</label>
+                                <div style="display:flex;flex-wrap:wrap;gap:6px;">${subjectChecks}</div>
+                            </div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+                                <div>
+                                    <label style="font-size:13px;font-weight:bold;display:block;margin-bottom:6px;">回复详细度</label>
+                                    <select id="agentLen" style="width:100%;padding:8px 12px;border:2px solid #e8e8f0;border-radius:8px;font-size:13px;">
+                                        ${selOpts(lengths, cfg.response_length)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="font-size:13px;font-weight:bold;display:block;margin-bottom:6px;">幽默感</label>
+                                    <select id="agentHum" style="width:100%;padding:8px 12px;border:2px solid #e8e8f0;border-radius:8px;font-size:13px;">
+                                        ${selOpts(humors, cfg.humor_level)}
+                                    </select>
+                                </div>
+                            </div>
+                            <div style="margin-bottom:16px;">
+                                <label style="font-size:13px;font-weight:bold;display:block;margin-bottom:6px;">自定义人设（可选）</label>
+                                <textarea id="agentPersona" rows="2" style="width:100%;padding:10px 14px;border:2px solid #e8e8f0;border-radius:10px;font-size:13px;outline:none;resize:none;" placeholder="如：耐心细致、注重引导、结合工程实战...">${cfg.custom_persona||''}</textarea>
+                            </div>
+                        </div>
+                        <div style="padding:16px 24px;border-top:1px solid #f0f2f5;display:flex;justify-content:flex-end;gap:10px;">
+                            <button class="btn btn-secondary" onclick="document.getElementById('agentCfgOverlay').remove()">取消</button>
+                            <button class="btn btn-primary" onclick="saveAgentConfig()">保存配置</button>
+                        </div>
+                    </div>
+                `;
+            } catch (err) {
+                overlay.innerHTML = '<div style="color:#fff;">加载失败：' + err.message + '</div>';
+            }
+        }
+
+        async function saveAgentConfig() {
+            const subjects = Array.from(document.querySelectorAll('.subject-cb:checked')).map(c => c.value);
+            const payload = {
+                agent_name: document.getElementById('agentName').value,
+                teaching_style: document.getElementById('agentStyle').value,
+                subject_focus: subjects,
+                response_length: document.getElementById('agentLen').value,
+                humor_level: document.getElementById('agentHum').value,
+                custom_persona: document.getElementById('agentPersona').value
+            };
+            try {
+                const res = await fetch('/api/double-teacher/ai-agent/config', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) { alert('✅ AI助教配置已保存！'); document.getElementById('agentCfgOverlay').remove(); }
+                else { alert('保存失败'); }
+            } catch (err) { alert('保存失败：' + err.message); }
+        }
+
+        // ===== 伦理辩论（学生端）=====
+        async function showEthicsDebate() {
+            if (document.getElementById('ethicsOverlay')) return;
+            const overlay = document.createElement('div');
+            overlay.id = 'ethicsOverlay';
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:99999;display:flex;justify-content:center;align-items:center;padding:20px;';
+            overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+            overlay.innerHTML = '<div style="color:#fff;">加载案例...</div>';
+            document.body.appendChild(overlay);
+
+            try {
+                const listRes = await fetch('/api/double-teacher/ethics-cases');
+                const listData = await listRes.json();
+                const cases = listData.cases || [];
+
+                let caseCards = cases.map(c => `
+                    <div style="background:#f8f9fc;border-radius:10px;padding:14px;cursor:pointer;border:2px solid transparent;transition:all;" onclick="selectEthicsCase('${c.id}')" onmouseover="this.style.borderColor='#fa541c';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='transparent';this.style.transform=''">
+                        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                            <span style="font-weight:bold;color:#333;">${c.title}</span>
+                            <span style="background:${c.level==='高级'?'#ff4d4f':c.level==='中级'?'#fa8c16':'#52c41a'};color:#fff;padding:2px 8px;border-radius:6px;font-size:11px;">${c.level}</span>
+                        </div>
+                        <div style="font-size:12px;color:#666;margin-bottom:6px;">${c.category}</div>
+                        <div style="font-size:12px;color:#555;line-height:1.4;">${c.description.substring(0, 80)}...</div>
+                    </div>
+                `).join('');
+
+                overlay.innerHTML = `
+                    <div style="background:#fff;border-radius:16px;max-width:720px;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;">
+                        <div style="background:linear-gradient(135deg,#fa541c,#eb2f96);color:#fff;padding:20px 24px;display:flex;justify-content:space-between;align-items:center;">
+                            <div><h2 style="font-size:20px;font-weight:bold;margin:0;">⚖️ 工程伦理案例辩论</h2><p style="font-size:12px;opacity:0.9;margin:4px 0 0;">AI引导思考 · 价值判断训练 · 责任意识培养</p></div>
+                            <button onclick="document.getElementById('ethicsOverlay').remove()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:20px;cursor:pointer;border-radius:50%;width:32px;height:32px;">×</button>
+                        </div>
+                        <div id="ethicsBody" style="padding:20px 24px;overflow-y:auto;flex:1;">
+                            <div style="font-size:13px;color:#666;margin-bottom:14px;">选择一个案例开始辩论：</div>
+                            <div style="display:grid;grid-template-columns:1fr;gap:12px;">${caseCards}</div>
+                        </div>
+                    </div>
+                `;
+            } catch (err) {
+                overlay.innerHTML = '<div style="color:#fff;">加载失败：' + err.message + '</div>';
+            }
+        }
+
+        async function selectEthicsCase(caseId) {
+            try {
+                const res = await fetch('/api/double-teacher/ethics-cases/' + caseId);
+                const data = await res.json();
+                const c = data.case;
+                const body = document.getElementById('ethicsBody');
+                if (!body) return;
+
+                let questionInputs = c.questions.map((q, i) => `
+                    <div style="margin-bottom:12px;">
+                        <div style="font-size:13px;font-weight:bold;margin-bottom:6px;color:#333;">Q${i+1}. ${q}</div>
+                        <textarea class="ethics-answer" rows="2" style="width:100%;padding:10px;border:2px solid #e8e8f0;border-radius:8px;font-size:13px;outline:none;resize:vertical;" placeholder="请阐述你的观点..."></textarea>
+                    </div>
+                `).join('');
+
+                body.innerHTML = `
+                    <div style="margin-bottom:16px;">
+                        <div style="background:linear-gradient(135deg,#fa541c,#eb2f96);color:#fff;padding:12px 16px;border-radius:10px;margin-bottom:12px;">
+                            <div style="font-weight:bold;font-size:15px;margin-bottom:4px;">${c.title}</div>
+                            <div style="font-size:12px;opacity:0.9;">${c.category} · ${c.level}</div>
+                        </div>
+                        <div style="background:#f8f9fc;border-radius:10px;padding:14px;font-size:13px;color:#444;line-height:1.6;margin-bottom:14px;">${c.description}</div>
+                    </div>
+                    <div style="margin-bottom:14px;">
+                        <div style="font-size:13px;font-weight:bold;margin-bottom:10px;">💭 请回答以下问题（AI将分析你的思维质量）</div>
+                        ${questionInputs}
+                    </div>
+                    <div style="display:flex;gap:10px;">
+                        <button class="btn btn-secondary" onclick="showEthicsDebate()">返回案例列表</button>
+                        <button class="btn btn-primary" style="flex:1;" onclick="submitEthicsAnswers('${caseId}')">提交辩论 · AI分析思维质量</button>
+                    </div>
+                `;
+            } catch (err) { alert('加载失败：' + err.message); }
+        }
+
+        async function submitEthicsAnswers(caseId) {
+            const inputs = document.querySelectorAll('.ethics-answer');
+            const answers = Array.from(inputs).map(t => t.value);
+            if (answers.some(a => a.length < 5)) { alert('请完整回答所有问题'); return; }
+
+            try {
+                const res = await fetch('/api/double-teacher/ethics-cases/' + caseId + '/submit', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({answers})
+                });
+                const data = await res.json();
+                const a = data.analysis;
+                const body = document.getElementById('ethicsBody');
+                if (!body) return;
+
+                let dimBars = Object.entries(a.dimensions).map(([k, v]) => {
+                    const nameMap = {user_perspective:'用户视角',responsibility:'责任意识',feasibility:'可行性',ethics_awareness:'伦理意识'};
+                    return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                        <span style="font-size:12px;color:#555;width:70px;">${nameMap[k]}</span>
+                        <div style="flex:1;background:#f0f0f0;border-radius:4px;height:8px;overflow:hidden;">
+                            <div style="width:${v}%;background:linear-gradient(90deg,#fa541c,#eb2f96);height:100%;border-radius:4px;"></div>
+                        </div>
+                        <span style="font-size:12px;font-weight:bold;min-width:35px;text-align:right;">${v}</span>
+                    </div>`;
+                }).join('');
+
+                body.innerHTML = `
+                    <div style="text-align:center;padding:20px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border-radius:12px;margin-bottom:16px;">
+                        <div style="font-size:14px;opacity:0.9;margin-bottom:4px;">思维质量综合评分</div>
+                        <div style="font-size:48px;font-weight:bold;">${a.score}</div>
+                        <div style="font-size:13px;">${a.score>=60?'🎉 表现优秀，思维清晰':a.score>=40?'👍 思考较为全面':'💪 继续锻炼批判性思维'}</div>
+                    </div>
+                    <div style="background:#f8f9fc;border-radius:10px;padding:16px;margin-bottom:14px;">
+                        <div style="font-size:13px;font-weight:bold;margin-bottom:10px;">📊 维度分析</div>
+                        ${dimBars}
+                    </div>
+                    <div style="background:#f6ffed;border-radius:10px;padding:16px;margin-bottom:14px;">
+                        <div style="font-size:13px;font-weight:bold;margin-bottom:8px;color:#52c41a;">💡 老师引导建议</div>
+                        <div style="font-size:12px;color:#444;line-height:1.6;">${data.teacher_guidance}</div>
+                    </div>
+                    <div style="display:flex;gap:10px;">
+                        <button class="btn btn-secondary" style="flex:1;" onclick="showEthicsDebate()">返回案例列表</button>
+                        <button class="btn btn-primary" onclick="document.getElementById('ethicsOverlay').remove()">完成</button>
+                    </div>
+                `;
+            } catch (err) { alert('提交失败：' + err.message); }
+        }
+
+        // ===== 教师练习题管理 =====
+        async function showExerciseManager() {
+            if (document.getElementById('exMgrOverlay')) return;
+            const overlay = document.createElement('div');
+            overlay.id = 'exMgrOverlay';
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:99999;display:flex;justify-content:center;align-items:center;padding:20px;';
+            overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+            overlay.innerHTML = '<div style="color:#fff;font-size:16px;">加载练习题库...</div>';
+            document.body.appendChild(overlay);
+
+            try {
+                const res = await fetch('/api/teacher/exercises');
+                const data = await res.json();
+                if (!data.success) { overlay.innerHTML = '<div style="color:#fff;">' + (data.error || '加载失败') + '</div>'; return; }
+
+                const exercises = data.exercises || [];
+                // 按知识点分组
+                const grouped = {};
+                exercises.forEach(e => {
+                    const kp = e.knowledge_point || '未分类';
+                    if (!grouped[kp]) grouped[kp] = [];
+                    grouped[kp].push(e);
+                });
+
+                let groupHtml = Object.entries(grouped).map(([kp, list]) => {
+                    let items = list.map(e => {
+                        const typeMap = {choice:'选择题', fill:'填空题', short:'简答题'};
+                        const diffStars = '★'.repeat(e.difficulty || 1) + '☆'.repeat(Math.max(0, 3 - (e.difficulty || 1)));
+                        const sourceTag = e.source === 'custom'
+                            ? '<span style="background:#fa541c;color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;">自定义</span>'
+                            : '<span style="background:#1890ff;color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;">内置</span>';
+                        const delBtn = e.source === 'custom'
+                            ? `<button class="btn btn-secondary" style="padding:2px 10px;font-size:11px;color:#ff4d4f;border:1px solid #ffa39e;" onclick="deleteExercise('${e.id}')">删除</button>`
+                            : '';
+                        return `
+                            <div style="background:#f8f9fc;border-radius:8px;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+                                <div style="flex:1;">
+                                    <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;">
+                                        ${sourceTag}
+                                        <span style="font-size:11px;color:#888;">${typeMap[e.type] || e.type}</span>
+                                        <span style="color:#faad14;font-size:11px;">${diffStars}</span>
+                                    </div>
+                                    <div style="font-size:13px;color:#333;margin-bottom:3px;">${e.question}</div>
+                                    <div style="font-size:11px;color:#888;">答案：${e.answer}</div>
+                                </div>
+                                ${delBtn}
+                            </div>
+                        `;
+                    }).join('');
+                    return `
+                        <div style="margin-bottom:16px;">
+                            <div style="font-size:13px;font-weight:bold;color:#1a1a1a;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #f0f0f0;">
+                                📚 ${kp} <span style="color:#888;font-weight:normal;font-size:12px;">(${list.length}题)</span>
+                            </div>
+                            ${items}
+                        </div>
+                    `;
+                }).join('');
+
+                overlay.innerHTML = `
+                    <div style="background:#fff;border-radius:16px;max-width:800px;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;">
+                        <div style="background:linear-gradient(135deg,#fa541c,#fa8c16);color:#fff;padding:20px 24px;display:flex;justify-content:space-between;align-items:center;">
+                            <div>
+                                <h2 style="font-size:20px;font-weight:bold;margin:0;">📝 练习题管理</h2>
+                                <p style="font-size:12px;opacity:0.9;margin:4px 0 0;">共 ${data.total} 题（内置 ${data.builtin_count} · 自定义 ${data.custom_count}）</p>
+                            </div>
+                            <div style="display:flex;gap:8px;">
+                                <button onclick="showAddExerciseForm()" style="background:#fff;color:#fa541c;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:bold;cursor:pointer;">➕ 添加题目</button>
+                                <button onclick="document.getElementById('exMgrOverlay').remove()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:20px;cursor:pointer;border-radius:50%;width:32px;height:32px;">×</button>
+                            </div>
+                        </div>
+                        <div id="exMgrBody" style="padding:20px 24px;overflow-y:auto;flex:1;">
+                            ${groupHtml || '<div style="text-align:center;padding:40px;color:#999;">暂无题目</div>'}
+                        </div>
+                    </div>
+                `;
+            } catch (err) {
+                overlay.innerHTML = '<div style="color:#fff;">加载失败：' + err.message + '</div>';
+            }
+        }
+
+        function showAddExerciseForm() {
+            const body = document.getElementById('exMgrBody');
+            if (!body) return;
+            body.innerHTML = `
+                <div style="max-width:600px;margin:0 auto;">
+                    <div style="font-size:15px;font-weight:bold;margin-bottom:16px;color:#fa541c;">➕ 添加新练习题</div>
+                    <div style="margin-bottom:14px;">
+                        <label style="font-size:13px;font-weight:bold;display:block;margin-bottom:6px;">知识点 *</label>
+                        <input type="text" id="exKp" list="kpList" placeholder="输入或选择知识点（如：傅里叶变换、5G NR等）" style="width:100%;padding:10px 14px;border:2px solid #e8e8f0;border-radius:10px;font-size:14px;outline:none;">
+                        <datalist id="kpList">
+                            <option value="傅里叶变换">
+                            <option value="奈奎斯特采样定理">
+                            <option value="QAM调制">
+                            <option value="OFDM技术">
+                            <option value="信道编码">
+                            <option value="MIMO技术">
+                            <option value="5G NR">
+                            <option value="天线原理">
+                            <option value="射频工程">
+                        </datalist>
+                    </div>
+                    <div style="margin-bottom:14px;">
+                        <label style="font-size:13px;font-weight:bold;display:block;margin-bottom:6px;">题型 *</label>
+                        <select id="exType" onchange="onTypeChange()" style="width:100%;padding:10px 14px;border:2px solid #e8e8f0;border-radius:10px;font-size:14px;outline:none;">
+                            <option value="choice">选择题（单选）</option>
+                            <option value="fill">填空题</option>
+                            <option value="short">简答题</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom:14px;">
+                        <label style="font-size:13px;font-weight:bold;display:block;margin-bottom:6px;">难度</label>
+                        <select id="exDiff" style="width:100%;padding:10px 14px;border:2px solid #e8e8f0;border-radius:10px;font-size:14px;outline:none;">
+                            <option value="1">★ 简单</option>
+                            <option value="2" selected>★★ 中等</option>
+                            <option value="3">★★★ 困难</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom:14px;">
+                        <label style="font-size:13px;font-weight:bold;display:block;margin-bottom:6px;">题目内容 *</label>
+                        <textarea id="exQuestion" rows="3" style="width:100%;padding:10px 14px;border:2px solid #e8e8f0;border-radius:10px;font-size:14px;outline:none;resize:vertical;" placeholder="输入题目内容..."></textarea>
+                    </div>
+                    <div id="exOptionsArea" style="margin-bottom:14px;">
+                        <label style="font-size:13px;font-weight:bold;display:block;margin-bottom:6px;">选项（选择题）</label>
+                        <div id="optionsContainer">
+                            <input type="text" class="ex-option" placeholder="A. 选项内容" style="width:100%;padding:8px 12px;border:2px solid #e8e8f0;border-radius:8px;font-size:13px;margin-bottom:6px;outline:none;">
+                            <input type="text" class="ex-option" placeholder="B. 选项内容" style="width:100%;padding:8px 12px;border:2px solid #e8e8f0;border-radius:8px;font-size:13px;margin-bottom:6px;outline:none;">
+                            <input type="text" class="ex-option" placeholder="C. 选项内容" style="width:100%;padding:8px 12px;border:2px solid #e8e8f0;border-radius:8px;font-size:13px;margin-bottom:6px;outline:none;">
+                            <input type="text" class="ex-option" placeholder="D. 选项内容" style="width:100%;padding:8px 12px;border:2px solid #e8e8f0;border-radius:8px;font-size:13px;margin-bottom:6px;outline:none;">
+                        </div>
+                        <button onclick="addOption()" style="background:#f0f0f0;border:1px dashed #ccc;padding:4px 12px;border-radius:6px;font-size:12px;cursor:pointer;color:#666;">+ 添加选项</button>
+                    </div>
+                    <div style="margin-bottom:14px;">
+                        <label style="font-size:13px;font-weight:bold;display:block;margin-bottom:6px;">正确答案 *</label>
+                        <input type="text" id="exAnswer" placeholder="选择题填字母（如A），填空/简答填答案内容" style="width:100%;padding:10px 14px;border:2px solid #e8e8f0;border-radius:10px;font-size:14px;outline:none;">
+                    </div>
+                    <div style="margin-bottom:14px;">
+                        <label style="font-size:13px;font-weight:bold;display:block;margin-bottom:6px;">答案解析（可选）</label>
+                        <textarea id="exAnalysis" rows="2" style="width:100%;padding:10px 14px;border:2px solid #e8e8f0;border-radius:10px;font-size:13px;outline:none;resize:vertical;" placeholder="输入答案解析..."></textarea>
+                    </div>
+                    <div style="display:flex;gap:10px;">
+                        <button class="btn btn-secondary" onclick="showExerciseManager()">返回列表</button>
+                        <button class="btn btn-primary" style="flex:1;background:linear-gradient(135deg,#fa541c,#fa8c16);" onclick="submitAddExercise()">保存题目</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function onTypeChange() {
+            const type = document.getElementById('exType').value;
+            const area = document.getElementById('exOptionsArea');
+            if (area) area.style.display = type === 'choice' ? 'block' : 'none';
+        }
+
+        function addOption() {
+            const container = document.getElementById('optionsContainer');
+            if (!container) return;
+            const count = container.children.length;
+            const letters = 'ABCDEFGH';
+            const letter = letters[count] || '?';
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'ex-option';
+            input.placeholder = `${letter}. 选项内容`;
+            input.style.cssText = 'width:100%;padding:8px 12px;border:2px solid #e8e8f0;border-radius:8px;font-size:13px;margin-bottom:6px;outline:none;';
+            container.appendChild(input);
+        }
+
+        async function submitAddExercise() {
+            const kp = document.getElementById('exKp').value.trim();
+            const type = document.getElementById('exType').value;
+            const difficulty = parseInt(document.getElementById('exDiff').value);
+            const question = document.getElementById('exQuestion').value.trim();
+            const answer = document.getElementById('exAnswer').value.trim();
+            const analysis = document.getElementById('exAnalysis').value.trim();
+
+            if (!kp || !question || !answer) { alert('知识点、题目和答案不能为空'); return; }
+
+            let options = [];
+            if (type === 'choice') {
+                options = Array.from(document.querySelectorAll('.ex-option')).map(i => i.value.trim()).filter(v => v);
+                if (options.length < 2) { alert('选择题至少需要2个选项'); return; }
+            }
+
+            try {
+                const res = await fetch('/api/teacher/exercises/add', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({knowledge_point: kp, type, difficulty, question, options, answer, analysis})
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('✅ ' + data.message);
+                    showExerciseManager(); // 刷新列表
+                } else {
+                    alert('保存失败：' + (data.error || ''));
+                }
+            } catch (err) { alert('保存失败：' + err.message); }
+        }
+
+        async function deleteExercise(exId) {
+            if (!confirm('确认删除这道自定义题目？')) return;
+            try {
+                const res = await fetch('/api/teacher/exercises/' + exId, {method: 'DELETE'});
+                const data = await res.json();
+                if (data.success) { alert('已删除'); showExerciseManager(); }
+                else { alert('删除失败：' + (data.error || '')); }
+            } catch (err) { alert('删除失败：' + err.message); }
+        }
     </script>
+
+    <!-- 上传知识库文件模态框 -->
+    <div class="modal-overlay" id="uploadModal">
+        <div class="modal">
+            <div class="modal-title">
+                📤 上传知识库文件
+                <span class="modal-close" onclick="closeUploadModal()">×</span>
+            </div>
+            
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">点击或拖拽文件到此处</div>
+                <div class="upload-hint">支持 .docx .doc .pptx .ppt .txt 格式</div>
+            </div>
+            
+            <input type="file" id="fileInput" class="file-input" accept=".docx,.doc,.pptx,.ppt,.txt">
+            
+            <div class="upload-progress" id="uploadProgress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div style="text-align: center; margin-top: 5px; font-size: 12px; color: #666;">处理中...</div>
+            </div>
+            
+            <button class="modal-btn cancel" onclick="closeUploadModal()" style="width: 100%;">取消</button>
+        </div>
+    </div>
 </body>
 </html>

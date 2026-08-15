@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>知识图谱 - 灵智尚人</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .header h1 { color: #333; font-size: 24px; }
+        .btn {
+            padding: 10px 20px;
+            background: #2a5298;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .search-bar {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .search-bar input {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #e0e0e8;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+        .search-bar button {
+            padding: 12px 30px;
+            background: #2a5298;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .graph-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .graph-container h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+        .category-section {
+            margin-bottom: 25px;
+        }
+        .category-title {
+            display: inline-block;
+            padding: 6px 15px;
+            border-radius: 20px;
+            color: white;
+            font-size: 14px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        .category-理论基础 { background: #4facfe; }
+        .category-调制技术 { background: #f5576c; }
+        .category-工程实践 { background: #43e97b; }
+        .category-工程伦理 { background: #ffa94d; }
+        .category-综合素质 { background: #a78bfa; }
+        
+        .concept-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+        }
+        .concept-card {
+            background: #f8f9fc;
+            padding: 18px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        .concept-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            border-color: #2a5298;
+        }
+        .concept-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .difficulty {
+            display: inline-block;
+            padding: 2px 10px;
+            background: #fff;
+            border-radius: 10px;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .difficulty-stars { color: #ffa94d; }
+        .concept-section {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #666;
+        }
+        .concept-section strong { color: #333; }
+        .tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 5px;
+        }
+        .tag {
+            padding: 2px 8px;
+            background: #e0e0e8;
+            border-radius: 10px;
+            font-size: 11px;
+            color: #666;
+        }
+        .tag.prereq { background: #ffd8a8; color: #e8590c; }
+        .tag.related { background: #d0ebff; color: #1864ab; }
+        .tag.app { background: #d3f9d8; color: #2b8a3e; }
+        
+        .detail-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .detail-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        .detail-section {
+            background: #f8f9fc;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        .detail-section h4 {
+            color: #333;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .detail-desc {
+            color: #555;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+        .formula-box {
+            background: #fff8e6;
+            padding: 12px 15px;
+            border-left: 4px solid #ffa94d;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            color: #e8590c;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        .key-points-list {
+            list-style: none;
+            padding: 0;
+        }
+        .key-points-list li {
+            padding: 6px 0 6px 24px;
+            position: relative;
+            color: #555;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .key-points-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #43e97b;
+            font-weight: bold;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .action-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .action-btn.primary {
+            background: #2a5298;
+            color: white;
+        }
+        .action-btn.primary:hover {
+            background: #1e3c72;
+        }
+        .action-btn.secondary {
+            background: #e0e0e8;
+            color: #333;
+        }
+        .action-btn.secondary:hover {
+            background: #d0d0d8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🕸️ 知识图谱</h1>
+            <div>
+                <a href="/student-portrait-page" class="btn" style="background: #667eea; margin-right: 10px;">能力画像</a>
+                <a href="/wrong-questions-page" class="btn" style="background: #f5576c; margin-right: 10px;">错题本</a>
+                <a href="/" class="btn">← 返回</a>
+            </div>
+        </div>
+
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="搜索知识点（如：傅里叶、QAM、OFDM）...">
+            <button onclick="searchGraph()">🔍 搜索</button>
+        </div>
+
+        <div class="graph-container">
+            <h2 id="graphTitle">📚 完整知识图谱</h2>
+            <div id="graphContent"></div>
+        </div>
+    </div>
+
+    <div class="detail-modal" id="detailModal" onclick="closeModal(event)">
+        <div class="detail-content" id="detailContent"></div>
+    </div>
+
+    <script>
+        let allGraph = {};
+
+        async function loadGraph() {
+            try {
+                const response = await fetch('/api/knowledge-graph');
+                const data = await response.json();
+                if (data.success) {
+                    allGraph = data.graph;
+                    renderGraph(allGraph);
+                }
+            } catch (error) {
+                console.error('加载知识图谱失败:', error);
+            }
+        }
+
+        function renderGraph(graph) {
+            const content = document.getElementById('graphContent');
+            const categories = {};
+            
+            Object.entries(graph).forEach(([name, info]) => {
+                const cat = info.category || '未分类';
+                if (!categories[cat]) categories[cat] = [];
+                categories[cat].push({name, ...info});
+            });
+            
+            content.innerHTML = Object.entries(categories).map(([cat, items]) => `
+                <div class="category-section">
+                    <div class="category-title category-${cat}">${cat} (${items.length})</div>
+                    <div class="concept-grid">
+                        ${items.map(item => renderConceptCard(item)).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderConceptCard(item) {
+            const stars = '★'.repeat(item.difficulty) + '☆'.repeat(5 - item.difficulty);
+            return `
+                <div class="concept-card" onclick="showDetail('${item.name}')">
+                    <div class="concept-name">${item.name}</div>
+                    <div class="difficulty">
+                        难度: <span class="difficulty-stars">${stars}</span>
+                    </div>
+                    <div class="concept-section">
+                        <strong>🔗 前置知识：</strong>
+                        <div class="tag-list">
+                            ${item.prerequisites.map(p => `<span class="tag prereq">${p}</span>`).join('') || '<span style="color:#999;">无</span>'}
+                        </div>
+                    </div>
+                    <div class="concept-section">
+                        <strong>🔗 关联知识：</strong>
+                        <div class="tag-list">
+                            ${item.related.map(r => `<span class="tag related">${r}</span>`).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showDetail(name) {
+            const info = allGraph[name];
+            if (!info) return;
+            
+            const modal = document.getElementById('detailModal');
+            const content = document.getElementById('detailContent');
+            
+            const keyPointsHtml = info.key_points && info.key_points.length > 0 
+                ? `<ul class="key-points-list">
+                    ${info.key_points.map(p => `<li>${p}</li>`).join('')}
+                   </ul>`
+                : '<span style="color:#999;">暂无要点</span>';
+            
+            const formulaHtml = info.formula 
+                ? `<div class="formula-box">${info.formula.replace(/\\/g, '\\')}</div>`
+                : '';
+            
+            content.innerHTML = `
+                <h2 style="color: #2a5298; margin-bottom: 15px;">📘 ${name}</h2>
+                <div style="margin-bottom: 15px;">
+                    <span class="category-title category-${info.category}">${info.category}</span>
+                    <span style="margin-left: 10px; color: #666;">难度: ${'★'.repeat(info.difficulty)}${'☆'.repeat(5 - info.difficulty)}</span>
+                </div>
+                
+                <div class="detail-section">
+                    <h4>📖 概念定义</h4>
+                    <p class="detail-desc">${info.description || '暂无详细描述'}</p>
+                </div>
+                
+                ${info.formula ? `
+                <div class="detail-section">
+                    <h4>📐 核心公式</h4>
+                    ${formulaHtml}
+                </div>` : ''}
+                
+                <div class="detail-section">
+                    <h4>💡 核心要点</h4>
+                    ${keyPointsHtml}
+                </div>
+                
+                <div class="detail-section">
+                    <h4>📋 前置知识</h4>
+                    ${info.prerequisites && info.prerequisites.length > 0 
+                        ? info.prerequisites.map(p => `<span class="tag prereq" style="margin-right: 5px;">${p}</span>`).join('') 
+                        : '<span style="color:#999;">无前置要求</span>'}
+                </div>
+                <div class="detail-section">
+                    <h4>🔗 关联知识</h4>
+                    ${info.related && info.related.length > 0
+                        ? info.related.map(r => {
+                            if (allGraph[r]) {
+                                return `<span class="tag related" style="margin-right: 5px; cursor: pointer;" onclick="showDetail('${r}')">${r}</span>`;
+                            }
+                            return `<span class="tag related" style="margin-right: 5px;">${r}</span>`;
+                        }).join('')
+                        : '<span style="color:#999;">无关联知识</span>'}
+                </div>
+                <div class="detail-section">
+                    <h4>💼 应用场景</h4>
+                    ${info.applications && info.applications.length > 0
+                        ? info.applications.map(a => `<span class="tag app" style="margin-right: 5px;">${a}</span>`).join('')
+                        : '<span style="color:#999;">暂无应用场景</span>'}
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="action-btn primary" onclick="goToChat('${encodeURIComponent(name)}')">
+                        🤖 去学习这个知识点
+                    </button>
+                    <button class="action-btn secondary" onclick="document.getElementById('detailModal').style.display='none'">
+                        关闭
+                    </button>
+                </div>
+            `;
+            modal.style.display = 'flex';
+        }
+        
+        function goToChat(keyword) {
+            window.open('/?keyword=' + keyword, '_blank');
+        }
+
+        function closeModal(event) {
+            if (event.target.id === 'detailModal') {
+                document.getElementById('detailModal').style.display = 'none';
+            }
+        }
+
+        async function searchGraph() {
+            const keyword = document.getElementById('searchInput').value.trim();
+            if (!keyword) {
+                loadGraph();
+                document.getElementById('graphTitle').textContent = '📚 完整知识图谱';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/knowledge-graph?keyword=${encodeURIComponent(keyword)}`);
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('graphTitle').textContent = `🔍 搜索: "${keyword}" (${Object.keys(data.graph).length}个结果)`;
+                    renderGraph(data.graph);
+                }
+            } catch (error) {
+                console.error('搜索失败:', error);
+            }
+        }
+
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') searchGraph();
+        });
+
+        loadGraph();
+    </script>
+</body>
+</html>

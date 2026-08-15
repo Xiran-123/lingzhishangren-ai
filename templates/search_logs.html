@@ -1,0 +1,1688 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搜索日志 - 灵智尚人</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 10px;
+        }
+
+        .back-btn {
+            padding: 10px 20px;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            color: #667eea;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .nav-btn {
+            padding: 10px 16px;
+            background: rgba(102, 126, 234, 0.1);
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            color: #667eea;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .nav-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .logout-btn {
+            background: rgba(211, 47, 47, 0.1);
+            border-color: #d32f2f;
+            color: #d32f2f;
+        }
+
+        .logout-btn:hover {
+            background: #d32f2f;
+            color: white;
+        }
+
+        .title {
+            font-size: 28px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            background: white;
+            border: 2px solid #e0e0e8;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #666;
+        }
+
+        .filter-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: transparent;
+            color: white;
+        }
+
+        .logs-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .log-item {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f5;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .log-item:hover {
+            background: #f8f9fc;
+        }
+
+        .log-item:last-child {
+            border-bottom: none;
+        }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .log-query {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            flex: 1;
+        }
+
+        .log-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .log-tag {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .log-tag.kb {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .log-tag.search {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .log-tag.reviewed {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .log-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .log-preview {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .log-detail {
+            display: none;
+            padding-top: 15px;
+            margin-top: 15px;
+            border-top: 1px solid #f0f0f5;
+        }
+
+        .log-detail.show {
+            display: block;
+        }
+
+        .log-content {
+            background: #f8f9fc;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 14px;
+            line-height: 1.8;
+            color: #333;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .log-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .action-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .action-btn.success {
+            background: #2e7d32;
+            color: white;
+        }
+
+        .action-btn.success:hover {
+            background: #1b5e20;
+        }
+
+        .action-btn.danger {
+            background: #d32f2f;
+            color: white;
+        }
+
+        .action-btn.danger:hover {
+            background: #b71c1c;
+        }
+
+        .action-btn.secondary {
+            background: #f0f0f5;
+            color: #666;
+        }
+
+        .action-btn.secondary:hover {
+            background: #e0e0e8;
+        }
+
+        .upload-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            border: 2px solid #11998e;
+            border-radius: 10px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            flex-shrink: 0;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(17, 153, 142, 0.4);
+            border-color: #0d7d73;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-close {
+            margin-left: auto;
+            font-size: 24px;
+            color: #999;
+            cursor: pointer;
+        }
+
+        .modal-close:hover {
+            color: #666;
+        }
+
+        .upload-area {
+            border: 2px dashed #e0e0e8;
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover,
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #f8f9fc;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .upload-text {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .upload-hint {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-progress {
+            display: none;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #e0e0e8;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        .note-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e8;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-top: 10px;
+            resize: vertical;
+            min-height: 60px;
+            font-family: inherit;
+        }
+
+        .note-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .empty-state-text {
+            font-size: 18px;
+        }
+
+        /* 问题分析统计 */
+        .analysis-section {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .analysis-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .category-card {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            border: 2px solid #e8e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .category-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .category-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .category-count {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .category-bar {
+            height: 8px;
+            background: #e8e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .category-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        .category-percent {
+            font-size: 13px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .category-card.clickable {
+            cursor: pointer;
+        }
+
+        .category-card.clickable:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.25);
+        }
+
+        .category-view-btn {
+            margin-top: 10px;
+            padding: 6px 12px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 6px;
+            font-size: 13px;
+            color: #667eea;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .category-card.clickable:hover .category-view-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .keywords-section {
+            background: #f8f9fc;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .keywords-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .keyword-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .keyword-tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .keyword-count {
+            background: rgba(255, 255, 255, 0.3);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+
+        .questions-section {
+            background: #f8f9fc;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .question-type {
+            background: white;
+            border: 2px solid #e8e8f0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 12px;
+        }
+
+        .question-type:last-child {
+            margin-bottom: 0;
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .question-type-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 15px;
+        }
+
+        .question-count-badge {
+            background: #fff3e0;
+            color: #ef6c00;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .question-examples {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .question-example {
+            padding: 6px 0;
+            border-bottom: 1px solid #f0f0f5;
+        }
+
+        .question-example:last-child {
+            border-bottom: none;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            background: white;
+            border: 2px solid #e8e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #666;
+        }
+
+        .tab-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: transparent;
+            color: white;
+        }
+
+        /* 模态框样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
+            overflow: hidden;
+        }
+
+        .modal.large {
+            max-width: 800px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 25px;
+            border-bottom: 1px solid #eee;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #999;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+
+        .modal-body {
+            padding: 25px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 20px 25px;
+            border-top: 1px solid #eee;
+            background: #f8f9fc;
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid;
+        }
+
+        .modal-btn.cancel {
+            background: white;
+            border-color: #ddd;
+            color: #666;
+        }
+
+        .modal-btn.cancel:hover {
+            background: #f5f5f5;
+        }
+
+        /* 日志详情列表 */
+        .log-detail-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .log-detail-item {
+            background: #f8f9fc;
+            border-radius: 10px;
+            padding: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .log-detail-query {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        .log-detail-content {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .log-detail-meta {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #999;
+        }
+
+        /* 图表样式 */
+        .charts-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            padding: 20px;
+        }
+
+        .chart-card.full-width {
+            grid-column: span 2;
+        }
+
+        .chart-card canvas {
+            max-width: 100%;
+            height: 280px !important;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+
+            .title {
+                font-size: 22px;
+            }
+
+            .log-header {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .log-meta {
+                flex-wrap: wrap;
+            }
+
+            .category-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <a href="/" class="back-btn">← 返回</a>
+                <h1 class="title">📚 搜索日志</h1>
+            </div>
+            <div class="header-right">
+                <button class="nav-btn logout-btn" onclick="doLogout()">🔓 退出登录</button>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalLogs">0</div>
+                <div class="stat-label">总记录数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="kbLogs">0</div>
+                <div class="stat-label">来自知识库</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="searchLogs">0</div>
+                <div class="stat-label">新增搜索</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="reviewedLogs">0</div>
+                <div class="stat-label">已审核</div>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <div style="color: red; font-size: 24px; font-weight: bold;">===== TEST UPLOAD BUTTON =====</div>
+            <button class="upload-btn" onclick="openUploadModal()">📤 上传Word/PPT文档到知识库</button>
+        </div>
+
+        <div class="filters">
+            <button class="filter-btn active" data-filter="all">全部</button>
+            <button class="filter-btn" data-filter="kb">来自知识库</button>
+            <button class="filter-btn" data-filter="search">新增搜索</button>
+            <button class="filter-btn" data-filter="reviewed">已审核</button>
+            <button class="filter-btn" data-filter="pending">待审核</button>
+        </div>
+
+        <!-- 学生普遍问题分析 -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="logs" onclick="switchTab('logs')">📋 日志列表</button>
+            <button class="tab-btn" data-tab="analysis" onclick="switchTab('analysis')">📊 问题分析</button>
+        </div>
+
+        <!-- 日志详情模态框 -->
+        <div class="modal-overlay" id="logDetailModal" style="display: none;">
+            <div class="modal large">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="modalTitle">📋 日志详情</h3>
+                    <button class="modal-close" onclick="hideLogDetailModal()">✕</button>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📖</div>
+                        <div class="empty-state-text">加载中...</div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="modal-btn cancel" onclick="hideLogDetailModal()">关闭</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 问题分析区域 -->
+        <div class="analysis-section" id="analysisSection" style="display: none;">
+            <div class="analysis-title">📊 学生普遍问题分析</div>
+            
+            <!-- 统计图表区域 -->
+            <div class="charts-row">
+                <div class="chart-card">
+                    <h3 style="font-size: 16px; color: #333; margin-bottom: 15px;">📊 知识领域分布饼图</h3>
+                    <canvas id="categoryPieChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3 style="font-size: 16px; color: #333; margin-bottom: 15px;">� 知识领域柱状图</h3>
+                    <canvas id="categoryBarChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- 知识领域分布 -->
+            <h3 style="font-size: 16px; color: #333; margin-bottom: 15px;">📚 知识领域详细数据</h3>
+            <div class="category-grid" id="categoryGrid">
+                <div class="empty-state" style="padding: 20px;">
+                    <div class="empty-state-text">加载中...</div>
+                </div>
+            </div>
+            
+            <!-- 高频关键词图表 -->
+            <div class="charts-row">
+                <div class="chart-card full-width">
+                    <h3 style="font-size: 16px; color: #333; margin-bottom: 15px;">🔥 高频关键词 TOP 10</h3>
+                    <canvas id="keywordsBarChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- 高频关键词 -->
+            <div class="keywords-section">
+                <div class="keyword-tags" id="keywordTags">
+                    <div class="empty-state-text">暂无数据</div>
+                </div>
+            </div>
+            
+            <!-- 常见问题类型图表 -->
+            <div class="charts-row">
+                <div class="chart-card">
+                    <h3 style="font-size: 16px; color: #333; margin-bottom: 15px;">💡 问题类型分布</h3>
+                    <canvas id="questionTypeChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- 常见问题类型 -->
+            <div class="questions-section">
+                <div class="keywords-title">问题类型详情</div>
+                <div id="questionsList">
+                    <div class="empty-state-text">暂无数据</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="logs-container" id="logsContainer">
+            <div class="empty-state">
+                <div class="empty-state-icon">📖</div>
+                <div class="empty-state-text">加载中...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allLogs = [];
+        let currentFilter = 'all';
+        let currentTab = 'logs';
+
+        // 退出登录
+        async function doLogout() {
+            if (confirm('确定要退出登录吗？')) {
+                try {
+                    const response = await fetch('/logout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    
+                    if (response.ok) {
+                        localStorage.removeItem('lingzhi_chat_history');
+                        localStorage.removeItem('lingzhi_scenario_history');
+                        window.location.href = '/';
+                    }
+                } catch (error) {
+                    console.error('退出失败:', error);
+                    localStorage.removeItem('lingzhi_chat_history');
+                    localStorage.removeItem('lingzhi_scenario_history');
+                    window.location.href = '/';
+                }
+            }
+        }
+
+        // 显示分类日志详情
+        async function showCategoryLogs(categoryName) {
+            document.getElementById('modalTitle').textContent = `📋 ${categoryName} - 日志详情`;
+            document.getElementById('modalBody').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">📖</div>
+                    <div class="empty-state-text">加载中...</div>
+                </div>
+            `;
+            document.getElementById('logDetailModal').style.display = 'flex';
+            
+            try {
+                const response = await fetch(`/search-logs/category/${encodeURIComponent(categoryName)}`);
+                const data = await response.json();
+                
+                if (data.logs && data.logs.length > 0) {
+                    document.getElementById('modalBody').innerHTML = `
+                        <div class="log-detail-list">
+                            ${data.logs.map(log => `
+                                <div class="log-detail-item">
+                                    <div class="log-detail-query">🔍 ${escapeHtml(log.query)}</div>
+                                    <div class="log-detail-content">📝 ${escapeHtml(log.content.substring(0, 200))}${log.content.length > 200 ? '...' : ''}</div>
+                                    <div class="log-detail-meta">
+                                        <span>📅 ${log.timestamp}</span>
+                                        <span>📁 ${log.source === 'kb' ? '知识库' : '搜索'}</span>
+                                        <span>${log.reviewed ? '✓ 已审核' : '⏳ 待审核'}</span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('modalBody').innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <div class="empty-state-text">该分类暂无日志</div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('加载日志失败:', error);
+                document.getElementById('modalBody').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">❌</div>
+                        <div class="empty-state-text">加载失败</div>
+                    </div>
+                `;
+            }
+        }
+
+        // 隐藏日志详情模态框
+        function hideLogDetailModal() {
+            document.getElementById('logDetailModal').style.display = 'none';
+        }
+
+        // 点击模态框外部关闭
+        document.getElementById('logDetailModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideLogDetailModal();
+            }
+        });
+
+        // 切换标签页
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // 更新标签按钮状态
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+            
+            // 显示/隐藏对应区域
+            if (tab === 'logs') {
+                document.getElementById('analysisSection').style.display = 'none';
+                document.querySelector('.filters').style.display = 'flex';
+                document.getElementById('logsContainer').style.display = 'block';
+            } else {
+                document.getElementById('analysisSection').style.display = 'block';
+                document.querySelector('.filters').style.display = 'none';
+                document.getElementById('logsContainer').style.display = 'none';
+                loadAnalysis();
+            }
+        }
+
+        // 加载问题分析数据
+        async function loadAnalysis() {
+            try {
+                const response = await fetch('/search-logs/analysis');
+                const data = await response.json();
+                renderAnalysis(data);
+            } catch (error) {
+                console.error('加载分析数据失败:', error);
+                document.getElementById('categoryGrid').innerHTML = `
+                    <div class="empty-state" style="padding: 20px;">
+                        <div class="empty-state-text">加载失败</div>
+                    </div>
+                `;
+            }
+        }
+
+        // 图表实例缓存
+        let charts = {};
+
+        // 销毁现有图表
+        function destroyCharts() {
+            Object.keys(charts).forEach(key => {
+                if (charts[key]) {
+                    charts[key].destroy();
+                    charts[key] = null;
+                }
+            });
+            charts = {};
+        }
+
+        // 创建颜色数组
+        const chartColors = [
+            'rgba(102, 126, 234, 0.8)',
+            'rgba(118, 75, 162, 0.8)',
+            'rgba(240, 98, 146, 0.8)',
+            'rgba(255, 152, 0, 0.8)',
+            'rgba(76, 175, 80, 0.8)',
+            'rgba(33, 150, 243, 0.8)',
+            'rgba(156, 39, 176, 0.8)',
+            'rgba(255, 87, 34, 0.8)',
+            'rgba(0, 188, 212, 0.8)',
+            'rgba(255, 193, 7, 0.8)'
+        ];
+
+        const chartBorderColors = [
+            'rgba(102, 126, 234, 1)',
+            'rgba(118, 75, 162, 1)',
+            'rgba(240, 98, 146, 1)',
+            'rgba(255, 152, 0, 1)',
+            'rgba(76, 175, 80, 1)',
+            'rgba(33, 150, 243, 1)',
+            'rgba(156, 39, 176, 1)',
+            'rgba(255, 87, 34, 1)',
+            'rgba(0, 188, 212, 1)',
+            'rgba(255, 193, 7, 1)'
+        ];
+
+        // 渲染分析数据
+        function renderAnalysis(data) {
+            // 销毁之前的图表
+            destroyCharts();
+            
+            // 渲染知识领域分布图表
+            const categories = Object.entries(data.category_stats || {});
+            const sortedCategories = categories.sort((a, b) => b[1].count - a[1].count);
+            const categoryLabels = sortedCategories.map(([name]) => name);
+            const categoryCounts = sortedCategories.map(([, stats]) => stats.count);
+            
+            // 创建饼图
+            if (categoryLabels.length > 0) {
+                const pieCtx = document.getElementById('categoryPieChart').getContext('2d');
+                charts['pie'] = new Chart(pieCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: categoryLabels,
+                        datasets: [{
+                            data: categoryCounts,
+                            backgroundColor: chartColors.slice(0, categoryLabels.length),
+                            borderColor: chartBorderColors.slice(0, categoryLabels.length),
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 15,
+                                    usePointStyle: true,
+                                    font: { size: 12 }
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                // 创建柱状图
+                const barCtx = document.getElementById('categoryBarChart').getContext('2d');
+                charts['bar'] = new Chart(barCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: categoryLabels,
+                        datasets: [{
+                            label: '问题数量',
+                            data: categoryCounts,
+                            backgroundColor: chartColors.slice(0, categoryLabels.length),
+                            borderColor: chartBorderColors.slice(0, categoryLabels.length),
+                            borderWidth: 2,
+                            borderRadius: 8
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            x: { beginAtZero: true, grid: { color: '#f0f0f5' } },
+                            y: { grid: { display: false } }
+                        }
+                    }
+                });
+            }
+            
+            // 渲染知识领域分布卡片
+            const categoryGrid = document.getElementById('categoryGrid');
+            if (categories.length === 0) {
+                categoryGrid.innerHTML = `
+                    <div class="empty-state" style="padding: 20px;">
+                        <div class="empty-state-text">暂无数据</div>
+                    </div>
+                `;
+            } else {
+                categoryGrid.innerHTML = sortedCategories.map(([name, stats], index) => `
+                    <div class="category-card clickable" onclick="showCategoryLogs('${name}')">
+                        <div class="category-header">
+                            <div class="category-name">${name}</div>
+                            <div class="category-count">${stats.count} 个问题</div>
+                        </div>
+                        <div class="category-bar">
+                            <div class="category-bar-fill" style="width: ${stats.percentage}%; background: ${chartColors[index]}"></div>
+                        </div>
+                        <div class="category-percent">占比 ${stats.percentage}%</div>
+                        <div class="category-view-btn">👁️ 查看详情</div>
+                    </div>
+                `).join('');
+            }
+            
+            // 渲染高频关键词图表
+            const keywords = data.top_keywords || [];
+            if (keywords.length > 0) {
+                const kwLabels = keywords.map(kw => kw.keyword);
+                const kwCounts = keywords.map(kw => kw.count);
+                
+                const kwCtx = document.getElementById('keywordsBarChart').getContext('2d');
+                charts['keywords'] = new Chart(kwCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: kwLabels,
+                        datasets: [{
+                            label: '出现次数',
+                            data: kwCounts,
+                            backgroundColor: chartColors.slice(0, keywords.length),
+                            borderColor: chartBorderColors.slice(0, keywords.length),
+                            borderWidth: 2,
+                            borderRadius: 8
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            x: { grid: { display: false } },
+                            y: { beginAtZero: true, grid: { color: '#f0f0f5' } }
+                        }
+                    }
+                });
+            }
+            
+            // 渲染高频关键词标签
+            const keywordTags = document.getElementById('keywordTags');
+            if (keywords.length === 0) {
+                keywordTags.innerHTML = '<div class="empty-state-text">暂无数据</div>';
+            } else {
+                keywordTags.innerHTML = keywords.map(kw => `
+                    <div class="keyword-tag">
+                        ${kw.keyword}
+                        <span class="keyword-count">${kw.count}</span>
+                    </div>
+                `).join('');
+            }
+            
+            // 渲染常见问题类型图表
+            const questions = data.common_questions || [];
+            if (questions.length > 0) {
+                const qLabels = questions.map(q => q.type);
+                const qCounts = questions.map(q => q.count);
+                
+                const qCtx = document.getElementById('questionTypeChart').getContext('2d');
+                charts['questions'] = new Chart(qCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: qLabels,
+                        datasets: [{
+                            data: qCounts,
+                            backgroundColor: chartColors.slice(0, questions.length),
+                            borderColor: chartBorderColors.slice(0, questions.length),
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 15,
+                                    usePointStyle: true,
+                                    font: { size: 12 }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // 渲染常见问题类型列表
+            const questionsList = document.getElementById('questionsList');
+            if (questions.length === 0) {
+                questionsList.innerHTML = '<div class="empty-state-text">暂无数据</div>';
+            } else {
+                questionsList.innerHTML = questions.map(q => `
+                    <div class="question-type">
+                        <div class="question-header">
+                            <div class="question-type-name">${q.type}</div>
+                            <div class="question-count-badge">${q.count} 条</div>
+                        </div>
+                        <div class="question-examples">
+                            ${q.examples.map(ex => `
+                                <div class="question-example">• ${escapeHtml(ex)}</div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // 加载日志
+        async function loadLogs() {
+            try {
+                const response = await fetch('/search-logs');
+                const data = await response.json();
+                allLogs = data.logs || [];
+                updateStats();
+                renderLogs();
+            } catch (error) {
+                console.error('加载日志失败:', error);
+                document.getElementById('logsContainer').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">❌</div>
+                        <div class="empty-state-text">加载失败，请稍后重试</div>
+                    </div>
+                `;
+            }
+        }
+
+        // 更新统计数据
+        function updateStats() {
+            document.getElementById('totalLogs').textContent = allLogs.length;
+            document.getElementById('kbLogs').textContent = allLogs.filter(l => l.is_from_kb).length;
+            document.getElementById('searchLogs').textContent = allLogs.filter(l => !l.is_from_kb).length;
+            document.getElementById('reviewedLogs').textContent = allLogs.filter(l => l.reviewed).length;
+        }
+
+        // 渲染日志列表
+        function renderLogs() {
+            const container = document.getElementById('logsContainer');
+            
+            let filteredLogs = allLogs;
+            if (currentFilter === 'kb') {
+                filteredLogs = allLogs.filter(l => l.is_from_kb);
+            } else if (currentFilter === 'search') {
+                filteredLogs = allLogs.filter(l => !l.is_from_kb);
+            } else if (currentFilter === 'reviewed') {
+                filteredLogs = allLogs.filter(l => l.reviewed);
+            } else if (currentFilter === 'pending') {
+                filteredLogs = allLogs.filter(l => !l.reviewed);
+            }
+
+            if (filteredLogs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <div class="empty-state-text">暂无记录</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filteredLogs.reverse().map(log => `
+                <div class="log-item" data-id="${log.id}">
+                    <div class="log-header" onclick="toggleLogDetail(${log.id})">
+                        <div class="log-query">${escapeHtml(log.query)}</div>
+                        <div class="log-meta">
+                            <span class="log-tag ${log.is_from_kb ? 'kb' : 'search'}">${log.is_from_kb ? '知识库' : '搜索'}</span>
+                            ${log.reviewed ? '<span class="log-tag reviewed">已审核</span>' : ''}
+                            ${log.added_to_kb ? '<span class="log-tag" style="background: #e8f5e9; color: #2e7d32;">已入知识库</span>' : ''}
+                            <span class="log-time">${log.timestamp}</span>
+                        </div>
+                    </div>
+                    <div class="log-preview">${escapeHtml(log.content.substring(0, 200))}${log.content.length > 200 ? '...' : ''}</div>
+                    <div class="log-detail" id="detail-${log.id}">
+                        <div class="log-content">${escapeHtml(log.content)}</div>
+                        <textarea class="note-input" id="note-${log.id}" placeholder="添加备注...">${escapeHtml(log.note || '')}</textarea>
+                        <div class="log-actions">
+                            <button class="action-btn secondary" onclick="saveNote(${log.id})">💾 保存备注</button>
+                            <button class="action-btn success" onclick="markReviewed(${log.id}, true)">✅ 标记已审核</button>
+                            <button class="action-btn primary" onclick="addToKnowledge(${log.id})">📚 添加到知识库</button>
+                            <button class="action-btn danger" onclick="deleteLog(${log.id})">🗑️ 删除</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 切换日志详情
+        function toggleLogDetail(logId) {
+            const detail = document.getElementById(`detail-${logId}`);
+            detail.classList.toggle('show');
+        }
+
+        // 保存备注
+        async function saveNote(logId) {
+            const note = document.getElementById(`note-${logId}`).value;
+            try {
+                const response = await fetch(`/search-logs/${logId}/review`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ note: note })
+                });
+                if (response.ok) {
+                    alert('备注已保存');
+                    loadLogs();
+                }
+            } catch (error) {
+                alert('保存失败');
+            }
+        }
+
+        // 标记审核状态
+        async function markReviewed(logId, reviewed) {
+            const note = document.getElementById(`note-${logId}`).value;
+            try {
+                const response = await fetch(`/search-logs/${logId}/review`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reviewed: reviewed, note: note })
+                });
+                if (response.ok) {
+                    const result = await response.json();
+                    alert(result.message || (reviewed ? '已标记为已审核' : '已取消审核标记'));
+                    loadLogs();
+                }
+            } catch (error) {
+                alert('操作失败');
+            }
+        }
+
+        // 添加到知识库
+        async function addToKnowledge(logId) {
+            if (!confirm('确定要将此记录添加到知识库吗？')) {
+                return;
+            }
+            try {
+                const response = await fetch(`/search-logs/${logId}/add-to-knowledge`, {
+                    method: 'POST'
+                });
+                if (response.ok) {
+                    alert('已添加到知识库！');
+                    loadLogs();
+                } else {
+                    alert('添加失败');
+                }
+            } catch (error) {
+                alert('添加失败');
+            }
+        }
+
+        // 删除日志
+        async function deleteLog(logId) {
+            if (!confirm('确定要删除此记录吗？')) {
+                return;
+            }
+            try {
+                const response = await fetch(`/search-logs/${logId}`, {
+                    method: 'DELETE'
+                });
+                if (response.ok) {
+                    alert('已删除');
+                    loadLogs();
+                }
+            } catch (error) {
+                alert('删除失败');
+            }
+        }
+
+        // 筛选按钮
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.filter;
+                renderLogs();
+            });
+        });
+
+        // HTML转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 初始化
+        loadLogs();
+
+        // 知识库文件上传相关
+        function openUploadModal() {
+            document.getElementById('uploadModal').classList.add('active');
+        }
+
+        function closeUploadModal() {
+            document.getElementById('uploadModal').classList.remove('active');
+            document.getElementById('fileInput').value = '';
+            document.getElementById('uploadProgress').style.display = 'none';
+            document.getElementById('progressFill').style.width = '0%';
+        }
+
+        document.getElementById('uploadArea').addEventListener('click', function() {
+            document.getElementById('fileInput').click();
+        });
+
+        document.getElementById('uploadArea').addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('dragover');
+        });
+
+        document.getElementById('uploadArea').addEventListener('dragleave', function() {
+            this.classList.remove('dragover');
+        });
+
+        document.getElementById('uploadArea').addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        async function handleFile(file) {
+            const allowedTypes = ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 
+                                  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                                  'text/plain'];
+            const allowedExtensions = ['.docx', '.doc', '.pptx', '.ppt', '.txt'];
+            
+            const fileName = file.name.toLowerCase();
+            const isAllowed = allowedExtensions.some(ext => fileName.endsWith(ext));
+            
+            if (!isAllowed) {
+                alert('不支持的文件格式！请上传 .docx, .doc, .pptx, .ppt 或 .txt 文件');
+                return;
+            }
+
+            const progressDiv = document.getElementById('uploadProgress');
+            const progressFill = document.getElementById('progressFill');
+            
+            progressDiv.style.display = 'block';
+            progressFill.style.width = '30%';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                progressFill.style.width = '60%';
+                
+                const response = await fetch('/api/knowledge/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                progressFill.style.width = '100%';
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(result.message);
+                    closeUploadModal();
+                    loadLogs();
+                } else {
+                    alert('上传失败: ' + result.error);
+                }
+            } catch (error) {
+                alert('上传失败: ' + error.message);
+            } finally {
+                setTimeout(() => {
+                    progressDiv.style.display = 'none';
+                    progressFill.style.width = '0%';
+                }, 500);
+            }
+        }
+    </script>
+
+    <!-- 上传知识库文件模态框 -->
+    <div class="modal-overlay" id="uploadModal">
+        <div class="modal">
+            <div class="modal-title">
+                📤 上传知识库文件
+                <span class="modal-close" onclick="closeUploadModal()">×</span>
+            </div>
+            
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">点击或拖拽文件到此处</div>
+                <div class="upload-hint">支持 .docx .doc .pptx .ppt .txt 格式</div>
+            </div>
+            
+            <input type="file" id="fileInput" class="file-input" accept=".docx,.doc,.pptx,.ppt,.txt">
+            
+            <div class="upload-progress" id="uploadProgress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div style="text-align: center; margin-top: 5px; font-size: 12px; color: #666;">处理中...</div>
+            </div>
+            
+            <button class="action-btn secondary" onclick="closeUploadModal()" style="width: 100%;">取消</button>
+        </div>
+    </div>
+</body>
+</html>

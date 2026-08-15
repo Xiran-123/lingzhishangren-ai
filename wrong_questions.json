@@ -1,0 +1,41 @@
+[
+  {
+    "id": "f5f5d8da-ce8e-4b83-91e5-3a7f635c7b92",
+    "student_name": "test_student",
+    "question": "傅里叶变换的主要作用是什么？",
+    "category": "练习题",
+    "knowledge_point": "傅里叶变换",
+    "student_answer": "B",
+    "correct_answer": "A",
+    "count": 1,
+    "mastered": false,
+    "created_at": "2026-06-26 17:59:42",
+    "last_wrong_time": "2026-06-26 17:59:42"
+  },
+  {
+    "id": "1f581abd-a32d-4497-a6e6-55878640fe18",
+    "student_name": "teacher1",
+    "question": "傅里叶变换的主要作用是什么？",
+    "category": "练习题",
+    "knowledge_point": "傅里叶变换",
+    "student_answer": "\n",
+    "correct_answer": "A",
+    "count": 2,
+    "mastered": false,
+    "created_at": "2026-06-26 18:25:04",
+    "last_wrong_time": "2026-07-13 21:44:37"
+  },
+  {
+    "id": "07d8dd00-f6fe-45b5-8104-533ca3c905ec",
+    "student_name": "teacher1",
+    "question": "以下关于傅里叶变换性质的描述，哪一项是正确的？",
+    "category": "练习题",
+    "knowledge_point": "傅里叶变换",
+    "student_answer": "A",
+    "correct_answer": "C",
+    "count": 2,
+    "mastered": false,
+    "created_at": "2026-06-26 20:25:38",
+    "last_wrong_time": "2026-07-13 21:44:44"
+  }
+]

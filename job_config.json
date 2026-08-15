@@ -1,0 +1,53 @@
+{
+  "auto_fetch_enabled": true,
+  "fetch_interval_hours": 6,
+  "last_fetch_time": "2026-08-15 12:34:41",
+  "keywords": [
+    "通信工程",
+    "通信",
+    "电信",
+    "通讯",
+    "5G",
+    "4G",
+    "LTE",
+    "NR",
+    "无线",
+    "射频"
+  ],
+  "locations": [
+    "北京",
+    "上海",
+    "深圳",
+    "广州",
+    "杭州",
+    "成都",
+    "南京",
+    "武汉"
+  ],
+  "sources": [
+    "zhaopin",
+    "51job",
+    "boss",
+    "liepin",
+    "lagou"
+  ],
+  "max_jobs_per_fetch": 50,
+  "salary_min": null,
+  "experience_level": "不限",
+  "education_level": "不限",
+  "fetch_mode": "all",
+  "third_party_api_key": "",
+  "third_party_api_provider": "juhe",
+  "enterprise_sites_enabled": [
+    "huawei",
+    "zte",
+    "china_mobile",
+    "china_telecom",
+    "china_unicom",
+    "datang",
+    "fiberhome",
+    "hytera"
+  ],
+  "enterprise_fetch_enabled": true,
+  "api_fetch_enabled": false
+}

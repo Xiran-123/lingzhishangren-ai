@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>通信工程岗位招聘信息</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px 32px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+        }
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        .back-btn {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            padding: 14px 18px;
+            border-radius: 12px;
+        }
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.85;
+            margin-bottom: 4px;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        .control-panel {
+            background: white;
+            padding: 20px 24px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+        .control-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 16px;
+            align-items: center;
+        }
+        .control-row:last-child {
+            margin-bottom: 0;
+        }
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .control-group label {
+            font-size: 14px;
+            color: #555;
+            font-weight: 500;
+        }
+        .input-field, .select-field {
+            padding: 8px 14px;
+            border: 1px solid #e0e0e8;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-field:focus, .select-field:focus {
+            border-color: #667eea;
+        }
+        .input-field {
+            width: 200px;
+        }
+        .btn {
+            padding: 9px 18px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102,126,234,0.4);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+        }
+        .btn-success:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(67,233,123,0.4);
+        }
+        .btn-warning {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+        }
+        .btn-outline {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+        }
+        .scheduler-status {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .scheduler-status.running {
+            background: #e8f7ee;
+            color: #1a9d4b;
+        }
+        .scheduler-status.stopped {
+            background: #fee;
+            color: #d4380d;
+        }
+        .switch-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .switch {
+            position: relative;
+            width: 48px;
+            height: 26px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: 0.3s;
+            border-radius: 26px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #667eea;
+        }
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 24px;
+        }
+        @media (max-width: 1100px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        .job-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .job-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px 24px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+        }
+        .job-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            border-left-color: #667eea;
+        }
+        .job-card.is-new {
+            border-left-color: #ff7875;
+        }
+        .job-card.is-hot {
+            border-left-color: #faad14;
+        }
+        .job-card.favorite {
+            background: linear-gradient(to right, #fffbe6 0%, white 20%);
+        }
+        .job-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        .job-title-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .job-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a2e;
+            cursor: pointer;
+        }
+        .job-title:hover {
+            color: #667eea;
+        }
+        .badge {
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-new {
+            background: #fff1f0;
+            color: #cf1322;
+        }
+        .badge-hot {
+            background: #fff7e6;
+            color: #d46b08;
+        }
+        .badge-favorite {
+            background: #fff0f6;
+            color: #c41d7f;
+        }
+        .badge-real {
+            background: #f6ffed;
+            color: #389e0d;
+            border: 1px solid #b7eb8f;
+        }
+        .badge-mock {
+            background: #f5f5f5;
+            color: #8c8c8c;
+            border: 1px solid #d9d9d9;
+        }
+        .job-salary {
+            font-size: 22px;
+            font-weight: 700;
+            color: #ff6b6b;
+        }
+        .job-company {
+            font-size: 15px;
+            color: #555;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .job-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .meta-tag {
+            padding: 5px 12px;
+            background: #f0f2f5;
+            border-radius: 16px;
+            font-size: 13px;
+            color: #555;
+        }
+        .meta-tag.location {
+            background: #e6f7ff;
+            color: #0050b3;
+        }
+        .meta-tag.education {
+            background: #f9f0ff;
+            color: #531dab;
+        }
+        .meta-tag.experience {
+            background: #e6fffb;
+            color: #006d75;
+        }
+        .meta-tag.source {
+            background: #fff7e6;
+            color: #d46b08;
+        }
+        .job-skills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+        .skill-tag {
+            padding: 4px 10px;
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border: 1px solid #667eea30;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #667eea;
+        }
+        .job-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 12px;
+            border-top: 1px solid #f0f0f0;
+        }
+        .job-date {
+            font-size: 13px;
+            color: #999;
+        }
+        .job-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .action-btn {
+            padding: 6px 14px;
+            border: 1px solid #e0e0e8;
+            background: white;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .action-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+        .action-btn.active {
+            background: #fff0f6;
+            border-color: #c41d7f;
+            color: #c41d7f;
+        }
+        .action-btn.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+        .action-btn.primary:hover {
+            transform: translateY(-1px);
+        }
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .sidebar-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+        .sidebar-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #1a1a2e;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .chart-container {
+            margin-bottom: 20px;
+        }
+        .chart-container:last-child {
+            margin-bottom: 0;
+        }
+        .bar-chart {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .bar-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .bar-label {
+            width: 80px;
+            font-size: 13px;
+            color: #555;
+            flex-shrink: 0;
+            text-align: right;
+        }
+        .bar-track {
+            flex: 1;
+            height: 20px;
+            background: #f0f2f5;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            transition: width 0.5s;
+        }
+        .bar-value {
+            width: 40px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+        }
+        .pie-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .pie-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: #fafbfc;
+            border-radius: 8px;
+        }
+        .pie-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+        .pie-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #667eea;
+        }
+        .pie-value {
+            font-weight: 600;
+            color: #333;
+            font-size: 13px;
+        }
+        .job-detail-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .job-detail-modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            max-width: 700px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 24px;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .modal-header h2 {
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+        .modal-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .modal-body {
+            padding: 24px;
+        }
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin: 20px 0 10px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title:first-child {
+            margin-top: 0;
+        }
+        .section-content {
+            color: #555;
+            line-height: 1.8;
+            font-size: 14px;
+            background: #fafbfc;
+            padding: 14px 16px;
+            border-radius: 10px;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 20px 0;
+        }
+        .page-btn {
+            padding: 8px 14px;
+            border: 1px solid #e0e0e8;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .page-btn:hover:not(:disabled) {
+            border-color: #667eea;
+            color: #667eea;
+        }
+        .page-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 16px;
+        }
+        .empty-state .icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+        .empty-state h3 {
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .empty-state p {
+            color: #999;
+            font-size: 14px;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #fff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 10px;
+            color: white;
+            font-size: 14px;
+            z-index: 2000;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .toast.success {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+        .toast.error {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        }
+        .toast.info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <div>
+                    <h1>💼 通信工程岗位招聘信息</h1>
+                    <p>定期自动获取通信工程相关岗位招聘信息，助你找到理想工作</p>
+                </div>
+                <a href="/" class="back-btn">← 返回首页</a>
+            </div>
+            <div class="stats-row" id="statsRow">
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <div class="control-row">
+                <div class="control-group">
+                    <span id="schedulerStatus" class="scheduler-status running">● 调度器运行中</span>
+                </div>
+                <div class="control-group switch-container">
+                    <label>自动抓取:</label>
+                    <label class="switch">
+                        <input type="checkbox" id="autoFetchSwitch" checked onchange="toggleAutoFetch()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="control-group">
+                    <label>抓取间隔:</label>
+                    <select class="select-field" id="intervalSelect" onchange="updateInterval()">
+                        <option value="1">每1小时</option>
+                        <option value="2">每2小时</option>
+                        <option value="3">每3小时</option>
+                        <option value="6" selected>每6小时</option>
+                        <option value="12">每12小时</option>
+                        <option value="24">每24小时</option>
+                    </select>
+                </div>
+                <div class="control-group" style="margin-left: auto;">
+                    <button class="btn btn-success" onclick="fetchNow()">
+                        <span id="fetchBtnText">🔄 立即抓取</span>
+                    </button>
+                    <button class="btn btn-outline" onclick="exportData()">📥 导出数据</button>
+                </div>
+            </div>
+            <div class="control-row">
+                <div class="control-group">
+                    <input type="text" class="input-field" id="keywordInput" placeholder="搜索职位/公司/技能..." onkeyup="if(event.key==='Enter')loadJobs()">
+                </div>
+                <div class="control-group">
+                    <label>城市:</label>
+                    <select class="select-field" id="locationSelect" onchange="loadJobs()">
+                        <option value="">全部</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>薪资:</label>
+                    <select class="select-field" id="salarySelect" onchange="loadJobs()">
+                        <option value="">不限</option>
+                        <option value="10000">≥10K</option>
+                        <option value="20000">≥20K</option>
+                        <option value="30000">≥30K</option>
+                        <option value="50000">≥50K</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>经验:</label>
+                    <select class="select-field" id="experienceSelect" onchange="loadJobs()">
+                        <option value="">不限</option>
+                        <option value="应届毕业生">应届生</option>
+                        <option value="1-3年">1-3年</option>
+                        <option value="3-5年">3-5年</option>
+                        <option value="5-10年">5-10年</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>来源:</label>
+                    <select class="select-field" id="sourceSelect" onchange="loadJobs()">
+                        <option value="">全部</option>
+                    </select>
+                </div>
+                <div class="control-group" style="margin-left: auto; gap: 12px;">
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" id="onlyNew" onchange="loadJobs()"> 仅最新
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" id="onlyHot" onchange="loadJobs()"> 仅热门
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" id="onlyFavorite" onchange="loadJobs()"> 仅收藏
+                    </label>
+                    <button class="btn btn-primary" onclick="loadJobs()">🔍 筛选</button>
+                    <button class="btn btn-outline" onclick="resetFilters()">↺ 重置</button>
+                    <button class="btn btn-outline" onclick="toggleDataConfig()">⚙️ 数据源配置</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="control-panel" id="dataConfigPanel" style="display: none;">
+            <div class="control-row" style="margin-bottom: 16px;">
+                <div class="sidebar-title" style="margin: 0; font-size: 16px;">⚙️ 数据源配置</div>
+                <div class="control-group" style="margin-left: auto;">
+                    <button class="btn btn-primary" onclick="saveJobConfig()">💾 保存配置</button>
+                </div>
+            </div>
+            <div class="control-row">
+                <div class="control-group">
+                    <label>获取模式:</label>
+                    <select class="select-field" id="fetchModeSelect">
+                        <option value="all">全部（企业官网+API）</option>
+                        <option value="enterprise">仅企业官网</option>
+                        <option value="api">仅第三方API</option>
+                    </select>
+                </div>
+                <div class="control-group switch-container">
+                    <label>企业官网爬取:</label>
+                    <label class="switch">
+                        <input type="checkbox" id="enterpriseFetchSwitch" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="control-group switch-container">
+                    <label>第三方API:</label>
+                    <label class="switch">
+                        <input type="checkbox" id="apiFetchSwitch">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            <div class="control-row">
+                <div class="control-group">
+                    <label>API提供商:</label>
+                    <select class="select-field" id="apiProviderSelect">
+                        <option value="juhe">聚合数据</option>
+                        <option value="showapi">万维易源</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>API Key:</label>
+                    <input type="text" class="input-field" id="apiKeyInput" placeholder="输入第三方API Key（选填）" style="width: 300px;">
+                </div>
+                <div class="control-group">
+                    <a href="https://www.juhe.cn/docs/api/id/185" target="_blank" style="font-size: 13px; color: #667eea; text-decoration: none;">如何获取API Key?</a>
+                </div>
+            </div>
+            <div class="control-row">
+                <div class="control-group" style="align-items: flex-start;">
+                    <label>企业官网:</label>
+                    <div id="enterpriseSitesList" style="display: flex; flex-wrap: wrap; gap: 12px; max-width: 800px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div>
+                <div style="display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 2px solid #e8e8e8; padding-bottom: 12px;">
+                    <button class="btn btn-primary" id="tabJobs" onclick="switchTab('jobs')">📋 招聘信息</button>
+                    <button class="btn btn-outline" id="tabWebsites" onclick="switchTab('websites')">🔗 招聘网站导航</button>
+                </div>
+
+                <div id="jobsSection">
+                    <div class="job-list" id="jobList"></div>
+                    <div class="pagination" id="pagination"></div>
+                </div>
+
+                <div id="websitesSection" style="display: none;">
+                    <div id="websitesList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px;"></div>
+                </div>
+            </div>
+            <div class="sidebar">
+                <div class="sidebar-card">
+                    <div class="sidebar-title">📊 薪资分布</div>
+                    <div id="salaryChart" class="bar-chart"></div>
+                </div>
+                <div class="sidebar-card">
+                    <div class="sidebar-title">🏙️ 热门城市</div>
+                    <div id="locationChart" class="bar-chart"></div>
+                </div>
+                <div class="sidebar-card">
+                    <div class="sidebar-title">📋 热门岗位</div>
+                    <div id="titleChart" class="pie-list"></div>
+                </div>
+                <div class="sidebar-card">
+                    <div class="sidebar-title">🎓 学历要求</div>
+                    <div id="educationChart" class="pie-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="job-detail-modal" id="jobDetailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h2 id="detailTitle"></h2>
+                    <div id="detailMeta" style="opacity: 0.9; font-size: 14px;"></div>
+                </div>
+                <button class="modal-close" onclick="closeJobDetail()">×</button>
+            </div>
+            <div class="modal-body" id="detailBody"></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        let allJobs = [];
+        let filteredJobs = [];
+        let currentPage = 1;
+        const pageSize = 15;
+        let statistics = {};
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        async function loadSchedulerStatus() {
+            try {
+                const res = await fetch('/api/job-scheduler/status');
+                const data = await res.json();
+                updateSchedulerUI(data);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function updateSchedulerUI(status) {
+            const statusEl = document.getElementById('schedulerStatus');
+            const switchEl = document.getElementById('autoFetchSwitch');
+            const intervalEl = document.getElementById('intervalSelect');
+
+            if (status.is_running) {
+                statusEl.textContent = '● 调度器运行中';
+                statusEl.className = 'scheduler-status running';
+            } else {
+                statusEl.textContent = '○ 调度器已停止';
+                statusEl.className = 'scheduler-status stopped';
+            }
+            switchEl.checked = status.auto_fetch_enabled;
+            intervalEl.value = status.fetch_interval_hours;
+        }
+
+        async function toggleAutoFetch() {
+            const enabled = document.getElementById('autoFetchSwitch').checked;
+            try {
+                await fetch('/api/job-scheduler/auto-fetch', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ enabled })
+                });
+                showToast(enabled ? '已开启自动抓取' : '已关闭自动抓取', 'success');
+            } catch (e) {
+                showToast('操作失败', 'error');
+            }
+        }
+
+        async function updateInterval() {
+            const hours = parseInt(document.getElementById('intervalSelect').value);
+            try {
+                await fetch('/api/job-scheduler/interval', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ hours })
+                });
+                showToast(`抓取间隔已更新为每${hours}小时`, 'success');
+            } catch (e) {
+                showToast('操作失败', 'error');
+            }
+        }
+
+        async function fetchNow() {
+            const btn = document.getElementById('fetchBtnText');
+            btn.innerHTML = '<span class="loading"></span> 抓取中...';
+            try {
+                const res = await fetch('/api/job-scheduler/fetch-now', { method: 'POST' });
+                if (res.ok) {
+                    showToast('抓取完成！', 'success');
+                    await loadAllData();
+                } else {
+                    showToast('抓取失败', 'error');
+                }
+            } catch (e) {
+                showToast('抓取失败', 'error');
+            } finally {
+                btn.textContent = '🔄 立即抓取';
+            }
+        }
+
+        async function exportData() {
+            try {
+                const res = await fetch('/api/jobs/export');
+                const data = await res.json();
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `通信工程招聘信息_${new Date().toISOString().slice(0,10)}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                showToast('导出成功！', 'success');
+            } catch (e) {
+                showToast('导出失败', 'error');
+            }
+        }
+
+        async function loadAllData() {
+            await Promise.all([loadJobs(), loadStatistics(), loadSchedulerStatus()]);
+        }
+
+        async function loadJobs() {
+            const params = new URLSearchParams();
+            const keyword = document.getElementById('keywordInput').value.trim();
+            if (keyword) params.append('keyword', keyword);
+            const location = document.getElementById('locationSelect').value;
+            if (location) params.append('location', location);
+            const salary = document.getElementById('salarySelect').value;
+            if (salary) params.append('salary_min', salary);
+            const exp = document.getElementById('experienceSelect').value;
+            if (exp) params.append('experience', exp);
+            const source = document.getElementById('sourceSelect').value;
+            if (source) params.append('source', source);
+            if (document.getElementById('onlyNew').checked) params.append('only_new', 'true');
+            if (document.getElementById('onlyHot').checked) params.append('only_hot', 'true');
+            if (document.getElementById('onlyFavorite').checked) params.append('only_favorite', 'true');
+
+            try {
+                const res = await fetch(`/api/jobs?${params.toString()}`);
+                const data = await res.json();
+                allJobs = data.jobs || [];
+                filteredJobs = allJobs;
+                currentPage = 1;
+                renderJobs();
+                populateFilters(data.jobs || []);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function loadStatistics() {
+            try {
+                const res = await fetch('/api/jobs/statistics');
+                const data = await res.json();
+                statistics = data;
+                renderStats();
+                renderCharts();
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function renderStats() {
+            const statsRow = document.getElementById('statsRow');
+            const lastFetch = statistics.last_fetch_time || '暂无';
+            statsRow.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-label">总岗位数</div>
+                    <div class="stat-value">${statistics.total || 0}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">最新发布</div>
+                    <div class="stat-value">${statistics.new_count || 0}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">热门岗位</div>
+                    <div class="stat-value">${statistics.hot_count || 0}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">我的收藏</div>
+                    <div class="stat-value">${statistics.favorite_count || 0}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">上次抓取</div>
+                    <div class="stat-value" style="font-size: 15px;">${lastFetch.slice(5, 16)}</div>
+                </div>
+            `;
+        }
+
+        function populateFilters(jobs) {
+            const locations = [...new Set(jobs.map(j => j.location))].sort();
+            const locSelect = document.getElementById('locationSelect');
+            const currentLoc = locSelect.value;
+            locSelect.innerHTML = '<option value="">全部</option>' + locations.map(l => `<option value="${l}">${l}</option>`).join('');
+            locSelect.value = currentLoc;
+
+            const sources = [...new Set(jobs.map(j => j.source))].sort();
+            const srcSelect = document.getElementById('sourceSelect');
+            const currentSrc = srcSelect.value;
+            srcSelect.innerHTML = '<option value="">全部</option>' + sources.map(s => `<option value="${s}">${s}</option>`).join('');
+            srcSelect.value = currentSrc;
+        }
+
+        function renderJobs() {
+            const listEl = document.getElementById('jobList');
+            const start = (currentPage - 1) * pageSize;
+            const pageJobs = filteredJobs.slice(start, start + pageSize);
+
+            if (pageJobs.length === 0) {
+                listEl.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">🔍</div>
+                        <h3>暂无匹配的岗位</h3>
+                        <p>尝试调整筛选条件，或点击"立即抓取"获取新数据</p>
+                    </div>
+                `;
+                document.getElementById('pagination').innerHTML = '';
+                return;
+            }
+
+            listEl.innerHTML = pageJobs.map(job => `
+                <div class="job-card ${job.is_new ? 'is-new' : ''} ${job.is_hot ? 'is-hot' : ''} ${job.favorite ? 'favorite' : ''}">
+                    <div class="job-header">
+                        <div class="job-title-row">
+                            <span class="job-title" onclick="showJobDetail('${job.id}')">${escapeHtml(job.title)}</span>
+                            ${job.is_real_data ? '<span class="badge badge-real">✓ 真实数据</span>' : '<span class="badge badge-mock">模拟数据</span>'}
+                            ${job.is_new ? '<span class="badge badge-new">NEW</span>' : ''}
+                            ${job.is_hot ? '<span class="badge badge-hot">🔥 热门</span>' : ''}
+                            ${job.favorite ? '<span class="badge badge-favorite">❤️ 已收藏</span>' : ''}
+                        </div>
+                        <div class="job-salary">${escapeHtml(job.salary)}</div>
+                    </div>
+                    <div class="job-company">
+                        🏢 ${escapeHtml(job.company)}
+                    </div>
+                    <div class="job-meta">
+                        <span class="meta-tag location">📍 ${escapeHtml(job.location)}</span>
+                        <span class="meta-tag education">🎓 ${escapeHtml(job.education)}</span>
+                        <span class="meta-tag experience">💼 ${escapeHtml(job.experience)}</span>
+                        <span class="meta-tag source">🌐 ${escapeHtml(job.source)}</span>
+                    </div>
+                    <div class="job-skills">
+                        ${(job.skills || []).map(s => `<span class="skill-tag">${escapeHtml(s)}</span>`).join('')}
+                    </div>
+                    <div class="job-footer">
+                        <span class="job-date">📅 ${job.publish_date}</span>
+                        <div class="job-actions">
+                            <button class="action-btn ${job.favorite ? 'active' : ''}" onclick="toggleFavorite('${job.id}')">
+                                ${job.favorite ? '❤️ 已收藏' : '🤍 收藏'}
+                            </button>
+                            <button class="action-btn" onclick="showJobDetail('${job.id}')">📋 详情</button>
+                            <button class="action-btn primary" onclick="applyJob('${job.id}')">立即投递</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            renderPagination();
+        }
+
+        function renderPagination() {
+            const totalPages = Math.ceil(filteredJobs.length / pageSize);
+            if (totalPages <= 1) {
+                document.getElementById('pagination').innerHTML = '';
+                return;
+            }
+            let html = `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="goPage(${currentPage - 1})">上一页</button>`;
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 2) {
+                    html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goPage(${i})">${i}</button>`;
+                } else if (Math.abs(i - currentPage) === 3) {
+                    html += `<span style="padding: 8px;">...</span>`;
+                }
+            }
+            html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="goPage(${currentPage + 1})">下一页</button>`;
+            document.getElementById('pagination').innerHTML = html;
+        }
+
+        function goPage(page) {
+            currentPage = page;
+            renderJobs();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetFilters() {
+            document.getElementById('keywordInput').value = '';
+            document.getElementById('locationSelect').value = '';
+            document.getElementById('salarySelect').value = '';
+            document.getElementById('experienceSelect').value = '';
+            document.getElementById('sourceSelect').value = '';
+            document.getElementById('onlyNew').checked = false;
+            document.getElementById('onlyHot').checked = false;
+            document.getElementById('onlyFavorite').checked = false;
+            loadJobs();
+        }
+
+        function switchTab(tab) {
+            const jobsSection = document.getElementById('jobsSection');
+            const websitesSection = document.getElementById('websitesSection');
+            const tabJobs = document.getElementById('tabJobs');
+            const tabWebsites = document.getElementById('tabWebsites');
+
+            if (tab === 'jobs') {
+                jobsSection.style.display = '';
+                websitesSection.style.display = 'none';
+                tabJobs.className = 'btn btn-primary';
+                tabWebsites.className = 'btn btn-outline';
+            } else {
+                jobsSection.style.display = 'none';
+                websitesSection.style.display = '';
+                tabJobs.className = 'btn btn-outline';
+                tabWebsites.className = 'btn btn-primary';
+                loadWebsites();
+            }
+        }
+
+        async function loadWebsites() {
+            const listEl = document.getElementById('websitesList');
+            listEl.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #999;">加载中...</div>';
+
+            try {
+                const res = await fetch('/api/recruitment-websites');
+                const data = await res.json();
+                if (data.success) {
+                    const websites = data.websites;
+                    const grouped = {};
+                    websites.forEach(w => {
+                        const type = w.type || '其他';
+                        if (!grouped[type]) grouped[type] = [];
+                        grouped[type].push(w);
+                    });
+
+                    let html = '';
+                    Object.entries(grouped).forEach(([type, sites]) => {
+                        html += `<div style="grid-column: 1/-1; margin-top: 8px; margin-bottom: 4px;">
+                            <span style="background: #667eea; color: white; padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 600;">${type} (${sites.length})</span>
+                        </div>`;
+                        sites.forEach(site => {
+                            html += `
+                            <div style="background: white; border-radius: 12px; padding: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;" 
+                                 onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 8px 24px rgba(102,126,234,0.2)'" 
+                                 onmouseout="this.style.transform='';this.style.boxShadow='0 2px 12px rgba(0,0,0,0.08)'"
+                                 onclick="openWebsite('${site.url}')">
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                    <span style="font-size: 28px;">${site.logo || '🌐'}</span>
+                                    <div>
+                                        <div style="font-size: 16px; font-weight: 700; color: #333;">${escapeHtml(site.name)}</div>
+                                        <div style="font-size: 12px; color: #999;">${site.type || ''}</div>
+                                    </div>
+                                </div>
+                                <div style="font-size: 13px; color: #666; margin-bottom: 10px; line-height: 1.5;">${escapeHtml(site.description)}</div>
+                                <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px;">
+                                    ${(site.tags || []).map(t => `<span style="background: #f0f2f5; color: #666; padding: 2px 8px; border-radius: 8px; font-size: 11px;">${escapeHtml(t)}</span>`).join('')}
+                                </div>
+                                <div style="display: flex; gap: 8px;">
+                                    <a href="${site.url}" target="_blank" style="flex: 1; background: #667eea; color: white; padding: 8px; border-radius: 8px; text-align: center; text-decoration: none; font-size: 13px; font-weight: 600;">🌐 访问官网</a>
+                                    <a href="${site.search_url}" target="_blank" style="flex: 1; background: #f0f2f5; color: #667eea; padding: 8px; border-radius: 8px; text-align: center; text-decoration: none; font-size: 13px; font-weight: 600;">🔍 搜索岗位</a>
+                                </div>
+                            </div>`;
+                        });
+                    });
+
+                    listEl.innerHTML = html || '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #999;">暂无招聘网站信息</div>';
+                }
+            } catch (e) {
+                listEl.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #999;">加载失败</div>';
+            }
+        }
+
+        function openWebsite(url) {
+            window.open(url, '_blank');
+        }
+
+        function renderCharts() {
+            const salaryRanges = statistics.salary_ranges || {};
+            const salaryEl = document.getElementById('salaryChart');
+            const salaryMax = Math.max(...Object.values(salaryRanges), 1);
+            salaryEl.innerHTML = Object.entries(salaryRanges).map(([label, value]) => `
+                <div class="bar-item">
+                    <span class="bar-label">${label}</span>
+                    <div class="bar-track">
+                        <div class="bar-fill" style="width: ${(value / salaryMax * 100)}%;"></div>
+                    </div>
+                    <span class="bar-value">${value}</span>
+                </div>
+            `).join('');
+
+            const locationStats = statistics.location_stats || {};
+            const locEl = document.getElementById('locationChart');
+            const locMax = Math.max(...Object.values(locationStats), 1);
+            locEl.innerHTML = Object.entries(locationStats).slice(0, 8).map(([label, value]) => `
+                <div class="bar-item">
+                    <span class="bar-label">${label}</span>
+                    <div class="bar-track">
+                        <div class="bar-fill" style="width: ${(value / locMax * 100)}%; background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);"></div>
+                    </div>
+                    <span class="bar-value">${value}</span>
+                </div>
+            `).join('');
+
+            const titleStats = statistics.title_stats || {};
+            const titleEl = document.getElementById('titleChart');
+            const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe', '#43e97b', '#38f9d7', '#fa709a', '#fee140'];
+            titleEl.innerHTML = Object.entries(titleStats).slice(0, 8).map(([label, value], i) => `
+                <div class="pie-item">
+                    <span class="pie-label">
+                        <span class="pie-dot" style="background: ${colors[i % colors.length]};"></span>
+                        ${escapeHtml(label.length > 10 ? label.slice(0, 10) + '...' : label)}
+                    </span>
+                    <span class="pie-value">${value}</span>
+                </div>
+            `).join('');
+
+            const eduStats = statistics.education_stats || {};
+            const eduEl = document.getElementById('educationChart');
+            const eduColors = ['#ff6b6b', '#feca57', '#48dbfb', '#ff9ff3', '#54a0ff', '#5f27cd'];
+            eduEl.innerHTML = Object.entries(eduStats).map(([label, value], i) => `
+                <div class="pie-item">
+                    <span class="pie-label">
+                        <span class="pie-dot" style="background: ${eduColors[i % eduColors.length]};"></span>
+                        ${escapeHtml(label)}
+                    </span>
+                    <span class="pie-value">${value}</span>
+                </div>
+            `).join('');
+        }
+
+        async function toggleFavorite(jobId) {
+            try {
+                const res = await fetch(`/api/jobs/${jobId}/favorite`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(data.job.favorite ? '已添加收藏！' : '已取消收藏', 'success');
+                    loadAllData();
+                }
+            } catch (e) {
+                showToast('操作失败', 'error');
+            }
+        }
+
+        async function showJobDetail(jobId) {
+            try {
+                const res = await fetch(`/api/jobs/${jobId}`);
+                const data = await res.json();
+                if (!data.job) return;
+                const job = data.job;
+                document.getElementById('detailTitle').textContent = job.title;
+                document.getElementById('detailMeta').textContent = `${job.company} · ${job.location} · ${job.salary}`;
+
+                document.getElementById('detailBody').innerHTML = `
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
+                        <span class="meta-tag location">📍 ${escapeHtml(job.location)}</span>
+                        <span class="meta-tag education">🎓 ${escapeHtml(job.education)}</span>
+                        <span class="meta-tag experience">💼 ${escapeHtml(job.experience)}</span>
+                        <span class="meta-tag source">🌐 ${escapeHtml(job.source)}</span>
+                        <span style="color:#ff6b6b; font-weight:700; font-size:18px;">💰 ${escapeHtml(job.salary)}</span>
+                    </div>
+
+                    <div class="section-title">📝 职位描述</div>
+                    <div class="section-content">${escapeHtml(job.description || '暂无描述')}</div>
+
+                    <div class="section-title">✅ 任职要求</div>
+                    <div class="section-content">${escapeHtml(job.requirements || '暂无要求')}</div>
+
+                    <div class="section-title">🔧 技能要求</div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        ${(job.skills || []).map(s => `<span class="skill-tag">${escapeHtml(s)}</span>`).join('')}
+                    </div>
+
+                    <div class="section-title">🏷️ 标签福利</div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        ${(job.tags || []).map(t => `<span class="meta-tag">${escapeHtml(t)}</span>`).join('')}
+                    </div>
+
+                    <div class="section-title">📌 其他信息</div>
+                    <div class="section-content" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>📅 发布日期: ${job.publish_date}</div>
+                        <div>🔗 信息来源: ${escapeHtml(job.source)}</div>
+                        <div>👁️ 已查看: ${job.viewed ? '是' : '否'}</div>
+                        <div>📨 已投递: ${job.applied ? '是' : '否'}</div>
+                    </div>
+
+                    <div style="margin-top: 24px; display: flex; gap: 12px;">
+                        <button class="btn btn-primary" style="flex:1; padding: 14px; justify-content: center;" onclick="applyJob('${job.id}')">📨 立即投递</button>
+                        <button class="btn ${job.favorite ? 'btn-warning' : 'btn-outline'}" onclick="toggleFavorite('${job.id}'); closeJobDetail();">
+                            ${job.favorite ? '❤️ 取消收藏' : '🤍 收藏职位'}
+                        </button>
+                        <button class="btn btn-outline" onclick="window.open('${job.source_url}', '_blank')">🔗 查看原文</button>
+                    </div>
+                `;
+                document.getElementById('jobDetailModal').classList.add('active');
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function closeJobDetail() {
+            document.getElementById('jobDetailModal').classList.remove('active');
+        }
+
+        async function applyJob(jobId) {
+            try {
+                const res = await fetch(`/api/jobs/${jobId}/apply`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('投递成功！HR会尽快与您联系', 'success');
+                    loadJobs();
+                }
+            } catch (e) {
+                showToast('操作失败', 'error');
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = String(text);
+            return div.innerHTML;
+        }
+
+        document.getElementById('jobDetailModal').addEventListener('click', function(e) {
+            if (e.target === this) closeJobDetail();
+        });
+
+        function toggleDataConfig() {
+            const panel = document.getElementById('dataConfigPanel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+            if (panel.style.display === 'block') loadJobConfig();
+        }
+
+        let enterpriseSitesData = [];
+
+        async function loadJobConfig() {
+            try {
+                const res = await fetch('/api/job-config');
+                const data = await res.json();
+                if (!data.success) return;
+                const config = data.config;
+                document.getElementById('fetchModeSelect').value = config.fetch_mode || 'all';
+                document.getElementById('enterpriseFetchSwitch').checked = config.enterprise_fetch_enabled !== false;
+                document.getElementById('apiFetchSwitch').checked = config.api_fetch_enabled === true;
+                document.getElementById('apiProviderSelect').value = config.third_party_api_provider || 'juhe';
+                document.getElementById('apiKeyInput').value = config.third_party_api_key || '';
+                enterpriseSitesData = config.enterprise_sites || [];
+                const enabledSites = config.enterprise_sites_enabled || enterpriseSitesData.map(s => s.id);
+                const container = document.getElementById('enterpriseSitesList');
+                container.innerHTML = enterpriseSitesData.map(s => `
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px;">
+                        <input type="checkbox" class="enterprise-site-cb" value="${s.id}" ${enabledSites.includes(s.id) ? 'checked' : ''}>
+                        ${s.name}
+                    </label>
+                `).join('');
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function saveJobConfig() {
+            const enabledSites = Array.from(document.querySelectorAll('.enterprise-site-cb:checked')).map(cb => cb.value);
+            const config = {
+                fetch_mode: document.getElementById('fetchModeSelect').value,
+                enterprise_fetch_enabled: document.getElementById('enterpriseFetchSwitch').checked,
+                api_fetch_enabled: document.getElementById('apiFetchSwitch').checked,
+                third_party_api_provider: document.getElementById('apiProviderSelect').value,
+                third_party_api_key: document.getElementById('apiKeyInput').value.trim(),
+                enterprise_sites_enabled: enabledSites
+            };
+            try {
+                const res = await fetch('/api/job-config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('配置已保存！', 'success');
+                } else {
+                    showToast('保存失败: ' + (data.error || ''), 'error');
+                }
+            } catch (e) {
+                showToast('保存失败', 'error');
+            }
+        }
+
+        loadAllData();
+        setInterval(loadSchedulerStatus, 30000);
+    </script>
+</body>
+</html>

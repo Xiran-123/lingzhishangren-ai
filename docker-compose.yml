@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  lingzhishangren:
+    build: .
+    container_name: lingzhishangren-api
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - SECRET_KEY=your-production-secret-key-change-this
+      - API_KEY=sk-sdfaoxkrbsmmnueekypiqjgxtcrscmrmajrzvtdjkgnjieyi
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/uploads
+      - ./wrong_questions_agent.json:/app/wrong_questions_agent.json
+      - ./learning_records_agent.json:/app/learning_records_agent.json
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职业问卷 - 灵智尚人</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 760px; margin: 0 auto; }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 28px 32px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+        }
+        .header h1 { font-size: 24px; margin-bottom: 6px; }
+        .header p { opacity: 0.9; font-size: 14px; }
+        .back-btn {
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 12px;
+            transition: background 0.2s;
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.3); }
+        .progress-bar {
+            background: rgba(255,255,255,0.2);
+            border-radius: 12px;
+            height: 8px;
+            margin-top: 16px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            background: white;
+            height: 100%;
+            border-radius: 12px;
+            transition: width 0.4s ease;
+            width: 0%;
+        }
+        .question-card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+        .question-card.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .q-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 32px;
+            height: 32px;
+            line-height: 32px;
+            text-align: center;
+            border-radius: 50%;
+            font-size: 14px;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+        .q-title { font-size: 20px; font-weight: 600; color: #1a1a1a; margin-bottom: 24px; }
+        .options { display: grid; gap: 12px; }
+        .option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            border: 2px solid #e8e8f0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .option:hover { border-color: #667eea; background: #f8f9fc; }
+        .option.selected { border-color: #667eea; background: linear-gradient(135deg, rgba(102,126,234,0.08) 0%, rgba(118,75,162,0.08) 100%); }
+        .option-icon { font-size: 28px; }
+        .option-label { font-size: 15px; color: #333; }
+        .option input[type="checkbox"], .option input[type="radio"] { width: 20px; height: 20px; accent-color: #667eea; }
+        .btn-group { display: flex; gap: 12px; margin-top: 24px; }
+        .btn {
+            padding: 14px 32px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(102,126,234,0.4); }
+        .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+        .btn-secondary { background: #f0f2f5; color: #555; }
+        .result-card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            display: none;
+        }
+        .result-card.active { display: block; animation: fadeIn 0.5s ease; }
+        .result-title { font-size: 22px; font-weight: 700; color: #1a1a1a; margin-bottom: 20px; text-align: center; }
+        .recommend-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            border: 2px solid #e8e8f0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .recommend-item:hover { border-color: #667eea; background: #f8f9fc; }
+        .recommend-item.top { border-color: #667eea; background: linear-gradient(135deg, rgba(102,126,234,0.06) 0%, rgba(118,75,162,0.06) 100%); }
+        .rec-icon { font-size: 36px; }
+        .rec-info { flex: 1; }
+        .rec-name { font-size: 17px; font-weight: 600; color: #333; }
+        .rec-desc { font-size: 13px; color: #888; margin-top: 4px; }
+        .rec-meta { display: flex; gap: 12px; margin-top: 8px; }
+        .rec-meta span { font-size: 12px; color: #667eea; background: #e8ecfd; padding: 3px 10px; border-radius: 8px; }
+        .match-badge {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 8px;
+        }
+        .match-high { background: #f6ffed; color: #389e0d; }
+        .match-mid { background: #fff7e6; color: #d46b08; }
+        .match-low { background: #fff1f0; color: #cf1322; }
+        .target-section {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 2px solid #f0f0f0;
+        }
+        .target-label { font-size: 16px; font-weight: 600; color: #333; margin-bottom: 12px; }
+        .target-select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e8e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+            margin-bottom: 16px;
+        }
+        .target-select:focus { border-color: #667eea; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="back-btn" onclick="window.location.href='/'">← 返回首页</button>
+            <h1>🎯 职业意向问卷</h1>
+            <p>回答以下问题，系统将为您推荐最匹配的通信工程岗位</p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+
+        <div id="questionsContainer"></div>
+
+        <div id="resultCard" class="result-card">
+            <div class="result-title">🎉 推荐结果</div>
+            <div id="recommendList"></div>
+            <div class="target-section">
+                <div class="target-label">请选择您的目标岗位：</div>
+                <select class="target-select" id="targetJobSelect" onchange="onTargetChange()">
+                    <option value="">-- 请选择推荐岗位，或下方输入自定义岗位 --</option>
+                </select>
+                <div style="margin-top:12px;">
+                    <input type="text" id="customJobInput" placeholder="或输入自定义岗位名称（如：FPGA工程师、网络安全工程师）"
+                        style="width:100%;padding:12px 16px;border:2px solid #e8e8f0;border-radius:12px;font-size:15px;outline:none;"
+                        oninput="onCustomJobInput(this.value)">
+                </div>
+                <div style="margin-top:12px;font-size:12px;color:#999;">💡 系统会在前2周发基础任务摸底，第3周起根据您的实际学习数据精准生成提升任务</div>
+                <button class="btn btn-primary" id="confirmTargetBtn" onclick="confirmTarget()" style="width:100%;margin-top:16px;" disabled>
+                    确认目标岗位并生成每周任务
+                </button>
+            </div>
+        </div>
+
+        <div class="btn-group" id="navButtons" style="display:none;">
+            <button class="btn btn-secondary" id="prevBtn" onclick="prevQuestion()" style="display:none;">上一题</button>
+            <button class="btn btn-primary" id="nextBtn" onclick="nextQuestion()" style="margin-left:auto;">下一题</button>
+        </div>
+    </div>
+
+    <script>
+        let questions = [];
+        let currentIdx = 0;
+        let answers = {};
+        let recommendations = [];
+
+        async function loadSurvey() {
+            const res = await fetch('/api/survey');
+            const data = await res.json();
+            if (data.success) {
+                questions = data.questions;
+                renderQuestions();
+                showQuestion(0);
+            }
+        }
+
+        function renderQuestions() {
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = questions.map((q, idx) => {
+                const optionsHtml = q.options.map(opt => {
+                    const inputType = q.type === 'multi' ? 'checkbox' : 'radio';
+                    const inputName = `q_${q.id}`;
+                    return `
+                    <label class="option" data-qid="${q.id}" data-oval="${opt.value}" onclick="selectOption(this, '${q.type}')">
+                        <input type="${inputType}" name="${inputName}" value="${opt.value}">
+                        <span class="option-icon">${opt.icon}</span>
+                        <span class="option-label">${opt.label}</span>
+                    </label>`;
+                }).join('');
+
+                return `
+                <div class="question-card" id="card_${idx}">
+                    <div style="margin-bottom:16px;">
+                        <span class="q-number">${idx + 1}</span>
+                        <span style="color:#999;font-size:13px;">第 ${idx + 1} / ${questions.length} 题</span>
+                    </div>
+                    <div class="q-title">${q.question}</div>
+                    <div class="options">${optionsHtml}</div>
+                </div>`;
+            }).join('');
+
+            updateProgress();
+        }
+
+        function selectOption(el, type) {
+            if (type === 'single') {
+                el.parentElement.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+                el.classList.add('selected');
+                el.querySelector('input').checked = true;
+            } else {
+                el.classList.toggle('selected');
+                el.querySelector('input').checked = el.classList.contains('selected');
+            }
+            updateProgress();
+        }
+
+        function showQuestion(idx) {
+            document.querySelectorAll('.question-card').forEach(c => c.classList.remove('active'));
+            const card = document.getElementById(`card_${idx}`);
+            if (card) card.classList.add('active');
+
+            const navBtns = document.getElementById('navButtons');
+            navBtns.style.display = 'flex';
+
+            document.getElementById('prevBtn').style.display = idx > 0 ? '' : 'none';
+
+            const nextBtn = document.getElementById('nextBtn');
+            if (idx === questions.length - 1) {
+                nextBtn.textContent = '提交问卷';
+            } else {
+                nextBtn.textContent = '下一题';
+            }
+
+            currentIdx = idx;
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const answered = Object.keys(answers).length;
+            const pct = (answered / questions.length) * 100;
+            document.getElementById('progressFill').style.width = pct + '%';
+        }
+
+        function collectAnswers() {
+            const q = questions[currentIdx];
+            if (q.type === 'multi') {
+                const selected = [];
+                q.options.forEach(opt => {
+                    const el = document.querySelector(`.option[data-qid="${q.id}"][data-oval="${opt.value}"]`);
+                    if (el && el.classList.contains('selected')) selected.push(opt.value);
+                });
+                if (selected.length > 0) answers[q.id] = selected;
+            } else {
+                q.options.forEach(opt => {
+                    const el = document.querySelector(`.option[data-qid="${q.id}"][data-oval="${opt.value}"]`);
+                    if (el && el.classList.contains('selected')) answers[q.id] = opt.value;
+                });
+            }
+        }
+
+        function nextQuestion() {
+            collectAnswers();
+            const q = questions[currentIdx];
+            if (!answers[q.id] || (Array.isArray(answers[q.id]) && answers[q.id].length === 0)) {
+                alert('请先选择答案');
+                return;
+            }
+
+            if (currentIdx < questions.length - 1) {
+                showQuestion(currentIdx + 1);
+            } else {
+                submitSurvey();
+            }
+        }
+
+        function prevQuestion() {
+            collectAnswers();
+            if (currentIdx > 0) showQuestion(currentIdx - 1);
+        }
+
+        async function submitSurvey() {
+            const nextBtn = document.getElementById('nextBtn');
+            nextBtn.disabled = true;
+            nextBtn.textContent = '提交中...';
+
+            const res = await fetch('/api/survey/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ answers: answers })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                recommendations = data.recommendations;
+                document.querySelectorAll('.question-card').forEach(c => c.classList.remove('active'));
+                document.getElementById('navButtons').style.display = 'none';
+                renderResults(data.recommendations);
+            } else {
+                alert('提交失败，请重试');
+                nextBtn.disabled = false;
+                nextBtn.textContent = '提交问卷';
+            }
+        }
+
+        function renderResults(recs) {
+            const listEl = document.getElementById('recommendList');
+            listEl.innerHTML = recs.map((r, idx) => {
+                const matchClass = r.match_level === '高' ? 'match-high' : (r.match_level === '中' ? 'match-mid' : 'match-low');
+                return `
+                <div class="recommend-item ${idx === 0 ? 'top' : ''}" onclick="selectTarget('${r.job_name}')">
+                    <span class="rec-icon">${r.icon}</span>
+                    <div class="rec-info">
+                        <div class="rec-name">${r.job_name} ${idx === 0 ? '⭐ 最推荐' : ''}</div>
+                        <div class="rec-desc">${r.description}</div>
+                        <div class="rec-meta">
+                            <span>💰 ${r.salary_range}</span>
+                            <span>📊 匹配度: ${r.match_level}</span>
+                        </div>
+                    </div>
+                    <span class="match-badge ${matchClass}">${r.match_level}匹配</span>
+                </div>`;
+            }).join('');
+
+            const selectEl = document.getElementById('targetJobSelect');
+            const allJobs = ['通信工程师', '网络优化工程师', '射频工程师', '研发工程师'];
+            selectEl.innerHTML = '<option value="">-- 请选择推荐岗位，或下方输入自定义岗位 --</option>' +
+                allJobs.map(job => {
+                    const rec = recs.find(r => r.job_name === job);
+                    const icon = rec ? rec.icon : '💼';
+                    const match = rec ? ` (${rec.match_level}匹配 ⭐)` : '';
+                    return `<option value="${job}">${icon} ${job}${match}</option>`;
+                }).join('');
+
+            document.getElementById('resultCard').classList.add('active');
+        }
+
+        function selectTarget(jobName) {
+            document.getElementById('targetJobSelect').value = jobName;
+            document.getElementById('customJobInput').value = '';
+            document.getElementById('confirmTargetBtn').disabled = false;
+        }
+
+        function onTargetChange() {
+            const sel = document.getElementById('targetJobSelect');
+            const input = document.getElementById('customJobInput');
+            if (sel.value) {
+                input.value = '';
+                document.getElementById('confirmTargetBtn').disabled = false;
+            }
+            validateTarget();
+        }
+
+        function onCustomJobInput(val) {
+            if (val.trim()) {
+                document.getElementById('targetJobSelect').value = '';
+            }
+            validateTarget();
+        }
+
+        function validateTarget() {
+            const sel = document.getElementById('targetJobSelect');
+            const input = document.getElementById('customJobInput');
+            const hasValue = sel.value || input.value.trim();
+            document.getElementById('confirmTargetBtn').disabled = !hasValue;
+        }
+
+        document.getElementById('targetJobSelect').addEventListener('change', onTargetChange);
+
+        async function confirmTarget() {
+            let targetJob = document.getElementById('targetJobSelect').value;
+            const customInput = document.getElementById('customJobInput').value.trim();
+            if (customInput) targetJob = customInput;
+            if (!targetJob) return;
+
+            const btn = document.getElementById('confirmTargetBtn');
+            btn.disabled = true;
+            btn.textContent = '设置中...';
+
+            const res = await fetch('/api/career/target', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ target_job: targetJob })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                btn.textContent = '✅ 已设置';
+                btn.style.background = 'linear-gradient(135deg, #52c41a 0%, #389e0d 100%)';
+                setTimeout(() => {
+                    window.location.href = '/weekly-tasks-page';
+                }, 1000);
+            } else {
+                alert(data.message || '设置失败');
+                btn.disabled = false;
+                btn.textContent = '确认目标岗位并生成每周任务';
+            }
+        }
+
+        loadSurvey();
+    </script>
+</body>
+</html>
