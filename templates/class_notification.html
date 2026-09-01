@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -771,6 +771,9 @@
             font-weight: 500;
         }
     </style>
+    <!-- 全局按钮美化 -->
+    <link rel="stylesheet" href="/static/global_buttons.css">
+<link rel="stylesheet" href="/static/global_pages.css">
 </head>
 <body>
     <div class="container">
@@ -782,6 +785,7 @@
             <div class="nav-buttons">
                 <a href="/" class="nav-btn">💬 AI对话</a>
                 <a href="/scenario-page" class="nav-btn">🎬 剧情演绎</a>
+                <a href="/scenario-demo" class="nav-btn" style="background: linear-gradient(135deg, #0080ff, #00c8ff);">🎞️ 沉浸式剧情</a>
                 <a href="/search-logs-page" class="nav-btn">📚 搜索日志</a>
                 <a href="/student-report-page" class="nav-btn">📊 学生分析</a>
                 <button class="nav-btn" onclick="doLogout()">🔓 退出登录</button>
@@ -1558,5 +1562,9 @@
 
         loadCurrentUser();
     </script>
+
+    <!-- 全局桌宠 Desktop Pet -->
+    <link rel="stylesheet" href="/static/desktop_pet.css">
+    <script src="/static/desktop_pet.js" defer></script>
 </body>
 </html>

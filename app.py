@@ -4332,6 +4332,14 @@ def scenario_page():
     return render_template('scenario.html')
 
 
+@app.route('/scenario-demo')
+def scenario_demo():
+    """剧情演绎演示页面"""
+    if not session.get('authenticated'):
+        return redirect('/login-page')
+    return render_template('scenario_demo.html')
+
+
 @app.route('/exercise-page')
 def exercise_page():
     """互动式练习页面"""

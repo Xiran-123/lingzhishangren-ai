@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -13,22 +13,295 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+            overflow-x: hidden;
+            /* 渐变作为 fallback（JS 关掉 splash 后也能看到背景） */
+            background: linear-gradient(135deg, #0a1a3a 0%, #1a2a5a 100%);
         }
 
-        .login-container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 48px;
+        /* ===== 左右分屏容器 ===== */
+        .login-wrapper {
+            display: flex;
+            min-height: 100vh;
             width: 100%;
-            max-width: 420px;
+        }
+
+        /* ===== 左侧品牌面板 ===== */
+        .brand-panel {
+            position: relative;
+            flex: 1.15;
+            background: linear-gradient(135deg, #0a1a3a 0%, #0e2a55 45%, #1a3d7a 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px 70px;
+            overflow: hidden;
+        }
+        /* 品牌面板装饰光斑 */
+        .brand-panel::before,
+        .brand-panel::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.3;
+            pointer-events: none;
+        }
+        .brand-panel::before {
+            width: 500px; height: 500px;
+            background: #0080ff;
+            top: -150px; left: -100px;
+        }
+        .brand-panel::after {
+            width: 400px; height: 400px;
+            background: #5b3dff;
+            bottom: -120px; right: -80px;
+            opacity: 0.25;
+        }
+        /* 网格线装饰 */
+        .brand-grid {
+            position: absolute; inset: 0;
+            background-image:
+                linear-gradient(rgba(0,200,255,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,200,255,0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+        }
+
+        .brand-content {
+            position: relative; z-index: 2;
+            max-width: 480px;
+            width: 100%;
+        }
+
+        .brand-logo-row {
+            display: flex; align-items: center; gap: 14px;
+            margin-bottom: 36px;
+        }
+        .brand-logo-box {
+            width: 56px; height: 56px;
+            background: linear-gradient(135deg, #0080ff, #00c8ff);
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 8px 24px rgba(0,130,255,0.45);
+            overflow: hidden;
+        }
+        .brand-logo-box img { width: 100%; height: 100%; object-fit: cover; }
+        .brand-logo-text { color: #fff; font-size: 20px; font-weight: 600; letter-spacing: 2px; }
+
+        .brand-headline {
+            color: #fff;
+            font-size: 38px;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 16px;
+            letter-spacing: 1px;
+        }
+        .brand-headline span {
+            background: linear-gradient(90deg, #00c8ff, #5b8dff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .brand-slogan {
+            color: rgba(255,255,255,0.65);
+            font-size: 15px;
+            line-height: 1.8;
+            margin-bottom: 48px;
+        }
+
+        /* 功能亮点列表 */
+        .brand-features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 50px;
+        }
+        .feature-item {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 16px 18px;
+            transition: all 0.3s;
+        }
+        .feature-item:hover {
+            background: rgba(0,200,255,0.1);
+            border-color: rgba(0,200,255,0.3);
+            transform: translateY(-2px);
+        }
+        .feature-icon {
+            font-size: 22px; margin-bottom: 6px;
+            display: block;
+        }
+        .feature-title {
+            color: #fff; font-size: 14px; font-weight: 600; margin-bottom: 2px;
+        }
+        .feature-desc {
+            color: rgba(255,255,255,0.45); font-size: 12px; line-height: 1.5;
+        }
+
+        /* 底部版权 */
+        .brand-footer {
+            position: relative; z-index: 2;
+            color: rgba(255,255,255,0.35);
+            font-size: 12px;
             text-align: center;
+            letter-spacing: 1px;
+        }
+
+        /* ===== 右侧登录面板容器（与左侧同风格深色背景） ===== */
+        .login-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 32px;
+            background: linear-gradient(135deg, #0d1f45 0%, #1a2d6a 50%, #0a1838 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        /* 右面板装饰光斑 */
+        .login-panel::before {
+            content: '';
+            position: absolute;
+            width: 380px; height: 380px;
+            background: #5b3dff;
+            filter: blur(100px);
+            top: -100px; right: -80px;
+            border-radius: 50%;
+            opacity: 0.28;
+            pointer-events: none;
+        }
+        /* 右面板网格线 */
+        .login-panel::after {
+            content: '';
+            position: absolute; inset: 0;
+            background-image:
+                linear-gradient(rgba(100,100,255,0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(100,100,255,0.06) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+        }
+
+        /* 面板粒子（左右两侧通用） */
+        .panel-particles {
+            position: absolute; inset: 0;
+            pointer-events: none; z-index: 1;
+        }
+        .panel-particles span {
+            position: absolute; display: block;
+            border-radius: 50%;
+            animation: panelFloat linear infinite;
+        }
+        /* 左面板粒子 — 青蓝色 */
+        .brand-particles span {
+            background: rgba(0, 229, 255, 0.85);
+            box-shadow: 0 0 6px rgba(0, 229, 255, 0.9);
+        }
+        /* 右面板粒子 — 紫蓝色 + 白色 */
+        .login-particles span {
+            background: rgba(180, 180, 255, 0.75);
+            box-shadow: 0 0 5px rgba(150, 150, 255, 0.8);
+        }
+        @keyframes panelFloat {
+            0%   { transform: translateY(0) translateX(0); opacity: 0; }
+            10%  { opacity: 1; }
+            90%  { opacity: 0.9; }
+            100% { transform: translateY(-130vh) translateX(20px); opacity: 0; }
+        }
+        /* 左右各 16 个粒子的起点/时长配置 */
+        .brand-particles span:nth-child(1)  { left: 6%;  top: 20%; width:3px; height:3px; animation-duration: 10s; animation-delay: 0s; }
+        .brand-particles span:nth-child(2)  { left: 14%; top: 78%; width:4px; height:4px; animation-duration: 12s; animation-delay: -2s; }
+        .brand-particles span:nth-child(3)  { left: 22%; top: 40%; width:3px; height:3px; animation-duration: 9s;  animation-delay: -4s; }
+        .brand-particles span:nth-child(4)  { left: 30%; top: 88%; width:4px; height:4px; animation-duration: 13s; animation-delay: -1s; }
+        .brand-particles span:nth-child(5)  { left: 42%; top: 15%; width:3px; height:3px; animation-duration: 11s; animation-delay: -3s; }
+        .brand-particles span:nth-child(6)  { left: 52%; top: 62%; width:4px; height:4px; animation-duration: 10s; animation-delay: -5s; }
+        .brand-particles span:nth-child(7)  { left: 62%; top: 28%; width:3px; height:3px; animation-duration: 14s; animation-delay: -2s; }
+        .brand-particles span:nth-child(8)  { left: 72%; top: 82%; width:4px; height:4px; animation-duration: 9s;  animation-delay: -6s; }
+        .brand-particles span:nth-child(9)  { left: 82%; top: 45%; width:3px; height:3px; animation-duration: 12s; animation-delay: -1s; }
+        .brand-particles span:nth-child(10) { left: 90%; top: 68%; width:4px; height:4px; animation-duration: 11s; animation-delay: -4s; }
+        .brand-particles span:nth-child(11) { left: 4%;  top: 55%; width:3px; height:3px; animation-duration: 13s; animation-delay: -7s; }
+        .brand-particles span:nth-child(12) { left: 18%; top: 8%;  width:4px; height:4px; animation-duration: 10s; animation-delay: -3s; }
+        .brand-particles span:nth-child(13) { left: 38%; top: 94%; width:3px; height:3px; animation-duration: 12s; animation-delay: -8s; }
+        .brand-particles span:nth-child(14) { left: 56%; top: 48%; width:4px; height:4px; animation-duration: 14s; animation-delay: -2s; }
+        .brand-particles span:nth-child(15) { left: 76%; top: 16%; width:3px; height:3px; animation-duration: 11s; animation-delay: -5s; }
+        .brand-particles span:nth-child(16) { left: 28%; top: 35%; width:4px; height:4px; animation-duration: 13s; animation-delay: -9s; }
+
+        .login-particles span:nth-child(1)  { left: 5%;  top: 18%; width:3px; height:3px; animation-duration: 11s; animation-delay: -1s; }
+        .login-particles span:nth-child(2)  { left: 16%; top: 72%; width:3px; height:3px; animation-duration: 13s; animation-delay: -3s; }
+        .login-particles span:nth-child(3)  { left: 26%; top: 42%; width:4px; height:4px; animation-duration: 10s; animation-delay: -5s; }
+        .login-particles span:nth-child(4)  { left: 36%; top: 86%; width:3px; height:3px; animation-duration: 14s; animation-delay: -2s; }
+        .login-particles span:nth-child(5)  { left: 46%; top: 12%; width:4px; height:4px; animation-duration: 12s; animation-delay: -4s; }
+        .login-particles span:nth-child(6)  { left: 58%; top: 58%; width:3px; height:3px; animation-duration: 11s; animation-delay: -6s; }
+        .login-particles span:nth-child(7)  { left: 68%; top: 25%; width:3px; height:3px; animation-duration: 13s; animation-delay: -1s; }
+        .login-particles span:nth-child(8)  { left: 78%; top: 78%; width:4px; height:4px; animation-duration: 10s; animation-delay: -7s; }
+        .login-particles span:nth-child(9)  { left: 88%; top: 40%; width:3px; height:3px; animation-duration: 12s; animation-delay: -3s; }
+        .login-particles span:nth-child(10) { left: 92%; top: 65%; width:3px; height:3px; animation-duration: 14s; animation-delay: -5s; }
+        .login-particles span:nth-child(11) { left: 8%;  top: 52%; width:4px; height:4px; animation-duration: 11s; animation-delay: -8s; }
+        .login-particles span:nth-child(12) { left: 20%; top: 10%; width:3px; height:3px; animation-duration: 13s; animation-delay: -2s; }
+        .login-particles span:nth-child(13) { left: 40%; top: 92%; width:3px; height:3px; animation-duration: 10s; animation-delay: -4s; }
+        .login-particles span:nth-child(14) { left: 54%; top: 46%; width:4px; height:4px; animation-duration: 12s; animation-delay: -6s; }
+        .login-particles span:nth-child(15) { left: 74%; top: 14%; width:3px; height:3px; animation-duration: 14s; animation-delay: -1s; }
+        .login-particles span:nth-child(16) { left: 32%; top: 60%; width:3px; height:3px; animation-duration: 11s; animation-delay: -9s; }
+
+        /* ===== 登录卡片（毛玻璃风，融入深色背景） ===== */
+        .login-container {
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4),
+                        0 0 0 1px rgba(0, 200, 255, 0.15);
+            padding: 44px 36px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            position: relative;
+            z-index: 5;
+        }
+
+        /* ===== 右面板顶部：系统状态条 ===== */
+        .sys-status {
+            position: relative; z-index: 5;
+            margin-bottom: 28px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: rgba(255,255,255,0.75);
+            font-size: 12px;
+            letter-spacing: 2px;
+        }
+        .sys-status .led {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            box-shadow: 0 0 8px #22c55e, 0 0 14px rgba(34,197,94,0.5);
+            animation: ledBlink 2s ease-in-out infinite;
+        }
+        @keyframes ledBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .sys-status .sep { color: rgba(255,255,255,0.2); margin: 0 4px; }
+
+        /* ===== 右面板底部：数据统计 ===== */
+        .login-stats {
+            position: relative; z-index: 5;
+            margin-top: 28px;
+            display: flex;
+            gap: 24px;
+            color: rgba(255,255,255,0.55);
+            font-size: 11px;
+            letter-spacing: 1px;
+        }
+        .login-stats .stat-num {
+            color: #00e5ff;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Consolas', monospace;
+            margin-right: 4px;
         }
 
         .icon {
@@ -41,7 +314,9 @@
             justify-content: center;
             margin: 0 auto 24px;
             font-size: 40px;
+            overflow: hidden;
         }
+        .icon img { width: 100%; height: 100%; object-fit: cover; }
 
         h1 {
             color: #1a1a1a;
@@ -412,12 +687,282 @@
         .login-container {
             position: relative;
         }
+
+        /* ============ 启动动画 Splash Overlay ============ */
+        .splash-overlay {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #0a1a3a 0%, #0d2a5c 50%, #061230 100%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+        .splash-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        /* 背景装饰：大光斑 */
+        .splash-overlay::before,
+        .splash-overlay::after {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.35;
+        }
+        .splash-overlay::before {
+            background: #0080ff;
+            top: -200px;
+            left: -150px;
+            animation: floatGlow 8s ease-in-out infinite;
+        }
+        .splash-overlay::after {
+            background: #00c8ff;
+            bottom: -200px;
+            right: -150px;
+            animation: floatGlow 10s ease-in-out infinite reverse;
+        }
+        @keyframes floatGlow {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(40px, -30px); }
+        }
+
+        /* CSS 粒子（18 个 span，纯 CSS） */
+        .splash-particles {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+        .splash-particles span {
+            position: absolute;
+            display: block;
+            width: 4px;
+            height: 4px;
+            background: rgba(0, 229, 255, 0.8);
+            border-radius: 50%;
+            box-shadow: 0 0 6px rgba(0, 229, 255, 0.9);
+            animation: splashFloat linear infinite;
+        }
+        /* 18 个粒子各不同起点和时长 — 纯手写避免 JS 注入 */
+        .splash-particles span:nth-child(1)  { left: 5%;  top: 15%; width:3px; height:3px; animation-duration: 9s; animation-delay: 0s;   opacity:.7; }
+        .splash-particles span:nth-child(2)  { left: 15%; top: 75%; width:5px; height:5px; animation-duration: 11s; animation-delay: -2s;  opacity:.9; }
+        .splash-particles span:nth-child(3)  { left: 25%; top: 35%; width:3px; height:3px; animation-duration: 8s;  animation-delay: -4s;  opacity:.6; }
+        .splash-particles span:nth-child(4)  { left: 35%; top: 85%; width:4px; height:4px; animation-duration: 12s; animation-delay: -1s;  opacity:.8; }
+        .splash-particles span:nth-child(5)  { left: 48%; top: 10%; width:3px; height:3px; animation-duration: 10s; animation-delay: -3s;  opacity:.7; }
+        .splash-particles span:nth-child(6)  { left: 55%; top: 60%; width:5px; height:5px; animation-duration: 9s;  animation-delay: -5s;  opacity:.85;}
+        .splash-particles span:nth-child(7)  { left: 65%; top: 25%; width:3px; height:3px; animation-duration: 13s; animation-delay: -2s;  opacity:.6; }
+        .splash-particles span:nth-child(8)  { left: 75%; top: 80%; width:4px; height:4px; animation-duration: 8s;  animation-delay: -6s;  opacity:.75;}
+        .splash-particles span:nth-child(9)  { left: 85%; top: 40%; width:3px; height:3px; animation-duration: 11s; animation-delay: -1s;  opacity:.65;}
+        .splash-particles span:nth-child(10) { left: 92%; top: 65%; width:4px; height:4px; animation-duration: 10s; animation-delay: -4s;  opacity:.8; }
+        .splash-particles span:nth-child(11) { left: 8%;  top: 50%; width:3px; height:3px; animation-duration: 14s; animation-delay: -7s;  opacity:.55;}
+        .splash-particles span:nth-child(12) { left: 20%; top: 5%;  width:4px; height:4px; animation-duration: 9s;  animation-delay: -3s;  opacity:.7; }
+        .splash-particles span:nth-child(13) { left: 42%; top: 92%; width:3px; height:3px; animation-duration: 11s; animation-delay: -8s;  opacity:.6; }
+        .splash-particles span:nth-child(14) { left: 60%; top: 45%; width:5px; height:5px; animation-duration: 13s; animation-delay: -2s;  opacity:.9; }
+        .splash-particles span:nth-child(15) { left: 78%; top: 12%; width:3px; height:3px; animation-duration: 10s; animation-delay: -5s;  opacity:.7; }
+        .splash-particles span:nth-child(16) { left: 3%;  top: 90%; width:4px; height:4px; animation-duration: 12s; animation-delay: -6s;  opacity:.75;}
+        .splash-particles span:nth-child(17) { left: 88%; top: 22%; width:3px; height:3px; animation-duration: 9s;  animation-delay: -9s;  opacity:.6; }
+        .splash-particles span:nth-child(18) { left: 32%; top: 55%; width:4px; height:4px; animation-duration: 11s; animation-delay: -3s;  opacity:.8; }
+
+        @keyframes splashFloat {
+            0%   { transform: translateY(0) translateX(0);   opacity: 0; }
+            10%  { opacity: 1; }
+            90%  { opacity: 1; }
+            100% { transform: translateY(-120vh) translateX(30px); opacity: 0; }
+        }
+
+        /* Logo + 标题区 */
+        .splash-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            animation: splashFadeIn 1.2s ease both;
+        }
+        @keyframes splashFadeIn {
+            0%   { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .splash-logo {
+            width: 96px;
+            height: 96px;
+            margin: 0 auto 28px;
+            background: linear-gradient(135deg, #0080ff 0%, #00c8ff 100%);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            box-shadow: 0 8px 32px rgba(0, 130, 255, 0.45),
+                        0 0 0 1px rgba(0, 200, 255, 0.3),
+                        inset 0 1px 0 rgba(255,255,255,0.2);
+            animation: splashPulse 2.8s ease-in-out infinite;
+            overflow: hidden;
+        }
+        .splash-logo img { width: 100%; height: 100%; object-fit: cover; }
+        @keyframes splashPulse {
+            0%, 100% { transform: scale(1); }
+            50%      { transform: scale(1.04); box-shadow: 0 8px 40px rgba(0, 130, 255, 0.6), 0 0 0 1px rgba(0,200,255,.5), inset 0 1px 0 rgba(255,255,255,.2); }
+        }
+
+        .splash-title {
+            color: #fff;
+            font-size: 30px;
+            font-weight: 600;
+            letter-spacing: 6px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(0, 200, 255, 0.4);
+        }
+        .splash-subtitle {
+            color: rgba(255,255,255,0.55);
+            font-size: 14px;
+            letter-spacing: 3px;
+            margin-bottom: 48px;
+        }
+
+        /* 进度条 */
+        .splash-progress {
+            width: 240px;
+            height: 3px;
+            background: rgba(255,255,255,0.12);
+            border-radius: 2px;
+            margin: 0 auto 18px;
+            overflow: hidden;
+        }
+        .splash-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #0080ff, #00e5ff);
+            border-radius: 2px;
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.6);
+            animation: splashProgress 2.2s cubic-bezier(.4,0,.2,1) forwards;
+        }
+        @keyframes splashProgress {
+            0%   { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        .splash-tip {
+            color: rgba(255,255,255,0.35);
+            font-size: 12px;
+            letter-spacing: 1px;
+        }
+
+        /* ===== 响应式：窄屏隐藏品牌面板 ===== */
+        @media (max-width: 960px) {
+            .brand-panel { display: none; }
+            .login-panel { flex: 1; }
+        }
+        @media (max-width: 480px) {
+            .login-panel { padding: 24px 16px; }
+            .login-container { padding: 36px 24px; }
+        }
     </style>
+    <!-- 全局按钮美化 -->
+    <link rel="stylesheet" href="/static/global_buttons.css">
 </head>
-<body>
+<body class="login-body">
+    <!-- ============ 启动动画 Splash Overlay ============ -->
+    <div class="splash-overlay" id="splashOverlay">
+        <div class="splash-particles">
+            <span></span><span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="splash-content">
+            <div class="splash-logo"><img src="/static/brand_logo.svg" alt="logo"></div>
+            <div class="splash-title">灵智尚人</div>
+            <div class="splash-subtitle">INTELLIGENT ENGINEERING TRAINING</div>
+            <div class="splash-progress">
+                <div class="splash-progress-bar"></div>
+            </div>
+            <div class="splash-tip">AI 驱动的智能工程训练平台</div>
+        </div>
+    </div>
+
+    <!-- 左右分屏主容器 -->
+    <div class="login-wrapper">
+        <!-- 左侧品牌展示面板 -->
+        <div class="brand-panel">
+            <div class="brand-grid"></div>
+            <div class="panel-particles brand-particles">
+                <span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span>
+            </div>
+            <div class="brand-content">
+                <div class="brand-logo-row">
+                    <div class="brand-logo-box"><img src="/static/brand_logo.svg" alt="logo"></div>
+                    <div class="brand-logo-text">灵智尚人 · AI 工程训练平台</div>
+                </div>
+
+                <h2 class="brand-headline">
+                    让工程训练<br>
+                    从此 <span>更智能、更高效</span>
+                </h2>
+                <p class="brand-slogan">
+                    面向通信与电子信息专业的 AI 驱动虚拟仿真实训平台，融合知识图谱、
+                    场景剧情演绎、动态故障注入与智能报告生成，构建「学—练—评—改」闭环训练体系。
+                </p>
+
+                <div class="brand-features">
+                    <div class="feature-item">
+                        <span class="feature-icon">🧠</span>
+                        <div class="feature-title">AI 知识图谱</div>
+                        <div class="feature-desc">知识点自动关联，智能推荐学习路径</div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">🎬</span>
+                        <div class="feature-title">沉浸式剧情</div>
+                        <div class="feature-desc">真实工程场景模拟，身临其境练技能</div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">💡</span>
+                        <div class="feature-title">口语化排障</div>
+                        <div class="feature-desc">自然语言描述故障，AI 辅助定位根因</div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">📊</span>
+                        <div class="feature-title">胜任力画像</div>
+                        <div class="feature-desc">5 维能力雷达图，量身规划提升路线</div>
+                    </div>
+                </div>
+            </div>
+            <div class="brand-footer">
+                © 2024 灵智尚人 · 智能工程训练平台 · v2.1
+            </div>
+        </div>
+
+        <!-- 右侧登录面板 -->
+        <div class="login-panel">
+            <div class="panel-particles login-particles">
+                <span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span>
+            </div>
+
+            <!-- 顶部系统状态条 -->
+            <div class="sys-status">
+                <span class="led"></span>
+                <span>SYSTEM ONLINE</span>
+                <span class="sep">│</span>
+                <span>CORE v2.1</span>
+                <span class="sep">│</span>
+                <span>SECURE LINK</span>
+            </div>
+
     <div class="login-container">
         <button class="guide-trigger" onclick="showGuide()">📖 使用说明</button>
-        <div class="icon">🤖</div>
+        <div class="icon"><img src="/static/brand_logo.svg" alt="logo"></div>
         <h1>灵智尚人</h1>
         <p class="subtitle">请选择角色并登录</p>
         
@@ -474,6 +1019,42 @@
             仅限授权用户访问
         </div>
     </div>
+
+            <!-- 底部数据统计 -->
+            <div class="login-stats">
+                <div><span class="stat-num">3,200+</span>KNOWLEDGE NODES</div>
+                <div><span class="stat-num">15+</span>SCENARIOS</div>
+                <div><span class="stat-num">8</span>DIMENSIONS</div>
+            </div>
+
+        </div><!-- /login-panel -->
+    </div><!-- /login-wrapper -->
+
+    <!-- ============ 启动动画控制脚本 ============ -->
+    <script>
+    (function() {
+        var overlay = document.getElementById('splashOverlay');
+        var SPLASH_DURATION = 2500;   // 画面持续时长
+        var FADEOUT_DURATION = 700;   // 淡出过渡时长（与 CSS transition 对齐）
+        var TOTAL = SPLASH_DURATION + FADEOUT_DURATION;
+
+        if (!sessionStorage.getItem('splashPlayed')) {
+            sessionStorage.setItem('splashPlayed', '1');
+            setTimeout(function() {
+                overlay.classList.add('hidden');
+                setTimeout(function() {
+                    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+                    // 通知其他脚本：splash 已结束，可以弹 guide 了
+                    window.dispatchEvent(new CustomEvent('splashEnded'));
+                }, FADEOUT_DURATION);
+            }, SPLASH_DURATION);
+        } else {
+            overlay.style.display = 'none';
+            // 之前已看过 splash，直接通知后续逻辑
+            window.dispatchEvent(new CustomEvent('splashEnded'));
+        }
+    })();
+    </script>
 
     <script>
         const passwordInput = document.getElementById('password');
@@ -744,15 +1325,21 @@
             setTimeout(() => overlay.remove(), 180);
         }
 
-        // 登录前自动弹出使用说明（除非用户勾选了不再提示）
+        // 登录前自动弹出使用说明（在 splash 动画全部结束之后才弹）
         (function autoShowGuide() {
             try {
                 if (localStorage.getItem(GUIDE_STORAGE_KEY) === '1') return;
             } catch (e) {}
-            window.addEventListener('load', () => {
-                setTimeout(showGuide, 400);
-            });
+            function tryShow() {
+                setTimeout(showGuide, 300); // 登录页刚露出来时别立刻弹，等 300ms 缓和
+            }
+            // 等 splash 播放完再弹（自定义事件由 splash 脚本在淡出结束后触发）
+            window.addEventListener('splashEnded', tryShow, { once: true });
         })();
     </script>
+
+    <!-- 全局桌宠 Desktop Pet -->
+    <link rel="stylesheet" href="/static/desktop_pet.css">
+    <script src="/static/desktop_pet.js" defer></script>
 </body>
 </html>

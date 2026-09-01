@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -542,9 +542,12 @@
             }
         }
     </style>
+    <!-- 全局按钮美化 -->
+    <link rel="stylesheet" href="/static/global_buttons.css">
+<link rel="stylesheet" href="/static/global_pages.css">
 </head>
 <body>
-    <div class="container">
+    <div class="container" style="max-width: 1250px;">
         <!-- 场景选择面板 -->
         <div class="scenarios-panel">
             <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 20px;">
@@ -552,7 +555,40 @@
                 <button class="nav-btn" onclick="clearChatHistory()" style="margin: 0; padding: 8px 16px; font-size: 14px;">🗑️ 清除记录</button>
                 <button class="nav-btn logout-btn" onclick="doLogout()" style="margin: 0; padding: 8px 16px; font-size: 14px;">🔓 退出登录</button>
             </div>
-            <h2 class="panel-title">🎬 剧情演绎</h2>
+
+            <!-- 沉浸式剧情体验入口 -->
+            <div style="background: linear-gradient(135deg, rgba(0, 128, 255, 0.1) 0%, rgba(0, 200, 255, 0.08) 100%);
+                        border: 1.5px solid rgba(0, 150, 255, 0.4);
+                        border-radius: 14px;
+                        padding: 18px 20px;
+                        margin-bottom: 20px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        gap: 15px;">
+                <div style="flex: 1;">
+                    <div style="font-size: 16px; font-weight: 600; color: #0a1a3a; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                        <span style="display:inline-block; background: linear-gradient(135deg,#0080ff,#00c8ff); color:#fff; padding:2px 8px; border-radius:4px; font-size:12px;">NEW</span>
+                        🎞️ 沉浸式剧情演绎
+                    </div>
+                    <div style="font-size: 13px; color: #555; line-height: 1.6;">
+                        推荐切换到「沉浸式剧情」模式：全屏场景 + 步骤引导 + 毛玻璃剧情面板，效果更逼真。
+                    </div>
+                </div>
+                <a href="/scenario-demo" style="padding: 10px 22px;
+                    background: linear-gradient(135deg, #0080ff, #00c8ff);
+                    color: #fff;
+                    border: none;
+                    border-radius: 22px;
+                    font-size: 14px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    text-decoration: none;
+                    box-shadow: 0 4px 14px rgba(0, 130, 255, 0.35);
+                    white-space: nowrap;">立即体验 →</a>
+            </div>
+
+            <h2 class="panel-title">🎬 剧情演绎（经典模式）</h2>
             
             <!-- 自定义场景 -->
             <div class="custom-scenario-section">
@@ -1116,5 +1152,9 @@
         loadScenarios();
         loadChatHistory();
     </script>
+
+    <!-- 全局桌宠 Desktop Pet -->
+    <link rel="stylesheet" href="/static/desktop_pet.css">
+    <script src="/static/desktop_pet.js" defer></script>
 </body>
 </html>

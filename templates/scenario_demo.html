@@ -1,0 +1,767 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>剧情演绎 - 灵智尚人</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+            min-height: 100vh;
+            overflow: hidden;
+            background: #0a1a2e;
+        }
+
+        /* ============ 主舞台容器 ============ */
+        .stage {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ============ 场景背景层 ============ */
+        .scene-bg {
+            position: absolute;
+            inset: 0;
+            transition: opacity 1s ease, background 1s ease;
+            z-index: 0;
+        }
+
+        /* 不同场景的渐变背景（模拟3D虚拟场景） */
+        .scene-bg[data-step="0"] {
+            background:
+                radial-gradient(ellipse at 30% 40%, rgba(0, 200, 255, 0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 60%, rgba(0, 100, 200, 0.2) 0%, transparent 60%),
+                linear-gradient(180deg, #0d2137 0%, #1a3a5c 40%, #0f2847 100%);
+        }
+        .scene-bg[data-step="1"] {
+            background:
+                radial-gradient(ellipse at 20% 30%, rgba(0, 180, 255, 0.2) 0%, transparent 50%),
+                radial-gradient(ellipse at 60% 70%, rgba(100, 255, 200, 0.1) 0%, transparent 50%),
+                linear-gradient(180deg, #0a1f3a 0%, #1e5799 50%, #0a2d5a 100%);
+        }
+        .scene-bg[data-step="2"] {
+            background:
+                radial-gradient(ellipse at 50% 20%, rgba(255, 200, 0, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(0, 150, 255, 0.15) 0%, transparent 50%),
+                linear-gradient(180deg, #1a2a4a 0%, #2d4a7a 40%, #0a2040 100%);
+        }
+        .scene-bg[data-step="3"] {
+            background:
+                radial-gradient(ellipse at 30% 50%, rgba(0, 255, 150, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 30%, rgba(255, 100, 100, 0.1) 0%, transparent 50%),
+                linear-gradient(180deg, #0d1f35 0%, #2a4a6a 50%, #0d1f35 100%);
+        }
+        .scene-bg[data-step="4"] {
+            background:
+                radial-gradient(ellipse at 40% 60%, rgba(150, 100, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 30%, rgba(255, 150, 50, 0.1) 0%, transparent 50%),
+                linear-gradient(180deg, #1a1a3a 0%, #3a2a5a 40%, #1a1a3a 100%);
+        }
+        .scene-bg[data-step="5"] {
+            background:
+                radial-gradient(ellipse at 50% 50%, rgba(0, 255, 200, 0.2) 0%, transparent 50%),
+                radial-gradient(ellipse at 20% 80%, rgba(0, 100, 255, 0.15) 0%, transparent 50%),
+                linear-gradient(180deg, #0a1a2e 0%, #164e63 50%, #0a1a2e 100%);
+        }
+
+        /* ============ SVG 装饰层 ============ */
+        .scene-bg svg.decor {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.6;
+        }
+
+        /* ============ 遮罩层 ============ */
+        .overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(0,10,30,0.3) 0%, rgba(0,10,30,0.5) 100%);
+            z-index: 1;
+        }
+
+        /* ============ 顶部导航栏 ============ */
+        .top-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 56px;
+            background: rgba(10, 25, 50, 0.6);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 200, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 10;
+        }
+
+        .top-bar .mode-selector {
+            display: flex;
+            gap: 8px;
+        }
+        .top-bar .mode-btn {
+            padding: 6px 16px;
+            background: rgba(0, 200, 255, 0.15);
+            color: #a0e8ff;
+            border: 1px solid rgba(0, 200, 255, 0.3);
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .top-bar .mode-btn:hover {
+            background: rgba(0, 200, 255, 0.3);
+            color: #fff;
+        }
+        .top-bar .mode-btn.active {
+            background: rgba(0, 200, 255, 0.4);
+            color: #fff;
+            box-shadow: 0 0 12px rgba(0, 200, 255, 0.4);
+        }
+
+        .top-bar .title {
+            color: #fff;
+            font-size: 14px;
+            letter-spacing: 2px;
+        }
+
+        .top-bar .end-btn {
+            padding: 8px 20px;
+            background: rgba(255, 80, 80, 0.8);
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .top-bar .end-btn:hover { background: rgba(255, 50, 50, 1); }
+
+        /* ============ 主标题区 ============ */
+        .main-header {
+            position: absolute;
+            top: 80px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            z-index: 5;
+            pointer-events: none;
+        }
+        .main-header .deco {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .main-header .deco .line {
+            width: 60px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00e5ff);
+        }
+        .main-header .deco .line:last-child {
+            background: linear-gradient(90deg, #00e5ff, transparent);
+        }
+        .main-header h1 {
+            color: #fff;
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: 4px;
+            text-shadow: 0 0 20px rgba(0, 200, 255, 0.5);
+        }
+        .main-header .clock {
+            margin-top: 8px;
+            color: rgba(255,255,255,0.6);
+            font-size: 13px;
+            font-family: 'Consolas', monospace;
+        }
+        .main-header .clock span { color: #00e5ff; }
+
+        /* ============ 右侧步骤指示器 ============ */
+        .step-indicator {
+            position: absolute;
+            right: 32px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            z-index: 10;
+        }
+        .step-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .step-item .label {
+            color: rgba(255,255,255,0.5);
+            font-size: 12px;
+            text-align: right;
+            min-width: 90px;
+            transition: all 0.3s;
+        }
+        .step-item .dot {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.2);
+            color: rgba(255,255,255,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s;
+            position: relative;
+        }
+        .step-item.completed .dot {
+            background: rgba(0, 200, 255, 0.3);
+            border-color: rgba(0, 200, 255, 0.6);
+            color: #a0e8ff;
+        }
+        .step-item.completed .label { color: rgba(0, 200, 255, 0.8); }
+        .step-item.active .dot {
+            background: linear-gradient(135deg, #00c8ff, #0077ff);
+            border-color: #00e5ff;
+            color: #fff;
+            box-shadow: 0 0 20px rgba(0, 200, 255, 0.6), 0 0 40px rgba(0, 200, 255, 0.3);
+            transform: scale(1.15);
+        }
+        .step-item.active .dot::after {
+            content: '';
+            position: absolute;
+            inset: -6px;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 229, 255, 0.4);
+            animation: pulse 2s infinite;
+        }
+        .step-item.active .label {
+            color: #fff;
+            font-weight: 600;
+            text-shadow: 0 0 10px rgba(0, 200, 255, 0.5);
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0; }
+        }
+
+        /* 步骤连接线 */
+        .step-connector {
+            position: absolute;
+            right: 47px;
+            width: 2px;
+            height: 16px;
+            background: rgba(255,255,255,0.1);
+        }
+        .step-connector.active {
+            background: linear-gradient(180deg, rgba(0, 200, 255, 0.6), rgba(255,255,255,0.1));
+        }
+
+        /* ============ 剧情对话面板 ============ */
+        .dialog-panel {
+            position: absolute;
+            left: 50%;
+            top: 55%;
+            transform: translate(-50%, -50%);
+            width: min(680px, 70vw);
+            z-index: 15;
+            animation: fadeInUp 0.8s ease;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translate(-50%, -30px); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+
+        .dialog-box {
+            background: linear-gradient(135deg, rgba(10, 35, 65, 0.85) 0%, rgba(15, 25, 55, 0.9) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 200, 255, 0.3);
+            border-radius: 16px;
+            padding: 40px 44px 32px;
+            box-shadow: 0 8px 40px rgba(0, 100, 200, 0.3),
+                        inset 0 1px 0 rgba(255,255,255,0.1);
+            position: relative;
+        }
+        .dialog-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 20px;
+            right: 20px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00e5ff, transparent);
+        }
+        /* 角装饰 */
+        .dialog-box .corner {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-color: rgba(0, 229, 255, 0.6);
+            border-style: solid;
+        }
+        .dialog-box .corner.tl { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+        .dialog-box .corner.tr { top: -1px; right: -1px; border-width: 2px 2px 0 0; }
+        .dialog-box .corner.bl { bottom: -1px; left: -1px; border-width: 0 0 2px 2px; }
+        .dialog-box .corner.br { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+
+        .dialog-title {
+            text-align: center;
+            color: #fff;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+            text-shadow: 0 0 15px rgba(0, 200, 255, 0.4);
+        }
+
+        .dialog-content {
+            color: rgba(255,255,255,0.85);
+            font-size: 15px;
+            line-height: 1.9;
+            margin-bottom: 28px;
+            text-align: justify;
+        }
+
+        .dialog-actions {
+            text-align: center;
+        }
+        .btn-next {
+            padding: 12px 48px;
+            background: linear-gradient(135deg, #0080ff 0%, #00c8ff 100%);
+            color: #fff;
+            border: none;
+            border-radius: 24px;
+            font-size: 15px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 20px rgba(0, 150, 255, 0.4);
+        }
+        .btn-next:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(0, 150, 255, 0.6);
+        }
+        .btn-next:active { transform: translateY(0); }
+
+        .btn-skip {
+            margin-left: 12px;
+            padding: 12px 28px;
+            background: transparent;
+            color: rgba(255,255,255,0.5);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 24px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-skip:hover {
+            color: rgba(255,255,255,0.8);
+            border-color: rgba(255,255,255,0.4);
+        }
+
+        /* ============ 进度条 ============ */
+        .progress-bar {
+            position: absolute;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 10;
+        }
+        .progress-bar .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.25);
+            transition: all 0.3s;
+        }
+        .progress-bar .dot.active {
+            background: #00e5ff;
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.6);
+            width: 24px;
+            border-radius: 4px;
+        }
+        .progress-bar .dot.completed {
+            background: rgba(0, 229, 255, 0.5);
+        }
+
+        /* ============ 场景切换过渡 ============ */
+        .scene-bg.fade-out { opacity: 0; }
+
+        /* ============ 结束画面 ============ */
+        .end-screen {
+            position: absolute;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            background: rgba(0, 10, 30, 0.9);
+            backdrop-filter: blur(10px);
+        }
+        .end-screen.show { display: flex; }
+        .end-card {
+            background: linear-gradient(135deg, rgba(0, 50, 100, 0.9), rgba(0, 20, 60, 0.95));
+            border: 1px solid rgba(0, 229, 255, 0.4);
+            border-radius: 20px;
+            padding: 50px 60px;
+            text-align: center;
+            box-shadow: 0 0 60px rgba(0, 200, 255, 0.3);
+        }
+        .end-card h2 {
+            color: #fff;
+            font-size: 28px;
+            margin-bottom: 12px;
+            letter-spacing: 4px;
+        }
+        .end-card p {
+            color: rgba(255,255,255,0.7);
+            font-size: 15px;
+            margin-bottom: 28px;
+        }
+        .end-card .btn-back {
+            padding: 12px 36px;
+            background: linear-gradient(135deg, #0080ff, #00c8ff);
+            color: #fff;
+            border: none;
+            border-radius: 24px;
+            font-size: 14px;
+            cursor: pointer;
+            margin: 6px;
+        }
+        .end-card .btn-secondary {
+            padding: 12px 36px;
+            background: transparent;
+            color: rgba(255,255,255,0.7);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 24px;
+            font-size: 14px;
+            cursor: pointer;
+            margin: 6px;
+        }
+    </style>
+    <!-- 全局按钮美化 -->
+    <link rel="stylesheet" href="/static/global_buttons.css">
+<link rel="stylesheet" href="/static/global_pages.css">
+</head>
+<body>
+    <div class="stage">
+        <!-- 场景背景 -->
+        <div class="scene-bg" id="sceneBg" data-step="0">
+            <svg class="decor" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+                <!-- 网格地平线 -->
+                <defs>
+                    <linearGradient id="groundGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="rgba(0,229,255,0.3)" stop-opacity="0.6"/>
+                        <stop offset="100%" stop-color="rgba(0,229,255,0)" stop-opacity="0"/>
+                    </linearGradient>
+                    <radialGradient id="sunGrad" cx="0.5" cy="0.5" r="0.5">
+                        <stop offset="0%" stop-color="rgba(255,180,50,0.6)"/>
+                        <stop offset="50%" stop-color="rgba(255,100,50,0.2)"/>
+                        <stop offset="100%" stop-color="rgba(255,50,50,0)"/>
+                    </radialGradient>
+                </defs>
+                <!-- 远景太阳 -->
+                <circle cx="720" cy="250" r="120" fill="url(#sunGrad)"/>
+                <!-- 山脉轮廓 -->
+                <path d="M0,600 L200,420 L400,520 L600,380 L800,480 L1000,350 L1200,450 L1440,400 L1440,900 L0,900Z" fill="rgba(0,30,60,0.6)"/>
+                <path d="M0,650 L150,500 L350,580 L550,450 L750,550 L950,420 L1150,520 L1440,470 L1440,900 L0,900Z" fill="rgba(0,40,80,0.7)"/>
+                <!-- 建筑群（虚拟校园） -->
+                <g opacity="0.5">
+                    <rect x="300" y="500" width="60" height="120" fill="rgba(0,80,140,0.8)"/>
+                    <rect x="370" y="460" width="50" height="160" fill="rgba(0,100,160,0.7)"/>
+                    <rect x="430" y="520" width="40" height="100" fill="rgba(0,70,120,0.8)"/>
+                    <rect x="900" y="480" width="70" height="140" fill="rgba(0,90,150,0.8)"/>
+                    <rect x="980" y="440" width="55" height="180" fill="rgba(0,110,170,0.7)"/>
+                    <rect x="1050" y="510" width="45" height="110" fill="rgba(0,80,130,0.8)"/>
+                </g>
+                <!-- 网格地面 -->
+                <g opacity="0.4" stroke="rgba(0,200,255,0.4)" fill="none" stroke-width="1">
+                    <line x1="0" y1="720" x2="1440" y2="720"/>
+                    <line x1="0" y1="760" x2="1440" y2="760"/>
+                    <line x1="0" y1="810" x2="1440" y2="810"/>
+                    <line x1="0" y1="870" x2="1440" y2="870"/>
+                    <!-- 纵向透视网格 -->
+                    <line x1="720" y1="700" x2="200" y2="900"/>
+                    <line x1="720" y1="700" x2="500" y2="900"/>
+                    <line x1="720" y1="700" x2="940" y2="900"/>
+                    <line x1="720" y1="700" x2="1240" y2="900"/>
+                </g>
+                <!-- 信号塔/基站剪影 -->
+                <g opacity="0.6" transform="translate(1100, 460)">
+                    <line x1="0" y1="0" x2="0" y2="80" stroke="rgba(0,229,255,0.6)" stroke-width="2"/>
+                    <line x1="-30" y1="20" x2="30" y2="20" stroke="rgba(0,229,255,0.5)" stroke-width="1.5"/>
+                    <line x1="-25" y1="0" x2="25" y2="0" stroke="rgba(0,229,255,0.5)" stroke-width="1.5"/>
+                    <line x1="-40" y1="-20" x2="40" y2="-20" stroke="rgba(0,229,255,0.4)" stroke-width="1"/>
+                    <circle cx="0" cy="-30" r="4" fill="rgba(0,229,255,0.8)"/>
+                </g>
+                <!-- 信号波纹 -->
+                <g opacity="0.3" stroke="rgba(0,229,255,0.5)" fill="none" stroke-width="1">
+                    <circle cx="1100" cy="430" r="30"/>
+                    <circle cx="1100" cy="430" r="50"/>
+                    <circle cx="1100" cy="430" r="70"/>
+                </g>
+            </svg>
+        </div>
+
+        <div class="overlay"></div>
+
+        <!-- 顶部导航栏 -->
+        <div class="top-bar">
+            <div class="mode-selector">
+                <button class="mode-btn active">剧情演绎模式</button>
+                <button class="mode-btn">自由探索模式</button>
+            </div>
+            <div class="title">站点工程勘查设计虚拟仿真实训平台</div>
+            <button class="end-btn" onclick="showEndScreen()">结束实训</button>
+        </div>
+
+        <!-- 主标题 -->
+        <div class="main-header">
+            <div class="deco">
+                <span class="line"></span>
+                <h1 id="sceneTitle">站点工程勘查设计虚拟仿真实训平台</h1>
+                <span class="line"></span>
+            </div>
+            <div class="clock">
+                <span id="clockDate"></span> · <span id="clockTime"></span>
+            </div>
+        </div>
+
+        <!-- 右侧步骤指示器 -->
+        <div class="step-indicator" id="stepIndicator"></div>
+
+        <!-- 剧情对话面板 -->
+        <div class="dialog-panel" id="dialogPanel">
+            <div class="dialog-box">
+                <span class="corner tl"></span>
+                <span class="corner tr"></span>
+                <span class="corner bl"></span>
+                <span class="corner br"></span>
+                <div class="dialog-title" id="dialogTitle">背景</div>
+                <div class="dialog-content" id="dialogContent"></div>
+                <div class="dialog-actions">
+                    <button class="btn-next" id="btnNext" onclick="nextStep()">下一步</button>
+                    <button class="btn-skip" onclick="skipDialog()">跳过</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部进度指示 -->
+        <div class="progress-bar" id="progressBar"></div>
+
+        <!-- 结束画面 -->
+        <div class="end-screen" id="endScreen">
+            <div class="end-card">
+                <h2>🎉 实训完成</h2>
+                <p>恭喜你完成了站点勘查设计实训任务！<br>你可以选择重新开始或返回主菜单。</p>
+                <button class="btn-back" onclick="restart()">重新开始</button>
+                <button class="btn-secondary" onclick="goBack()">返回主菜单</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============ 剧情步骤数据 ============
+        const steps = [
+            {
+                title: "背景",
+                label: "项目背景",
+                content: `近期，毗邻某市高铁附近知名大学需要进行智慧校园升级项目。该院致力于成为信息化教育的前沿阵地，因此急需引入5G强化校园网络基础设施。为此，中国移动通信集团有限公司某市分公司下达5G强化校园网络第一阶段的勘察设计任务，旨在全面评估校园内各区域的5G信号覆盖需求，包括教学楼、图书馆、宿舍楼及户外活动区等，确保5G网络最终能够高效支撑高清视频教学、远程互动、大数据分析及物联网应用。`,
+                nextText: "开始勘查"
+            },
+            {
+                title: "站点勘查",
+                label: "站点勘查",
+                content: `作为本次勘察设计工程师，你现在需要对候选站点进行实地勘查。请仔细观察虚拟场景中的校园布局，重点关注以下关键区域：教学区的信号遮挡情况、宿舍楼的用户容量需求、以及校园中心广场的覆盖盲区。这些信息将直接影响后续的基站选址和天线参数设计。`,
+                nextText: "继续勘查"
+            },
+            {
+                title: "现场测量",
+                label: "现场测量",
+                content: `勘查完成后，系统自动记录了各候选站点的信号强度数据。当前教学楼A栋的RSRP值为 -95 dBm，信号偏弱；图书馆区域的RSRP值为 -110 dBm，属于覆盖盲区；宿舍区平均RSRP值为 -85 dBm，基本达标但高峰期容量不足。你需要根据这些数据，合理规划基站的覆盖范围和发射功率。`,
+                nextText: "查看方案"
+            },
+            {
+                title: "基站参数查询",
+                label: "参数查询",
+                content: `通过查询3GPP标准和设备手册，你了解到：5G NR频段 n78（3.5GHz）在城区覆盖半径约 300-500米；使用64T64R Massive MIMO天线可提升频谱效率 3-5 倍；小区最大发射功率为 24 dBm；广播信道功率配比 PBCH = 30 dBm。这些参数将作为本次设计的核心依据。`,
+                nextText: "开始设计"
+            },
+            {
+                title: "基站勘查准备",
+                label: "勘查准备",
+                content: `基站选址需要满足以下条件：1) 天线高度需高于周围建筑5米以上；2) 站址地质条件稳定，避开低洼积水区域；3) 符合城市规划和电磁环保要求；4) 机房空间满足设备安装和散热需求。经初步筛选，校园内的中心铁塔和东侧教学楼楼顶均具备建站条件。`,
+                nextText: "进入设计"
+            },
+            {
+                title: "基站设计",
+                label: "基站设计",
+                content: `综合以上勘查和参数分析，最终设计方案如下：在校园中心铁塔部署1个5G宏基站，配置64T64R天线，覆盖教学楼、图书馆和宿舍区；发射功率设为 21 dBm，天线高度 35 米，下倾角 8°；小区边缘覆盖预计可满足 98% 区域的信号需求。方案已提交审核，请确认。`,
+                nextText: "完成设计"
+            }
+        ];
+
+        let currentStep = 0;
+
+        // ============ 初始化 ============
+        function init() {
+            renderStepIndicator();
+            renderProgressBar();
+            goToStep(0);
+            updateClock();
+            setInterval(updateClock, 1000);
+        }
+
+        // ============ 渲染步骤指示器 ============
+        function renderStepIndicator() {
+            const container = document.getElementById('stepIndicator');
+            const connectorHtml = [];
+            let html = '';
+            steps.forEach((step, i) => {
+                html += `
+                    <div class="step-item ${i === 0 ? 'active' : ''}" data-index="${i}">
+                        <span class="label">${step.label}</span>
+                        <div class="dot">${i + 1}</div>
+                    </div>
+                `;
+                if (i < steps.length - 1) {
+                    html += `<div class="step-connector" data-idx="${i}"></div>`;
+                }
+            });
+            container.innerHTML = html;
+
+            // 绑定点击事件
+            container.querySelectorAll('.step-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const idx = parseInt(item.dataset.index);
+                    if (idx <= currentStep) {
+                        goToStep(idx);
+                    }
+                });
+            });
+        }
+
+        // ============ 渲染进度条 ============
+        function renderProgressBar() {
+            const bar = document.getElementById('progressBar');
+            let html = '';
+            steps.forEach((_, i) => {
+                html += `<div class="dot" data-idx="${i}"></div>`;
+            });
+            bar.innerHTML = html;
+        }
+
+        // ============ 跳转到指定步骤 ============
+        function goToStep(index) {
+            currentStep = index;
+            const step = steps[index];
+
+            // 更新场景背景
+            const bg = document.getElementById('sceneBg');
+            bg.classList.add('fade-out');
+            setTimeout(() => {
+                bg.setAttribute('data-step', index);
+                bg.classList.remove('fade-out');
+            }, 400);
+
+            // 更新步骤指示器
+            document.querySelectorAll('.step-item').forEach(item => {
+                const idx = parseInt(item.dataset.index);
+                item.classList.remove('active', 'completed');
+                if (idx === index) item.classList.add('active');
+                else if (idx < index) item.classList.add('completed');
+            });
+
+            // 更新连接线
+            document.querySelectorAll('.step-connector').forEach(conn => {
+                const idx = parseInt(conn.dataset.idx);
+                conn.classList.toggle('active', idx < index);
+            });
+
+            // 更新进度条
+            document.querySelectorAll('#progressBar .dot').forEach(dot => {
+                const idx = parseInt(dot.dataset.idx);
+                dot.classList.remove('active', 'completed');
+                if (idx === index) dot.classList.add('active');
+                else if (idx < index) dot.classList.add('completed');
+            });
+
+            // 更新对话面板
+            const panel = document.getElementById('dialogPanel');
+            panel.style.animation = 'none';
+            // 强制重绘
+            void panel.offsetWidth;
+            panel.style.animation = 'fadeInUp 0.6s ease';
+
+            document.getElementById('dialogTitle').textContent = step.title;
+            document.getElementById('dialogContent').textContent = step.content;
+            document.getElementById('sceneTitle').textContent = step.label;
+            document.getElementById('btnNext').textContent = step.nextText || '下一步';
+
+            // 最后一步显示"完成"按钮
+            if (index === steps.length - 1) {
+                document.getElementById('btnNext').textContent = '完成设计';
+            }
+        }
+
+        // ============ 下一步 ============
+        function nextStep() {
+            if (currentStep < steps.length - 1) {
+                goToStep(currentStep + 1);
+            } else {
+                showEndScreen();
+            }
+        }
+
+        // ============ 跳过对话 ============
+        function skipDialog() {
+            nextStep();
+        }
+
+        // ============ 显示结束画面 ============
+        function showEndScreen() {
+            document.getElementById('endScreen').classList.add('show');
+        }
+
+        // ============ 重新开始 ============
+        function restart() {
+            document.getElementById('endScreen').classList.remove('show');
+            goToStep(0);
+        }
+
+        // ============ 返回主菜单 ============
+        function goBack() {
+            window.location.href = '/';
+        }
+
+        // ============ 时钟 ============
+        function updateClock() {
+            const now = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            document.getElementById('clockDate').textContent =
+                `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+            document.getElementById('clockTime').textContent =
+                `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+        }
+
+        // 启动
+        init();
+    </script>
+
+    <!-- 全局桌宠 Desktop Pet -->
+    <link rel="stylesheet" href="/static/desktop_pet.css">
+    <script src="/static/desktop_pet.js" defer></script>
+</body>
+</html>

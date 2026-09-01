@@ -1,0 +1,46 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <defs>
+    <linearGradient id="petHex" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0e2a60"/>
+      <stop offset="100%" stop-color="#1a4d9a"/>
+    </linearGradient>
+    <radialGradient id="petCore" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#00f0ff"/>
+      <stop offset="100%" stop-color="#0040a0"/>
+    </radialGradient>
+    <filter id="petGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="1.5"/>
+    </filter>
+  </defs>
+
+  <!-- 外层六边形 -->
+  <polygon points="60,8 112,36 112,84 60,112 8,84 8,36" fill="none" stroke="#00e5ff" stroke-width="1.2" opacity="0.5">
+    <animateTransform attributeName="transform" type="rotate" from="0 60 60" to="360 60 60" dur="22s" repeatCount="indefinite"/>
+  </polygon>
+
+  <!-- 内层六边形主体 -->
+  <polygon points="60,22 98,44 98,76 60,98 22,76 22,44" fill="url(#petHex)" stroke="#00c8ff" stroke-width="1"/>
+
+  <!-- 天线 -->
+  <line x1="60" y1="22" x2="60" y2="14" stroke="#00e5ff" stroke-width="1.5"/>
+  <circle cx="60" cy="12" r="2.5" fill="#00f0ff">
+    <animate attributeName="r" values="2.5;4;2.5" dur="1.2s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- 左眼 -->
+  <g id="petEyeL">
+    <ellipse cx="45" cy="58" rx="7" ry="8" fill="url(#petCore)"/>
+    <circle cx="47" cy="56" r="2.5" fill="#fff"/>
+  </g>
+
+  <!-- 右眼 -->
+  <g id="petEyeR">
+    <ellipse cx="75" cy="58" rx="7" ry="8" fill="url(#petCore)"/>
+    <circle cx="77" cy="56" r="2.5" fill="#fff"/>
+  </g>
+
+  <!-- 能量核心 -->
+  <circle cx="60" cy="75" r="3" fill="#00f0ff">
+    <animate attributeName="opacity" values="1;0.4;1" dur="1.8s" repeatCount="indefinite"/>
+  </circle>
+</svg>

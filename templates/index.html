@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -13,109 +13,173 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background: linear-gradient(135deg, #0a1838 0%, #0d1f45 50%, #1a2d6a 100%);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             padding: 20px;
+            position: relative;
+            overflow-x: hidden;
         }
 
+        /* 全局粒子背景层 */
+        .bg-particles {
+            position: fixed; inset: 0;
+            pointer-events: none; z-index: 0;
+            overflow: hidden;
+        }
+        .bg-particles span {
+            position: absolute; display: block;
+            border-radius: 50%;
+            background: rgba(0, 200, 255, 0.7);
+            box-shadow: 0 0 6px rgba(0, 200, 255, 0.8);
+            animation: bgFloat linear infinite;
+        }
+        @keyframes bgFloat {
+            0%   { transform: translateY(0) translateX(0); opacity: 0; }
+            10%  { opacity: 0.9; }
+            90%  { opacity: 0.7; }
+            100% { transform: translateY(-120vh) translateX(30px); opacity: 0; }
+        }
+        /* 粒子位置/尺寸/时长（18 个） */
+        .bg-particles span:nth-child(1)  { left: 5%;  top: 85%; width:3px; height:3px; animation-duration: 14s; animation-delay: 0s; }
+        .bg-particles span:nth-child(2)  { left: 12%; top: 60%; width:4px; height:4px; animation-duration: 16s; animation-delay: -2s; }
+        .bg-particles span:nth-child(3)  { left: 20%; top: 30%; width:2px; height:2px; animation-duration: 12s; animation-delay: -5s; }
+        .bg-particles span:nth-child(4)  { left: 28%; top: 80%; width:3px; height:3px; animation-duration: 15s; animation-delay: -1s; }
+        .bg-particles span:nth-child(5)  { left: 35%; top: 15%; width:4px; height:4px; animation-duration: 18s; animation-delay: -7s; }
+        .bg-particles span:nth-child(6)  { left: 42%; top: 70%; width:2px; height:2px; animation-duration: 13s; animation-delay: -3s; }
+        .bg-particles span:nth-child(7)  { left: 50%; top: 45%; width:3px; height:3px; animation-duration: 17s; animation-delay: -6s; }
+        .bg-particles span:nth-child(8)  { left: 58%; top: 90%; width:4px; height:4px; animation-duration: 14s; animation-delay: -4s; }
+        .bg-particles span:nth-child(9)  { left: 65%; top: 25%; width:2px; height:2px; animation-duration: 16s; animation-delay: -8s; }
+        .bg-particles span:nth-child(10) { left: 72%; top: 65%; width:3px; height:3px; animation-duration: 12s; animation-delay: -2s; }
+        .bg-particles span:nth-child(11) { left: 80%; top: 40%; width:4px; height:4px; animation-duration: 15s; animation-delay: -5s; }
+        .bg-particles span:nth-child(12) { left: 88%; top: 85%; width:2px; height:2px; animation-duration: 18s; animation-delay: -9s; }
+        .bg-particles span:nth-child(13) { left: 95%; top: 55%; width:3px; height:3px; animation-duration: 13s; animation-delay: -1s; }
+        .bg-particles span:nth-child(14) { left: 8%;  top: 50%; width:3px; height:3px; animation-duration: 16s; animation-delay: -6s; }
+        .bg-particles span:nth-child(15) { left: 25%; top: 95%; width:4px; height:4px; animation-duration: 14s; animation-delay: -3s; }
+        .bg-particles span:nth-child(16) { left: 48%; top: 5%;  width:2px; height:2px; animation-duration: 17s; animation-delay: -7s; }
+        .bg-particles span:nth-child(17) { left: 68%; top: 80%; width:3px; height:3px; animation-duration: 15s; animation-delay: -4s; }
+        .bg-particles span:nth-child(18) { left: 92%; top: 10%; width:2px; height:2px; animation-duration: 18s; animation-delay: -8s; }
+
         .chat-container {
-            background: #ffffff;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(12px);
             border-radius: 16px;
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3),
+                        0 0 0 1px rgba(0, 200, 255, 0.1);
             width: 100%;
-            max-width: 950px;
+            max-width: 960px;
             height: 90vh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            position: relative; z-index: 1;
         }
 
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0a1a4a 0%, #0e2a60 100%);
             color: white;
-            padding: 20px 24px;
+            padding: 14px 18px;
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
-            justify-content: space-between;
+            gap: 12px 10px;
+            border-bottom: 1px solid rgba(0, 200, 255, 0.2);
+            position: relative;
+        }
+        /* header 装饰线 */
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0,200,255,0.6), transparent);
         }
 
         .header-left {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 12px;
+            flex-shrink: 0;
         }
 
         .header-right {
             display: flex;
-            gap: 10px;
+            flex-wrap: wrap;
+            gap: 8px;
+            flex: 1;
+            min-width: 200px;
         }
 
         .nav-btn {
-            padding: 10px 16px;
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            border-radius: 10px;
-            color: white;
-            font-size: 14px;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            color: #e0ecff;
+            font-size: 12.5px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.25s;
             text-decoration: none;
+            white-space: nowrap;
+            line-height: 1.4;
         }
 
         .nav-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
+            background: rgba(0, 200, 255, 0.2);
+            border-color: rgba(0, 200, 255, 0.5);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 130, 255, 0.3);
         }
 
         .header-icon {
-            width: 48px;
-            height: 48px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, #0080ff, #00c8ff);
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 28px;
+            font-size: 22px;
+            box-shadow: 0 4px 12px rgba(0, 130, 255, 0.4);
         }
 
         .header-text h1 {
-            font-size: 20px;
+            font-size: 17px;
             font-weight: 600;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
+            letter-spacing: 0.5px;
         }
 
         .header-text p {
-            font-size: 14px;
-            opacity: 0.9;
+            font-size: 12px;
+            opacity: 0.65;
         }
 
         .mode-selector {
             display: flex;
             gap: 8px;
             padding: 12px 24px;
-            background: #f7f8fc;
-            border-bottom: 1px solid #e8e8f0;
+            background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.4));
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(91,141,255,0.15);
         }
 
         .mode-btn {
             padding: 8px 20px;
-            border: 2px solid #e0e0e8;
-            background: white;
+            border: 2px solid rgba(102,126,234,0.25);
+            background: rgba(255,255,255,0.7);
             border-radius: 20px;
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s;
-            color: #666;
+            color: #4a5a8a;
         }
 
         .mode-btn:hover {
             border-color: #667eea;
             color: #667eea;
+            background: rgba(255,255,255,0.9);
         }
 
         .mode-btn.active {
@@ -128,7 +192,27 @@
             flex: 1;
             overflow-y: auto;
             padding: 24px;
-            background: #f7f8fc;
+            background: linear-gradient(180deg, #f0f4ff 0%, #e8edff 50%, #f0f4ff 100%);
+            position: relative;
+        }
+        /* 聊天区背景装饰：淡淡的网格 + 光圈 */
+        .messages-area::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(91,141,255,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(91,141,255,0.05) 1px, transparent 1px);
+            background-size: 32px 32px;
+            pointer-events: none;
+        }
+        .messages-area::after {
+            content: '';
+            position: absolute;
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(91,141,255,0.12), transparent 70%);
+            bottom: -100px; right: -80px;
+            pointer-events: none;
         }
 
         .message {
@@ -170,8 +254,14 @@
         }
 
         .message.assistant .avatar {
-            background: #e9eff6;
-            color: #667eea;
+            background: transparent;
+            padding: 0;
+            box-shadow: none;
+        }
+        .message.assistant .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
 
         .message-content {
@@ -189,10 +279,11 @@
         }
 
         .message.assistant .message-content {
-            background: white;
-            color: #1a1a1a;
+            background: linear-gradient(135deg, rgba(240,244,255,0.95) 0%, rgba(232,237,255,0.95) 100%);
+            color: #1a1a2e;
             border-top-left-radius: 4px;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(102,126,234,0.12);
+            box-shadow: 0 2px 8px rgba(91,141,255,0.08);
         }
 
         .message-content pre {
@@ -249,8 +340,9 @@
 
         .input-area {
             padding: 16px 24px;
-            background: white;
-            border-top: 1px solid #e8e8f0;
+            background: linear-gradient(180deg, rgba(255,255,255,0.7), rgba(240,244,255,0.85));
+            backdrop-filter: blur(8px);
+            border-top: 1px solid rgba(91,141,255,0.15);
             display: flex;
             gap: 12px;
             align-items: flex-end;
@@ -281,8 +373,8 @@
 
         .upload-btn {
             padding: 12px;
-            background: #f0f2f5;
-            border: none;
+            background: rgba(255,255,255,0.7);
+            border: 1px solid rgba(102,126,234,0.15);
             border-radius: 10px;
             cursor: pointer;
             font-size: 20px;
@@ -290,15 +382,21 @@
         }
 
         .upload-btn:hover {
-            background: #e6e8ec;
+            background: rgba(255,255,255,0.95);
         }
 
         .input-box {
             flex: 1;
             display: flex;
             flex-direction: column;
-            background: #f0f2f5;
+            background: rgba(255,255,255,0.75);
+            border: 1px solid rgba(102,126,234,0.15);
             border-radius: 12px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .input-box:focus-within {
+            border-color: rgba(102,126,234,0.5);
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
         }
 
         .input-box textarea {
@@ -527,12 +625,21 @@
             background: #f5f5f5;
         }
     </style>
+    <!-- 全局按钮美化 -->
+    <link rel="stylesheet" href="/static/global_buttons.css">
 </head>
-<body>
-    <div class="chat-container">
+<body class="chat-body">
+    <!-- 动态粒子背景 -->
+    <div class="bg-particles">
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
+
+    <div class="chat-container" style="margin: 0 auto;">
         <div class="header">
             <div class="header-left">
-                <div class="header-icon">🤖</div>
+                <div class="header-icon"><img src="/static/brand_logo.svg" alt="logo" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"></div>
                 <div class="header-text">
                     <h1>灵智尚人</h1>
                     <p>智能对话，随时为您服务</p>
@@ -558,7 +665,7 @@
 
         <div class="messages-area" id="messagesArea">
             <div class="message assistant">
-                <div class="avatar">🤖</div>
+                <div class="avatar"><img src="/static/ai_avatar.svg" alt="AI"></div>
                 <div class="message-content">
                     你好！我是灵智尚人，很高兴为您服务！您可以选择快速回答或深度思考模式来问我问题。
                 </div>
@@ -723,6 +830,7 @@
             if (currentUser.role === 'student') {
                 navHTML = `
                     <a href="/scenario-page" class="nav-btn">🎬 剧情演绎</a>
+                    <a href="/scenario-demo" class="nav-btn" style="background: linear-gradient(135deg, #0080ff, #00c8ff);">🎞️ 沉浸式剧情</a>
                     <a href="/exercise-page" class="nav-btn" style="background: rgba(67, 233, 123, 0.8);">✏️ 互动练习</a>
                     <a href="/student-portrait-page" class="nav-btn" style="background: rgba(102, 126, 234, 0.8);">🎯 我的能力</a>
                     <a href="/weekly-tasks-page" class="nav-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">📋 每周任务</a>
@@ -739,6 +847,7 @@
                 // 老师端导航
                 navHTML = `
                     <a href="/scenario-page" class="nav-btn">🎬 剧情演绎</a>
+                    <a href="/scenario-demo" class="nav-btn" style="background: linear-gradient(135deg, #0080ff, #00c8ff);">🎞️ 沉浸式剧情</a>
                     <a href="/exercise-page" class="nav-btn" style="background: rgba(67, 233, 123, 0.8);">✏️ 互动练习</a>
                     <a href="/search-logs-page" class="nav-btn">📚 搜索日志</a>
                     <a href="/student-report-page" class="nav-btn">📊 学生分析</a>
@@ -952,7 +1061,15 @@
             
             const avatar = document.createElement('div');
             avatar.className = 'avatar';
-            avatar.textContent = isUser ? '👤' : '🤖';
+            if (isUser) {
+                avatar.textContent = '👤';
+                avatar.style.fontSize = '20px';
+            } else {
+                const img = document.createElement('img');
+                img.src = '/static/ai_avatar.svg';
+                img.alt = 'AI';
+                avatar.appendChild(img);
+            }
             
             const contentDiv = document.createElement('div');
             contentDiv.className = 'message-content';
@@ -1026,7 +1143,10 @@
             
             const avatar = document.createElement('div');
             avatar.className = 'avatar';
-            avatar.textContent = '🤖';
+            const img = document.createElement('img');
+            img.src = '/static/ai_avatar.svg';
+            img.alt = 'AI';
+            avatar.appendChild(img);
             
             const contentDiv = document.createElement('div');
             contentDiv.className = 'message-content typing-indicator';
@@ -1934,5 +2054,9 @@
             <button class="modal-btn cancel" onclick="closeUploadModal()" style="width: 100%;">取消</button>
         </div>
     </div>
+
+    <!-- 全局桌宠 Desktop Pet -->
+    <link rel="stylesheet" href="/static/desktop_pet.css">
+    <script src="/static/desktop_pet.js" defer></script>
 </body>
 </html>

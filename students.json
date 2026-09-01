@@ -119,7 +119,7 @@
   {
     "id": "8",
     "student_no": "2024001001001",
-    "name": "测试学生",
+    "name": "张三",
     "class_name": "",
     "created_at": "2026-06-14 19:29:34",
     "competence_analysis": {},
@@ -134,7 +134,8 @@
         "is_question": true,
         "timestamp": "2026-06-14 19:30:29"
       }
-    ]
+    ],
+    "last_login": "2026-09-01 17:16:40"
   },
   {
     "id": "9",
@@ -706,7 +707,7 @@
     "name": "test",
     "class_name": "",
     "created_at": "2026-08-07 09:53:54",
-    "last_login": "2026-08-07 09:53:54",
+    "last_login": "2026-09-01 17:34:25",
     "competence_analysis": {
       "signal_system": {
         "count": 0,
@@ -915,6 +916,162 @@
         "completed_tasks": 0,
         "stage": "basic",
         "analysis_summary": "",
+        "weak_areas": []
+      },
+      "week_4": {
+        "week_num": 4,
+        "generated_at": "2026-09-01 17:35:27",
+        "target_job": "通信工程师",
+        "tasks": [
+          {
+            "id": "task_4_basic_0",
+            "title": "认识信号与系统",
+            "detail": "了解什么是信号、系统的基本概念，阅读教材前3章",
+            "estimated_time": "45分钟",
+            "area": "信号与系统",
+            "area_id": "signal_system",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_4_basic_1",
+            "title": "通信原理入门",
+            "detail": "了解通信系统的基本组成：信源、信道、信宿",
+            "estimated_time": "40分钟",
+            "area": "通信原理",
+            "area_id": "communication_principle",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_4_basic_2",
+            "title": "数字信号处理基础",
+            "detail": "了解采样定理的基本内容，尝试手动计算一个采样例子",
+            "estimated_time": "45分钟",
+            "area": "数字信号处理",
+            "area_id": "digital_signal",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_4_basic_3",
+            "title": "网络协议概览",
+            "detail": "了解OSI七层模型和TCP/IP四层模型的对应关系",
+            "estimated_time": "30分钟",
+            "area": "网络协议",
+            "area_id": "network_protocol",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_4_basic_4",
+            "title": "调制技术简介",
+            "detail": "了解ASK、FSK、PSK三种基本调制方式的区别",
+            "estimated_time": "35分钟",
+            "area": "调制技术",
+            "area_id": "modulation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_4_basic_5",
+            "title": "射频工程基础",
+            "detail": "了解射频信号的基本特征：频率、波长、阻抗",
+            "estimated_time": "40分钟",
+            "area": "射频工程",
+            "area_id": "rf_engineering",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_4_basic_6",
+            "title": "天线设计入门",
+            "detail": "了解天线的基本参数：增益、方向图、极化",
+            "estimated_time": "30分钟",
+            "area": "天线设计",
+            "area_id": "antenna_design",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_4_basic_7",
+            "title": "故障排查思维",
+            "detail": "学习分层故障排查法：从物理层到应用层逐层排查",
+            "estimated_time": "35分钟",
+            "area": "故障排查",
+            "area_id": "troubleshooting",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_4_basic_8",
+            "title": "常见仪器介绍",
+            "detail": "认识频谱仪、示波器、信号源的基本用途",
+            "estimated_time": "30分钟",
+            "area": "设备操作",
+            "area_id": "equipment_operation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_4_basic_9",
+            "title": "通信安全意识",
+            "detail": "了解通信工程中的基本安全规范：防雷、接地、防静电",
+            "estimated_time": "25分钟",
+            "area": "安全意识",
+            "area_id": "safety_awareness",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_4_basic_10",
+            "title": "创新思维训练",
+            "detail": "思考一个问题：5G相比4G有哪些创新？写出3点",
+            "estimated_time": "30分钟",
+            "area": "创新思维",
+            "area_id": "innovation",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          },
+          {
+            "id": "task_4_basic_11",
+            "title": "团队协作案例",
+            "detail": "了解一个真实的通信工程团队协作案例",
+            "estimated_time": "30分钟",
+            "area": "团队协作",
+            "area_id": "teamwork",
+            "current_score": 0,
+            "required_score": 0,
+            "gap": 0,
+            "completed": false
+          }
+        ],
+        "total_tasks": 12,
+        "completed_tasks": 0,
+        "stage": "basic",
+        "analysis_summary": "您还没有学习记录，建议先完成基础摸底任务",
         "weak_areas": []
       }
     }
@@ -3855,7 +4012,7 @@
     "name": "lh",
     "class_name": "1",
     "created_at": "2026-08-15 09:13:28",
-    "last_login": "2026-08-15 12:32:15",
+    "last_login": "2026-08-15 15:23:19",
     "competence_analysis": {
       "signal_system": {
         "count": 0,
