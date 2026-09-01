@@ -161,6 +161,31 @@
     opacity: 1;
 }
 
+/* ---------- 互动小动画（v2 新增） ---------- */
+@keyframes petBounce {
+    0%, 100% { transform: translateY(0); }
+    30%      { transform: translateY(-14px); }
+    55%      { transform: translateY(0); }
+    75%      { transform: translateY(-6px); }
+}
+@keyframes petSpin {
+    from { transform: rotate(0deg) scale(1.1); }
+    to   { transform: rotate(360deg) scale(1.1); }
+}
+@keyframes petWiggle {
+    0%, 100% { transform: rotate(0deg); }
+    25%      { transform: rotate(-12deg); }
+    75%      { transform: rotate(12deg); }
+}
+.global-desktop-pet.pet-anim-bounce .pet-body-wrap img { animation: petBounce 0.65s ease !important; }
+.global-desktop-pet.pet-anim-spin   .pet-body-wrap img { animation: petSpin 0.8s ease-in-out !important; }
+.global-desktop-pet.pet-anim-wiggle .pet-body-wrap img { animation: petWiggle 0.55s ease-in-out !important; }
+
+/* 拖拽中禁止小动画干扰 */
+.global-desktop-pet.dragging .pet-body-wrap img {
+    animation: none !important;
+}
+
 @media (max-width: 768px) {
     .global-desktop-pet {
         width: 52px;
