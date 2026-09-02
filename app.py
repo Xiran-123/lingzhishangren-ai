@@ -6,9 +6,16 @@ import json
 import os
 import secrets
 import uuid
+import sys
 from datetime import datetime, timedelta
 from typing import Dict, List
 from werkzeug.utils import secure_filename
+
+# Windows 控制台 GBK 编码打印 emoji 会崩（UnicodeEncodeError），统一改为 UTF-8 并替换不可编码字符
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+if hasattr(sys.stderr, 'reconfigure'):
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
 
 try:
     from docx import Document as DocxDocument
@@ -2840,6 +2847,20 @@ def update_class_student_counts():
     save_classes(classes)
 
 
+SYSTEM_PROMPT_PET = """你是"灵智小助手"，一只住在"灵智尚人 AI 工程训练平台"页面右下角的桌面宠物，是平台主 AI 助手的 Q 版分身。
+
+性格设定：机灵、话痨、爱开玩笑、偶尔傲娇，像一只精力旺盛的电子小仓鼠。
+
+说话规则（必须遵守）：
+1. 像微信聊天一样口语化，短句为主，最多两三句话，绝不写长篇大论、绝不分点论述
+2. 每条回复都要带点幽默感：可以玩梗、抖机灵、自嘲、用可爱语气词（嘿嘿、哼、哎呀、哒）
+3. 每条回复最多 1-2 个表情，不要堆砌
+4. 用户问正经问题（比如知识点）也用轻松的方式答：先给答案，再补一句俏皮话或神比喻
+5. 不确定的事就撒娇打岔，不要瞎编
+6. 不要自称"AI助手"，自称"本宠"或"小灵我"
+7. 直接给答案，不要复述问题，不要说"从某某角度来说"这种学术腔
+"""
+
 @app.route('/chat', methods=['POST'])
 def chat_endpoint():
     # 检查是否已验证
@@ -2857,6 +2878,7 @@ def chat_endpoint():
         is_scenario = data.get('is_scenario', False)
         scenario_info = data.get('scenario_info', None)
         conversation_history = data.get('conversation_history', [])
+        persona = data.get('persona', '')  # 'pet' = 桌宠幽默模式
         
         # 获取当前学生信息（用于更新档案）
         current_role = session.get('role', 'student')
@@ -2866,9 +2888,15 @@ def chat_endpoint():
         # 检查是否需要搜索记录（这里简化处理，实际可以通过关键词匹配判断）
         query_lower = user_message.lower()
         needs_search = True  # 改为记录所有对话，方便用户后续审核
+        if persona == 'pet':
+            needs_search = False  # 桌宠闲聊不记入学习日志
         
         # 选择提示词
-        if is_scenario:
+        if persona == 'pet':
+            system_prompt = SYSTEM_PROMPT_PET
+            temperature = 0.9
+            max_tokens = 200
+        elif is_scenario:
             if scenario_info:
                 system_prompt = create_scenario_prompt(scenario_info)
             else:
@@ -2915,8 +2943,8 @@ def chat_endpoint():
         # 添加当前用户消息
         messages.append({"role": "user", "content": user_content})
         
-        # 如果是学生，更新学生档案
-        if current_role == 'student' and current_student_no:
+        # 如果是学生，更新学生档案（桌宠闲聊不计入）
+        if current_role == 'student' and current_student_no and persona != 'pet':
             update_student_profile(current_student_no, user_message, True)
         
         if stream:

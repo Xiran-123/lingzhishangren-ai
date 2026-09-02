@@ -139,6 +139,7 @@
             <div class="pet-bubble" id="petBubble">系统在线 ✨</div>
             <div class="pet-menu" id="petMenu">
                 <div class="pet-menu-title">🤖 灵智尚人 桌宠</div>
+                <div class="pet-menu-item" data-act="chat">💬 聊天互动</div>
                 <div class="pet-menu-item" data-act="greet">👋 打个招呼</div>
                 <div class="pet-menu-item" data-act="cheer">🔥 加油打气</div>
                 <div class="pet-menu-item" data-act="tip">💡 今日提示</div>
@@ -203,9 +204,33 @@
                 try { el.releasePointerCapture(e.pointerId); } catch(err) {}
             }
             if (state.moved) {
-                savePos(el);
-                if (Math.random() < 0.4) say(el, pick(PET_LAND), 1600);
+                // v3: 先尝试侧边磁吸，吸不上才按原位保存
+                if (!trySnap(el)) savePos(el);
+                if (Math.random() < 0.3) say(el, pick(PET_LAND), 1600);
             }
+        }
+
+        /* ---------- v3: 侧边磁吸 ---------- */
+        const SNAP_DIST = 36; // 距边缘 36px 内自动吸附
+        function trySnap(el) {
+            const rect = el.getBoundingClientRect();
+            const cands = [
+                { d: rect.left,                            x: 0,                               y: rect.top },
+                { d: window.innerWidth  - rect.right,      x: window.innerWidth - rect.width,  y: rect.top },
+                { d: rect.top,                             x: rect.left,                       y: 0 },
+                { d: window.innerHeight - rect.bottom,     x: rect.left,                       y: window.innerHeight - rect.height }
+            ].sort((a, b) => a.d - b.d);
+            const near = cands[0];
+            if (near.d > SNAP_DIST) return false;
+            // 弹性吸附动画
+            el.style.transition = 'left 0.28s cubic-bezier(0.34,1.56,0.64,1), top 0.28s cubic-bezier(0.34,1.56,0.64,1)';
+            el.style.left = near.x + 'px';
+            el.style.top  = near.y + 'px';
+            setTimeout(() => { el.style.transition = ''; savePos(el); }, 320);
+            // 贴边挤压小动画
+            playAnim(el, 'pet-anim-wiggle', 500);
+            if (Math.random() < 0.8) say(el, '吸住啦 🧲', 1300);
+            return true;
         }
 
         function onDown(e) {
@@ -339,6 +364,7 @@
 
     function doAction(el, act) {
         switch(act) {
+            case 'chat': toggleChat(el); break;
             case 'greet':
                 say(el, pick(PET_GREETS));
                 playAnim(el, 'pet-anim-bounce', 700);
@@ -392,6 +418,212 @@
         el.style.bottom = '90px';
         setTimeout(() => el.style.transition = '', 600);
         say(el, '位置已重置 ↺', 1800);
+    }
+
+    /* ========================================================
+       v3: 迷你聊天面板（实时互动 · 娱乐 + 平台使用助手）
+       在线：转发到 Flask /chat 接口（真 AI 对话）
+       离线/未登录：本地应答（娱乐闲聊 + 功能导航跳转）
+       ======================================================== */
+    const PET_NAV = [
+        { kws: ['周任务', '任务'],        name: '📋 周任务',   url: '/weekly-tasks-page' },
+        { kws: ['沉浸式'],                name: '🎬 沉浸式剧情', url: '/scenario-demo' },
+        { kws: ['剧情', '演绎'],          name: '🎭 剧情演绎', url: '/scenario-page' },
+        { kws: ['知识图谱', '图谱'],      name: '🧠 知识图谱', url: '/knowledge-graph-page' },
+        { kws: ['岗位', '招聘', '求职'],  name: '💼 岗位招聘', url: '/job-recruitment-page' },
+        { kws: ['错题'],                  name: '📕 错题本',   url: '/wrong-questions-page' },
+        { kws: ['画像', '能力'],          name: '📊 能力画像', url: '/student-portrait-page' },
+        { kws: ['班级', '通知'],          name: '📢 班级通知', url: '/class-notification-page' },
+        { kws: ['练习', '刷题'],          name: '✏️ 互动练习', url: '/exercise-page' },
+        { kws: ['报告'],                  name: '📄 学生报告', url: '/student-report-page' },
+        { kws: ['问卷', '调查'],          name: '📝 调查问卷', url: '/survey-page' },
+        { kws: ['上传', '知识库'],        name: '📤 知识上传', url: '/upload-knowledge-page' },
+        { kws: ['日志', '记录'],          name: '🔍 日志查询', url: '/search-logs-page' }
+    ];
+    const PET_SMALLTALK = [
+        '嘿嘿，我在听～然后呢？👀',
+        '哈哈，被你发现了，我最爱聊天了 💬',
+        '嗯嗯！继续说，我拿小本本记着呢 📝',
+        '你说话的样子真好看（虽然我看不见）😄',
+        '哔——收到信号！🛰️'
+    ];
+    const PET_FALLBACK = [
+        '嗯…这个问题有点超纲了 🤔 换个说法试试？',
+        '我的小脑瓜转不动了，回主界面问我吧，那里的我更聪明 💪',
+        '嘀嘀——信号不好，稍后再问我一次？📡'
+    ];
+
+    let chatPanel = null;
+    let chatHistory = [];   // [{role, content}] 供 AI 上下文
+    let chatBusy = false;
+    let chatWelcomed = false;
+
+    function toggleChat(el) {
+        if (!chatPanel) chatPanel = buildChatPanel(el);
+        const show = !chatPanel.classList.contains('show');
+        chatPanel.classList.toggle('show', show);
+        if (show) {
+            positionChat(el);
+            const input = chatPanel.querySelector('input');
+            setTimeout(() => input.focus(), 200);
+            if (!chatWelcomed) {
+                chatWelcomed = true;
+                botSay(el, '嗨！我是灵智小助手 🤖<br>可以和我闲聊解闷，也可以问我平台怎么用～<br>试试：<b>打开剧情演绎</b> / <b>帮助</b> / <b>讲个笑话</b>');
+            }
+        }
+    }
+    function buildChatPanel(el) {
+        const p = document.createElement('div');
+        p.className = 'pet-chat-panel';
+        p.innerHTML = `
+            <div class="pet-chat-head">
+                <span class="pet-chat-dot"></span>
+                <span class="pet-chat-title">灵智小助手 · 在线</span>
+                <span class="pet-chat-clear" title="清空对话">🗑️</span>
+                <span class="pet-chat-close" title="收起">✕</span>
+            </div>
+            <div class="pet-chat-list"></div>
+            <div class="pet-chat-input-row">
+                <input type="text" maxlength="200" placeholder="说点什么吧…（Enter 发送）">
+                <button class="pet-chat-send">➤</button>
+            </div>
+        `;
+        document.body.appendChild(p);
+
+        p.querySelector('.pet-chat-close').addEventListener('click', () => p.classList.remove('show'));
+        p.querySelector('.pet-chat-clear').addEventListener('click', () => {
+            p.querySelector('.pet-chat-list').innerHTML = '';
+            chatHistory = [];
+            botSay(el, '对话已清空～我们重新开始吧 ✨');
+        });
+        const input = p.querySelector('input');
+        const send = () => sendChat(el);
+        p.querySelector('.pet-chat-send').addEventListener('click', send);
+        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') send(); });
+        return p;
+    }
+    function positionChat(el) {
+        const rect = el.getBoundingClientRect();
+        const W = 264, H = 360, M = 8;
+        let left = rect.left - W + 60;
+        let top  = rect.top - H - 10;
+        if (left < M) left = M;
+        if (left + W > window.innerWidth - M) left = window.innerWidth - W - M;
+        if (top < M) top = Math.min(M, window.innerHeight - H - M);
+        if (top + H > window.innerHeight - M) top = window.innerHeight - H - M;
+        chatPanel.style.left = left + 'px';
+        chatPanel.style.top  = top + 'px';
+    }
+    function escapeHtml(s) {
+        return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function pushMsg(el, role, html) {
+        const list = chatPanel.querySelector('.pet-chat-list');
+        const div = document.createElement('div');
+        div.className = 'pet-chat-msg ' + role;
+        div.innerHTML = html;
+        list.appendChild(div);
+        while (list.children.length > 30) list.removeChild(list.firstChild);
+        list.scrollTop = list.scrollHeight;
+    }
+    function botSay(el, html) { pushMsg(el, 'bot', html); }
+    function showTyping(el) {
+        botSay(el, '<span class="pet-typing"><i></i><i></i><i></i></span>');
+        chatPanel.querySelector('.pet-chat-list').lastChild.classList.add('typing-msg');
+    }
+    function removeTyping() {
+        const t = chatPanel.querySelector('.typing-msg');
+        if (t) t.remove();
+    }
+
+    /* 本地指令匹配（导航 / 帮助 / 娱乐），命中返回 HTML，否则 null */
+    function matchLocal(text) {
+        const t = text.trim().toLowerCase();
+        // 1. 页面导航：消息很短且像"打开XX / 去XX / XX怎么去"
+        if (t.length <= 12) {
+            const clean = t.replace(/^(打开|去|进入|跳转|带我(去|到)?)/, '').replace(/(页面|呗|吧|呀|啊)$/, '').trim();
+            for (const nav of PET_NAV) {
+                if (nav.kws.some(kw => clean.includes(kw))) {
+                    return `好的，带你前往 ${nav.name} 🚀<br><a class="pet-nav-link" href="${nav.url}">点击进入 →</a><br><small>（也可以直接点上面的链接）</small>`;
+                }
+            }
+        }
+        // 2. 帮助
+        if (/^(帮助|帮忙|怎么用|使用说明|指南|help)/.test(t)) {
+            let html = '📖 <b>快速上手指南</b><br>';
+            html += '· 和我聊天：直接打字，AI 在线时能实时回答<br>';
+            html += '· 快速跳转：输入"打开周任务"、"去岗位招聘"等<br>';
+            html += '· 侧边吸附：把我拖到屏幕边缘试试 🧲<br>';
+            html += '· 双击我：转圈圈 🌀 · 连点5下：有惊喜 😵‍💫<br>';
+            html += '· 常用入口：<a class="pet-nav-link" href="/scenario-demo">沉浸式剧情</a> · <a class="pet-nav-link" href="/weekly-tasks-page">周任务</a> · <a class="pet-nav-link" href="/job-recruitment-page">岗位招聘</a>';
+            return html;
+        }
+        // 3. 娱乐指令
+        if (/笑话|冷知识|逗/.test(t)) { return escapeHtml(pick(PET_JOKES)); }
+        if (/加油|鼓励|夸|鸡汤|打气/.test(t)) { return '💪 ' + escapeHtml(pick(PET_CHEERS)); }
+        if (/几点|时间|日期/.test(t)) {
+            const d = new Date();
+            return `现在是 ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}，${getTimePhrase()}`;
+        }
+        if (/你是谁|你叫什么|介绍/.test(t)) {
+            return '我是<b>灵智小助手</b> 🤖 灵智尚人 AI 工程训练平台的桌宠！主职卖萌与导航，兼职 AI 聊天（主界面里的我更聪明哦）✨';
+        }
+        // 4. 寒暄类短消息 → 本地娱乐回复
+        if (t.length <= 8 && /^(你好|嗨|哈喽|hello|hi|在吗|在么)/.test(t)) {
+            return escapeHtml(pick(PET_GREETS));
+        }
+        return null;
+    }
+
+    async function sendChat(el) {
+        if (chatBusy || !chatPanel) return;
+        const input = chatPanel.querySelector('input');
+        const text = input.value.trim();
+        if (!text) return;
+        input.value = '';
+
+        pushMsg(el, 'user', escapeHtml(text));
+
+        // 本地指令优先（导航/帮助/娱乐，秒回）
+        const local = matchLocal(text);
+        if (local) { botSay(el, local); return; }
+
+        // 走后端真 AI
+        chatBusy = true;
+        showTyping(el);
+        try {
+            const r = await fetch('/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: text,
+                    mode: 'fast',
+                    stream: false,
+                    persona: 'pet',  // 幽默桌宠人设
+                    conversation_history: chatHistory.slice(-6)
+                })
+            });
+            removeTyping();
+            if (r.status === 401) {
+                botSay(el, '登录之后我就能聪明地聊天啦～现在只有娱乐模式 😜<br>' + escapeHtml(pick(PET_SMALLTALK)));
+            } else {
+                const d = await r.json().catch(() => ({}));
+                if (d.response) {
+                    botSay(el, escapeHtml(d.response));
+                    chatHistory.push({ role: 'user', content: text });
+                    chatHistory.push({ role: 'assistant', content: d.response });
+                    if (chatHistory.length > 12) chatHistory = chatHistory.slice(-12);
+                } else {
+                    botSay(el, escapeHtml(pick(PET_FALLBACK)));
+                }
+            }
+        } catch (err) {
+            removeTyping();
+            botSay(el, escapeHtml(pick(PET_SMALLTALK)) + '<br><small>（AI 信号不佳，先陪我玩会儿～）</small>');
+        }
+        chatBusy = false;
+        const inp = chatPanel.querySelector('input');
+        if (chatPanel.classList.contains('show')) inp.focus();
     }
 
     /* ---------- 眨眼 / 自动说话 / 随机小动作 ---------- */
