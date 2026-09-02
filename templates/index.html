@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -624,6 +624,191 @@
         .modal-btn.cancel:hover {
             background: #f5f5f5;
         }
+
+        /* ====================== 会话侧边栏（豆包风格） ====================== */
+        .conv-sidebar {
+            position: fixed;
+            left: 0; top: 0; bottom: 0;
+            width: 270px;
+            background: rgba(10, 26, 74, 0.96);
+            backdrop-filter: blur(16px);
+            border-right: 1px solid rgba(0, 200, 255, 0.25);
+            box-shadow: 8px 0 40px rgba(0, 0, 0, 0.35);
+            display: flex;
+            flex-direction: column;
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 900;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+        .conv-sidebar.open { transform: translateX(0); }
+
+        .conv-side-head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 14px 12px;
+            border-bottom: 1px solid rgba(0, 200, 255, 0.15);
+        }
+        .conv-side-logo {
+            width: 34px; height: 34px;
+            border-radius: 10px;
+            background: rgba(0, 200, 255, 0.12);
+            border: 1px solid rgba(0, 200, 255, 0.3);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .conv-side-title {
+            flex: 1;
+            color: #d8e8ff;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .conv-collapse-btn {
+            background: none; border: none;
+            color: rgba(200, 216, 255, 0.55);
+            font-size: 16px;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .conv-collapse-btn:hover { color: #fff; background: rgba(0, 200, 255, 0.12); }
+
+        .conv-new-btn {
+            margin: 12px 12px 4px;
+            padding: 11px;
+            border: 1px solid rgba(0, 200, 255, 0.35);
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.35), rgba(118, 75, 162, 0.35));
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .conv-new-btn:hover {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            box-shadow: 0 4px 18px rgba(102, 126, 234, 0.45);
+            transform: translateY(-1px);
+        }
+        .conv-new-btn:active { transform: scale(0.98); }
+
+        .conv-section-label {
+            padding: 14px 18px 6px;
+            color: rgba(200, 216, 255, 0.45);
+            font-size: 12px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .conv-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 10px 14px;
+        }
+        .conv-list::-webkit-scrollbar { width: 5px; }
+        .conv-list::-webkit-scrollbar-thumb { background: rgba(0, 200, 255, 0.25); border-radius: 3px; }
+
+        .conv-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 10px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.18s;
+            position: relative;
+            margin-bottom: 2px;
+        }
+        .conv-item:hover { background: rgba(0, 200, 255, 0.08); }
+        .conv-item.active {
+            background: linear-gradient(90deg, rgba(102, 126, 234, 0.28), rgba(118, 75, 162, 0.15));
+            box-shadow: inset 3px 0 0 #667eea;
+        }
+        .conv-item-icon {
+            width: 32px; height: 32px;
+            border-radius: 9px;
+            background: rgba(0, 200, 255, 0.1);
+            border: 1px solid rgba(0, 200, 255, 0.2);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .conv-item-body { flex: 1; min-width: 0; }
+        .conv-item-title {
+            color: #d8e8ff;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .conv-item-meta {
+            color: rgba(200, 216, 255, 0.4);
+            font-size: 11px;
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .conv-item-actions {
+            display: none;
+            gap: 2px;
+            flex-shrink: 0;
+        }
+        .conv-item:hover .conv-item-actions { display: flex; }
+        .conv-item-actions button {
+            background: none; border: none;
+            font-size: 13px;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+            opacity: 0.65;
+            transition: all 0.15s;
+        }
+        .conv-item-actions button:hover { opacity: 1; background: rgba(0, 200, 255, 0.15); }
+
+        .conv-empty {
+            text-align: center;
+            color: rgba(200, 216, 255, 0.35);
+            font-size: 12px;
+            padding: 30px 10px;
+            line-height: 1.8;
+        }
+
+        /* 收起后的悬浮展开按钮 */
+        .conv-fab {
+            position: fixed;
+            left: 14px; top: 50%;
+            transform: translateY(-50%) translateX(-60px);
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: 1px solid rgba(0, 200, 255, 0.4);
+            color: #fff;
+            font-size: 18px;
+            cursor: pointer;
+            z-index: 890;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.5);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .conv-fab.show { transform: translateY(-50%) translateX(0); }
+        .conv-fab:hover { box-shadow: 0 6px 28px rgba(102, 126, 234, 0.7); }
+
+        /* 侧边栏展开时主容器右移 */
+        body.sidebar-open .chat-container { margin-left: 300px !important; margin-right: 30px; }
+        /* 中等屏幕：侧边栏改为覆盖模式，不挤容器 */
+        @media (max-width: 1180px) {
+            body.sidebar-open .chat-container { margin-left: auto !important; margin-right: auto; }
+        }
+        @media (max-width: 768px) {
+            .conv-sidebar { width: 82vw; }
+            .conv-fab { left: 8px; top: 76px; transform: translateY(0) translateX(-60px); width: 38px; height: 38px; }
+            .conv-fab.show { transform: translateY(0) translateX(0); }
+        }
     </style>
     <!-- 全局按钮美化 -->
     <link rel="stylesheet" href="/static/global_buttons.css">
@@ -635,6 +820,21 @@
         <span></span><span></span><span></span><span></span><span></span><span></span>
         <span></span><span></span><span></span><span></span><span></span><span></span>
     </div>
+
+    <!-- 会话侧边栏（豆包风格） -->
+    <div class="conv-sidebar" id="convSidebar">
+        <div class="conv-side-head">
+            <div class="conv-side-logo"><img src="/static/brand_logo.svg" alt="" style="width:24px;height:24px;"></div>
+            <div class="conv-side-title">对话历史</div>
+            <button class="conv-collapse-btn" onclick="toggleSidebar()" title="收起侧边栏">✕</button>
+        </div>
+        <button class="conv-new-btn" onclick="newConversation()">＋ 开启新对话</button>
+        <div class="conv-section-label"><span>最近</span><span id="convCount"></span></div>
+        <div class="conv-list" id="convList">
+            <div class="conv-empty">暂无历史对话<br>发一条消息开始吧 ✨</div>
+        </div>
+    </div>
+    <button class="conv-fab" id="convFab" onclick="toggleSidebar()" title="对话历史">💬</button>
 
     <div class="chat-container" style="margin: 0 auto;">
         <div class="header">
@@ -974,14 +1174,239 @@
             });
         }
         
-        // 清除聊天记录
-        function clearChatHistory() {
-            if (confirm('确定要清除所有聊天记录吗？')) {
+        // 清除聊天记录（删除当前会话）
+        async function clearChatHistory() {
+            if (!confirm('确定要清除当前对话的所有记录吗？')) return;
+            chatHistory = [];
+            conversationHistory = [];
+            if (currentConvId) {
+                try { await fetch('/api/conversations/' + currentConvId, { method: 'DELETE' }); } catch (e) {}
+                currentConvId = null;
+                localStorage.removeItem(CURRENT_CONV_KEY);
+            }
+            localStorage.removeItem(STORAGE_KEY);
+            await newConversation();
+            loadConversations();
+        }
+
+        /* ====================== 会话侧边栏逻辑（豆包风格） ====================== */
+        const CURRENT_CONV_KEY = 'lingzhi_current_conv';
+        const MIGRATED_KEY = 'lingzhi_migrated_v2';
+        let conversations = [];
+        let currentConvId = localStorage.getItem(CURRENT_CONV_KEY) || null;
+
+        function escapeTitle(s) {
+            return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+        function timeAgo(iso) {
+            try {
+                const diff = Date.now() - new Date(iso).getTime();
+                if (diff < 60000) return '刚刚';
+                if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+                if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
+                if (diff < 7 * 86400000) return Math.floor(diff / 86400000) + '天前';
+                return new Date(iso).toLocaleDateString('zh-CN');
+            } catch (e) { return ''; }
+        }
+
+        async function loadConversations() {
+            try {
+                const r = await fetch('/api/conversations');
+                if (!r.ok) return;
+                const d = await r.json();
+                conversations = d.conversations || [];
+                renderConvList();
+            } catch (e) { console.error('加载会话列表失败', e); }
+        }
+
+        function renderConvList() {
+            const list = document.getElementById('convList');
+            document.getElementById('convCount').textContent = conversations.length ? conversations.length + ' 条' : '';
+            if (!conversations.length) {
+                list.innerHTML = '<div class="conv-empty">暂无历史对话<br>发一条消息开始吧 ✨</div>';
+                return;
+            }
+            list.innerHTML = '';
+            conversations.forEach(c => {
+                const item = document.createElement('div');
+                item.className = 'conv-item' + (c.id === currentConvId ? ' active' : '');
+                item.innerHTML = `
+                    <div class="conv-item-icon">💬</div>
+                    <div class="conv-item-body">
+                        <div class="conv-item-title">${escapeTitle(c.title)}</div>
+                        <div class="conv-item-meta">${timeAgo(c.updated_at)} · ${c.message_count}条 · ${escapeTitle(c.preview).slice(0, 24)}</div>
+                    </div>
+                    <div class="conv-item-actions">
+                        <button title="重命名" data-a="rename">✏️</button>
+                        <button title="删除" data-a="del">🗑️</button>
+                    </div>`;
+                item.addEventListener('click', (e) => {
+                    const btn = e.target.closest('button[data-a]');
+                    if (btn) {
+                        e.stopPropagation();
+                        if (btn.dataset.a === 'del') deleteConversation(c.id);
+                        else renameConversation(c.id);
+                        return;
+                    }
+                    openConversation(c.id);
+                });
+                list.appendChild(item);
+            });
+        }
+
+        function resetChatUI() {
+            chatHistory = [];
+            conversationHistory = [];
+            messagesArea.innerHTML = `
+                <div class="message assistant">
+                    <div class="avatar"><img src="/static/ai_avatar.svg" alt="AI"></div>
+                    <div class="message-content">
+                        你好！我是灵智尚人，很高兴为您服务！您可以选择快速回答或深度思考模式来问我问题。
+                    </div>
+                </div>`;
+        }
+
+        async function newConversation() {
+            if (isGenerating) { alert('AI 正在回复中，请稍候…'); return; }
+            currentConvId = null;
+            localStorage.removeItem(CURRENT_CONV_KEY);
+            resetChatUI();
+            renderConvList();
+            if (window.innerWidth <= 1280) toggleSidebarForce(false);
+            userInput.focus();
+        }
+
+        async function openConversation(id) {
+            if (isGenerating) { alert('AI 正在回复中，请稍候再切换会话'); return; }
+            try {
+                const r = await fetch('/api/conversations/' + id);
+                if (!r.ok) { loadConversations(); return; }
+                const d = await r.json();
+                currentConvId = id;
+                localStorage.setItem(CURRENT_CONV_KEY, id);
+                messagesArea.innerHTML = '';
                 chatHistory = [];
                 conversationHistory = [];
-                saveChatHistory();
-                location.reload();
+                (d.messages || []).forEach(m => {
+                    addMessage(m.content, m.isUser, m.image, false);
+                    chatHistory.push({ content: m.content, isUser: m.isUser, image: m.image, timestamp: m.timestamp });
+                    conversationHistory.push({ role: m.isUser ? 'user' : 'assistant', content: m.content });
+                });
+                renderConvList();
+                scrollToBottom();
+                if (window.innerWidth < 1180) toggleSidebarForce(false);
+            } catch (e) { console.error('打开会话失败', e); }
+        }
+
+        async function deleteConversation(id) {
+            if (!confirm('删除这个对话？')) return;
+            try { await fetch('/api/conversations/' + id, { method: 'DELETE' }); } catch (e) {}
+            if (id === currentConvId) {
+                currentConvId = null;
+                localStorage.removeItem(CURRENT_CONV_KEY);
+                resetChatUI();
             }
+            loadConversations();
+        }
+
+        async function renameConversation(id) {
+            const c = conversations.find(x => x.id === id);
+            const t = prompt('重命名对话：', c ? c.title : '');
+            if (!t || !t.trim()) return;
+            try {
+                await fetch('/api/conversations/' + id, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: t.trim() })
+                });
+            } catch (e) {}
+            loadConversations();
+        }
+
+        // 发送首条消息时才真正创建会话（标题取消息前20字）
+        async function ensureConversation(firstMsg) {
+            if (currentConvId) return;
+            try {
+                const r = await fetch('/api/conversations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: (firstMsg || '新的对话').slice(0, 20) })
+                });
+                const d = await r.json();
+                currentConvId = d.id;
+                localStorage.setItem(CURRENT_CONV_KEY, d.id);
+                loadConversations();
+            } catch (e) { console.error('创建会话失败', e); }
+        }
+
+        // 消息落库（异步，不阻塞聊天）
+        function saveMsgToServer(content, isUser, image) {
+            if (!currentConvId) return;
+            fetch(`/api/conversations/${currentConvId}/messages`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: content, isUser: isUser, image: image })
+            }).then(r => { if (r.ok) loadConversations(); }).catch(() => {});
+        }
+
+        function toggleSidebarForce(open) {
+            const sb = document.getElementById('convSidebar');
+            const fab = document.getElementById('convFab');
+            sb.classList.toggle('open', open);
+            document.body.classList.toggle('sidebar-open', open);
+            fab.classList.toggle('show', !open);
+            localStorage.setItem('lzr_sidebar_open', open ? '1' : '0');
+        }
+        function toggleSidebar() {
+            const sb = document.getElementById('convSidebar');
+            toggleSidebarForce(!sb.classList.contains('open'));
+        }
+
+        // 旧版 localStorage 单会话记录 → 一次性迁移到服务器
+        async function migrateOldHistory() {
+            if (localStorage.getItem(MIGRATED_KEY)) return;
+            let old = null;
+            try { old = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); } catch (e) {}
+            if (Array.isArray(old) && old.length) {
+                try {
+                    const r = await fetch('/api/conversations', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ title: '历史记录' })
+                    });
+                    const d = await r.json();
+                    for (const m of old) {
+                        await fetch(`/api/conversations/${d.id}/messages`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ content: m.content || '', isUser: !!m.isUser, image: m.image || null })
+                        });
+                    }
+                } catch (e) {}
+            }
+            localStorage.setItem(MIGRATED_KEY, '1');
+            localStorage.removeItem(STORAGE_KEY);
+        }
+
+        async function initSidebar() {
+            const prefer = localStorage.getItem('lzr_sidebar_open');
+            const wantOpen = window.innerWidth >= 1180 ? prefer !== '0' : prefer === '1';
+            toggleSidebarForce(wantOpen);
+            await migrateOldHistory();
+            // 恢复上次会话
+            if (currentConvId) {
+                try {
+                    const r = await fetch('/api/conversations/' + currentConvId);
+                    if (r.ok) {
+                        await openConversation(currentConvId);
+                        loadConversations();
+                        return;
+                    }
+                } catch (e) {}
+                currentConvId = null;
+                localStorage.removeItem(CURRENT_CONV_KEY);
+            }
+            loadConversations();
         }
 
         function switchMode(mode) {
@@ -1192,6 +1617,10 @@
             
             // 添加用户消息
             addMessage(message || '请描述这张图片', true, selectedImage);
+
+            // 首条消息时创建会话，并把用户消息落库
+            await ensureConversation(message);
+            saveMsgToServer(message || '请描述这张图片', true, imageToSend);
             
             // 清空输入，但不清空 selectedImage（留到 finally）
             userInput.value = '';
@@ -1293,6 +1722,9 @@
                             content: fullResponse
                         });
                     }
+
+                    // AI 回复落库
+                    saveMsgToServer(fullResponse, false, null);
                 }
                 
             } catch (error) {
@@ -1317,8 +1749,8 @@
             }
         }
 
-        // 页面加载时恢复聊天记录并获取用户信息
-        loadChatHistory();
+        // 页面加载时初始化会话侧边栏并获取用户信息
+        initSidebar();
         loadCurrentUser();
         
         // 从URL参数获取关键词，自动填充到输入框

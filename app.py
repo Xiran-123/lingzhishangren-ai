@@ -7,6 +7,7 @@ import os
 import secrets
 import uuid
 import sys
+import time
 from datetime import datetime, timedelta
 from typing import Dict, List
 from werkzeug.utils import secure_filename
@@ -2990,6 +2991,147 @@ def chat_endpoint():
         return jsonify({'error': '请求超时，请稍后重试'}), 500
     except Exception as e:
         return jsonify({'error': f'请求出错: {str(e)}'}), 500
+
+
+# ====================== 会话历史（侧边栏） ======================
+CONVERSATIONS_FILE = 'conversations.json'
+MAX_CONVS_PER_USER = 50        # 每用户最多保留会话数
+MAX_MSGS_PER_CONV = 200        # 每会话最多消息数
+MAX_CONTENT_LEN = 8000         # 单条消息文本上限
+
+def load_conversations():
+    try:
+        with open(CONVERSATIONS_FILE, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            return data if isinstance(data, dict) else {}
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+def save_conversations(data):
+    with open(CONVERSATIONS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+def get_user_key():
+    role = session.get('role', 'student')
+    no = session.get('student_no', '')
+    name = session.get('student_name', '')
+    return f"{role}:{no or name or 'anon'}"
+
+def get_user_convs(data):
+    return data.setdefault(get_user_key(), {}).setdefault('convs', [])
+
+def conv_summary(c):
+    preview = ''
+    for m in reversed(c['messages']):
+        if m.get('content'):
+            preview = m['content'][:60]
+            break
+    return {
+        'id': c['id'],
+        'title': c['title'],
+        'updated_at': c['updated_at'],
+        'message_count': len(c['messages']),
+        'preview': preview
+    }
+
+def find_conv(convs, cid):
+    for c in convs:
+        if c['id'] == cid:
+            return c
+    return None
+
+@app.route('/api/conversations', methods=['GET'])
+def api_list_conversations():
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    convs = get_user_convs(load_conversations())
+    convs.sort(key=lambda c: c['updated_at'], reverse=True)
+    return jsonify({'conversations': [conv_summary(c) for c in convs]})
+
+@app.route('/api/conversations', methods=['POST'])
+def api_create_conversation():
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    req = request.get_json(silent=True) or {}
+    now = datetime.now().isoformat(timespec='seconds')
+    conv = {
+        'id': uuid.uuid4().hex[:12],
+        'title': (req.get('title') or '新的对话').strip()[:30] or '新的对话',
+        'created_at': now,
+        'updated_at': now,
+        'messages': []
+    }
+    data = load_conversations()
+    convs = get_user_convs(data)
+    convs.insert(0, conv)
+    # 超出上限时删掉最旧的会话
+    if len(convs) > MAX_CONVS_PER_USER:
+        convs.sort(key=lambda c: c['updated_at'], reverse=True)
+        del convs[MAX_CONVS_PER_USER:]
+    save_conversations(data)
+    return jsonify(conv_summary(conv))
+
+@app.route('/api/conversations/<cid>', methods=['GET'])
+def api_get_conversation(cid):
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    conv = find_conv(get_user_convs(load_conversations()), cid)
+    if not conv:
+        return jsonify({'error': '会话不存在'}), 404
+    out = conv_summary(conv)
+    out['messages'] = conv['messages']
+    return jsonify(out)
+
+@app.route('/api/conversations/<cid>', methods=['PATCH'])
+def api_rename_conversation(cid):
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    req = request.get_json(silent=True) or {}
+    title = (req.get('title') or '').strip()[:30]
+    if not title:
+        return jsonify({'error': '标题不能为空'}), 400
+    data = load_conversations()
+    conv = find_conv(get_user_convs(data), cid)
+    if not conv:
+        return jsonify({'error': '会话不存在'}), 404
+    conv['title'] = title
+    save_conversations(data)
+    return jsonify(conv_summary(conv))
+
+@app.route('/api/conversations/<cid>', methods=['DELETE'])
+def api_delete_conversation(cid):
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    data = load_conversations()
+    convs = get_user_convs(data)
+    conv = find_conv(convs, cid)
+    if not conv:
+        return jsonify({'error': '会话不存在'}), 404
+    convs.remove(conv)
+    save_conversations(data)
+    return jsonify({'ok': True})
+
+@app.route('/api/conversations/<cid>/messages', methods=['POST'])
+def api_add_conv_message(cid):
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    req = request.get_json(silent=True) or {}
+    content = str(req.get('content', ''))[:MAX_CONTENT_LEN]
+    data = load_conversations()
+    conv = find_conv(get_user_convs(data), cid)
+    if not conv:
+        return jsonify({'error': '会话不存在'}), 404
+    conv['messages'].append({
+        'content': content,
+        'isUser': bool(req.get('isUser')),
+        'image': req.get('image'),       # data URL 或 null
+        'timestamp': int(time.time() * 1000)
+    })
+    if len(conv['messages']) > MAX_MSGS_PER_CONV:
+        del conv['messages'][:len(conv['messages']) - MAX_MSGS_PER_CONV]
+    conv['updated_at'] = datetime.now().isoformat(timespec='seconds')
+    save_conversations(data)
+    return jsonify({'ok': True, 'summary': conv_summary(conv)})
 
 
 def stream_generator(headers, messages, temperature, max_tokens, search_query=None):
