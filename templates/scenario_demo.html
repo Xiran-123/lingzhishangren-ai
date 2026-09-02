@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -450,6 +450,268 @@
             cursor: pointer;
             margin: 6px;
         }
+        /* ================= 交互实训组件 ================= */
+        .dialog-panel.wide { width: min(940px, 92vw); }
+
+        .dialog-content {
+            max-height: 60vh;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .dialog-content::-webkit-scrollbar { width: 5px; }
+        .dialog-content::-webkit-scrollbar-thumb { background: rgba(0, 190, 255, 0.35); border-radius: 3px; }
+
+        .score-badge {
+            background: rgba(0, 190, 255, 0.08);
+            border: 1px solid rgba(0, 200, 255, 0.35);
+            border-radius: 12px;
+            padding: 14px 30px;
+            margin: 6px auto 12px;
+            display: inline-block;
+        }
+        .score-num { font-size: 34px; font-weight: 800; color: #4dd8ff; font-family: Consolas, monospace; }
+        .score-num span { font-size: 16px; color: rgba(190, 220, 255, 0.6); }
+        .score-stars { font-size: 20px; margin: 4px 0; }
+        .score-cmt { color: #ffd66b; font-size: 14px; margin-top: 2px; }
+
+        .opt-intro {
+            color: rgba(190, 220, 255, 0.85);
+            font-size: 14px;
+            line-height: 1.7;
+            margin-bottom: 12px;
+        }
+        .opt-intro b { color: #4dd8ff; }
+        .opt-step-label {
+            border-left: 3px solid #4dd8ff;
+            padding-left: 8px;
+            color: #4dd8ff;
+            font-size: 15px;
+            font-weight: 700;
+            margin: 6px 0 12px;
+        }
+        .opt-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px 14px;
+        }
+        .opt-card {
+            background: rgba(20, 60, 120, 0.45);
+            border: 1px solid rgba(0, 190, 255, 0.35);
+            border-radius: 8px;
+            padding: 12px 14px;
+            cursor: pointer;
+            transition: all 0.18s;
+            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+        }
+        .opt-card:hover { background: rgba(30, 90, 170, 0.55); border-color: rgba(0, 220, 255, 0.7); transform: translateY(-1px); }
+        .opt-card.selected {
+            background: linear-gradient(135deg, #1e4fd8, #1a3fb8);
+            border-color: #4dd8ff;
+            box-shadow: 0 0 16px rgba(0, 180, 255, 0.45);
+        }
+        .opt-card.multi.selected { background: linear-gradient(135deg, #0e7a4a, #0c6a40); }
+        .opt-name { color: #fff; font-size: 14px; font-weight: 700; }
+        .opt-sub { color: rgba(170, 210, 255, 0.65); font-size: 12px; margin-top: 3px; }
+
+        .feedback-bar {
+            margin-top: 14px;
+            padding: 12px 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 190, 255, 0.3);
+            background: rgba(10, 40, 90, 0.6);
+            color: #cfe6ff;
+            font-size: 13.5px;
+            line-height: 1.75;
+            display: none;
+            animation: fadeInUp 0.4s ease;
+        }
+        .feedback-bar.show { display: block; }
+        .feedback-bar.good { border-color: rgba(40, 220, 130, 0.6); background: rgba(8, 70, 45, 0.65); }
+        .feedback-bar.bad { border-color: rgba(255, 150, 60, 0.55); background: rgba(90, 45, 8, 0.6); }
+
+        /* 选址场景 */
+        .site-wrap { display: flex; gap: 14px; align-items: stretch; }
+        .site-map {
+            flex: 1.4;
+            border: 1px solid rgba(0, 190, 255, 0.35);
+            border-radius: 10px;
+            background: rgba(6, 24, 56, 0.8);
+            overflow: hidden;
+            position: relative;
+        }
+        .site-side { flex: 1; display: flex; flex-direction: column; }
+        .spot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .spot-btn {
+            padding: 11px 0;
+            text-align: center;
+            color: #cfe9ff;
+            font-size: 13px;
+            font-weight: 600;
+            background: rgba(20, 60, 120, 0.5);
+            border: 1px solid rgba(0, 190, 255, 0.4);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.18s;
+        }
+        .spot-btn:hover { border-color: #4dd8ff; box-shadow: 0 0 12px rgba(0, 190, 255, 0.4); }
+        .spot-btn.active { background: linear-gradient(135deg, #1e4fd8, #1a3fb8); color: #fff; }
+        .spot-btn.ok { background: linear-gradient(135deg, #0e9a5a, #0b7a46); }
+        .site-side .feedback-bar { flex: 1; }
+        .map-pin {
+            position: absolute;
+            transform: translate(-50%, -100%);
+            font-size: 26px;
+            filter: drop-shadow(0 0 8px rgba(255, 230, 0, 0.8));
+            animation: pinBounce 0.5s ease;
+            pointer-events: none;
+        }
+        @keyframes pinBounce { 0% { transform: translate(-50%, -180%); } 100% { transform: translate(-50%, -100%); } }
+
+        /* 勘察表 */
+        .survey-tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+        .survey-tab {
+            flex: 1;
+            padding: 9px 0;
+            text-align: center;
+            font-size: 13px;
+            color: rgba(180, 215, 255, 0.7);
+            background: rgba(20, 60, 120, 0.35);
+            border: 1px solid rgba(0, 190, 255, 0.25);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.18s;
+        }
+        .survey-tab.active { color: #fff; background: linear-gradient(135deg, #1e4fd8, #1a3fb8); border-color: #4dd8ff; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; }
+        .form-item label { display: block; color: rgba(170, 210, 255, 0.75); font-size: 12px; margin-bottom: 4px; }
+        .form-row { display: flex; gap: 6px; align-items: center; }
+        .form-item input, .form-item select {
+            flex: 1;
+            width: 100%;
+            background: rgba(8, 30, 70, 0.8);
+            border: 1px solid rgba(0, 190, 255, 0.35);
+            border-radius: 6px;
+            color: #e8f4ff;
+            padding: 8px 10px;
+            font-size: 13px;
+            outline: none;
+            transition: border 0.2s;
+        }
+        .form-item input:focus, .form-item select:focus { border-color: #4dd8ff; box-shadow: 0 0 8px rgba(0, 190, 255, 0.3); }
+        .form-item input.filled-auto { border-color: rgba(40, 220, 130, 0.7); }
+        .measure-btn {
+            white-space: nowrap;
+            padding: 7px 12px;
+            font-size: 12px;
+            color: #4dd8ff;
+            background: rgba(0, 120, 200, 0.2);
+            border: 1px solid rgba(0, 190, 255, 0.5);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.18s;
+        }
+        .measure-btn:hover { background: rgba(0, 150, 255, 0.35); color: #fff; }
+        .measure-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* 测量设备模拟面板 */
+        .device-pop {
+            position: fixed;
+            right: 26px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 190px;
+            background: rgba(6, 22, 50, 0.95);
+            border: 1px solid rgba(0, 200, 255, 0.5);
+            border-radius: 14px;
+            padding: 14px;
+            z-index: 1300;
+            box-shadow: 0 0 30px rgba(0, 180, 255, 0.35);
+            text-align: center;
+            animation: fadeInUp 0.3s ease;
+        }
+        .device-pop .dev-icon { font-size: 44px; }
+        .device-pop .dev-name { color: #9fd4ff; font-size: 12px; margin: 6px 0 10px; }
+        .scan-bar {
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(0, 190, 255, 0.15);
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+        .scan-bar i {
+            display: block;
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, #00c8ff, #667eea);
+            animation: scanFill 1.4s ease forwards;
+        }
+        @keyframes scanFill { to { width: 100%; } }
+        .device-pop .dev-val { color: #5eff9b; font-size: 13px; font-weight: 700; font-family: Consolas, monospace; }
+
+        /* 工程规划参考 */
+        .plan-fab {
+            position: absolute;
+            top: 12px;
+            right: 14px;
+            padding: 6px 14px;
+            font-size: 12px;
+            color: #ffd66b;
+            background: rgba(120, 80, 0, 0.3);
+            border: 1px solid rgba(255, 200, 80, 0.55);
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .plan-fab:hover { background: rgba(160, 110, 0, 0.45); }
+        .plan-modal {
+            position: absolute;
+            inset: 0;
+            background: rgba(2, 10, 28, 0.9);
+            border-radius: 10px;
+            z-index: 1200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeInUp 0.3s ease;
+        }
+        .plan-card {
+            width: min(520px, 90%);
+            max-height: 80%;
+            overflow-y: auto;
+            background: linear-gradient(160deg, rgba(16, 52, 110, 0.95), rgba(10, 30, 70, 0.95));
+            border: 1px solid rgba(0, 200, 255, 0.5);
+            border-radius: 12px;
+            padding: 18px 22px;
+        }
+        .plan-card h4 { color: #4dd8ff; text-align: center; margin-bottom: 12px; letter-spacing: 2px; }
+        .plan-row { display: flex; padding: 6px 0; border-bottom: 1px dashed rgba(0, 190, 255, 0.18); font-size: 13px; }
+        .plan-row .k { width: 45%; color: rgba(170, 210, 255, 0.7); }
+        .plan-row .v { color: #fff; font-weight: 600; }
+        .plan-close { text-align: center; margin-top: 12px; }
+
+        /* 热力图 */
+        .heat-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 11px;
+            color: #d8ecff;
+        }
+        .heat-legend .li { display: flex; align-items: center; gap: 6px; }
+        .heat-legend .sw { width: 16px; height: 10px; border-radius: 2px; display: inline-block; }
+
+        /* 设计结果 */
+        .design-result {
+            margin-top: 12px;
+            padding: 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(40, 220, 130, 0.5);
+            background: rgba(8, 60, 40, 0.55);
+            color: #d6ffe8;
+            font-size: 13.5px;
+            line-height: 1.8;
+            display: none;
+        }
+        .design-result.show { display: block; animation: fadeInUp 0.4s ease; }
     </style>
     <!-- 全局按钮美化 -->
     <link rel="stylesheet" href="/static/global_buttons.css">
@@ -553,7 +815,7 @@
                 <div class="dialog-content" id="dialogContent"></div>
                 <div class="dialog-actions">
                     <button class="btn-next" id="btnNext" onclick="nextStep()">下一步</button>
-                    <button class="btn-skip" onclick="skipDialog()">跳过</button>
+                    <button class="btn-skip" id="btnSkip" onclick="skipDialog()">跳过</button>
                 </div>
             </div>
         </div>
@@ -565,6 +827,7 @@
         <div class="end-screen" id="endScreen">
             <div class="end-card">
                 <h2>🎉 实训完成</h2>
+                <div class="score-badge" id="scoreBox"></div>
                 <p>恭喜你完成了站点勘查设计实训任务！<br>你可以选择重新开始或返回主菜单。</p>
                 <button class="btn-back" onclick="restart()">重新开始</button>
                 <button class="btn-secondary" onclick="goBack()">返回主菜单</button>
@@ -573,47 +836,166 @@
     </div>
 
     <script>
-        // ============ 剧情步骤数据 ============
+        // ============ 实训状态 ============
+        let currentStep = 0;
+        let score = 0;          // 实训得分
+        let scoreMax = 0;       // 满分
+        let quizIdx = 0;        // 摸测子步骤
+        let quizSel = [];       // 当前子步选择
+        let quizDone = false;
+        let mapShown = false;
+        let choiceSel = -1;
+        let siteSel = -1;
+        let siteConfirmed = false;
+        let surveyTab = 0;
+        let surveyMeasured = new Set();
+        let designSel = [-1, -1, -1, -1];
+        let designDone = false;
+
+        // ============ 剧情步骤数据（交互式实训） ============
         const steps = [
             {
+                type: 'text',
                 title: "背景",
                 label: "项目背景",
-                content: `近期，毗邻某市高铁附近知名大学需要进行智慧校园升级项目。该院致力于成为信息化教育的前沿阵地，因此急需引入5G强化校园网络基础设施。为此，中国移动通信集团有限公司某市分公司下达5G强化校园网络第一阶段的勘察设计任务，旨在全面评估校园内各区域的5G信号覆盖需求，包括教学楼、图书馆、宿舍楼及户外活动区等，确保5G网络最终能够高效支撑高清视频教学、远程互动、大数据分析及物联网应用。`,
-                nextText: "开始勘查"
+                content: `近期，毗邻某市高铁附近知名大学需要进行智慧校园升级项目。该院致力于成为信息化教育的前沿阵地，因此急需引入5G强化校园网络基础设施。为此，中国移动通信集团有限公司某市分公司下达<b>5G强化校园网络第一阶段</b>的勘察设计任务，旨在全面评估校园内各区域的5G信号覆盖需求，包括<b>教学楼、图书馆、宿舍楼及户外活动区</b>等，确保5G网络最终能够高效支撑高清视频教学、远程互动、大数据分析及物联网应用。<br><br><span style="color:#4dd8ff">请以勘察设计工程师的身份，完成本次实训的全部环节。</span>`,
+                nextText: "下一步"
             },
             {
-                title: "站点勘查",
-                label: "站点勘查",
-                content: `作为本次勘察设计工程师，你现在需要对候选站点进行实地勘查。请仔细观察虚拟场景中的校园布局，重点关注以下关键区域：教学区的信号遮挡情况、宿舍楼的用户容量需求、以及校园中心广场的覆盖盲区。这些信息将直接影响后续的基站选址和天线参数设计。`,
-                nextText: "继续勘查"
+                type: 'choice',
+                title: "岗位选择",
+                label: "岗位选择",
+                intro: `<b>人物描述：</b>本次勘查任务为智慧校园5G基站建设，需要对校园内的教学楼、图书馆、宿舍楼及户外活动区进行信号覆盖评估和基站选址。<br><b>请根据任务要求，从以下角色中选择适合完成基站选址的人员：</b>`,
+                options: [
+                    { name: "无线网络与规划优化工程师", sub: "负责覆盖评估、站址规划与网络优化", good: true, feedback: "✅ 选择正确！无线网络与规划优化工程师正是本次5G校园勘察设计的核心岗位——负责覆盖评估、候选站址规划与网络优化，本次任务将由此岗位主导完成。" },
+                    { name: "无线通信基站设计工程师", sub: "负责基站设备选型与参数设计", feedback: "❌ 该岗位偏重后期的基站设备选型与参数设计，本次任务的核心是<b>现场勘查与站址规划</b>，建议选择无线网络与规划优化工程师。" },
+                    { name: "通信概算员", sub: "负责工程预算与造价核算", feedback: "❌ 通信概算员负责工程预算与造价核算，属于<b>后续概算阶段</b>的岗位，不适合主导本次选址勘察任务。" },
+                    { name: "通信督导", sub: "负责施工现场督导与质量检查", feedback: "❌ 通信督导负责施工阶段的现场督导与质量检查，是<b>建设实施阶段</b>的岗位，而当前处于规划勘察阶段。" },
+                    { name: "基站通信工程师", sub: "负责基站设备安装与维护", feedback: "❌ 基站通信工程师负责基站设备的安装与维护，属于<b>工程落地阶段</b>，本次勘察选址任务应由规划优化工程师承担。" }
+                ]
             },
             {
-                title: "现场测量",
-                label: "现场测量",
-                content: `勘查完成后，系统自动记录了各候选站点的信号强度数据。当前教学楼A栋的RSRP值为 -95 dBm，信号偏弱；图书馆区域的RSRP值为 -110 dBm，属于覆盖盲区；宿舍区平均RSRP值为 -85 dBm，基本达标但高峰期容量不足。你需要根据这些数据，合理规划基站的覆盖范围和发射功率。`,
-                nextText: "查看方案"
+                type: 'quiz',
+                title: "站点摸测",
+                label: "站点摸测",
+                subSteps: [
+                    {
+                        q: "第一步：选择网络制式",
+                        options: [
+                            { name: "GSM网络", sub: "2G网络" }, { name: "TD-SCDMA网络", sub: "3G网络" },
+                            { name: "WCDMA网络", sub: "3G网络" }, { name: "CDMA网络", sub: "3G网络" },
+                            { name: "广电700M网络", sub: "700M频段" }, { name: "LTE网络", sub: "4G网络" },
+                            { name: "5GNR网络", sub: "5G网络" }
+                        ],
+                        correct: 6
+                    },
+                    {
+                        q: "第二步：选择测试SIM卡",
+                        options: [
+                            { name: "2G全网通SIM卡", sub: "仅支持2G网络" }, { name: "3G全网通SIM卡", sub: "支持2G/3G网络" },
+                            { name: "4G全网通SIM卡", sub: "支持2G/3G/4G网络" }, { name: "5G全网通SIM卡", sub: "支持2G/3G/4G/5G网络" }
+                        ],
+                        correct: 3
+                    },
+                    {
+                        q: "第三步：选择测试手机",
+                        options: [
+                            { name: "2G全网通测试手机", sub: "仅支持2G频段" }, { name: "3G全网通测试手机", sub: "支持2G/3G网络" },
+                            { name: "4G全网通测试手机", sub: "支持2G/3G/4G网络" }, { name: "5G全网通测试手机", sub: "支持2G/3G/4G/5G网络" }
+                        ],
+                        correct: 3
+                    },
+                    {
+                        q: "第四步：选择测试装备",
+                        options: [
+                            { name: "笔记本电脑", sub: "测试数据处理设备" }, { name: "USB接口GPS", sub: "位置定位设备" },
+                            { name: "加密狗", sub: "测试软件授权设备" }, { name: "测试软件", sub: "网络测试工具" }
+                        ],
+                        multi: true, required: 3
+                    }
+                ]
             },
             {
+                type: 'text',
                 title: "基站参数查询",
                 label: "参数查询",
-                content: `通过查询3GPP标准和设备手册，你了解到：5G NR频段 n78（3.5GHz）在城区覆盖半径约 300-500米；使用64T64R Massive MIMO天线可提升频谱效率 3-5 倍；小区最大发射功率为 24 dBm；广播信道功率配比 PBCH = 30 dBm。这些参数将作为本次设计的核心依据。`,
-                nextText: "开始设计"
+                content: `通过查询3GPP标准和设备手册，你了解到：<br><br>· 5G NR频段 <b>n78（3.5GHz）</b>在城区覆盖半径约 <b>300-500米</b>；<br>· 使用 <b>64T64R Massive MIMO</b> 天线可提升频谱效率 3-5 倍；<br>· 小区最大发射功率为 <b>24 dBm</b>；<br>· 广播信道功率配比 PBCH = 30 dBm。<br><br><span style="color:#4dd8ff">这些参数将作为下一步基站选址与设计的核心依据。</span>`,
+                nextText: "开始选址"
             },
             {
-                title: "基站勘查准备",
-                label: "勘查准备",
-                content: `基站选址需要满足以下条件：1) 天线高度需高于周围建筑5米以上；2) 站址地质条件稳定，避开低洼积水区域；3) 符合城市规划和电磁环保要求；4) 机房空间满足设备安装和散热需求。经初步筛选，校园内的中心铁塔和东侧教学楼楼顶均具备建站条件。`,
-                nextText: "进入设计"
+                type: 'siteselect',
+                title: "基站选址",
+                label: "基站选址",
+                intro: `请结合<b>信号热力图</b>与现场环境，在校园中为本批次5G基站选择合适的建设位置。点击位置查看选址分析，找到<b>最合理</b>的站址后点击"选址确认"。`,
+                spots: [
+                    {
+                        name: "位置1", ok: true, x: 46, y: 38,
+                        feedback: `✅ <b>选址分析（位置1 · 中心教学楼楼顶）：</b>视野开阔，天线挂高充足，可高效覆盖教学楼、图书馆与宿舍区；楼顶便于施工与后续维护，市电与传输引入方便。是本次基站建设的<b>理想站址</b>！`
+                    },
+                    {
+                        name: "位置2", ok: false, x: 78, y: 30,
+                        feedback: `❌ <b>选址分析（位置2 · 实验楼群旁）：</b>1. 周边高层实验楼遮挡严重，可能导致校园内信号覆盖分布不均衡。2. 信号覆盖范围可能得不到有效利用，造成通信资源的闲置。3. 该区域建筑密集，天线施工与后期维护难度较大。`
+                    },
+                    {
+                        name: "位置3", ok: false, x: 30, y: 66,
+                        feedback: `❌ <b>选址分析（位置3 · 运动场中央）：</b>1. 占用运动场地，影响师生日常活动。2. 信号覆盖范围可能得不到有效利用，造成通信资源的闲置。3. 该区域所提供的通信服务对用户的实际帮助和价值有限。`
+                    },
+                    {
+                        name: "位置4", ok: false, x: 62, y: 60,
+                        feedback: `❌ <b>选址分析（位置4 · 校园边缘围墙处）：</b>1. 此区域建设基站，可能导致校园内信号覆盖分布不均衡。2. 信号覆盖范围可能得不到有效利用，造成通信资源的闲置。3. 该区域建设基站，所提供的通信服务对用户的实际帮助和价值有限。`
+                    },
+                    {
+                        name: "位置5", ok: false, x: 20, y: 26,
+                        feedback: `❌ <b>选址分析（位置5 · 高压电塔附近）：</b>1. 此区域存在高压电场和磁场，基站建设过程中可能引发触电、电弧放电等安全事故。2. 强电磁场可能干扰基站通信设备，导致信号传输不稳定、通信质量下降。3. 进行设备维护或升级，需协调电力部门，可能面临停电、封路等复杂情况。`
+                    }
+                ],
+                correctIdx: 0
             },
             {
+                type: 'survey',
+                title: "基站勘察表填写",
+                label: "勘察填写",
+                intro: `请根据现场勘查与工程规划资料，填写<b>基站勘察表</b>。带 🔍 的字段可通过<b>专业测量设备</b>现场测量获得（点击"测量"按钮），其余信息可通过右上角"工程规划"参考资料核对。`,
+                tabs: ["基础信息", "基站电源", "传输信息"],
+                plan: [
+                    [["楼层数", "4"], ["站名", "信息工程大学"], ["站址", "石门市经济开发区天给大道88号"], ["民航/民风问题", "否"], ["层高", "4m"], ["频段", "2600MHZ"], ["经纬度海拔", "经度114.41083，北纬38.02465，海拔52m"]],
+                    [["下行总容量请求数", "8.96Gbit/s"], ["单扇区下行容量", "2.24Gbit/s"], ["机房市电引入位置", "市区电力端引入"], ["引入电源电压", "380V"], ["市电引入距离", "38米"]],
+                    [["传输路由方式", "管道"], ["上传传输机房名称", "开发区承受机房"], ["传输引入距离", "2800m"]]
+                ],
+                fields: [
+                    { tab: 0, key: "站名", type: "input", ph: "如：信息工程大学" },
+                    { tab: 0, key: "站址", type: "input", ph: "如：××市××区××大道88号" },
+                    { tab: 0, key: "民航/民风问题", type: "select", opts: ["否", "是"] },
+                    { tab: 0, key: "层数", type: "input", ph: "如：4" },
+                    { tab: 0, key: "层高", type: "input", ph: "点击右侧测量获取", measure: { device: "laser", icon: "🔴", name: "激光测距仪", value: "4m" } },
+                    { tab: 0, key: "频段", type: "select", opts: ["700MHZ", "1800MHZ", "2600MHZ", "3500MHZ"] },
+                    { tab: 0, key: "经纬度海拔", type: "input", ph: "点击右侧测量获取", measure: { device: "gps", icon: "📡", name: "USB接口GPS", value: "经度114.41083，北纬38.02465，海拔52m" } },
+                    { tab: 1, key: "下行总容量请求数", type: "input", ph: "如：8.96Gbit/s" },
+                    { tab: 1, key: "单扇区下行容量", type: "input", ph: "如：2.24Gbit/s" },
+                    { tab: 1, key: "机房市电引入位置", type: "select", opts: ["市区电力端引入", "备用发电机引入", "太阳能电源引入"] },
+                    { tab: 1, key: "引入电源电压", type: "select", opts: ["220V", "380V", "10kV"] },
+                    { tab: 1, key: "市电引入距离", type: "input", ph: "点击右侧测量获取", measure: { device: "tape", icon: "📏", name: "激光测距仪", value: "38米" } },
+                    { tab: 2, key: "传输路由方式", type: "select", opts: ["管道", "架空", "直埋"] },
+                    { tab: 2, key: "上传传输机房名称", type: "input", ph: "如：开发区承受机房" },
+                    { tab: 2, key: "传输引入距离", type: "input", ph: "如：2800m" }
+                ]
+            },
+            {
+                type: 'design',
                 title: "基站设计",
                 label: "基站设计",
-                content: `综合以上勘查和参数分析，最终设计方案如下：在校园中心铁塔部署1个5G宏基站，配置64T64R天线，覆盖教学楼、图书馆和宿舍区；发射功率设为 21 dBm，天线高度 35 米，下倾角 8°；小区边缘覆盖预计可满足 98% 区域的信号需求。方案已提交审核，请确认。`,
-                nextText: "完成设计"
+                intro: `综合勘查数据与参数手册，完成<b>最终设计方案</b>。请结合前面的参数查询知识做出选择：`,
+                groups: [
+                    { q: "天线型号", options: ["4T4R 天线", "32T32R Massive MIMO", "64T64R Massive MIMO"], correct: 2 },
+                    { q: "天线挂高", options: ["25 米", "35 米", "45 米"], correct: 1 },
+                    { q: "发射功率", options: ["17.4 dBm", "21 dBm", "24 dBm"], correct: 1 },
+                    { q: "下倾角", options: ["3°", "8°", "15°"], correct: 1 }
+                ],
+                result: `最终方案：在校园中心教学楼楼顶部署 1 个 5G 宏基站，配置 64T64R Massive MIMO 天线，挂高 35 米；发射功率 21 dBm，下倾角 8°；小区边缘覆盖预计可满足 98% 区域的信号需求，覆盖教学楼、图书馆、宿舍区及户外活动区。方案已提交审核！`
             }
         ];
-
-        let currentStep = 0;
+        // 满分：摸测3分 + 选址2分 + 测量3分 + 设计4分
+        scoreMax = 12;
 
         // ============ 初始化 ============
         function init() {
@@ -701,23 +1083,375 @@
             // 更新对话面板
             const panel = document.getElementById('dialogPanel');
             panel.style.animation = 'none';
-            // 强制重绘
             void panel.offsetWidth;
             panel.style.animation = 'fadeInUp 0.6s ease';
 
             document.getElementById('dialogTitle').textContent = step.title;
-            document.getElementById('dialogContent').textContent = step.content;
             document.getElementById('sceneTitle').textContent = step.label;
-            document.getElementById('btnNext').textContent = step.nextText || '下一步';
+            renderStepContent(step);
+            updateNextBtn(step);
+            document.getElementById('btnSkip').style.display = (step.type === 'text') ? '' : 'none';
+        }
 
-            // 最后一步显示"完成"按钮
-            if (index === steps.length - 1) {
-                document.getElementById('btnNext').textContent = '完成设计';
+        // ============ 内容渲染分发 ============
+        function addScore(n) { score += n; }
+
+        function renderStepContent(step) {
+            const content = document.getElementById('dialogContent');
+            const panel = document.getElementById('dialogPanel');
+            const interactive = ['choice', 'quiz', 'siteselect', 'survey', 'design'].includes(step.type);
+            panel.classList.toggle('wide', interactive);
+            switch (step.type) {
+                case 'text': content.innerHTML = `<div style="line-height:2.05">${step.content}</div>`; break;
+                case 'choice': renderChoice(step, content); break;
+                case 'quiz': renderQuiz(step, content); break;
+                case 'siteselect': renderSite(step, content); break;
+                case 'survey': renderSurvey(step, content); break;
+                case 'design': renderDesign(step, content); break;
             }
         }
 
-        // ============ 下一步 ============
+        function updateNextBtn(step) {
+            const btn = document.getElementById('btnNext');
+            if (step.type === 'quiz') btn.textContent = mapShown ? '下一步' : (quizIdx === step.subSteps.length - 1 ? '查看信号热力图' : '下一步');
+            else if (step.type === 'design') btn.textContent = designDone ? '完成实训' : '提交方案';
+            else btn.textContent = step.nextText || '下一步';
+        }
+
+        function optCardHtml(o, i, multi) {
+            o = (typeof o === 'string') ? { name: o } : o;
+            return `<div class="opt-card ${multi ? 'multi' : ''}" data-idx="${i}">
+                <div class="opt-name">${o.name}</div>
+                ${o.sub ? `<div class="opt-sub">${o.sub}</div>` : ''}
+            </div>`;
+        }
+        function bindSingleSel(container, onPick) {
+            container.querySelectorAll('.opt-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    container.querySelectorAll('.opt-card').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    onPick(parseInt(card.dataset.idx));
+                });
+            });
+        }
+
+        /* ---- 岗位选择 ---- */
+        function renderChoice(step, content) {
+            choiceSel = -1;
+            content.innerHTML = `
+                <div class="opt-intro">${step.intro}</div>
+                <div class="opt-grid" id="choiceGrid">${step.options.map((o, i) => optCardHtml(o, i, false)).join('')}</div>
+                <div class="feedback-bar" id="choiceFb"></div>`;
+            bindSingleSel(content.querySelector('#choiceGrid'), (idx) => {
+                choiceSel = idx;
+                const o = step.options[idx];
+                const fb = document.getElementById('choiceFb');
+                fb.className = 'feedback-bar show ' + (o.good ? 'good' : 'bad');
+                fb.innerHTML = o.feedback;
+            });
+        }
+
+        /* ---- 站点摸测（分步选择） ---- */
+        function renderQuiz(step, content) {
+            if (mapShown) { renderHeatmap(content); return; }
+            const sub = step.subSteps[quizIdx];
+            quizSel = [];
+            content.innerHTML = `
+                <div class="opt-intro">${sub.q}${sub.multi ? '<span style="color:#ffd66b;font-size:12px">（可多选）</span>' : ''}</div>
+                <div class="opt-grid" id="quizGrid">${sub.options.map((o, i) => optCardHtml(o, i, sub.multi)).join('')}</div>
+                <div class="feedback-bar" id="quizFb"></div>`;
+            content.querySelectorAll('#quizGrid .opt-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const idx = parseInt(card.dataset.idx);
+                    if (sub.multi) {
+                        card.classList.toggle('selected');
+                        quizSel = quizSel.includes(idx) ? quizSel.filter(x => x !== idx) : quizSel.concat(idx);
+                    } else {
+                        content.querySelectorAll('.opt-card').forEach(c => c.classList.remove('selected'));
+                        card.classList.add('selected');
+                        quizSel = [idx];
+                    }
+                });
+            });
+        }
+
+        /* ---- 信号热力图 ---- */
+        function renderHeatmap(content) {
+            const legend = `
+                <div class="heat-legend">
+                    <div style="color:#8fc7ff;font-weight:700;margin-bottom:2px">RSRP(dBm):</div>
+                    <div class="li"><span class="sw" style="background:#e03131"></span>[-140,-115]</div>
+                    <div class="li"><span class="sw" style="background:#f59f00"></span>(-115,-105]</div>
+                    <div class="li"><span class="sw" style="background:#ffe066"></span>(-105,-95]</div>
+                    <div class="li"><span class="sw" style="background:#51cf66"></span>(-95,-75]</div>
+                    <div class="li"><span class="sw" style="background:#2f9e44"></span>(-75,+∞)</div>
+                </div>`;
+            const B = (x, y, w, h, label, fs = 11) =>
+                `<g><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="#e9ecef" stroke="#adb5bd"/>
+                 <text x="${x + w / 2}" y="${y + h / 2 + 4}" text-anchor="middle" font-size="${fs}" fill="#495057">${label}</text></g>`;
+            const R = (x1, y1, x2, y2, color) =>
+                `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="7" stroke-linecap="round"/>`;
+            content.innerHTML = `
+                <div class="opt-step-label">第五步：室外信号强度测试结果</div>
+                <div style="display:flex;gap:12px;align-items:stretch">
+                    <svg viewBox="0 0 560 300" style="flex:1;background:#f8f9fa;border-radius:8px;min-height:250px">
+                        ${R(40, 70, 520, 70, '#e03131')}
+                        ${R(150, 20, 150, 280, '#e03131')}
+                        ${R(300, 20, 300, 280, '#f59f00')}
+                        ${R(40, 170, 520, 170, '#ffe066')}
+                        ${R(430, 130, 430, 280, '#51cf66')}
+                        ${B(50, 25, 80, 32, '教学楼1')}
+                        ${B(190, 25, 80, 32, '教学楼2')}
+                        ${B(330, 25, 80, 32, '实验楼', 10)}
+                        ${B(50, 95, 80, 32, '宿舍1', 10)}
+                        ${B(190, 95, 90, 32, '校医院', 10)}
+                        ${B(330, 95, 80, 32, '图书馆', 10)}
+                        ${B(50, 195, 80, 32, '男生宿舍', 10)}
+                        ${B(190, 195, 90, 32, '女生宿舍', 10)}
+                        ${B(330, 195, 80, 32, '食堂', 10)}
+                        ${B(50, 240, 80, 32, '操场1', 10)}
+                        ${B(190, 240, 90, 32, '操场2', 10)}
+                        <g opacity="0.85">
+                            <circle cx="465" cy="90" r="26" fill="none" stroke="#2f9e44" stroke-width="2"/>
+                            <circle cx="465" cy="90" r="14" fill="rgba(47,158,68,0.35)"/>
+                            <text x="465" y="94" text-anchor="middle" font-size="10" fill="#2b8a3e">基站</text>
+                        </g>
+                    </svg>
+                    ${legend}
+                </div>
+                <div class="feedback-bar show" style="margin-top:10px">
+                    📡 <b>测试结论：</b>校园主干道以 <b style="color:#ff8787">弱覆盖（红/橙）</b>为主，宿舍区与食堂周边 <b style="color:#ffe066">中等覆盖（黄）</b>，仅现有站址周边小范围为良好覆盖。需新建 5G 基站补盲——请进入下一步完成选址。
+                </div>`;
+        }
+
+        /* ---- 基站选址 ---- */
+        function siteMapSvg() {
+            const bld = (x, y, w, h, f) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="${f}" stroke="rgba(0,60,110,0.5)"/>`;
+            return `<svg viewBox="0 0 420 260" style="width:100%;height:100%;display:block">
+                <defs>
+                    <linearGradient id="grass" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#2e7d32"/><stop offset="100%" stop-color="#1b5e20"/>
+                    </linearGradient>
+                </defs>
+                <rect width="420" height="260" fill="url(#grass)"/>
+                <rect x="0" y="0" width="420" height="260" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="3"/>
+                ${bld(30, 30, 90, 50, '#8d6e63')}${bld(140, 25, 110, 55, '#a1887f')}${bld(280, 30, 100, 50, '#8d6e63')}
+                ${bld(35, 120, 80, 45, '#bcaaa4')}${bld(150, 115, 100, 50, '#a1887f')}${bld(290, 120, 90, 45, '#8d6e63')}
+                <ellipse cx="60" cy="215" rx="40" ry="20" fill="#66bb6a" stroke="rgba(255,255,255,0.3)"/>
+                <text x="60" y="219" text-anchor="middle" font-size="10" fill="#e8f5e9">操场</text>
+                <ellipse cx="350" cy="218" rx="42" ry="20" fill="#66bb6a" stroke="rgba(255,255,255,0.3)"/>
+                <text x="350" y="222" text-anchor="middle" font-size="10" fill="#e8f5e9">运动场</text>
+                <line x1="0" y1="95" x2="420" y2="95" stroke="#eceff1" stroke-width="10" opacity="0.85"/>
+                <line x1="0" y1="185" x2="420" y2="185" stroke="#eceff1" stroke-width="10" opacity="0.85"/>
+                <line x1="120" y1="0" x2="120" y2="260" stroke="#eceff1" stroke-width="9" opacity="0.85"/>
+                <line x1="265" y1="0" x2="265" y2="260" stroke="#eceff1" stroke-width="9" opacity="0.85"/>
+                <g opacity="0.9"><polygon points="392,20 398,42 386,42" fill="#ff8f00"/><line x1="392" y1="42" x2="392" y2="62" stroke="#5d4037" stroke-width="3"/><line x1="384" y1="48" x2="400" y2="48" stroke="#5d4037" stroke-width="2"/></g>
+                <text x="392" y="76" text-anchor="middle" font-size="9" fill="#fff59d">高压电塔</text>
+                <g transform="translate(210,130)"><circle r="9" fill="#ff5252" opacity="0.9"/><circle r="16" fill="none" stroke="#ff5252" opacity="0.5"/><circle r="24" fill="none" stroke="#ff5252" opacity="0.25"/></g>
+            </svg>`;
+        }
+        function renderSite(step, content) {
+            siteSel = -1; siteConfirmed = false;
+            content.innerHTML = `
+                <div class="opt-intro">${step.intro}</div>
+                <div class="site-wrap">
+                    <div class="site-map">${siteMapSvg()}<div id="pinLayer"></div></div>
+                    <div class="site-side">
+                        <div class="opt-step-label" style="margin-top:0">候选位置</div>
+                        <div class="spot-grid" id="spotGrid">${step.spots.map((s, i) => `<div class="spot-btn" data-idx="${i}">${s.name}</div>`).join('')}</div>
+                        <div class="spot-btn" id="btnConfirmSite" style="visibility:hidden;background:linear-gradient(135deg,#0e9a5a,#0b7a46);border-color:#51cf66">✅ 选址确认</div>
+                        <div class="feedback-bar" id="siteFb"></div>
+                    </div>
+                </div>`;
+            const pinLayer = content.querySelector('#pinLayer');
+            const fb = content.querySelector('#siteFb');
+            const confirmBtn = content.querySelector('#btnConfirmSite');
+            content.querySelectorAll('#spotGrid .spot-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const idx = parseInt(btn.dataset.idx);
+                    siteSel = idx;
+                    content.querySelectorAll('#spotGrid .spot-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const s = step.spots[idx];
+                    pinLayer.innerHTML = `<div class="map-pin" style="left:${s.x}%;top:${s.y}%">📍</div>`;
+                    fb.className = 'feedback-bar show ' + (s.ok ? 'good' : 'bad');
+                    fb.innerHTML = s.feedback;
+                    confirmBtn.style.visibility = s.ok ? 'visible' : 'hidden';
+                    if (!s.ok) { confirmBtn.textContent = '✅ 选址确认'; }
+                });
+            });
+            confirmBtn.addEventListener('click', () => {
+                siteConfirmed = true;
+                confirmBtn.classList.add('ok');
+                confirmBtn.textContent = '✅ 已确认选址';
+                const s = step.spots[siteSel];
+                if (s.ok && !step._scored) { addScore(2); step._scored = true; }
+                fb.innerHTML += `<div style="margin-top:6px;color:#5eff9b">已确认站址！点击"下一步"进入基站勘察表填写。</div>`;
+            });
+        }
+
+        /* ---- 勘察表填写 ---- */
+        function renderSurvey(step, content) {
+            content.innerHTML = `
+                <div class="opt-intro" style="font-size:12.5px;margin-bottom:8px">${step.intro}</div>
+                <button class="plan-fab" onclick="showPlan()">工程规划</button>
+                <div class="survey-tabs">${step.tabs.map((t, i) => `<div class="survey-tab ${i === surveyTab ? 'active' : ''}" data-tab="${i}">${i + 1} ${t}</div>`).join('')}</div>
+                <div class="form-grid" id="surveyForm"></div>`;
+            renderSurveyTab(step, content);
+            content.querySelectorAll('.survey-tab').forEach(t => {
+                t.addEventListener('click', () => {
+                    collectSurveyVals(content, step);
+                    surveyTab = parseInt(t.dataset.tab);
+                    content.querySelectorAll('.survey-tab').forEach(x => x.classList.remove('active'));
+                    t.classList.add('active');
+                    renderSurveyTab(step, content);
+                });
+            });
+        }
+        function renderSurveyTab(step, content) {
+            const grid = content.querySelector('#surveyForm');
+            grid.innerHTML = step.fields.filter(f => f.tab === surveyTab).map(f => {
+                const val = f._val || '';
+                if (f.type === 'select') {
+                    return `<div class="form-item"><label>${f.key}</label><select data-key="${f.key}">${f.opts.map(o => `<option ${o === val ? 'selected' : ''}>${o}</option>`).join('')}</select></div>`;
+                }
+                const mBtn = f.measure ? `<button class="measure-btn" data-key="${f.key}">🔍 测量</button>` : '';
+                return `<div class="form-item"><label>${f.key}${f.measure ? ' 🔍' : ''}</label><div class="form-row"><input data-key="${f.key}" placeholder="${f.ph || ''}" value="${val}">${mBtn}</div></div>`;
+            }).join('');
+            grid.querySelectorAll('input,select').forEach(el => {
+                el.addEventListener('change', () => {
+                    const f = step.fields.find(x => x.key === el.dataset.key);
+                    if (f) f._val = el.value;
+                });
+                el.addEventListener('input', () => {
+                    const f = step.fields.find(x => x.key === el.dataset.key);
+                    if (f) f._val = el.value;
+                });
+            });
+            grid.querySelectorAll('.measure-btn').forEach(btn => btn.addEventListener('click', () => doMeasure(step, btn)));
+        }
+        function collectSurveyVals(content, step) {
+            content.querySelectorAll('#surveyForm input').forEach(inp => {
+                const f = step.fields.find(x => x.key === inp.dataset.key);
+                if (f) f._val = inp.value;
+            });
+            content.querySelectorAll('#surveyForm select').forEach(sel => {
+                const f = step.fields.find(x => x.key === sel.dataset.key);
+                if (f) f._val = sel.value;
+            });
+        }
+        function doMeasure(step, btn) {
+            const f = step.fields.find(x => x.key === btn.dataset.key);
+            const pop = document.createElement('div');
+            pop.className = 'device-pop';
+            pop.innerHTML = `<div class="dev-icon">${f.measure.icon}</div><div class="dev-name">${f.measure.name} · 测量中</div><div class="scan-bar"><i></i></div><div class="dev-val">正在采集数据…</div>`;
+            document.body.appendChild(pop);
+            btn.disabled = true;
+            setTimeout(() => {
+                pop.querySelector('.dev-val').textContent = f.measure.value;
+                const input = document.querySelector(`#surveyForm input[data-key="${f.key}"]`);
+                if (input) { input.value = f.measure.value; input.classList.add('filled-auto'); }
+                f._val = f.measure.value;
+                if (!surveyMeasured.has(f.key)) { surveyMeasured.add(f.key); addScore(1); }
+                setTimeout(() => { pop.remove(); btn.disabled = false; btn.textContent = '✅ 已测'; }, 1100);
+            }, 1500);
+        }
+        function showPlan() {
+            const step = steps[currentStep];
+            const modal = document.createElement('div');
+            modal.className = 'plan-modal';
+            modal.innerHTML = `<div class="plan-card"><h4>📋 工程规划（参考资料）</h4>
+                ${step.plan.map((rows, i) => `<div style="color:#4dd8ff;font-size:12px;margin:8px 0 2px">—— ${step.tabs[i]} ——</div>` +
+                    rows.map(r => `<div class="plan-row"><span class="k">${r[0]}</span><span class="v">${r[1]}</span></div>`).join('')).join('')}
+                <div class="plan-close"><button class="measure-btn" onclick="this.closest('.plan-modal').remove()">关闭</button></div></div>`;
+            document.querySelector('#dialogPanel .dialog-box').appendChild(modal);
+        }
+        function countUnfilled(step) {
+            return step.fields.filter(f => f.type === 'input' && !(f._val || '').trim()).length;
+        }
+
+        /* ---- 基站设计 ---- */
+        function renderDesign(step, content) {
+            designSel = [-1, -1, -1, -1];
+            designDone = false;
+            content.innerHTML = `<div class="opt-intro">${step.intro}</div>` +
+                step.groups.map((g, gi) => `
+                    <div class="opt-step-label">${gi + 1}. ${g.q}</div>
+                    <div class="opt-grid design-g" data-g="${gi}" style="grid-template-columns:repeat(3,1fr)">${g.options.map((o, oi) => optCardHtml(o, oi, false)).join('')}</div>
+                `).join('') +
+                `<div class="design-result" id="designResult"></div>`;
+            content.querySelectorAll('.design-g').forEach(grid => {
+                bindSingleSel(grid, (idx) => { designSel[parseInt(grid.dataset.g)] = idx; });
+            });
+        }
+        function submitDesign(step) {
+            let got = 0;
+            const rows = step.groups.map((g, gi) => {
+                const ok = designSel[gi] === g.correct;
+                if (ok) got++;
+                return `<div>· <b>${g.q}</b>：${g.options[designSel[gi]]} ${ok ? '✅' : '❌（建议：' + g.options[g.correct] + '）'}</div>`;
+            }).join('');
+            addScore(got);
+            designDone = true;
+            step._scored = true;
+            const res = document.getElementById('designResult');
+            res.innerHTML = rows + `<div style="margin-top:8px;color:#5eff9b">🎯 ${step.result}</div>`;
+            res.classList.add('show');
+            updateNextBtn(step);
+        }
+
+        // ============ 下一步（按步骤类型校验） ============
         function nextStep() {
+            const step = steps[currentStep];
+            const content = document.getElementById('dialogContent');
+            switch (step.type) {
+                case 'choice':
+                    if (choiceSel < 0) { alert('请先选择一个岗位角色'); return; }
+                    break;
+                case 'quiz': {
+                    if (mapShown) break;
+                    const sub = step.subSteps[quizIdx];
+                    if (!sub.multi && quizSel.length !== 1) { alert('请先完成选择'); return; }
+                    if (sub.multi) {
+                        if (!quizSel.includes(sub.required)) { alert('网络测试离不开测试软件，请选择"测试软件"！'); return; }
+                    }
+                    if (!step._scored) step._scored = [];
+                    if (!step._scored[quizIdx]) {
+                        if (sub.multi) { if (quizSel.includes(sub.required)) addScore(1); }
+                        else if (quizSel[0] === sub.correct) addScore(1);
+                        step._scored[quizIdx] = true;
+                    }
+                    if (quizIdx < step.subSteps.length - 1) {
+                        quizIdx++;
+                        renderQuiz(step, content);
+                        updateNextBtn(step);
+                        return;
+                    }
+                    if (!mapShown) {
+                        mapShown = true;
+                        renderHeatmap(content);
+                        updateNextBtn(step);
+                        return;
+                    }
+                    break;
+                }
+                case 'siteselect':
+                    if (!siteConfirmed) { alert('请查看各位置选址分析，确认理想站址后继续'); return; }
+                    break;
+                case 'survey': {
+                    collectSurveyVals(content, step);
+                    const unfilled = countUnfilled(step);
+                    if (unfilled > 0 && !confirm(`还有 ${unfilled} 项未填写（可通过"工程规划"参考或设备测量获得），确认跳过继续吗？`)) return;
+                    break;
+                }
+                case 'design':
+                    if (!designDone) {
+                        if (designSel.some(v => v < 0)) { alert('请完成全部 4 项设计选择'); return; }
+                        submitDesign(step);
+                        return;
+                    }
+                    break;
+            }
             if (currentStep < steps.length - 1) {
                 goToStep(currentStep + 1);
             } else {
@@ -732,11 +1466,24 @@
 
         // ============ 显示结束画面 ============
         function showEndScreen() {
+            const pct = scoreMax ? Math.round(score / scoreMax * 100) : 100;
+            const stars = pct >= 90 ? 5 : pct >= 75 ? 4 : pct >= 60 ? 3 : pct >= 40 ? 2 : 1;
+            const comment = pct >= 90 ? '优秀！你就是王牌勘察工程师！' :
+                pct >= 75 ? '良好！离专家只差一点点！' :
+                pct >= 60 ? '合格！继续加油！' : '再接再厉，回看流程再来一次！';
+            document.getElementById('scoreBox').innerHTML = `
+                <div class="score-num">${score}<span> / ${scoreMax}</span></div>
+                <div class="score-stars">${'⭐'.repeat(stars)}${'☆'.repeat(5 - stars)}</div>
+                <div class="score-cmt">${comment}</div>`;
             document.getElementById('endScreen').classList.add('show');
         }
 
         // ============ 重新开始 ============
         function restart() {
+            score = 0; quizIdx = 0; quizSel = []; quizDone = false; mapShown = false;
+            choiceSel = -1; siteSel = -1; siteConfirmed = false; surveyTab = 0;
+            surveyMeasured = new Set(); designSel = [-1, -1, -1, -1]; designDone = false;
+            steps.forEach(s => { s._scored = undefined; s.fields && s.fields.forEach(f => f._val = ''); });
             document.getElementById('endScreen').classList.remove('show');
             goToStep(0);
         }
