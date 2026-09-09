@@ -647,6 +647,51 @@
         .toast.info {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
+
+        /* ===== 移动端适配（新增） ===== */
+        @media (max-width: 768px) {
+            body { padding: 8px !important; }
+            .header { padding: 16px 18px; }
+            .header h1 { font-size: 20px; flex-wrap: wrap; }
+            .header p { font-size: 13px; }
+            .header-top { flex-wrap: wrap; gap: 10px; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .stat-card { padding: 10px 12px; }
+            .stat-value { font-size: 18px; }
+            .control-panel { padding: 14px 12px; }
+            .control-row { gap: 10px; }
+            .control-group { flex-wrap: wrap; }
+            .control-group[style*="margin-left: auto"] { margin-left: 0 !important; }
+            .input-field { width: 100% !important; max-width: 100%; }
+            #apiKeyInput { width: 100% !important; }
+            .job-card { padding: 14px 16px; }
+            .job-header { flex-direction: column; gap: 6px; align-items: flex-start; }
+            .job-title { font-size: 16px; }
+            .job-salary { font-size: 18px; }
+            .job-footer { flex-wrap: wrap; gap: 8px; }
+            .job-actions { flex-wrap: wrap; }
+            .action-btn { padding: 6px 10px; font-size: 12px; }
+            .sidebar-card { padding: 14px; }
+            .bar-label { width: 56px; font-size: 12px; }
+            .bar-value { width: 32px; font-size: 12px; }
+            .modal-content { width: 100%; }
+            .modal-header { padding: 14px 16px; }
+            .modal-header h2 { font-size: 17px; }
+            .modal-body { padding: 16px; }
+            .pagination { flex-wrap: wrap; }
+            .page-btn { padding: 6px 10px; font-size: 13px; }
+            #websitesList { grid-template-columns: 1fr !important; }
+            #enterpriseSitesList { max-width: 100% !important; }
+            /* JS 动态详情弹窗内联布局兜底 */
+            .modal-body .section-content[style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
+            .empty-state { padding: 40px 12px; }
+        }
+        @media (max-width: 480px) {
+            body { padding: 6px !important; }
+            .stats-row { grid-template-columns: 1fr; }
+            .header h1 { font-size: 18px; }
+            .job-title { font-size: 15px; }
+        }
     </style>
     <!-- 全局按钮美化 -->
     <link rel="stylesheet" href="/static/global_buttons.css">

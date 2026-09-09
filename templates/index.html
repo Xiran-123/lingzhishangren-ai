@@ -823,6 +823,72 @@
             .conv-fab { left: 8px; top: 76px; transform: translateY(0) translateX(-60px); width: 38px; height: 38px; }
             .conv-fab.show { transform: translateY(0) translateX(0); }
         }
+        /* ============ 移动端补充适配（不改动桌面端外观） ============ */
+        @media (max-width: 768px) {
+            body { padding: 8px !important; }
+            .chat-container {
+                height: calc(100dvh - 16px);
+                min-height: auto;
+                border-radius: 12px;
+            }
+            .header {
+                padding: 10px 12px;
+                gap: 8px;
+            }
+            .header-left { gap: 8px; }
+            .header-right { min-width: 0; gap: 6px; }
+            .header-right .nav-btn { padding: 5px 10px; font-size: 12px; }
+            .header-icon { width: 36px; height: 36px; font-size: 18px; border-radius: 8px; }
+            .header-text h1 { font-size: 15px; letter-spacing: 0; }
+            .header-text p { font-size: 11px; }
+            .notification-bell { padding: 6px 10px !important; font-size: 20px !important; margin-left: 6px !important; }
+            .mode-selector { padding: 8px 12px; gap: 6px; flex-wrap: wrap; }
+            .mode-btn { padding: 6px 14px; font-size: 13px; }
+            .messages-area { padding: 14px 12px; }
+            .message { gap: 8px; margin-bottom: 16px; }
+            .avatar { width: 34px; height: 34px; font-size: 18px; }
+            .message-content { max-width: 82%; padding: 10px 12px; font-size: 14px; line-height: 1.55; }
+            .message-content pre { font-size: 12.5px; padding: 10px 12px; }
+            .message-actions { flex-wrap: wrap; }
+            .action-btn { padding: 5px 10px; font-size: 12px; }
+            .input-area { padding: 10px 12px; gap: 8px; }
+            .upload-btn { padding: 8px; font-size: 18px; }
+            .input-box textarea { font-size: 15px; padding: 10px 12px; }
+            .send-btn { padding: 10px 16px; font-size: 14px; }
+            .modal { padding: 20px 18px; max-width: 92vw; max-height: 88vh; overflow-y: auto; }
+            .modal-title { font-size: 17px; }
+            .upload-area { padding: 24px 14px; }
+            .upload-icon { font-size: 36px; }
+        }
+        @media (max-width: 480px) {
+            body { padding: 6px !important; }
+            .chat-container { border-radius: 10px; }
+            .header { padding: 8px 10px; }
+            .header-left { gap: 6px; }
+            .header-right .nav-btn { padding: 4px 8px; font-size: 11.5px; }
+            .header-text h1 { font-size: 14px; }
+            .header-text p { font-size: 10.5px; }
+            .mode-selector { padding: 6px 10px; }
+            .mode-btn { padding: 5px 10px; font-size: 12px; }
+            .messages-area { padding: 12px 10px; }
+            .message-content { padding: 9px 10px; font-size: 13.5px; }
+            .input-area { padding: 8px 10px; gap: 6px; }
+            .input-box textarea { padding: 9px 10px; }
+            .send-btn { padding: 9px 12px; font-size: 13px; }
+        }
+        @supports not (height: 100dvh) {
+            .chat-container { height: 90vh; }
+            @media (max-width: 768px) {
+                .chat-container { height: calc(100vh - 16px); }
+            }
+        }
+        /* ===== JS 动态弹窗（内联样式）移动端兜底 ===== */
+        @media (max-width: 768px) {
+            body > div[style*="z-index:99999"] > div[style*="max-width"] { max-width: 94vw !important; }
+            body > div[style*="z-index:99999"] div[style*="min-width:180px"] { min-width: 0 !important; }
+            body > div[style*="z-index:99999"] div[style*="display:flex"] { flex-wrap: wrap !important; }
+            body > div[style*="z-index:99999"] div[style*="display:grid"][style*="1fr 1fr"] { grid-template-columns: 1fr !important; }
+        }
     </style>
     <!-- 全局按钮美化 -->
     <link rel="stylesheet" href="/static/global_buttons.css">
@@ -1683,15 +1749,19 @@
                 
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
+                let buffer = '';
                 
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) break;
                     
-                    const chunk = decoder.decode(value);
-                    const lines = chunk.split('\n\n');
+                    buffer += decoder.decode(value, { stream: true });
                     
-                    for (const line of lines) {
+                    let sepIndex;
+                    while ((sepIndex = buffer.indexOf('\n\n')) !== -1) {
+                        const line = buffer.substring(0, sepIndex);
+                        buffer = buffer.substring(sepIndex + 2);
+                        
                         if (line.startsWith('data: ')) {
                             const dataStr = line.slice(6);
                             if (dataStr === '[DONE]') {

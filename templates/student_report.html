@@ -469,6 +469,33 @@
                 align-items: flex-start;
             }
         }
+
+        /* ===== 移动端适配（新增补充） ===== */
+        @media (max-width: 768px) {
+            body { padding: 8px !important; }
+            .title { font-size: 22px; }
+            .header-right { flex-wrap: wrap; }
+            .students-section { padding: 16px; }
+            .report-card { padding: 16px; }
+            .section-title { flex-wrap: wrap; gap: 8px; font-size: 17px; }
+            .add-btn { margin-left: 0; flex: 1 1 auto; }
+            .students-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+            .student-card { padding: 14px; }
+            .student-avatar { width: 52px; height: 52px; font-size: 22px; }
+            .student-name { font-size: 16px; word-break: break-all; }
+            .student-stats { flex-wrap: wrap; gap: 8px; justify-content: center; }
+            .weakness-item, .strength-item { flex-wrap: wrap; gap: 6px; }
+            .item-name { min-width: 0; word-break: break-all; }
+            .radar-container { padding: 10px; }
+            .modal { width: 94%; padding: 18px; max-height: 85vh; overflow-y: auto; }
+            .modal-actions { flex-wrap: wrap; }
+            .empty-state { padding: 40px 12px; }
+        }
+        @media (max-width: 480px) {
+            body { padding: 6px !important; }
+            .students-grid { grid-template-columns: 1fr; }
+            .title { font-size: 20px; }
+        }
     </style>
     <!-- 全局按钮美化 -->
     <link rel="stylesheet" href="/static/global_buttons.css">

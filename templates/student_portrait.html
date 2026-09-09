@@ -164,6 +164,67 @@
             align-items: center;
             margin-bottom: 15px;
         }
+
+        /* ===== 移动端适配（新增） ===== */
+        @media (max-width: 768px) {
+            body { padding: 8px !important; }
+            .container { max-width: 100% !important; }
+            .header {
+                padding: 14px 16px !important;
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 10px;
+            }
+            .header h1 { font-size: 18px !important; }
+            .grid { grid-template-columns: 1fr !important; gap: 14px !important; }
+            .card { padding: 16px !important; }
+            .card h2 { font-size: 16px !important; margin-bottom: 12px !important; }
+            .stat-grid {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 10px !important;
+            }
+            .stat-grid .stat-box:nth-child(3) {
+                grid-column: 1 / -1 !important;
+            }
+            .stat-box { padding: 14px 10px !important; }
+            .stat-value { font-size: 24px !important; }
+            .radar-container { height: 280px !important; }
+            .chart-container { height: 220px !important; }
+            .control-row {
+                flex-wrap: wrap !important;
+                gap: 8px !important;
+            }
+            .control-row select,
+            .control-row button {
+                flex: 1 1 100% !important;
+                min-width: 0 !important;
+                width: 100% !important;
+            }
+            .competence-item {
+                flex-wrap: wrap !important;
+                gap: 6px !important;
+            }
+            .competence-bar {
+                flex: 1 1 100% !important;
+                margin: 4px 0 !important;
+                order: 3;
+            }
+            .competence-score { min-width: 60px !important; }
+            /* 覆盖 HTML 内联 grid 1fr 1fr（岗位差距分析两块） */
+            .card.full-width > div[style*="grid-template-columns"] {
+                grid-template-columns: 1fr !important;
+                gap: 12px !important;
+            }
+        }
+        @media (max-width: 480px) {
+            body { padding: 6px !important; }
+            .header { padding: 12px !important; }
+            .header h1 { font-size: 16px !important; }
+            .card { padding: 12px !important; border-radius: 12px !important; }
+            .stat-value { font-size: 20px !important; }
+            .radar-container { height: 240px !important; }
+            .chart-container { height: 200px !important; }
+        }
     </style>
     <!-- 全局按钮美化 -->
     <link rel="stylesheet" href="/static/global_buttons.css">

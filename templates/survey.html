@@ -160,6 +160,53 @@
             margin-bottom: 16px;
         }
         .target-select:focus { border-color: #667eea; }
+
+        /* ===== 移动端适配（新增） ===== */
+        @media (max-width: 768px) {
+            body { padding: 10px !important; }
+            .container { max-width: 100% !important; }
+            .header {
+                padding: 18px 18px !important;
+                border-radius: 14px !important;
+            }
+            .header h1 { font-size: 19px !important; }
+            .header p { font-size: 13px !important; }
+            .question-card { padding: 18px !important; border-radius: 14px !important; }
+            .q-title { font-size: 16px !important; margin-bottom: 16px !important; }
+            .option {
+                padding: 12px 14px !important;
+                gap: 10px !important;
+            }
+            .option-icon { font-size: 22px !important; }
+            .option-label { font-size: 14px !important; }
+            .btn-group { flex-wrap: wrap !important; }
+            .btn {
+                padding: 12px 20px !important;
+                font-size: 15px !important;
+                flex: 1 1 100% !important;
+            }
+            .btn-group .btn-secondary { order: 2; }
+            .btn-group .btn-primary { order: 1; margin-left: 0 !important; }
+            .result-card { padding: 18px !important; }
+            .result-title { font-size: 18px !important; }
+            .rec-icon { font-size: 28px !important; }
+            .rec-name { font-size: 15px !important; }
+            .rec-meta { flex-wrap: wrap !important; gap: 6px !important; }
+            .target-section { margin-top: 18px !important; padding-top: 18px !important; }
+            .target-label { font-size: 14px !important; }
+            .target-select, input[type="text"] {
+                font-size: 14px !important;
+                padding: 12px 14px !important;
+            }
+        }
+        @media (max-width: 480px) {
+            body { padding: 6px !important; }
+            .header { padding: 14px !important; }
+            .header h1 { font-size: 17px !important; }
+            .question-card { padding: 14px !important; }
+            .option { padding: 10px 12px !important; }
+            .back-btn { font-size: 13px !important; padding: 6px 12px !important; }
+        }
     </style>
     <!-- 全局按钮美化 -->
     <link rel="stylesheet" href="/static/global_buttons.css">

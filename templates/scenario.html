@@ -541,6 +541,56 @@
                 min-height: 400px;
             }
         }
+        /* ============ 移动端补充适配 ============ */
+        @media (max-width: 768px) {
+            body { padding: 12px !important; }
+            .container { gap: 14px; }
+            .scenarios-panel { padding: 18px; min-height: auto; }
+            .chat-panel { min-height: 360px; }
+            .panel-title { font-size: 20px; }
+            .custom-scenario-section { padding: 16px; }
+            .custom-title { font-size: 15px; }
+            .scenario-card { padding: 16px; }
+            .scenario-title { font-size: 16px; }
+            .scenario-description { font-size: 13px; }
+            .chat-header { padding: 14px 16px; gap: 10px; }
+            .chat-icon { font-size: 26px; }
+            .chat-title { font-size: 17px; }
+            .chat-subtitle { font-size: 12px; }
+            .messages-area { padding: 14px; }
+            .message { gap: 8px; margin-bottom: 14px; }
+            .avatar { width: 34px; height: 34px; font-size: 18px; }
+            .message-content { max-width: 82%; padding: 10px 12px; font-size: 14px; }
+            .input-area { padding: 10px 12px; gap: 8px; flex-wrap: nowrap; }
+            .upload-btn { padding: 8px 10px; font-size: 16px; }
+            .input-box textarea { font-size: 15px; padding: 10px 12px; }
+            .send-btn { padding: 10px 14px; font-size: 14px; }
+            .image-preview { max-width: 48px; max-height: 48px; }
+            .empty-chat-icon { font-size: 48px; }
+            .empty-chat-text { font-size: 15px; }
+            .start-btn { padding: 12px; font-size: 15px; }
+        }
+        @media (max-width: 480px) {
+            body { padding: 8px !important; }
+            .scenarios-panel { padding: 14px; }
+            .scenarios-panel > div:first-child { flex-wrap: wrap; }
+            .scenarios-panel > div:first-child > a,
+            .scenarios-panel > div:first-child > button { flex: 1 1 auto; min-width: 0; }
+            .panel-title { font-size: 18px; gap: 6px; margin-bottom: 14px; }
+            .scenario-card { padding: 14px; }
+            .scenario-header { flex-direction: column; align-items: flex-start; gap: 6px; }
+            .scenario-title { font-size: 15px; }
+            .custom-scenario-section { padding: 12px; }
+            .divider { margin: 18px 0; font-size: 12px; }
+            .input-group input,
+            .input-group textarea { padding: 9px 12px; font-size: 14px; }
+            .chat-header { padding: 12px 14px; }
+            .chat-icon { font-size: 22px; }
+            .chat-title { font-size: 15px; }
+            .message-content { max-width: 86%; padding: 9px 10px; font-size: 13.5px; }
+            .input-area { padding: 8px 10px; }
+            .send-btn { padding: 9px 12px; font-size: 13px; }
+        }
     </style>
     <!-- 全局按钮美化 -->
     <link rel="stylesheet" href="/static/global_buttons.css">

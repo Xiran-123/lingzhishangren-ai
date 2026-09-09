@@ -13,4 +13,6 @@ RUN mkdir -p /app/data
 
 EXPOSE 5000
 
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "--timeout", "120", "app:app"]
+ENV PYTHONUNBUFFERED=1
+
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--worker-class", "gthread", "--threads", "8", "--worker-connections", "1000", "--timeout", "180", "--keep-alive", "5", "--no-sendfile", "app:app"]

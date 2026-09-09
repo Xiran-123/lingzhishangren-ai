@@ -149,6 +149,52 @@
             font-size: 12px;
             margin-bottom: 5px;
         }
+
+        /* ===== 移动端适配（新增） ===== */
+        @media (max-width: 768px) {
+            body { padding: 8px !important; }
+            .container { max-width: 100% !important; }
+            .header {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 10px;
+                padding: 14px 16px !important;
+            }
+            .header h1 { font-size: 18px !important; }
+            .header > div {
+                display: flex !important;
+                gap: 8px !important;
+                flex-wrap: wrap !important;
+            }
+            .header > div > .btn { flex: 1 1 calc(50% - 4px) !important; margin-right: 0 !important; text-align: center !important; }
+            .card { padding: 16px !important; }
+            .card h2 { font-size: 16px !important; margin-bottom: 12px !important; }
+            .grid { grid-template-columns: 1fr !important; gap: 14px !important; }
+            .stat-row { flex-wrap: wrap !important; gap: 10px !important; }
+            .stat-card { flex: 1 1 calc(33% - 8px) !important; padding: 12px 8px !important; min-width: 0 !important; }
+            .stat-value { font-size: 22px !important; }
+            .add-form { padding: 14px !important; }
+            .form-group input, .form-group textarea, .form-group select {
+                font-size: 14px !important;
+            }
+            /* HTML 内联 grid 1fr 1fr（能力类别+知识点） */
+            .add-form div[style*="grid-template-columns"] {
+                grid-template-columns: 1fr !important;
+                gap: 10px !important;
+            }
+            .wrong-item { padding: 12px !important; }
+            .wrong-question { font-size: 14px !important; }
+            .wrong-meta { flex-wrap: wrap !important; gap: 6px 10px !important; font-size: 11px !important; }
+            .rec-item { padding: 12px !important; }
+        }
+        @media (max-width: 480px) {
+            body { padding: 4px !important; }
+            .header { padding: 12px !important; }
+            .header h1 { font-size: 16px !important; }
+            .card { padding: 12px !important; border-radius: 12px !important; }
+            .stat-value { font-size: 18px !important; }
+            .stat-label { font-size: 11px !important; }
+        }
     </style>
     <!-- 全局按钮美化 -->
     <link rel="stylesheet" href="/static/global_buttons.css">

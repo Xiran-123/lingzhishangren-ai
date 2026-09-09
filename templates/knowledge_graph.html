@@ -242,6 +242,39 @@
         .action-btn.secondary:hover {
             background: #d0d0d8;
         }
+
+        /* ===== 移动端适配（新增） ===== */
+        @media (max-width: 768px) {
+            body { padding: 8px !important; }
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+                padding: 16px 18px;
+            }
+            .header h1 { font-size: 20px; }
+            .header > div { flex-wrap: wrap; }
+            .btn { padding: 8px 14px; font-size: 13px; }
+            .search-bar { flex-direction: column; padding: 14px; }
+            .search-bar input { width: 100%; min-width: 0; padding: 11px 14px; font-size: 15px; }
+            .search-bar button { width: 100%; padding: 11px 16px; }
+            .graph-container { padding: 14px; }
+            .graph-container h2 { font-size: 16px; }
+            .concept-grid { grid-template-columns: 1fr; gap: 12px; }
+            .concept-card { padding: 14px; }
+            .concept-name { font-size: 16px; word-break: break-all; }
+            .detail-content { width: 94%; padding: 18px; max-height: 85vh; }
+            .detail-section { padding: 12px; }
+            .action-buttons { flex-wrap: wrap; }
+            .action-btn { flex: 1 1 auto; }
+            /* 兼容可能存在的 canvas/SVG 图谱 */
+            canvas, svg, img { max-width: 100%; height: auto; }
+        }
+        @media (max-width: 480px) {
+            body { padding: 6px !important; }
+            .header h1 { font-size: 18px; }
+            .concept-name { font-size: 15px; }
+        }
     </style>
     <!-- 全局按钮美化 -->
     <link rel="stylesheet" href="/static/global_buttons.css">

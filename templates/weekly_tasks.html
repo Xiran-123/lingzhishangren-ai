@@ -1060,6 +1060,157 @@
             margin-top: 8px;
             border: 1px solid #b7eb8f;
         }
+
+        /* ===== 移动端适配（新增） ===== */
+        @media (max-width: 768px) {
+            body { padding: 8px !important; }
+            .container { max-width: 100% !important; }
+            /* header 区域：取消 absolute 按钮，改为垂直堆叠 */
+            .header {
+                padding: 18px 16px !important;
+                border-radius: 14px !important;
+                position: relative !important;
+            }
+            .header h1 { font-size: 19px !important; }
+            .header .subtitle { font-size: 13px !important; }
+            .header > button[onclick*="showPlatformGuide"] {
+                position: static !important;
+                display: block !important;
+                width: 100% !important;
+                margin: 8px 0 0 0 !important;
+                right: auto !important;
+                top: auto !important;
+                padding: 10px 14px !important;
+                font-size: 13px !important;
+                box-sizing: border-box !important;
+            }
+            .header > button[onclick*="viewFullCompetencyProfile"] {
+                position: static !important;
+                display: block !important;
+                width: 100% !important;
+                margin: 8px 0 0 0 !important;
+                right: auto !important;
+                top: auto !important;
+                padding: 10px 14px !important;
+                font-size: 13px !important;
+                box-sizing: border-box !important;
+            }
+            .target-banner {
+                flex-wrap: wrap !important;
+                padding: 10px 12px !important;
+                gap: 10px !important;
+            }
+            .target-banner .icon { font-size: 24px !important; }
+            .target-banner .job-name { font-size: 15px !important; }
+            .target-banner .salary { font-size: 12px !important; }
+            .progress-ring { width: 50px !important; height: 50px !important; }
+            .progress-ring svg { width: 50px !important; height: 50px !important; }
+            .progress-ring .pct { font-size: 12px !important; }
+
+            .analysis-box { padding: 14px 16px !important; }
+            .career-info { padding: 14px 16px !important; }
+            .task-card {
+                padding: 14px 16px !important;
+                gap: 12px !important;
+            }
+            .task-title { font-size: 15px !important; }
+            .task-tag { font-size: 11px !important; padding: 2px 8px !important; }
+            .stage-badge { font-size: 12px !important; padding: 4px 10px !important; margin-left: 6px !important; }
+            .proficiency-summary { gap: 8px !important; }
+            .proficiency-card { min-width: 0 !important; padding: 10px !important; flex: 1 1 calc(50% - 8px) !important; }
+            .proficiency-card .pct { font-size: 20px !important; }
+
+            /* Modal 弹窗：占满屏幕 */
+            .modal-overlay { padding: 10px !important; }
+            .modal {
+                max-width: 100% !important;
+                border-radius: 14px !important;
+            }
+            .modal.pre-check-modal { max-width: 100% !important; }
+            .modal.pre-check-modal .modal-body { padding: 16px !important; }
+            .modal-header { padding: 16px 18px !important; }
+            .modal-header h2 { font-size: 15px !important; }
+            .modal-body { padding: 14px 16px !important; max-height: 75vh !important; }
+            .modal-footer { padding: 12px 16px !important; flex-wrap: wrap !important; gap: 8px !important; }
+            .modal-footer .btn { flex: 1 1 100% !important; }
+
+            .ppt-item { padding: 10px 12px !important; gap: 10px !important; }
+            .ppt-item .ppt-name { font-size: 13px !important; }
+            .knowledge-item { padding: 12px 14px !important; }
+            .study-suggestion { padding: 12px 14px !important; font-size: 13px !important; }
+
+            /* 测验 */
+            .quiz-header {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 10px !important;
+                padding: 12px 14px !important;
+            }
+            .quiz-header .btn { width: 100% !important; }
+            .quiz-question { padding: 14px 16px !important; }
+            .quiz-question .q-text { font-size: 14px !important; }
+            .quiz-option { padding: 10px 12px !important; font-size: 13px !important; }
+            .quiz-result { padding: 14px !important; }
+            .quiz-result .score-big { font-size: 36px !important; }
+            .safety-score-display {
+                flex-wrap: wrap !important;
+                gap: 10px !important;
+                padding: 12px !important;
+            }
+            .safety-score-display .score-item { flex: 1 1 30% !important; }
+            .safety-score-display .score-item .val { font-size: 18px !important; }
+
+            /* 前置自检 */
+            .pre-check-progress {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 10px !important;
+            }
+            .pre-check-progress .progress-bar { width: 100% !important; }
+            .pre-check-item { padding: 12px 14px !important; gap: 10px !important; }
+            .pre-check-text { font-size: 13px !important; }
+            .fault-banner { padding: 12px 14px !important; }
+            .fault-icon { font-size: 24px !important; }
+            .fault-title { font-size: 14px !important; }
+
+            /* 报告区 */
+            .report-section { padding: 12px !important; }
+            .report-header { flex-wrap: wrap !important; gap: 6px !important; }
+            .report-time { margin-left: 0 !important; width: 100% !important; }
+
+            /* 口袋排障 */
+            .troubleshoot-body { padding: 12px !important; }
+            .troubleshoot-header { font-size: 13px !important; padding: 10px 12px !important; }
+
+            /* 行内 inline-grid 1fr 1fr 强制单列 */
+            .add-form div[style*="grid-template-columns"],
+            .modal-body div[style*="grid-template-columns"],
+            .report-block div[style*="grid-template-columns"],
+            .report-section div[style*="grid-template-columns"] {
+                grid-template-columns: 1fr !important;
+                gap: 10px !important;
+            }
+            /* 报告里雷达图容器过大 → 限制 */
+            .report-section svg { max-width: 100% !important; height: auto !important; }
+
+            /* ===== JS 动态"使用说明"弹窗（内联样式）兜底 ===== */
+            #guideOverlay { padding: 10px !important; }
+            #guideOverlay > div[style*="max-width:720px"] { max-width: 100% !important; max-height: 88vh !important; }
+            #guideOverlay div[style*="display:flex"] { flex-wrap: wrap !important; }
+            #guideOverlay h2 { font-size: 17px !important; }
+            /* JS 动态生成的报告 flex 双列 → 单列 */
+            .modal-body div[style*="display:flex"][style*="gap:16px"],
+            .modal-body div[style*="display:flex"][style*="gap:20px"] { flex-direction: column !important; }
+        }
+        @media (max-width: 480px) {
+            body { padding: 4px !important; }
+            .header { padding: 14px !important; border-radius: 12px !important; }
+            .header h1 { font-size: 17px !important; }
+            .task-card { padding: 12px !important; }
+            .modal-header { padding: 12px 14px !important; }
+            .modal-body { padding: 12px !important; }
+            .proficiency-card { flex: 1 1 100% !important; }
+        }
     </style>
     <!-- 全局按钮美化 -->
     <link rel="stylesheet" href="/static/global_buttons.css">

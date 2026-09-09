@@ -770,6 +770,52 @@
             margin-bottom: 20px;
             font-weight: 500;
         }
+
+        /* ===== 移动端适配（新增） ===== */
+        @media (max-width: 768px) {
+            body { padding: 8px !important; }
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+                padding: 16px 18px;
+            }
+            .header h1 { font-size: 20px; }
+            .header > div:first-child { flex-wrap: wrap; gap: 10px; }
+            .nav-buttons { flex-wrap: wrap; gap: 8px; }
+            .nav-btn { padding: 8px 12px; font-size: 13px; }
+            .tabs { flex-wrap: wrap; gap: 8px; }
+            .tab { padding: 10px 16px; font-size: 14px; flex: 1 1 auto; min-width: 96px; text-align: center; }
+            .content { padding: 16px; border-radius: 12px; }
+            .section-title { font-size: 17px; }
+            .class-form { flex-direction: column; }
+            .input { width: 100%; padding: 12px 14px; }
+            .btn { padding: 12px 18px; }
+            .class-grid { grid-template-columns: 1fr; gap: 14px; }
+            .class-card { padding: 16px; }
+            .class-name { font-size: 16px; word-break: break-all; }
+            .class-actions .btn-sm { flex: 1 1 auto; min-width: 72px; padding: 8px 10px; }
+            .modal-content { width: 94%; padding: 18px; max-height: 85vh; }
+            .student-item { flex-wrap: wrap; gap: 8px; }
+            .student-info { min-width: 0; }
+            .add-student-form { flex-direction: column; }
+            .notification-form { padding: 16px; }
+            .notification-item { padding: 16px; }
+            .notification-header { flex-wrap: wrap; gap: 6px; }
+            .notification-meta { flex-wrap: wrap; gap: 10px; }
+            .notification-actions { flex-wrap: wrap; }
+            .file-preview-item { min-width: 100%; }
+            .video-preview-item { flex-wrap: wrap; }
+            .image-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+            .empty-state { padding: 40px 12px; }
+        }
+        @media (max-width: 480px) {
+            body { padding: 6px !important; }
+            .header h1 { font-size: 18px; }
+            .content { padding: 12px; }
+            .btn-sm { min-width: 0; }
+            .class-actions { gap: 6px; }
+        }
     </style>
     <!-- 全局按钮美化 -->
     <link rel="stylesheet" href="/static/global_buttons.css">

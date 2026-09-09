@@ -883,6 +883,46 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* ===== 移动端适配（新增补充） ===== */
+        @media (max-width: 768px) {
+            body { padding: 8px !important; }
+            .stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .stat-card { padding: 14px; }
+            .stat-number { font-size: 26px; }
+            .tabs { flex-wrap: wrap; }
+            .tab-btn { padding: 8px 14px; font-size: 13px; }
+            .filters { gap: 8px; }
+            .filter-btn { padding: 6px 12px; font-size: 13px; }
+            .upload-btn { width: 100%; justify-content: center; padding: 10px 14px; }
+            .charts-row { grid-template-columns: 1fr; gap: 14px; }
+            .chart-card { padding: 14px; }
+            .chart-card.full-width { grid-column: span 1; }
+            .chart-card canvas { height: 240px !important; max-width: 100%; }
+            .analysis-section { padding: 16px; }
+            .keywords-section, .questions-section { padding: 14px; }
+            .keyword-tag { padding: 6px 12px; font-size: 13px; }
+            .log-item { padding: 14px; }
+            .log-query { font-size: 15px; word-break: break-all; }
+            .log-actions { gap: 8px; }
+            .action-btn { padding: 8px 12px; font-size: 13px; }
+            .log-content { max-height: 300px; }
+            .log-detail-meta { flex-wrap: wrap; gap: 8px; }
+            .modal { width: 100%; max-width: 100% !important; }
+            .modal.large { max-width: 100% !important; }
+            .modal-header { padding: 14px 16px; }
+            .modal-body { padding: 16px; max-height: 65vh; }
+            .modal-actions { padding: 14px 16px; flex-wrap: wrap; }
+            .upload-area { padding: 28px 14px; }
+            /* 日志内容横向滚动兜底 */
+            .log-content, .log-detail-content { overflow-x: auto; }
+        }
+        @media (max-width: 480px) {
+            body { padding: 6px !important; }
+            .stats { grid-template-columns: 1fr 1fr; }
+            .stat-number { font-size: 22px; }
+            .title { font-size: 20px; }
+        }
     </style>
     <!-- 全局按钮美化 -->
     <link rel="stylesheet" href="/static/global_buttons.css">

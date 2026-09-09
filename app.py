@@ -38,10 +38,7 @@ app.jinja_env.auto_reload = True
 
 # ====================== SiliconFlow API 配置 ======================
 def _load_siliconflow_key():
-    """密钥读取优先级：环境变量 SILICONFLOW_API_KEY > api_key.local 文件。
-
-    api_key.local 不随源码提交（已加入 .gitignore），打包 exe 时放在 exe 同级目录。
-    """
+    """密钥读取优先级：环境变量 SILICONFLOW_API_KEY > api_key.local 文件 > 硬编码默认值。"""
     key = os.environ.get('SILICONFLOW_API_KEY', '').strip()
     if key:
         return key
@@ -56,7 +53,8 @@ def _load_siliconflow_key():
                 return key
     except OSError:
         pass
-    return ''
+    # 硬编码默认密钥（比赛演示用）
+    return 'sk-sdfaoxkrbsmmnueekypiqjgxtcrscmrmajrzvtdjkgnjieyi'
 
 API_KEY = _load_siliconflow_key()
 API_URL = "https://api.siliconflow.cn/v1/chat/completions"
@@ -2975,7 +2973,10 @@ def chat_endpoint():
             return Response(
                 stream_generator(headers, messages, temperature, max_tokens, user_message),
                 content_type='text/event-stream',
-                headers={'Cache-Control': 'no-cache'}
+                headers={
+                    'Cache-Control': 'no-cache, no-transform',
+                    'X-Accel-Buffering': 'no'
+                }
             )
         else:
             # 非流式输出
@@ -3167,7 +3168,7 @@ def stream_generator(headers, messages, temperature, max_tokens, search_query=No
     
     full_response = ""
     try:
-        response = requests.post(API_URL, headers=headers, json=payload, stream=True, timeout=30)
+        response = requests.post(API_URL, headers=headers, json=payload, stream=True, timeout=120)
         
         print(f"流式API请求状态码: {response.status_code}")
         

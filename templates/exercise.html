@@ -269,6 +269,37 @@
         .hidden {
             display: none;
         }
+
+        /* ===== 移动端适配（新增） ===== */
+        @media (max-width: 768px) {
+            body { padding: 8px !important; }
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+                padding: 16px 18px;
+            }
+            .header h1 { font-size: 20px; }
+            .header > div { flex-wrap: wrap; }
+            .card { padding: 16px; }
+            .card-title { flex-wrap: wrap; gap: 8px; font-size: 16px; }
+            .knowledge-grid { grid-template-columns: 1fr; }
+            .stats-row { flex-wrap: wrap; gap: 10px; }
+            .stat-box { flex: 1 1 40%; min-width: 0; padding: 12px; }
+            .stat-value { font-size: 22px; }
+            .action-buttons { flex-wrap: wrap; }
+            .action-buttons .btn { flex: 1 1 auto; padding: 12px; font-size: 15px; }
+            .question-header { flex-wrap: wrap; gap: 6px; }
+            .question-text { font-size: 15px; }
+            .option-item { padding: 12px; }
+            .fill-input, .short-textarea { font-size: 15px; }
+            .feedback-text { font-size: 13px; }
+        }
+        @media (max-width: 480px) {
+            body { padding: 6px !important; }
+            .header h1 { font-size: 18px; }
+            .stat-box { flex: 1 1 100%; }
+        }
     </style>
     <!-- 全局按钮美化 -->
     <link rel="stylesheet" href="/static/global_buttons.css">
