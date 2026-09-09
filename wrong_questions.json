@@ -37,5 +37,18 @@
     "mastered": false,
     "created_at": "2026-06-26 20:25:38",
     "last_wrong_time": "2026-07-13 21:44:44"
+  },
+  {
+    "id": "a0826a06-7e2d-4dd2-8bf5-0d80cea20718",
+    "student_name": "测试员",
+    "question": "OTDR测试中，菲涅尔反射点说明什么？",
+    "category": "练习题",
+    "knowledge_point": "光纤铺设勘察",
+    "student_answer": "A",
+    "correct_answer": "B",
+    "count": 1,
+    "mastered": false,
+    "created_at": "2026-09-02 14:42:17",
+    "last_wrong_time": "2026-09-02 14:42:17"
   }
 ]

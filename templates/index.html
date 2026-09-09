@@ -307,6 +307,20 @@
             margin-top: 12px;
         }
 
+        /* AI生成内容标识（合规要求） */
+        .ai-gen-tag {
+            display: inline-block;
+            font-size: 11px;
+            line-height: 1;
+            color: #5b6cff;
+            background: rgba(91, 108, 255, 0.1);
+            border: 1px solid rgba(91, 108, 255, 0.35);
+            border-radius: 4px;
+            padding: 3px 8px;
+            margin-bottom: 8px;
+            user-select: none;
+        }
+
         .message-actions {
             display: flex;
             gap: 8px;
@@ -900,7 +914,10 @@
         let chatHistory = [];
         let conversationHistory = [];  // 用于API的对话历史
         let currentUser = { role: 'student', student_name: '', class_name: '' };
-        
+
+        // AI生成内容标识（合规要求）
+        const AI_GEN_TAG = '<div class="ai-gen-tag">✨ AI 生成内容</div>';
+
         // 本地存储键名
         const STORAGE_KEY = 'lingzhi_chat_history';
         
@@ -1510,7 +1527,7 @@
                     htmlContent = `<img src="data:image/png;base64,${imageBase64}" alt="图片" style="max-width: 100%; border-radius: 8px; margin: 10px 0;"><br>` + htmlContent;
                 }
             }
-            contentDiv.innerHTML = htmlContent;
+            contentDiv.innerHTML = (isUser ? '' : AI_GEN_TAG) + htmlContent;
             
             // 为AI消息添加操作按钮（追问）
             if (!isUser && content) {
@@ -1684,10 +1701,10 @@
                                 const data = JSON.parse(dataStr);
                                 if (data.content) {
                                     fullResponse += data.content;
-                                    messageContentDiv.innerHTML = formatMessage(fullResponse);
+                                    messageContentDiv.innerHTML = AI_GEN_TAG + formatMessage(fullResponse);
                                     scrollToBottom();
                                 } else if (data.error) {
-                                    messageContentDiv.innerHTML = data.error;
+                                    messageContentDiv.innerHTML = AI_GEN_TAG + data.error;
                                 }
                             } catch (e) {
                                 // 忽略解析错误
@@ -2316,6 +2333,9 @@
                                 <p style="font-size:12px;opacity:0.9;margin:4px 0 0;">共 ${data.total} 题（内置 ${data.builtin_count} · 自定义 ${data.custom_count}）</p>
                             </div>
                             <div style="display:flex;gap:8px;">
+                                <input type="file" id="exImportFile" accept=".json" style="display:none;" onchange="importExercises(event)">
+                                <button onclick="document.getElementById('exImportFile').click()" style="background:#52c41a;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:bold;cursor:pointer;">📤 导入题库</button>
+                                <button onclick="downloadExerciseTemplate()" style="background:rgba(255,255,255,0.25);color:#fff;border:none;padding:8px 12px;border-radius:8px;font-size:13px;cursor:pointer;">📥 下载模板</button>
                                 <button onclick="showAddExerciseForm()" style="background:#fff;color:#fa541c;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:bold;cursor:pointer;">➕ 添加题目</button>
                                 <button onclick="document.getElementById('exMgrOverlay').remove()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:20px;cursor:pointer;border-radius:50%;width:32px;height:32px;">×</button>
                             </div>
@@ -2457,6 +2477,45 @@
                 if (data.success) { alert('已删除'); showExerciseManager(); }
                 else { alert('删除失败：' + (data.error || '')); }
             } catch (err) { alert('删除失败：' + err.message); }
+        }
+
+        async function importExercises(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            try {
+                const text = await file.text();
+                const json = JSON.parse(text);
+                const res = await fetch('/api/teacher/exercises/import', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(json)
+                });
+                const data = await res.json();
+                if (!data.success) { alert('导入失败：' + (data.error || '')); return; }
+                let msg = `✅ 成功导入 ${data.added_count} 道题目`;
+                if (data.error_count > 0) {
+                    msg += `\n⚠️ ${data.error_count} 条失败：\n` + data.errors.join('\n');
+                }
+                alert(msg);
+                showExerciseManager();
+            } catch (err) {
+                alert('文件解析失败：' + err.message + '\n请确保是合法的JSON文件');
+            }
+            event.target.value = ''; // 重置input
+        }
+
+        async function downloadExerciseTemplate() {
+            try {
+                const res = await fetch('/api/teacher/exercises/template');
+                const data = await res.json();
+                const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = '练习题导入模板.json';
+                a.click();
+                URL.revokeObjectURL(url);
+            } catch (err) { alert('下载模板失败：' + err.message); }
         }
     </script>
 

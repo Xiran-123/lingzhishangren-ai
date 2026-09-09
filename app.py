@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, Response, session, send_from_directory
+from flask import Flask, render_template, request, jsonify, Response, session, send_from_directory, redirect
 import requests
 import base64
 import re
@@ -8,6 +8,7 @@ import secrets
 import uuid
 import sys
 import time
+import random
 from datetime import datetime, timedelta
 from typing import Dict, List
 from werkzeug.utils import secure_filename
@@ -36,7 +37,28 @@ app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.jinja_env.auto_reload = True
 
 # ====================== SiliconFlow API 配置 ======================
-API_KEY = "sk-sdfaoxkrbsmmnueekypiqjgxtcrscmrmajrzvtdjkgnjieyi"
+def _load_siliconflow_key():
+    """密钥读取优先级：环境变量 SILICONFLOW_API_KEY > api_key.local 文件。
+
+    api_key.local 不随源码提交（已加入 .gitignore），打包 exe 时放在 exe 同级目录。
+    """
+    key = os.environ.get('SILICONFLOW_API_KEY', '').strip()
+    if key:
+        return key
+    if getattr(sys, 'frozen', False):
+        key_file = os.path.join(os.path.dirname(sys.executable), 'api_key.local')
+    else:
+        key_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'api_key.local')
+    try:
+        with open(key_file, 'r', encoding='utf-8') as f:
+            key = f.read().strip()
+            if key:
+                return key
+    except OSError:
+        pass
+    return ''
+
+API_KEY = _load_siliconflow_key()
 API_URL = "https://api.siliconflow.cn/v1/chat/completions"
 MODEL_NAME = "Pro/moonshotai/Kimi-K2.6"
 
@@ -4269,6 +4291,161 @@ def api_teacher_batch_add_exercises():
     })
 
 
+@app.route('/api/teacher/exercises/import', methods=['POST'])
+def api_teacher_import_exercises():
+    """教师上传JSON文件批量导入练习题"""
+    if not session.get('authenticated') or session.get('role') != 'teacher':
+        return jsonify({'error': '仅老师可访问'}), 401
+
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': '请提供有效的JSON数据'}), 400
+
+    import uuid
+    custom = load_custom_exercises()
+    total_added = 0
+    errors = []
+
+    # 支持两种格式：
+    # 格式A: {"知识点名": [题目数组, ...], ...}
+    # 格式B: {"exercises": [{"knowledge_point":"xxx","question":"xxx",...}, ...]}
+    if isinstance(data, dict) and 'exercises' in data and isinstance(data['exercises'], list):
+        # 格式B：扁平数组
+        for idx, q in enumerate(data['exercises']):
+            try:
+                kp = (q.get('knowledge_point') or q.get('kp') or '未分类').strip()
+                if not kp:
+                    kp = '未分类'
+                result = _import_single_exercise(custom, kp, q)
+                if result:
+                    errors.append(result)
+                else:
+                    total_added += 1
+            except Exception as e:
+                errors.append(f'第{idx+1}条: {str(e)}')
+    else:
+        # 格式A：按知识点分组
+        for kp, exercises in data.items():
+            if not isinstance(exercises, list):
+                continue
+            for idx, q in enumerate(exercises):
+                try:
+                    result = _import_single_exercise(custom, kp.strip(), q)
+                    if result:
+                        errors.append(f'[{kp}]第{idx+1}条: {result}')
+                    else:
+                        total_added += 1
+                except Exception as e:
+                    errors.append(f'[{kp}]第{idx+1}条: {str(e)}')
+
+    save_custom_exercises(custom)
+    return jsonify({
+        'success': True,
+        'added_count': total_added,
+        'error_count': len(errors),
+        'errors': errors[:20]  # 最多返回20条错误
+    })
+
+
+@app.route('/api/teacher/exercises/template', methods=['GET'])
+def api_teacher_exercises_template():
+    """下载导入模板（JSON格式示例）"""
+    template = {
+        "格式A-按知识点分组": {
+            "傅里叶变换": [
+                {
+                    "question": "傅里叶变换的核心思想是将信号从时域转换到哪个域？",
+                    "type": "choice",
+                    "options": ["频率域", "空间域", "能量域", "相位域"],
+                    "answer": "A",
+                    "difficulty": 2,
+                    "analysis": "傅里叶变换将信号分解为不同频率的正弦波叠加，实现时域到频域的转换。"
+                },
+                {
+                    "question": "拉普拉斯变换是傅里叶变换的推广，引入了____因子。",
+                    "type": "fill",
+                    "answer": "衰减",
+                    "difficulty": 1,
+                    "analysis": "拉普拉斯变换引入衰减因子，使更多信号能够进行变换。"
+                }
+            ],
+            "5G NR": [
+                {
+                    "question": "5G NR的子载波间隔支持以下哪些？",
+                    "type": "choice",
+                    "options": ["15kHz", "30kHz", "60kHz", "以上都支持"],
+                    "answer": "D",
+                    "difficulty": 2,
+                    "analysis": "5G NR支持15/30/60/120/240kHz等多种子载波间隔。"
+                }
+            ]
+        },
+        "格式B-扁平数组": [
+            {
+                "knowledge_point": "天线原理",
+                "question": "天线的方向性系数定义是什么？",
+                "type": "choice",
+                "options": ["最大辐射方向功率与平均功率之比", "效率", "增益", "带宽"],
+                "answer": "A",
+                "difficulty": 2,
+                "analysis": "方向性系数是最大辐射方向的辐射强度与平均辐射强度之比。"
+            }
+        ],
+        "字段说明": {
+            "question": "题目内容（必填）",
+            "type": "题型：choice=选择题, fill=填空题, short=简答题（默认choice）",
+            "options": "选项数组（选择题必填，如['选项A','选项B']）",
+            "answer": "正确答案（选择题填 A/B/C/D；填空题填答案文本）",
+            "difficulty": "难度1-3（可选，默认2）",
+            "analysis": "答案解析（可选）"
+        }
+    }
+    return jsonify(template)
+
+
+def _import_single_exercise(custom, knowledge_point, q):
+    """导入单道练习题，返回错误字符串（成功返回None）"""
+    import uuid as _uuid
+    question_text = q.get('question', '').strip()
+    if not question_text:
+        return '题目内容为空'
+
+    q_type = q.get('type', 'choice')
+    if q_type not in ('choice', 'fill', 'short'):
+        q_type = 'choice'
+
+    answer = q.get('answer', '').strip()
+    if not answer:
+        return '答案为空'
+
+    options = q.get('options', [])
+    if q_type == 'choice' and (not options or len(options) < 2):
+        return '选择题至少需要2个选项'
+
+    difficulty = int(q.get('difficulty', 2))
+    analysis = q.get('analysis', f'导入的练习题')
+
+    if knowledge_point not in custom:
+        custom[knowledge_point] = []
+
+    ex_id = f"import_{_uuid.uuid4().hex[:8]}"
+    new_ex = {
+        'id': ex_id,
+        'type': q_type,
+        'question': question_text,
+        'difficulty': difficulty,
+        'answer': answer,
+        'analysis': analysis,
+        'created_by': session.get('student_name', 'teacher'),
+        'created_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+    if q_type == 'choice':
+        new_ex['options'] = options
+
+    custom[knowledge_point].append(new_ex)
+    return None
+
+
 @app.route('/api/learning-curve', methods=['GET'])
 def get_learning_curve():
     """获取学习曲线数据"""
@@ -4508,6 +4685,148 @@ def scenario_demo():
     if not session.get('authenticated'):
         return redirect('/login-page')
     return render_template('scenario_demo.html')
+
+
+# ====================== AI 自动生成场景实训 ======================
+
+SCENARIO_GEN_PROMPT = """你是一个交互式实训课程设计专家。请根据用户提供的场景主题与要求，生成一套完整的交互式虚拟仿真实训流程。
+
+【最重要】所有内容必须紧扣用户提供的场景主题！不要默认生成基站/5G相关内容。如果用户说的是"数据中心机房设计"，就生成数据中心的内容；如果用户说的是"光纤铺设"，就生成光纤铺设的内容。选项、问题、勘察表字段等都必须与用户主题直接相关。
+
+你必须输出**纯JSON**（不要markdown代码块、不要解释文字），格式如下：
+{"steps": [...], "scoreMax": 数字}
+
+steps数组包含5-7个步骤，每个步骤的 type 只能是以下6种之一。严格遵守每种类型的字段格式：
+
+══════ 1. text 类型（背景/说明） ══════
+{"type":"text", "title":"步骤标题", "label":"步骤标签", "content":"HTML格式的内容，可用<b>加粗</b>和<br>换行", "nextText":"下一步"}
+
+══════ 2. choice 类型（单选岗位/角色） ══════
+{"type":"choice", "title":"步骤标题", "label":"步骤标签", "intro":"HTML引导语", "options":[{"name":"选项名","sub":"描述","good":true,"feedback":"✅ 选对的反馈"}, {"name":"选项名","sub":"描述","feedback":"❌ 选错的反馈"}]}
+注意：只有一个选项的 good 为 true。
+
+══════ 3. quiz 类型（多步选择） ══════
+{"type":"quiz", "title":"步骤标题", "label":"步骤标签", "subSteps":[
+  {"q":"问题文本", "options":[{"name":"选项1","sub":"描述"},{"name":"选项2","sub":"描述"}], "correct": 正确索引(从0开始)},
+  {"q":"多选问题", "options":[{"name":"选项1","sub":"描述"},{"name":"选项2","sub":"描述"}], "multi":true, "required": 必选项索引}
+]}
+注意：subSteps有3-5个，correct是数字索引。每个选项的name和sub必须与用户主题相关。
+
+══════ 4. siteselect 类型（地图选址） ══════
+{"type":"siteselect", "title":"步骤标题", "label":"步骤标签", "intro":"HTML引导语", "spots":[
+  {"name":"位置1","ok":true,"x":46,"y":38,"feedback":"✅ 正确选址的详细分析"},
+  {"name":"位置2","ok":false,"x":78,"y":30,"feedback":"❌ 错误选址的原因分析"}
+], "correctIdx":0}
+注意：x在5-90之间，y在15-75之间，只有一个 ok 为 true，correctIdx是正确位置的索引。位置名称和分析内容必须与用户主题相关。
+
+══════ 5. survey 类型（勘察表填写） ══════
+{"type":"survey", "title":"步骤标题", "label":"步骤标签", "intro":"HTML引导语", "tabs":["标签1","标签2","标签3"], "plan":[[["字段名","参考值"],["字段名","参考值"]],[["字段名","参考值"]],[["字段名","参考值"]]], "fields":[
+  {"tab":0,"key":"字段名","type":"input","ph":"占位提示"},
+  {"tab":0,"key":"字段名","type":"select","opts":["选项1","选项2"]},
+  {"tab":0,"key":"字段名","type":"input","ph":"点击测量","measure":{"device":"laser","icon":"🔴","name":"测量设备名","value":"测量值"}}
+]}
+注意：tabs有2-3个，plan是二维数组对应每个tab的参考数据，fields中tab索引对应tabs。所有字段名和参考值必须与用户主题相关。
+
+══════ 6. design 类型（最终设计选择） ══════
+{"type":"design", "title":"步骤标题", "label":"步骤标签", "intro":"HTML引导语", "groups":[
+  {"q":"问题1","options":["选项A","选项B","选项C"],"correct": 正确索引},
+  {"q":"问题2","options":["选项A","选项B","选项C"],"correct": 正确索引}
+], "result":"最终方案的HTML总结"}
+注意：问题和选项必须与用户主题相关。
+
+══════ 评分规则 ══════
+scoreMax = quiz的subSteps数(每题1分) + siteselect的2分 + survey中有measure字段的数量(每项1分) + design的groups数(每项1分)
+
+══════ 步骤顺序建议 ══════
+text(背景) → choice(岗位选择) → quiz(测试/摸测) → text(参数查询) → siteselect(选址) → survey(勘察表) → design(最终设计)
+
+══════ 重要约束 ══════
+1. 【最重要】所有内容必须与用户提供的场景主题紧密相关，严禁默认生成基站/5G内容
+2. 每个选项的feedback要详细、有教育意义
+3. 内容用<b>标签强调关键词，用<br>换行
+4. 输出必须是合法JSON，不要包含注释、不要用单引号
+5. 不要输出```json```代码块标记，直接输出JSON原文
+"""
+
+
+@app.route('/api/scenario/generate', methods=['POST'])
+def api_generate_scenario():
+    """AI自动生成交互式场景实训"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+
+    try:
+        data = request.get_json()
+        topic = (data.get('topic') or '').strip()
+        question = (data.get('question') or '').strip()
+
+        if not topic:
+            return jsonify({'error': '请提供场景主题'}), 400
+
+        user_prompt = f"场景主题：{topic}\n具体要求：{question or '请根据该主题生成完整的交互式实训流程'}"
+        if not question:
+            user_prompt += "\n请自行设计合理的实训环节（背景→岗位选择→测试摸测→参数查询→选址→勘察表→最终设计），所有内容紧扣主题。"
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {API_KEY}"
+        }
+        messages = [
+            {"role": "system", "content": SCENARIO_GEN_PROMPT},
+            {"role": "user", "content": user_prompt}
+        ]
+        payload = {
+            "model": MODEL_NAME,
+            "messages": messages,
+            "temperature": 0.7,
+            "max_tokens": 4000,
+            "stream": False
+        }
+
+        print(f"[场景生成] 主题={topic}, 开始调用AI...")
+        resp = requests.post(API_URL, headers=headers, json=payload, timeout=180)
+
+        if resp.status_code != 200:
+            print(f"[场景生成] AI请求失败: {resp.status_code} - {resp.text[:300]}")
+            return jsonify({'error': f'AI请求失败: {resp.status_code}'}), 500
+
+        answer = resp.json()["choices"][0]["message"]["content"].strip()
+
+        # 去除可能的 ```json / ``` 包裹
+        if answer.startswith('```'):
+            answer = re.sub(r'^```(?:json)?\s*', '', answer)
+            answer = re.sub(r'\s*```$', '', answer)
+
+        try:
+            result = json.loads(answer)
+        except json.JSONDecodeError:
+            # 尝试提取第一个 { 到最后一个 }
+            s = answer.find('{')
+            e = answer.rfind('}')
+            if s >= 0 and e > s:
+                result = json.loads(answer[s:e + 1])
+            else:
+                return jsonify({'error': 'AI返回的JSON格式无法解析', 'raw': answer[:500]}), 500
+
+        steps = result.get('steps', [])
+        score_max = result.get('scoreMax', 0)
+
+        if not steps or not isinstance(steps, list):
+            return jsonify({'error': 'AI生成的实训步骤为空或格式错误'}), 500
+
+        # 安全校验：确保每个step有type字段
+        for i, st in enumerate(steps):
+            if not isinstance(st, dict) or 'type' not in st:
+                return jsonify({'error': f'第{i + 1}步缺少type字段'}), 500
+
+        print(f"[场景生成] 成功！生成 {len(steps)} 步, 满分 {score_max}")
+        return jsonify({'steps': steps, 'scoreMax': score_max})
+
+    except requests.Timeout:
+        return jsonify({'error': 'AI请求超时，请重试'}), 504
+    except Exception as e:
+        print(f"[场景生成] 异常: {e}")
+        return jsonify({'error': f'生成失败: {str(e)}'}), 500
 
 
 @app.route('/exercise-page')

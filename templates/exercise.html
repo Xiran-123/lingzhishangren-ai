@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -293,6 +293,7 @@
             <div class="card-title">
                 <span>📚 当前练习：</span>
                 <span id="currentKnowledge" style="color: #667eea;"></span>
+                <span style="font-size: 11px; color: #5b6cff; background: rgba(91,108,255,0.1); border: 1px solid rgba(91,108,255,0.35); border-radius: 4px; padding: 2px 8px; margin-left: auto;">✨ AI 智能题库生成</span>
             </div>
             
             <div class="stats-row">
@@ -544,6 +545,7 @@
                     <div class="feedback-title">❌ 回答错误</div>
                     <div class="feedback-text"><strong>正确答案：</strong>${data.correct_answer}</div>
                     <div class="feedback-text" style="margin-top: 10px;"><strong>解析：</strong>${data.analysis}</div>
+                    <div style="margin-top:10px;display:inline-block;background:rgba(255,87,87,0.15);color:#ff5757;border:1px solid rgba(255,87,87,0.3);padding:4px 12px;border-radius:12px;font-size:12px;">📕 已自动记录到错题本</div>
                 `;
                 
                 if (exercises[currentIndex].type === 'choice') {

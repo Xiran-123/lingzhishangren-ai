@@ -23,6 +23,7 @@
         }
 
         /* ============ 场景背景层 ============ */
+        /* ============ 场景背景（实景感） ============ */
         .scene-bg {
             position: absolute;
             inset: 0;
@@ -30,42 +31,59 @@
             z-index: 0;
         }
 
-        /* 不同场景的渐变背景（模拟3D虚拟场景） */
+        /* 场景0：校园鸟瞰 - 晴朗蓝天 */
         .scene-bg[data-step="0"] {
             background:
-                radial-gradient(ellipse at 30% 40%, rgba(0, 200, 255, 0.15) 0%, transparent 60%),
-                radial-gradient(ellipse at 70% 60%, rgba(0, 100, 200, 0.2) 0%, transparent 60%),
-                linear-gradient(180deg, #0d2137 0%, #1a3a5c 40%, #0f2847 100%);
+                radial-gradient(ellipse at 50% 15%, #87CEEB 0%, rgba(135,206,235,0) 40%),
+                radial-gradient(ellipse at 30% 85%, rgba(34,139,34,0.35) 0%, transparent 50%),
+                linear-gradient(180deg, #4a90c8 0%, #6ba3d4 35%, #7fa5c8 55%, #5b8a6c 85%, #3d6b4f 100%);
         }
+        /* 场景1：校园傍晚 - 夕阳 */
         .scene-bg[data-step="1"] {
             background:
-                radial-gradient(ellipse at 20% 30%, rgba(0, 180, 255, 0.2) 0%, transparent 50%),
-                radial-gradient(ellipse at 60% 70%, rgba(100, 255, 200, 0.1) 0%, transparent 50%),
-                linear-gradient(180deg, #0a1f3a 0%, #1e5799 50%, #0a2d5a 100%);
+                radial-gradient(ellipse at 70% 20%, #ff9944 0%, rgba(255,153,68,0) 45%),
+                radial-gradient(ellipse at 50% 100%, rgba(80,60,100,0.4) 0%, transparent 50%),
+                linear-gradient(180deg, #3a3d5e 0%, #6b4a6a 25%, #a56550 45%, #4a5a3a 80%, #2a3a28 100%);
         }
+        /* 场景2：野外勘测 - 绿色田野 */
         .scene-bg[data-step="2"] {
             background:
-                radial-gradient(ellipse at 50% 20%, rgba(255, 200, 0, 0.1) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 80%, rgba(0, 150, 255, 0.15) 0%, transparent 50%),
-                linear-gradient(180deg, #1a2a4a 0%, #2d4a7a 40%, #0a2040 100%);
+                radial-gradient(ellipse at 50% 20%, rgba(150,200,255,0.4) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 90%, rgba(50,120,60,0.5) 0%, transparent 50%),
+                linear-gradient(180deg, #7fb5d4 0%, #9bc4d8 30%, #a8cba0 60%, #4a7d3a 85%, #2d5a25 100%);
         }
+        /* 场景3：参数查询 - 机房冷色调 */
         .scene-bg[data-step="3"] {
             background:
-                radial-gradient(ellipse at 30% 50%, rgba(0, 255, 150, 0.1) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 30%, rgba(255, 100, 100, 0.1) 0%, transparent 50%),
-                linear-gradient(180deg, #0d1f35 0%, #2a4a6a 50%, #0d1f35 100%);
+                radial-gradient(ellipse at 50% 30%, rgba(100,180,220,0.3) 0%, transparent 50%),
+                linear-gradient(180deg, #1a2a3a 0%, #2a4a5a 40%, #1a3a4a 70%, #0f2030 100%);
         }
+        /* 场景4：基站选址 - 黄金时刻 */
         .scene-bg[data-step="4"] {
             background:
-                radial-gradient(ellipse at 40% 60%, rgba(150, 100, 255, 0.15) 0%, transparent 50%),
-                radial-gradient(ellipse at 70% 30%, rgba(255, 150, 50, 0.1) 0%, transparent 50%),
-                linear-gradient(180deg, #1a1a3a 0%, #3a2a5a 40%, #1a1a3a 100%);
+                radial-gradient(ellipse at 80% 25%, #ffb347 0%, rgba(255,179,71,0) 50%),
+                radial-gradient(ellipse at 20% 90%, rgba(60,80,100,0.4) 0%, transparent 50%),
+                linear-gradient(180deg, #5a4a3a 0%, #8a6a4a 30%, #6a5a4a 55%, #3a4a3a 85%, #2a3a28 100%);
         }
+        /* 场景5：勘察表填写 - 办公室内 */
         .scene-bg[data-step="5"] {
             background:
-                radial-gradient(ellipse at 50% 50%, rgba(0, 255, 200, 0.2) 0%, transparent 50%),
-                radial-gradient(ellipse at 20% 80%, rgba(0, 100, 255, 0.15) 0%, transparent 50%),
-                linear-gradient(180deg, #0a1a2e 0%, #164e63 50%, #0a1a2e 100%);
+                radial-gradient(ellipse at 50% 30%, rgba(255,200,120,0.25) 0%, transparent 50%),
+                linear-gradient(180deg, #2a2420 0%, #3a3028 50%, #2a2420 100%);
+        }
+        /* 场景6：基站设计 - 会议室 */
+        .scene-bg[data-step="6"] {
+            background:
+                radial-gradient(ellipse at 50% 20%, rgba(255,180,100,0.2) 0%, transparent 50%),
+                linear-gradient(180deg, #1a1820 0%, #2a2830 50%, #1a1820 100%);
+        }
+        /* 场景7+: 统一深色 */
+        .scene-bg[data-step="7"],
+        .scene-bg[data-step="8"],
+        .scene-bg[data-step="9"] {
+            background:
+                radial-gradient(ellipse at 50% 30%, rgba(100,150,200,0.25) 0%, transparent 50%),
+                linear-gradient(180deg, #0d1f35 0%, #2a4a6a 50%, #0d1f35 100%);
         }
 
         /* ============ SVG 装饰层 ============ */
@@ -712,6 +730,90 @@
             display: none;
         }
         .design-result.show { display: block; animation: fadeInUp 0.4s ease; }
+
+        /* ============ AI生成实训面板 ============ */
+        .gen-fab {
+            position: fixed; bottom: 28px; right: 28px; z-index: 50;
+            width: 52px; height: 52px; border-radius: 50%;
+            background: linear-gradient(135deg, #00b4ff, #0066ff);
+            border: 2px solid rgba(0, 229, 255, 0.6);
+            color: #fff; font-size: 22px; cursor: pointer;
+            box-shadow: 0 4px 24px rgba(0, 120, 255, 0.5);
+            display: flex; align-items: center; justify-content: center;
+            transition: transform 0.25s;
+        }
+        .gen-fab:hover { transform: scale(1.1) rotate(8deg); }
+
+        /* AI生成内容标识（合规要求） */
+        .ai-gen-badge {
+            position: fixed; bottom: 92px; right: 28px; z-index: 50;
+            background: rgba(91, 108, 255, 0.15);
+            border: 1px solid rgba(91, 108, 255, 0.4);
+            color: #aab4ff; font-size: 12px;
+            padding: 6px 14px; border-radius: 16px;
+            backdrop-filter: blur(8px);
+            pointer-events: none;
+        }
+
+        .gen-mask {
+            position: fixed; inset: 0; z-index: 60;
+            background: rgba(0, 10, 30, 0.7); backdrop-filter: blur(6px);
+            display: none; align-items: center; justify-content: center;
+        }
+        .gen-mask.show { display: flex; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .gen-panel {
+            width: min(520px, 90vw);
+            background: linear-gradient(160deg, #0d2540 0%, #102a4c 100%);
+            border: 1px solid rgba(0, 200, 255, 0.4);
+            border-radius: 14px; padding: 28px;
+            box-shadow: 0 8px 40px rgba(0, 100, 200, 0.4);
+            animation: fadeInUp 0.35s ease;
+        }
+        .gen-panel h2 {
+            color: #00e5ff; font-size: 20px; margin-bottom: 6px; text-align: center;
+        }
+        .gen-panel .gen-tip { color: rgba(190,220,255,0.7); font-size: 13px; text-align: center; margin-bottom: 18px; }
+        .gen-panel label { color: #a0e8ff; font-size: 13px; display: block; margin-bottom: 6px; }
+        .gen-panel input, .gen-panel textarea {
+            width: 100%; background: rgba(0, 30, 60, 0.6);
+            border: 1px solid rgba(0, 200, 255, 0.3); border-radius: 8px;
+            color: #e0f0ff; padding: 10px 14px; font-size: 14px; margin-bottom: 16px;
+            outline: none; transition: border-color 0.2s;
+        }
+        .gen-panel input:focus, .gen-panel textarea:focus { border-color: rgba(0, 229, 255, 0.8); }
+        .gen-panel textarea { resize: vertical; min-height: 70px; }
+        .gen-panel .gen-examples { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+        .gen-panel .gen-examples span {
+            background: rgba(0, 200, 255, 0.15); border: 1px solid rgba(0, 200, 255, 0.3);
+            color: #a0e8ff; font-size: 12px; padding: 4px 10px; border-radius: 12px;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .gen-panel .gen-examples span:hover { background: rgba(0, 200, 255, 0.35); color: #fff; }
+        .gen-panel .gen-btns { display: flex; gap: 10px; justify-content: center; }
+        .gen-panel .gen-btn {
+            padding: 10px 28px; border-radius: 8px; font-size: 14px; cursor: pointer; border: none;
+        }
+        .gen-panel .gen-submit {
+            background: linear-gradient(135deg, #00b4ff, #0066ff); color: #fff;
+        }
+        .gen-panel .gen-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+        .gen-panel .gen-cancel {
+            background: rgba(255, 80, 80, 0.3); color: #ffb0b0;
+            border: 1px solid rgba(255, 80, 80, 0.4);
+        }
+        .gen-loading {
+            display: none; text-align: center; padding: 20px;
+        }
+        .gen-loading.show { display: block; }
+        .gen-loading .spinner {
+            width: 40px; height: 40px; border: 3px solid rgba(0, 200, 255, 0.2);
+            border-top-color: #00e5ff; border-radius: 50%;
+            animation: spin 0.8s linear infinite; margin: 0 auto 12px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .gen-loading p { color: #a0e8ff; font-size: 14px; }
     </style>
     <!-- 全局按钮美化 -->
     <link rel="stylesheet" href="/static/global_buttons.css">
@@ -722,57 +824,203 @@
         <!-- 场景背景 -->
         <div class="scene-bg" id="sceneBg" data-step="0">
             <svg class="decor" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
-                <!-- 网格地平线 -->
                 <defs>
-                    <linearGradient id="groundGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stop-color="rgba(0,229,255,0.3)" stop-opacity="0.6"/>
-                        <stop offset="100%" stop-color="rgba(0,229,255,0)" stop-opacity="0"/>
+                    <linearGradient id="roadGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="rgba(50,50,55,0.7)"/>
+                        <stop offset="100%" stop-color="rgba(30,30,35,0.9)"/>
                     </linearGradient>
-                    <radialGradient id="sunGrad" cx="0.5" cy="0.5" r="0.5">
-                        <stop offset="0%" stop-color="rgba(255,180,50,0.6)"/>
-                        <stop offset="50%" stop-color="rgba(255,100,50,0.2)"/>
-                        <stop offset="100%" stop-color="rgba(255,50,50,0)"/>
-                    </radialGradient>
                 </defs>
-                <!-- 远景太阳 -->
-                <circle cx="720" cy="250" r="120" fill="url(#sunGrad)"/>
-                <!-- 山脉轮廓 -->
-                <path d="M0,600 L200,420 L400,520 L600,380 L800,480 L1000,350 L1200,450 L1440,400 L1440,900 L0,900Z" fill="rgba(0,30,60,0.6)"/>
-                <path d="M0,650 L150,500 L350,580 L550,450 L750,550 L950,420 L1150,520 L1440,470 L1440,900 L0,900Z" fill="rgba(0,40,80,0.7)"/>
-                <!-- 建筑群（虚拟校园） -->
-                <g opacity="0.5">
-                    <rect x="300" y="500" width="60" height="120" fill="rgba(0,80,140,0.8)"/>
-                    <rect x="370" y="460" width="50" height="160" fill="rgba(0,100,160,0.7)"/>
-                    <rect x="430" y="520" width="40" height="100" fill="rgba(0,70,120,0.8)"/>
-                    <rect x="900" y="480" width="70" height="140" fill="rgba(0,90,150,0.8)"/>
-                    <rect x="980" y="440" width="55" height="180" fill="rgba(0,110,170,0.7)"/>
-                    <rect x="1050" y="510" width="45" height="110" fill="rgba(0,80,130,0.8)"/>
+
+                <!-- 云朵 -->
+                <g opacity="0.85" fill="rgba(255,255,255,0.7)">
+                    <ellipse cx="200" cy="120" rx="80" ry="22"/>
+                    <ellipse cx="240" cy="108" rx="55" ry="20"/>
+                    <ellipse cx="1100" cy="95" rx="90" ry="24"/>
+                    <ellipse cx="1140" cy="82" rx="60" ry="22"/>
                 </g>
-                <!-- 网格地面 -->
-                <g opacity="0.4" stroke="rgba(0,200,255,0.4)" fill="none" stroke-width="1">
-                    <line x1="0" y1="720" x2="1440" y2="720"/>
-                    <line x1="0" y1="760" x2="1440" y2="760"/>
-                    <line x1="0" y1="810" x2="1440" y2="810"/>
-                    <line x1="0" y1="870" x2="1440" y2="870"/>
-                    <!-- 纵向透视网格 -->
-                    <line x1="720" y1="700" x2="200" y2="900"/>
-                    <line x1="720" y1="700" x2="500" y2="900"/>
-                    <line x1="720" y1="700" x2="940" y2="900"/>
-                    <line x1="720" y1="700" x2="1240" y2="900"/>
+
+                <!-- 远处山脉轮廓 -->
+                <path d="M0,580 L180,440 L320,510 L480,380 L620,460 L780,360 L940,420 L1100,350 L1260,410 L1440,370 L1440,900 L0,900Z" fill="rgba(50,70,90,0.55)"/>
+                <path d="M0,620 L150,500 L300,560 L450,460 L600,530 L750,440 L900,500 L1050,440 L1200,500 L1440,460 L1440,900 L0,900Z" fill="rgba(60,85,70,0.6)"/>
+
+                <!-- 校园主体建筑群（带窗户） -->
+                <g>
+                    <!-- 左楼：信息楼 -->
+                    <rect x="260" y="420" width="160" height="200" fill="rgba(180,195,210,0.85)" stroke="rgba(80,95,110,0.6)" stroke-width="1.5"/>
+                    <rect x="260" y="420" width="160" height="30" fill="rgba(200,210,220,0.85)"/>
+                    <!-- 窗户网格 -->
+                    <g fill="rgba(255,240,180,0.7)">
+                        <rect x="275" y="470" width="18" height="24"/>
+                        <rect x="305" y="470" width="18" height="24"/>
+                        <rect x="335" y="470" width="18" height="24"/>
+                        <rect x="365" y="470" width="18" height="24"/>
+                        <rect x="275" y="520" width="18" height="24"/>
+                        <rect x="305" y="520" width="18" height="24"/>
+                        <rect x="335" y="520" width="18" height="24"/>
+                        <rect x="365" y="520" width="18" height="24"/>
+                    </g>
+                    <g fill="rgba(140,170,130,0.7)">
+                        <rect x="275" y="570" width="18" height="24"/>
+                        <rect x="305" y="570" width="18" height="24"/>
+                        <rect x="335" y="570" width="18" height="24"/>
+                        <rect x="365" y="570" width="18" height="24"/>
+                    </g>
+
+                    <!-- 中楼：图书馆（带圆顶） -->
+                    <rect x="520" y="380" width="180" height="240" fill="rgba(165,180,200,0.9)" stroke="rgba(70,85,105,0.6)" stroke-width="1.5"/>
+                    <ellipse cx="610" cy="370" rx="95" ry="35" fill="rgba(145,160,180,0.9)" stroke="rgba(70,85,105,0.6)"/>
+                    <circle cx="610" cy="335" r="10" fill="rgba(220,200,80,0.9)"/>
+                    <!-- 大玻璃窗 -->
+                    <g fill="rgba(255,240,180,0.85)">
+                        <rect x="540" y="430" width="28" height="36"/>
+                        <rect x="580" y="430" width="28" height="36"/>
+                        <rect x="620" y="430" width="28" height="36"/>
+                        <rect x="660" y="430" width="28" height="36"/>
+                        <rect x="540" y="490" width="28" height="36"/>
+                        <rect x="580" y="490" width="28" height="36"/>
+                        <rect x="620" y="490" width="28" height="36"/>
+                        <rect x="660" y="490" width="28" height="36"/>
+                    </g>
+                    <!-- 大门 -->
+                    <rect x="595" y="550" width="30" height="70" fill="rgba(80,60,40,0.9)"/>
+
+                    <!-- 右楼：教学楼 -->
+                    <rect x="820" y="400" width="200" height="220" fill="rgba(175,190,205,0.85)" stroke="rgba(75,90,105,0.6)" stroke-width="1.5"/>
+                    <!-- 窗户 -->
+                    <g fill="rgba(255,240,180,0.75)">
+                        <rect x="840" y="450" width="20" height="26"/>
+                        <rect x="872" y="450" width="20" height="26"/>
+                        <rect x="904" y="450" width="20" height="26"/>
+                        <rect x="936" y="450" width="20" height="26"/>
+                        <rect x="968" y="450" width="20" height="26"/>
+                        <rect x="840" y="500" width="20" height="26"/>
+                        <rect x="872" y="500" width="20" height="26"/>
+                        <rect x="904" y="500" width="20" height="26"/>
+                        <rect x="936" y="500" width="20" height="26"/>
+                        <rect x="968" y="500" width="20" height="26"/>
+                    </g>
+                    <g fill="rgba(140,170,130,0.7)">
+                        <rect x="840" y="550" width="20" height="26"/>
+                        <rect x="872" y="550" width="20" height="26"/>
+                        <rect x="904" y="550" width="20" height="26"/>
+                        <rect x="936" y="550" width="20" height="26"/>
+                        <rect x="968" y="550" width="20" height="26"/>
+                    </g>
                 </g>
-                <!-- 信号塔/基站剪影 -->
-                <g opacity="0.6" transform="translate(1100, 460)">
-                    <line x1="0" y1="0" x2="0" y2="80" stroke="rgba(0,229,255,0.6)" stroke-width="2"/>
-                    <line x1="-30" y1="20" x2="30" y2="20" stroke="rgba(0,229,255,0.5)" stroke-width="1.5"/>
-                    <line x1="-25" y1="0" x2="25" y2="0" stroke="rgba(0,229,255,0.5)" stroke-width="1.5"/>
-                    <line x1="-40" y1="-20" x2="40" y2="-20" stroke="rgba(0,229,255,0.4)" stroke-width="1"/>
-                    <circle cx="0" cy="-30" r="4" fill="rgba(0,229,255,0.8)"/>
+
+                <!-- 基站塔（右侧教学楼顶） -->
+                <g transform="translate(910, 400)">
+                    <line x1="0" y1="0" x2="0" y2="-90" stroke="rgba(40,40,45,0.9)" stroke-width="3"/>
+                    <line x1="-35" y1="-25" x2="35" y2="-25" stroke="rgba(40,40,45,0.9)" stroke-width="2"/>
+                    <line x1="-28" y1="-45" x2="28" y2="-45" stroke="rgba(40,40,45,0.85)" stroke-width="2"/>
+                    <line x1="-22" y1="-60" x2="22" y2="-60" stroke="rgba(40,40,45,0.8)" stroke-width="1.5"/>
+                    <rect x="-8" y="-105" width="16" height="12" fill="rgba(50,50,55,0.9)"/>
+                    <rect x="-20" y="-110" width="6" height="20" fill="rgba(80,80,85,0.9)"/>
+                    <rect x="-4" y="-110" width="6" height="20" fill="rgba(80,80,85,0.9)"/>
+                    <rect x="12" y="-110" width="6" height="20" fill="rgba(80,80,85,0.9)"/>
+                    <!-- 信号灯 -->
+                    <circle cx="0" cy="-115" r="3" fill="#ff4444">
+                        <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/>
+                    </circle>
                 </g>
                 <!-- 信号波纹 -->
-                <g opacity="0.3" stroke="rgba(0,229,255,0.5)" fill="none" stroke-width="1">
-                    <circle cx="1100" cy="430" r="30"/>
-                    <circle cx="1100" cy="430" r="50"/>
-                    <circle cx="1100" cy="430" r="70"/>
+                <g stroke="rgba(255,100,100,0.4)" fill="none" stroke-width="1">
+                    <circle cx="910" cy="-55" r="40" transform="translate(0,455)">
+                        <animate attributeName="r" values="10;60;10" dur="3s" repeatCount="indefinite"/>
+                        <animate attributeName="opacity" values="0.6;0;0.6" dur="3s" repeatCount="indefinite"/>
+                    </circle>
+                </g>
+
+                <!-- 校园树木 -->
+                <g>
+                    <!-- 树1 -->
+                    <rect x="150" y="600" width="8" height="40" fill="rgba(80,55,30,0.9)"/>
+                    <circle cx="154" cy="590" r="32" fill="rgba(50,110,50,0.85)"/>
+                    <circle cx="142" cy="580" r="20" fill="rgba(60,120,55,0.85)"/>
+                    <circle cx="168" cy="585" r="22" fill="rgba(55,115,50,0.85)"/>
+
+                    <!-- 树2 -->
+                    <rect x="430" y="640" width="10" height="50" fill="rgba(80,55,30,0.9)"/>
+                    <circle cx="435" cy="625" r="38" fill="rgba(55,115,55,0.9)"/>
+                    <circle cx="420" cy="615" r="24" fill="rgba(65,125,60,0.9)"/>
+                    <circle cx="450" cy="620" r="26" fill="rgba(50,110,50,0.9)"/>
+
+                    <!-- 树3 -->
+                    <rect x="750" y="650" width="9" height="45" fill="rgba(80,55,30,0.9)"/>
+                    <circle cx="754" cy="638" r="34" fill="rgba(55,115,55,0.85)"/>
+
+                    <!-- 树4 -->
+                    <rect x="1180" y="580" width="8" height="40" fill="rgba(80,55,30,0.9)"/>
+                    <circle cx="1184" cy="570" r="30" fill="rgba(50,110,50,0.85)"/>
+                    <circle cx="1172" cy="562" r="18" fill="rgba(60,120,55,0.85)"/>
+                </g>
+
+                <!-- 道路 -->
+                <path d="M0,780 Q360,750 720,770 T1440,760 L1440,810 Q1080,825 720,810 T0,820Z" fill="url(#roadGrad)"/>
+                <!-- 道路虚线 -->
+                <g stroke="rgba(255,255,200,0.5)" stroke-width="3" stroke-dasharray="30,25">
+                    <path d="M0,795 Q360,770 720,785 T1440,780" fill="none"/>
+                </g>
+
+                <!-- 勘测设备三脚架 -->
+                <g transform="translate(350, 680)">
+                    <line x1="0" y1="0" x2="-15" y2="50" stroke="rgba(60,60,65,0.9)" stroke-width="3"/>
+                    <line x1="0" y1="0" x2="15" y2="50" stroke="rgba(60,60,65,0.9)" stroke-width="3"/>
+                    <line x1="0" y1="0" x2="0" y2="55" stroke="rgba(60,60,65,0.9)" stroke-width="2.5"/>
+                    <line x1="-12" y1="25" x2="12" y2="25" stroke="rgba(60,60,65,0.8)" stroke-width="1.5"/>
+                    <!-- 仪器 -->
+                    <rect x="-10" y="-18" width="20" height="18" fill="rgba(70,70,80,0.95)" rx="2"/>
+                    <circle cx="0" cy="-9" r="5" fill="rgba(100,180,220,0.9)"/>
+                    <!-- 小天线 -->
+                    <line x1="0" y1="-18" x2="0" y2="-30" stroke="rgba(80,80,90,0.9)" stroke-width="2"/>
+                </g>
+
+                <!-- 勘测人员剪影 -->
+                <g transform="translate(310, 695)" fill="rgba(30,30,35,0.9)">
+                    <circle cx="0" cy="0" r="10"/>
+                    <rect x="-7" y="8" width="14" height="30" rx="3"/>
+                    <line x1="-7" y1="38" x2="-10" y2="55" stroke="rgba(30,30,35,0.9)" stroke-width="4"/>
+                    <line x1="7" y1="38" x2="10" y2="55" stroke="rgba(30,30,35,0.9)" stroke-width="4"/>
+                    <line x1="-7" y1="15" x2="-18" y2="25" stroke="rgba(30,30,35,0.9)" stroke-width="4"/>
+                    <line x1="7" y1="15" x2="18" y2="22" stroke="rgba(30,30,35,0.9)" stroke-width="4"/>
+                </g>
+
+                <!-- 勘测人员2 -->
+                <g transform="translate(580, 700)" fill="rgba(35,35,40,0.9)">
+                    <circle cx="0" cy="0" r="9"/>
+                    <rect x="-6" y="7" width="12" height="28" rx="3"/>
+                    <line x1="-6" y1="35" x2="-9" y2="52" stroke="rgba(35,35,40,0.9)" stroke-width="4"/>
+                    <line x1="6" y1="35" x2="9" y2="52" stroke="rgba(35,35,40,0.9)" stroke-width="4"/>
+                    <!-- 手持板子 -->
+                    <rect x="10" y="12" width="14" height="20" fill="rgba(200,200,180,0.9)"/>
+                </g>
+
+                <!-- 勘测车辆 -->
+                <g transform="translate(720, 750)">
+                    <rect x="0" y="0" width="50" height="22" fill="rgba(50,55,60,0.95)" rx="3"/>
+                    <rect x="8" y="-10" width="34" height="14" fill="rgba(40,45,50,0.95)" rx="2"/>
+                    <rect x="12" y="-8" width="12" height="10" fill="rgba(150,200,220,0.6)"/>
+                    <rect x="26" y="-8" width="12" height="10" fill="rgba(150,200,220,0.6)"/>
+                    <circle cx="12" cy="24" r="7" fill="rgba(20,20,25,0.95)"/>
+                    <circle cx="38" cy="24" r="7" fill="rgba(20,20,25,0.95)"/>
+                    <!-- 车顶天线 -->
+                    <line x1="25" y1="-10" x2="25" y2="-22" stroke="rgba(50,55,60,0.9)" stroke-width="2"/>
+                    <circle cx="25" cy="-24" r="2" fill="rgba(255,200,50,0.9)"/>
+                </g>
+
+                <!-- 路灯 -->
+                <g transform="translate(180, 670)">
+                    <line x1="0" y1="0" x2="0" y2="60" stroke="rgba(40,40,45,0.85)" stroke-width="3"/>
+                    <ellipse cx="0" cy="-3" rx="12" ry="5" fill="rgba(255,240,150,0.85)" opacity="0.7"/>
+                </g>
+                <g transform="translate(1100, 660)">
+                    <line x1="0" y1="0" x2="0" y2="60" stroke="rgba(40,40,45,0.85)" stroke-width="3"/>
+                    <ellipse cx="0" cy="-3" rx="12" ry="5" fill="rgba(255,240,150,0.85)" opacity="0.7"/>
+                </g>
+
+                <!-- 近景透视地面 -->
+                <g fill="rgba(50,80,50,0.45)">
+                    <polygon points="0,820 720,780 1440,820 1440,900 0,900"/>
                 </g>
             </svg>
         </div>
@@ -782,8 +1030,8 @@
         <!-- 顶部导航栏 -->
         <div class="top-bar">
             <div class="mode-selector">
-                <button class="mode-btn active">剧情演绎模式</button>
-                <button class="mode-btn">自由探索模式</button>
+                <button class="mode-btn active" onclick="switchMode('story')" id="btnModeStory">剧情演绎模式</button>
+                <button class="mode-btn" onclick="switchMode('explore')" id="btnModeExplore">自由探索模式</button>
             </div>
             <div class="title">站点工程勘查设计虚拟仿真实训平台</div>
             <button class="end-btn" onclick="showEndScreen()">结束实训</button>
@@ -833,6 +1081,42 @@
                 <button class="btn-secondary" onclick="goBack()">返回主菜单</button>
             </div>
         </div>
+
+        <!-- AI生成实训：浮动按钮 -->
+        <button class="gen-fab" onclick="showGenPanel()" title="AI自动生成场景实训">✨</button>
+
+        <!-- AI生成内容标识（合规要求） -->
+        <div class="ai-gen-badge" id="aiGenBadge" style="display:none">✨ 本实训场景由 AI 生成</div>
+
+        <!-- AI生成实训：弹窗 -->
+        <div class="gen-mask" id="genMask">
+            <div class="gen-panel" id="genPanel">
+                <div id="genForm">
+                    <h2>AI 自动生成场景实训</h2>
+                    <p class="gen-tip">输入任意场景主题，AI将自动生成完整的交互式实训流程<br>
+                        <span style="display:inline-block;margin-top:6px;font-size:11px;color:#5b6cff;background:rgba(91,108,255,0.12);border:1px solid rgba(91,108,255,0.35);border-radius:4px;padding:2px 8px;">✨ 生成内容由 AI 生成，仅供参考</span>
+                    </p>
+                    <label>场景主题 *</label>
+                    <input type="text" id="genTopic" placeholder="如：光纤铺设工程勘察、数据中心机房设计、通信线路故障排查…">
+                    <label>具体要求（可选）</label>
+                    <textarea id="genQuestion" placeholder="如：包含线路路由选择、材料核算、施工验收等环节"></textarea>
+                    <div class="gen-examples">
+                        <span onclick="document.getElementById('genTopic').value='光纤铺设工程勘察'">光纤铺设勘察</span>
+                        <span onclick="document.getElementById('genTopic').value='数据中心机房设计'">数据中心设计</span>
+                        <span onclick="document.getElementById('genTopic').value='通信线路故障排查'">线路故障排查</span>
+                        <span onclick="document.getElementById('genTopic').value='5G基站勘察设计'">5G基站勘察</span>
+                    </div>
+                    <div class="gen-btns">
+                        <button class="gen-btn gen-submit" id="genBtn" onclick="generateScenario()">生成实训</button>
+                        <button class="gen-btn gen-cancel" onclick="hideGenPanel()">取消</button>
+                    </div>
+                </div>
+                <div class="gen-loading" id="genLoading">
+                    <div class="spinner"></div>
+                    <p>AI正在生成实训场景，请稍候…</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -851,14 +1135,15 @@
         let surveyMeasured = new Set();
         let designSel = [-1, -1, -1, -1];
         let designDone = false;
+        let mode = 'story';     // 'story'=剧情演绎(按步骤+评分), 'explore'=自由探索(可跳步+无评分)
 
         // ============ 剧情步骤数据（交互式实训） ============
-        const steps = [
+        let steps = [
             {
                 type: 'text',
                 title: "背景",
                 label: "项目背景",
-                content: `近期，毗邻某市高铁附近知名大学需要进行智慧校园升级项目。该院致力于成为信息化教育的前沿阵地，因此急需引入5G强化校园网络基础设施。为此，中国移动通信集团有限公司某市分公司下达<b>5G强化校园网络第一阶段</b>的勘察设计任务，旨在全面评估校园内各区域的5G信号覆盖需求，包括<b>教学楼、图书馆、宿舍楼及户外活动区</b>等，确保5G网络最终能够高效支撑高清视频教学、远程互动、大数据分析及物联网应用。<br><br><span style="color:#4dd8ff">请以勘察设计工程师的身份，完成本次实训的全部环节。</span>`,
+                content: `一所大学为加快智慧校园的数字化转型，准备在校内搭建5G通信网络，用于支持智能教学、跨校区协同以及各类物联网终端的接入。当地某通信运营商承接了此项目，现需对校内重点区域开展5G信号覆盖情况摸排与基站点位规划，涉及范围涵盖<b>教学楼、图书馆、学生宿舍楼以及室外公共活动区域</b>。<br><br>当前处于<b>5G校园网建设项目首期工程</b>的勘察设计环节，需要前往现场实测、采集核心参数、筛选备选站址，并最终形成完整的设计方案。<br><br><span style="color:#4dd8ff">请代入勘察设计工程师的角色，依次完成本次实训的各项任务。</span>`,
                 nextText: "下一步"
             },
             {
@@ -1006,6 +1291,18 @@
             setInterval(updateClock, 1000);
         }
 
+        // ============ 模式切换 ============
+        function switchMode(newMode) {
+            mode = newMode;
+            document.getElementById('btnModeStory').classList.toggle('active', mode === 'story');
+            document.getElementById('btnModeExplore').classList.toggle('active', mode === 'explore');
+            // 切换后重新渲染步骤指示器（自由探索模式下所有步骤可点击）
+            renderStepIndicator();
+            // 自由探索模式隐藏底部评分提示，剧情演绎模式恢复
+            const hint = document.getElementById('exploreHint');
+            if (hint) hint.style.display = mode === 'explore' ? '' : 'none';
+        }
+
         // ============ 渲染步骤指示器 ============
         function renderStepIndicator() {
             const container = document.getElementById('stepIndicator');
@@ -1028,8 +1325,15 @@
             container.querySelectorAll('.step-item').forEach(item => {
                 item.addEventListener('click', () => {
                     const idx = parseInt(item.dataset.index);
-                    if (idx <= currentStep) {
-                        goToStep(idx);
+                    if (mode === 'explore' || idx <= currentStep) {
+                        // 自由探索模式下允许跳步，跳过状态重置
+                        if (mode === 'explore') {
+                            // 跳步时只切换显示，不重置状态
+                            currentStep = idx;
+                            goToStep(idx);
+                        } else {
+                            goToStep(idx);
+                        }
                     }
                 });
             });
@@ -1501,6 +1805,77 @@
                 `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
             document.getElementById('clockTime').textContent =
                 `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+        }
+
+        // ============ AI生成实训 ============
+        function showGenPanel() {
+            document.getElementById('genMask').classList.add('show');
+            document.getElementById('genForm').style.display = 'block';
+            document.getElementById('genLoading').classList.remove('show');
+            document.getElementById('genBtn').disabled = false;
+        }
+        function hideGenPanel() {
+            document.getElementById('genMask').classList.remove('show');
+        }
+        async function generateScenario() {
+            const topic = document.getElementById('genTopic').value.trim();
+            const question = document.getElementById('genQuestion').value.trim();
+            if (!topic) { alert('请输入场景主题'); return; }
+
+            // 切换到加载状态
+            document.getElementById('genForm').style.display = 'none';
+            document.getElementById('genLoading').classList.add('show');
+            document.getElementById('genBtn').disabled = true;
+
+            try {
+                const resp = await fetch('/api/scenario/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ topic, question })
+                });
+                const data = await resp.json();
+                if (!resp.ok) {
+                    alert('生成失败：' + (data.error || '未知错误'));
+                    document.getElementById('genForm').style.display = 'block';
+                    document.getElementById('genLoading').classList.remove('show');
+                    document.getElementById('genBtn').disabled = false;
+                    return;
+                }
+                // 成功：替换steps并重新初始化
+                hideGenPanel();
+                loadNewScenario(data.steps, data.scoreMax, topic);
+            } catch (e) {
+                alert('请求失败：' + e.message);
+                document.getElementById('genForm').style.display = 'block';
+                document.getElementById('genLoading').classList.remove('show');
+                document.getElementById('genBtn').disabled = false;
+            }
+        }
+
+        function loadNewScenario(newSteps, newScoreMax, topic) {
+            // 重置所有状态
+            currentStep = 0; score = 0; quizIdx = 0; quizSel = []; quizDone = false; mapShown = false;
+            choiceSel = -1; siteSel = -1; siteConfirmed = false; surveyTab = 0;
+            surveyMeasured = new Set(); designSel = [-1, -1, -1, -1]; designDone = false;
+
+            // 替换steps数据和满分
+            steps = newSteps;
+            scoreMax = newScoreMax || 12;
+            steps.forEach(s => { s._scored = undefined; s.fields && s.fields.forEach(f => f._val = ''); });
+
+            // 更新页面标题
+            const titleEl = document.getElementById('sceneTitle');
+            if (titleEl) titleEl.textContent = topic + ' · 虚拟仿真实训';
+            const topTitle = document.querySelector('.top-bar .title');
+            if (topTitle) topTitle.textContent = topic + ' 虚拟仿真实训平台';
+
+            // 隐藏结束画面
+            document.getElementById('endScreen').classList.remove('show');
+            // 显示AI生成内容标识（合规要求）
+            const genBadge = document.getElementById('aiGenBadge');
+            if (genBadge) genBadge.style.display = 'block';
+            // 重新初始化
+            init();
         }
 
         // 启动

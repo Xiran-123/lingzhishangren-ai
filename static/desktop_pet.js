@@ -126,6 +126,37 @@
         return Math.random() < 0.3 ? getTimePhrase() : pick(PET_MSGS);
     }
 
+    /* ---------- 错题数查询（桌宠动态提醒用） ---------- */
+    let _wrongCache = { count: -1, ts: 0 }; // 缓存30秒，避免每次都请求
+    async function fetchWrongCount() {
+        try {
+            const now = Date.now();
+            if (_wrongCache.count >= 0 && now - _wrongCache.ts < 30000) {
+                return _wrongCache;
+            }
+            const resp = await fetch('/api/wrong-questions', { credentials: 'same-origin' });
+            if (!resp.ok) return null;
+            const data = await resp.json();
+            if (!data.success) return null;
+            const unmastered = data.unmastered || 0;
+            _wrongCache = { count: unmastered, ts: now };
+            return _wrongCache;
+        } catch (_) { return null; }
+    }
+
+    /* 生成错题提醒消息（有概率触发，且只有当有错题时才说） */
+    function pickWrongReminder(count) {
+        if (!count || count <= 0) return null;
+        const phrases = [
+            `还有 ${count} 道错题没复习呢，抽空看看吧 📝`,
+            `${count} 道错题等着你哦，复习一下更牢靠 💪`,
+            `错题本里还有 ${count} 道待攻克，加油鸭 🐤`,
+            `嘿，你有 ${count} 道错题还没掌握～去错题本看看？📕`,
+            `${count} 道错题在召唤你！复习完就打勾 ✅`
+        ];
+        return pick(phrases);
+    }
+
     /* ---------- 构建 DOM ---------- */
     function buildPet() {
         const el = document.createElement('div');
@@ -642,8 +673,16 @@
         }, 2000 + Math.random() * 2000);
     }
     function autoChatLoop(el) {
-        setTimeout(function tick() {
-            say(el, pickAutoMsg());
+        setTimeout(async function tick() {
+            // 先查错题数（异步，失败静默）
+            const w = await fetchWrongCount();
+            let msg = null;
+            if (w && w.count > 0 && Math.random() < 0.35) {
+                // 35%概率说错题提醒
+                msg = pickWrongReminder(w.count);
+            }
+            if (!msg) msg = pickAutoMsg();
+            say(el, msg);
             setTimeout(tick, 25000 + Math.random() * 25000);
         }, 6000 + Math.random() * 4000);
     }

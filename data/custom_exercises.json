@@ -10,5 +10,57 @@
       "created_by": "teacher1",
       "created_at": "2026-08-15 09:46:44"
     }
+  ],
+  "光纤铺设勘察": [
+    {
+      "id": "import_9d619000",
+      "type": "choice",
+      "question": "光纤熔接时，两根光纤的芯轴偏差不能超过多少微米？",
+      "difficulty": 2,
+      "answer": "B",
+      "analysis": "芯轴偏差过大会导致熔接损耗增大，要求不超过5μm",
+      "created_by": "teacher1",
+      "created_at": "2026-09-02 14:40:06",
+      "options": [
+        "1μm",
+        "5μm",
+        "10μm",
+        "20μm"
+      ]
+    },
+    {
+      "id": "import_ab58c849",
+      "type": "choice",
+      "question": "OTDR测试中，菲涅尔反射点说明什么？",
+      "difficulty": 1,
+      "answer": "B",
+      "analysis": "菲涅尔反射是两种介质界面的反射，熔接点有正常的菲涅尔反射",
+      "created_by": "teacher1",
+      "created_at": "2026-09-02 14:40:06",
+      "options": [
+        "光纤断裂",
+        "接头良好",
+        "存在水浸",
+        "损耗过大"
+      ]
+    }
+  ],
+  "数据中心机房设计": [
+    {
+      "id": "import_e629d517",
+      "type": "choice",
+      "question": "数据中心Tier III的可用性要求是多少？",
+      "difficulty": 2,
+      "answer": "C",
+      "analysis": "Tier III要求99.99%可用性，年停机时间<53分钟",
+      "created_by": "teacher1",
+      "created_at": "2026-09-02 14:40:06",
+      "options": [
+        "99.9%",
+        "99.95%",
+        "99.99%",
+        "99.995%"
+      ]
+    }
   ]
 }

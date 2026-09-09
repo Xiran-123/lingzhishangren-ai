@@ -841,8 +841,32 @@ def health_check():
 
 # ====================== 智能问答 API ======================
 import requests
+import sys as _sys
 
-API_KEY = "sk-sdfaoxkrbsmmnueekypiqjgxtcrscmrmajrzvtdjkgnjieyi"
+
+def _load_siliconflow_key():
+    """密钥读取优先级：环境变量 SILICONFLOW_API_KEY > api_key.local 文件。
+
+    api_key.local 不随源码提交（已加入 .gitignore），打包 exe 时放在 exe 同级目录。
+    """
+    key = os.environ.get('SILICONFLOW_API_KEY', '').strip()
+    if key:
+        return key
+    if getattr(_sys, 'frozen', False):
+        key_file = os.path.join(os.path.dirname(_sys.executable), 'api_key.local')
+    else:
+        key_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'api_key.local')
+    try:
+        with open(key_file, 'r', encoding='utf-8') as f:
+            key = f.read().strip()
+            if key:
+                return key
+    except OSError:
+        pass
+    return ''
+
+
+API_KEY = _load_siliconflow_key()
 API_URL = "https://api.siliconflow.cn/v1/chat/completions"
 MODEL_NAME = "Pro/moonshotai/Kimi-K2.6"
 

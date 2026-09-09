@@ -9,13 +9,14 @@ services:
     environment:
       - FLASK_ENV=production
       - SECRET_KEY=your-production-secret-key-change-this
-      - API_KEY=sk-sdfaoxkrbsmmnueekypiqjgxtcrscmrmajrzvtdjkgnjieyi
+    # 大模型密钥：由挂载的 api_key.local 提供（见 volumes），或改用环境变量：
+    # environment:
+    #   - SILICONFLOW_API_KEY=sk-xxxxxx
     restart: unless-stopped
     volumes:
       - ./data:/app/data
       - ./uploads:/app/uploads
-      - ./wrong_questions_agent.json:/app/wrong_questions_agent.json
-      - ./learning_records_agent.json:/app/learning_records_agent.json
+      - ./api_key.local:/app/api_key.local:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/api/v1/health"]
       interval: 30s
