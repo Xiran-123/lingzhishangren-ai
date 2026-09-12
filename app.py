@@ -2517,22 +2517,22 @@ def login():
     if password == ACCESS_PASSWORD:
         session['authenticated'] = True
         session['role'] = role
-        
+        is_new_user = False
+
         # 如果是学生，存储学生信息并创建/更新学生档案
         if role == 'student' and student_no:
             # 验证学号必须是13位数字
             if not student_no.isdigit() or len(student_no) != 13:
                 return jsonify({'success': False, 'message': '学号必须是13位数字'})
-            
+
             session['student_no'] = student_no
             session['student_name'] = student_name
             session['class_name'] = class_name
-            
+
             # 创建或更新学生档案
             students = load_students()
             existing_student = next((s for s in students if s.get('student_no') == student_no), None)
-            is_new_user = False
-            
+
             if existing_student:
                 # 一个学号只能对应一个账号：姓名不一致则拒绝登录
                 if existing_student.get('name') and existing_student['name'] != student_name:
@@ -2556,9 +2556,39 @@ def login():
                     'conversation_history': []
                 }
                 students.append(new_student)
-            
+
             save_students(students)
-        
+
+        elif role == 'student' and student_name:
+            # 未填学号的学生：按姓名关联已有档案（如老师手工添加的），没有则创建无学号档案
+            # 否则聊天时找不到档案，能力数据无法记录
+            session['student_name'] = student_name
+            if class_name:
+                session['class_name'] = class_name
+
+            students = load_students()
+            existing_student = next((s for s in students if s.get('name') == student_name), None)
+
+            if existing_student:
+                if class_name:
+                    existing_student['class_name'] = class_name
+                existing_student['last_login'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            else:
+                is_new_user = True
+                new_student = {
+                    'id': str(len(students) + 1),
+                    'student_no': '',
+                    'name': student_name,
+                    'class_name': class_name,
+                    'created_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    'last_login': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    'competence_analysis': {area['id']: {'count': 0, 'score': 0.0} for area in COMPETENCE_AREAS},
+                    'conversation_history': []
+                }
+                students.append(new_student)
+
+            save_students(students)
+
         return jsonify({'success': True, 'is_new_user': is_new_user, 'student_name': student_name})
     else:
         return jsonify({'success': False, 'message': '密码错误'})
@@ -3138,8 +3168,10 @@ def chat_endpoint():
         messages.append({"role": "user", "content": user_content})
         
         # 如果是学生，更新学生档案（桌宠闲聊不计入）
-        if current_role == 'student' and current_student_no and persona != 'pet':
-            update_student_profile(current_student_no, user_message, True)
+        # 学号或姓名任一存在即可定位档案（update_student_profile 按学号→姓名→id 查找）
+        current_student_name = session.get('student_name', '')
+        if current_role == 'student' and (current_student_no or current_student_name) and persona != 'pet':
+            update_student_profile(current_student_no or current_student_name, user_message, True)
         
         if stream:
             # 流式输出 - 记录所有对话到日志

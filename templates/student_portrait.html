@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -328,7 +328,7 @@
         // 加载学生列表
         async function loadStudents() {
             try {
-                const response = await fetch('/api/students');
+                const response = await fetch('/students');
                 const data = await response.json();
                 const select = document.getElementById('studentSelect');
                 select.innerHTML = '<option value="">请选择学生</option>';
