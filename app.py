@@ -76,13 +76,13 @@ TEACHER_ACCOUNTS = {
 
 # ====================== 知识库配置 ======================
 KNOWLEDGE_FILE = "knowledge.txt"
-SEARCH_LOG_FILE = "search_logs.json"
-STUDENTS_FILE = "students.json"
-CLASSES_FILE = "classes.json"
-NOTIFICATIONS_FILE = "notifications.json"
+SEARCH_LOG_FILE = "data/search_logs.json"
+STUDENTS_FILE = "data/students.json"  # 持久化到挂载的data目录（容器重建/重新部署不丢）
+CLASSES_FILE = "data/classes.json"
+NOTIFICATIONS_FILE = "data/notifications.json"
 UPLOAD_HISTORY_FILE = "data/upload_history.json"
-WRONG_QUESTIONS_FILE = "wrong_questions.json"
-LEARNING_RECORDS_FILE = "learning_records.json"
+WRONG_QUESTIONS_FILE = "data/wrong_questions.json"
+LEARNING_RECORDS_FILE = "data/learning_records.json"
 PPT_METADATA_FILE = "data/ppt_metadata.json"  # PPT课件元数据（持久化到挂载的data目录）
 AVATAR_DIR = "data/avatars"  # 用户头像（持久化到挂载的data目录）
 ALLOWED_AVATAR_EXT = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
@@ -116,6 +116,12 @@ def _migrate_to_data_dir(data_path: str):
 
 _migrate_to_data_dir(UPLOAD_HISTORY_FILE)
 _migrate_to_data_dir(PPT_METADATA_FILE)
+_migrate_to_data_dir(STUDENTS_FILE)
+_migrate_to_data_dir(CLASSES_FILE)
+_migrate_to_data_dir(NOTIFICATIONS_FILE)
+_migrate_to_data_dir(WRONG_QUESTIONS_FILE)
+_migrate_to_data_dir(LEARNING_RECORDS_FILE)
+_migrate_to_data_dir(SEARCH_LOG_FILE)
 
 # ====================== 能力评估指标 ======================
 # 12维能力维度配置（对应岗位能力雷达图）
@@ -2083,11 +2089,12 @@ def update_student_profile(student_id: str, message: str, is_question: bool = Tr
     
     for area_id, score in competence_scores.items():
         if score > 0:
-            student['competence_analysis'][area_id]['count'] += 1
+            # setdefault 兼容旧数据：字段缺失或为空字典时自动补全领域键
+            area_data = student['competence_analysis'].setdefault(area_id, {'count': 0, 'score': 0.0})
+            area_data['count'] += 1
             # 加权平均更新分数
-            current = student['competence_analysis'][area_id]['score']
-            count = student['competence_analysis'][area_id]['count']
-            student['competence_analysis'][area_id]['score'] = (current * (count - 1) + score) / count
+            current = area_data['score']
+            area_data['score'] = (current * (area_data['count'] - 1) + score) / area_data['count']
     
     # 添加对话记录
     if 'conversation_history' not in student:
@@ -2141,14 +2148,26 @@ def generate_personalized_report(student_id: str) -> Dict:
     
     # 推荐场景
     recommended_scenarios = recommend_scenarios(weaknesses)
-    
+
+    # 按5大类目聚合能力分数（用于雷达图：理论基础/专业核心/工程实践/工程伦理/综合素质）
+    categories = {}
+    for area in COMPETENCE_AREAS:
+        cat = area.get('category', '综合素质')
+        score = analysis.get(area['id'], {}).get('score', 0.0)
+        if cat not in categories:
+            categories[cat] = {'total': 0.0, 'n': 0}
+        categories[cat]['total'] += score  # 未互动的领域按0分计入，雷达图能体现空白维度
+        categories[cat]['n'] += 1
+    radar = [{'category': k, 'score': round(v['total'] / v['n'], 3)} for k, v in categories.items()]
+
     return {
         'student': student['name'],
         'weaknesses': weaknesses,
         'strengths': strengths,
         'suggestions': suggestions,
         'recommended_scenarios': recommended_scenarios,
-        'total_conversations': len(student.get('conversation_history', []))
+        'total_conversations': len(student.get('conversation_history', [])),
+        'radar': radar
     }
 
 

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -531,14 +531,20 @@
         <div class="report-section" id="reportSection" style="display: none;">
             <div class="report-card full-width">
                 <div class="report-title">🎯 学生概览</div>
-                <div style="display: flex; gap: 30px; flex-wrap: wrap;">
-                    <div style="text-align: center;">
-                        <div style="font-size: 36px; font-weight: 700; color: #667eea;" id="studentName">--</div>
-                        <div style="font-size: 14px; color: #666; margin-top: 5px;">学生姓名</div>
+                <div style="display: flex; gap: 30px; flex-wrap: wrap; align-items: center;">
+                    <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 36px; font-weight: 700; color: #667eea;" id="studentName">--</div>
+                            <div style="font-size: 14px; color: #666; margin-top: 5px;">学生姓名</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 36px; font-weight: 700; color: #667eea;" id="totalConversations">0</div>
+                            <div style="font-size: 14px; color: #666; margin-top: 5px;">对话次数</div>
+                        </div>
                     </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: 36px; font-weight: 700; color: #667eea;" id="totalConversations">0</div>
-                        <div style="font-size: 14px; color: #666; margin-top: 5px;">对话次数</div>
+                    <div id="radarWrap" style="display: none; margin-left: auto; text-align: center;">
+                        <div style="font-size: 14px; color: #666; margin-bottom: 4px;">🕸️ 能力雷达</div>
+                        <div id="radarSvg"></div>
                     </div>
                 </div>
             </div>
@@ -669,6 +675,42 @@
             }
         }
 
+        // 渲染能力雷达图（纯SVG，零依赖）
+        function renderRadar(radar) {
+            const wrap = document.getElementById('radarWrap');
+            const svgBox = document.getElementById('radarSvg');
+            if (!wrap || !svgBox) return;
+            if (!radar || radar.length < 3) { wrap.style.display = 'none'; return; }
+            wrap.style.display = 'block';
+
+            const W = 280, H = 250, cx = W / 2, cy = H / 2 + 6, R = 82, N = radar.length;
+            const angle = i => -Math.PI / 2 + i * 2 * Math.PI / N;
+            const pt = (i, r) => [cx + r * Math.cos(angle(i)), cy + r * Math.sin(angle(i))];
+            const poly = pts => pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+
+            // 网格（4层同心多边形）
+            let grid = '';
+            for (let lv = 1; lv <= 4; lv++) {
+                grid += `<polygon points="${poly(radar.map((_, i) => pt(i, R * lv / 4)))}" fill="none" stroke="#e3e9f5" stroke-width="1"/>`;
+            }
+            // 轴线 + 类目标签 + 分数
+            let axes = '';
+            radar.forEach((d, i) => {
+                const [x, y] = pt(i, R);
+                axes += `<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#e3e9f5" stroke-width="1"/>`;
+                const [lx, ly] = pt(i, R + 24);
+                const anchor = Math.abs(lx - cx) < 12 ? 'middle' : (lx > cx ? 'start' : 'end');
+                axes += `<text x="${lx.toFixed(1)}" y="${(ly - 6).toFixed(1)}" text-anchor="${anchor}" dominant-baseline="middle" font-size="12" fill="#555">${d.category}</text>`;
+                axes += `<text x="${lx.toFixed(1)}" y="${(ly + 8).toFixed(1)}" text-anchor="${anchor}" dominant-baseline="middle" font-size="11" fill="#667eea" font-weight="600">${Math.round(d.score * 100)}%</text>`;
+            });
+            // 数据多边形 + 顶点
+            const dataPts = radar.map((d, i) => pt(i, R * Math.max(Math.min(d.score, 1), 0.03)));
+            const data = `<polygon points="${poly(dataPts)}" fill="rgba(102,126,234,0.28)" stroke="#667eea" stroke-width="2" stroke-linejoin="round"/>
+                ${dataPts.map(p => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.5" fill="#667eea"/>`).join('')}`;
+
+            svgBox.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:${W}px;height:${H}px;max-width:100%;" role="img" aria-label="能力雷达图">${grid}${axes}${data}</svg>`;
+        }
+
         // 通过姓名获取学生报告
         async function loadStudentReportByName(studentName) {
             try {
@@ -772,6 +814,7 @@
             document.getElementById('reportSection').style.display = 'grid';
             document.getElementById('studentName').textContent = report.student;
             document.getElementById('totalConversations').textContent = report.total_conversations;
+            renderRadar(report.radar);
 
             // 渲染短板
             const weaknessList = document.getElementById('weaknessList');

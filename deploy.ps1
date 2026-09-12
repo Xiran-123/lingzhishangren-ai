@@ -24,12 +24,16 @@ $zip = [System.IO.Compression.ZipFile]::Open($LocalZip, 'Create')
 $exts = @('.py','.txt','.yml','.yaml','.css','.js','.html','.json','.sh','.bat','.md',
           '.png','.jpg','.jpeg','.gif','.svg','.ico','.woff','.woff2','.ttf')
 $excludeDirs = @('__pycache__','.git','node_modules','_merge_other','_backup_merged','.venv','.workbuddy','_mobile_test')
-$excludeFiles = @('api_key.local','deploy_upload.zip','*.log','*.pyc','project_full_20260904.zip')
+$excludeFiles = @('api_key.local','deploy_upload.zip','*.log','*.pyc','project_full_20260904.zip',
+                  'students.json','classes.json','notifications.json','wrong_questions.json',
+                  'learning_records.json','search_logs.json','cookie.txt')
+$excludeRel = @('data\students.json','data/students.json')
 
 Get-ChildItem $Src -Recurse -File | ForEach-Object {
     $rel = $_.FullName.Substring($Src.Length + 1)
     $skip = $false
     foreach ($ed in $excludeDirs) { if ($rel -match "(^|\\|/)$ed(\\|/|$)") { $skip = $true; break } }
+    if (-not $skip) { foreach ($er in $excludeRel) { if ($rel -eq $er) { $skip = $true; break } } }
     if (-not $skip) { foreach ($ef in $excludeFiles) { if ($rel -like "*\$ef" -or $rel -like "*/$ef") { $skip = $true; break } } }
     if (-not $skip -and $rel -match '[^\x00-\x7F]') { $skip = $true }
     if (-not $skip -and ($_.Extension -in $exts -or $_.Name -eq 'Dockerfile')) {

@@ -126,6 +126,17 @@
         return Math.random() < 0.3 ? getTimePhrase() : pick(PET_MSGS);
     }
 
+    /* 进入页面欢迎语：时段问候 + 存在感提示（每次进入都会说，让用户第一时间看见桌宠） */
+    function entryGreeting() {
+        return pick([
+            getTimePhrase() + ' 我在这儿哦 👋',
+            getTimePhrase() + ' 需要我就点我一下～ 💬',
+            pick(PET_GREETS),
+            '我上线啦！双击我还有彩蛋 🌀',
+            '看好我哦，我会一直陪着你 🫶'
+        ]);
+    }
+
     /* ---------- 错题数查询（桌宠动态提醒用） ---------- */
     let _wrongCache = { count: -1, ts: 0 }; // 缓存30秒，避免每次都请求
     async function fetchWrongCount() {
@@ -710,6 +721,11 @@
         blinkLoop(el);
         autoChatLoop(el);
         idleActionLoop(el);
+        // 每次进入页面：0.6秒后主动打招呼 + 弹跳动画，让用户第一时间注意到桌宠
+        setTimeout(() => {
+            say(el, entryGreeting(), 4500);
+            playAnim(el, 'pet-anim-bounce', 700);
+        }, 600);
     }
 
     if (document.readyState === 'loading') {
