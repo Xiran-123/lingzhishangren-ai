@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -308,28 +308,6 @@
             background: #e0e0e8;
         }
 
-        .upload-btn {
-            padding: 10px 20px;
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-            border: 2px solid #11998e;
-            border-radius: 10px;
-            color: white;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            flex-shrink: 0;
-        }
-
-        .upload-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(17, 153, 142, 0.4);
-            border-color: #0d7d73;
-        }
-
         .modal-overlay {
             display: none;
             position: fixed;
@@ -387,62 +365,6 @@
 
         .modal-close:hover {
             color: #666;
-        }
-
-        .upload-area {
-            border: 2px dashed #e0e0e8;
-            border-radius: 10px;
-            padding: 40px 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-bottom: 20px;
-        }
-
-        .upload-area:hover,
-        .upload-area.dragover {
-            border-color: #667eea;
-            background: #f8f9fc;
-        }
-
-        .upload-icon {
-            font-size: 48px;
-            color: #667eea;
-            margin-bottom: 10px;
-        }
-
-        .upload-text {
-            font-size: 16px;
-            color: #666;
-            margin-bottom: 5px;
-        }
-
-        .upload-hint {
-            font-size: 12px;
-            color: #999;
-        }
-
-        .file-input {
-            display: none;
-        }
-
-        .upload-progress {
-            display: none;
-            margin-bottom: 20px;
-        }
-
-        .progress-bar {
-            height: 8px;
-            background: #e0e0e8;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 4px;
-            transition: width 0.3s;
         }
 
         .note-input {
@@ -707,20 +629,6 @@
         }
 
         /* 模态框样式 */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: 20px;
-        }
-
         .modal {
             background: white;
             border-radius: 15px;
@@ -894,7 +802,6 @@
             .tab-btn { padding: 8px 14px; font-size: 13px; }
             .filters { gap: 8px; }
             .filter-btn { padding: 6px 12px; font-size: 13px; }
-            .upload-btn { width: 100%; justify-content: center; padding: 10px 14px; }
             .charts-row { grid-template-columns: 1fr; gap: 14px; }
             .chart-card { padding: 14px; }
             .chart-card.full-width { grid-column: span 1; }
@@ -913,7 +820,6 @@
             .modal-header { padding: 14px 16px; }
             .modal-body { padding: 16px; max-height: 65vh; }
             .modal-actions { padding: 14px 16px; flex-wrap: wrap; }
-            .upload-area { padding: 28px 14px; }
             /* 日志内容横向滚动兜底 */
             .log-content, .log-detail-content { overflow-x: auto; }
         }
@@ -957,11 +863,6 @@
                 <div class="stat-number" id="reviewedLogs">0</div>
                 <div class="stat-label">已审核</div>
             </div>
-        </div>
-
-        <div style="margin-bottom: 15px;">
-            <div style="color: red; font-size: 24px; font-weight: bold;">===== TEST UPLOAD BUTTON =====</div>
-            <button class="upload-btn" onclick="openUploadModal()">📤 上传Word/PPT文档到知识库</button>
         </div>
 
         <div class="filters">
@@ -1607,126 +1508,7 @@
 
         // 初始化
         loadLogs();
-
-        // 知识库文件上传相关
-        function openUploadModal() {
-            document.getElementById('uploadModal').classList.add('active');
-        }
-
-        function closeUploadModal() {
-            document.getElementById('uploadModal').classList.remove('active');
-            document.getElementById('fileInput').value = '';
-            document.getElementById('uploadProgress').style.display = 'none';
-            document.getElementById('progressFill').style.width = '0%';
-        }
-
-        document.getElementById('uploadArea').addEventListener('click', function() {
-            document.getElementById('fileInput').click();
-        });
-
-        document.getElementById('uploadArea').addEventListener('dragover', function(e) {
-            e.preventDefault();
-            this.classList.add('dragover');
-        });
-
-        document.getElementById('uploadArea').addEventListener('dragleave', function() {
-            this.classList.remove('dragover');
-        });
-
-        document.getElementById('uploadArea').addEventListener('drop', function(e) {
-            e.preventDefault();
-            this.classList.remove('dragover');
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                handleFile(files[0]);
-            }
-        });
-
-        document.getElementById('fileInput').addEventListener('change', function(e) {
-            if (e.target.files.length > 0) {
-                handleFile(e.target.files[0]);
-            }
-        });
-
-        async function handleFile(file) {
-            const allowedTypes = ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 
-                                  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-                                  'text/plain'];
-            const allowedExtensions = ['.docx', '.doc', '.pptx', '.ppt', '.txt'];
-            
-            const fileName = file.name.toLowerCase();
-            const isAllowed = allowedExtensions.some(ext => fileName.endsWith(ext));
-            
-            if (!isAllowed) {
-                alert('不支持的文件格式！请上传 .docx, .doc, .pptx, .ppt 或 .txt 文件');
-                return;
-            }
-
-            const progressDiv = document.getElementById('uploadProgress');
-            const progressFill = document.getElementById('progressFill');
-            
-            progressDiv.style.display = 'block';
-            progressFill.style.width = '30%';
-
-            const formData = new FormData();
-            formData.append('file', file);
-
-            try {
-                progressFill.style.width = '60%';
-                
-                const response = await fetch('/api/knowledge/upload', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                progressFill.style.width = '100%';
-
-                const result = await response.json();
-                
-                if (result.success) {
-                    alert(result.message);
-                    closeUploadModal();
-                    loadLogs();
-                } else {
-                    alert('上传失败: ' + result.error);
-                }
-            } catch (error) {
-                alert('上传失败: ' + error.message);
-            } finally {
-                setTimeout(() => {
-                    progressDiv.style.display = 'none';
-                    progressFill.style.width = '0%';
-                }, 500);
-            }
-        }
     </script>
-
-    <!-- 上传知识库文件模态框 -->
-    <div class="modal-overlay" id="uploadModal">
-        <div class="modal">
-            <div class="modal-title">
-                📤 上传知识库文件
-                <span class="modal-close" onclick="closeUploadModal()">×</span>
-            </div>
-            
-            <div class="upload-area" id="uploadArea">
-                <div class="upload-icon">📁</div>
-                <div class="upload-text">点击或拖拽文件到此处</div>
-                <div class="upload-hint">支持 .docx .doc .pptx .ppt .txt 格式</div>
-            </div>
-            
-            <input type="file" id="fileInput" class="file-input" accept=".docx,.doc,.pptx,.ppt,.txt">
-            
-            <div class="upload-progress" id="uploadProgress">
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
-                </div>
-                <div style="text-align: center; margin-top: 5px; font-size: 12px; color: #666;">处理中...</div>
-            </div>
-            
-            <button class="action-btn secondary" onclick="closeUploadModal()" style="width: 100%;">取消</button>
-        </div>
-    </div>
 
     <!-- 全局桌宠 Desktop Pet -->
     <link rel="stylesheet" href="/static/desktop_pet.css">
