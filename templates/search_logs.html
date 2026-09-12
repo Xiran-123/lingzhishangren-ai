@@ -1014,8 +1014,8 @@
                                     <div class="log-detail-content">📝 ${escapeHtml(log.content.substring(0, 200))}${log.content.length > 200 ? '...' : ''}</div>
                                     <div class="log-detail-meta">
                                         <span>📅 ${log.timestamp}</span>
-                                        <span>📁 ${log.source === 'kb' ? '知识库' : '搜索'}</span>
-                                        <span>${log.reviewed ? '✓ 已审核' : '⏳ 待审核'}</span>
+                                        <span>📁 ${log.is_from_kb ? '知识库' : '搜索'}</span>
+                                        <span>${log.is_from_kb ? '🟢 无需审核' : (log.reviewed ? '✓ 已审核' : '⏳ 待审核')}</span>
                                     </div>
                                 </div>
                             `).join('')}
@@ -1369,7 +1369,8 @@
             } else if (currentFilter === 'reviewed') {
                 filteredLogs = allLogs.filter(l => l.reviewed);
             } else if (currentFilter === 'pending') {
-                filteredLogs = allLogs.filter(l => !l.reviewed);
+                // 知识库内容无需审核，不进入待审核列表
+                filteredLogs = allLogs.filter(l => !l.reviewed && !l.is_from_kb);
             }
 
             if (filteredLogs.length === 0) {
