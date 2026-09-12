@@ -371,7 +371,7 @@
                     renderRadar(data.radar_data);
                     renderCompetenceList(data.radar_data);
                     renderCategorySummary(data.category_summary);
-                    updateStats(data.radar_data);
+                    updateStats(data.radar_data, data.total_questions);
                 }
             } catch (error) {
                 console.error('加载雷达图数据失败:', error);
@@ -445,14 +445,15 @@
             }).join('');
         }
 
-        function updateStats(data) {
-            const totalCount = data.reduce((sum, d) => sum + d.count, 0);
+        function updateStats(data, totalQuestions) {
+            // 累计提问：使用后端按"每次提问"统计的 total_questions，
+            // 不再用能力命中次数之和（否则不含关键词的问题不计次数）
             const avgScore = data.reduce((sum, d) => sum + d.score * d.weight, 0);
-            const topArea = data.reduce((max, d) => d.score > max.score ? d : max, data[0]);
-            
-            document.getElementById('totalQuestions').textContent = totalCount;
+            const topArea = data.length ? data.reduce((max, d) => d.score > max.score ? d : max, data[0]) : null;
+
+            document.getElementById('totalQuestions').textContent = totalQuestions ?? 0;
             document.getElementById('avgScore').textContent = avgScore.toFixed(1);
-            document.getElementById('topCategory').textContent = topArea ? topArea.name : '-';
+            document.getElementById('topCategory').textContent = topArea && topArea.score > 0 ? topArea.name : '-';
         }
 
         async function loadLearningCurve() {

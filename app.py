@@ -2112,17 +2112,24 @@ def update_student_profile(student_id: str, message: str, is_question: bool = Tr
     # 添加对话记录
     if 'conversation_history' not in student:
         student['conversation_history'] = []
-    
+
     student['conversation_history'].append({
         'message': message,
         'is_question': is_question,
         'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     })
-    
+
+    # 累计提问数：只要是学生主动提问就 +1，与是否命中能力关键词无关
+    # （旧口径只在命中关键词时累加，导致问"什么是通信工程"这类问题不计次数）
+    if is_question:
+        student['total_questions'] = student.get('total_questions', 0) + 1
+        # 同步写学习活动，驱动"学习曲线"
+        record_learning_activity(student.get('name', ''), 'question')
+
     # 限制对话记录数量
     if len(student['conversation_history']) > 50:
         student['conversation_history'] = student['conversation_history'][-50:]
-    
+
     save_students(students)
 
 
@@ -2179,7 +2186,10 @@ def generate_personalized_report(student_id: str) -> Dict:
         'strengths': strengths,
         'suggestions': suggestions,
         'recommended_scenarios': recommended_scenarios,
-        'total_conversations': len(student.get('conversation_history', [])),
+        'total_conversations': student.get(
+            'total_questions',
+            sum(1 for m in (student.get('conversation_history') or []) if m.get('is_question', True))
+        ),
         'radar': radar
     }
 
@@ -4865,9 +4875,17 @@ def get_competence_radar():
         return jsonify({
             'success': True,
             'radar_data': [],
-            'category_summary': {}
+            'category_summary': {},
+            'total_questions': 0
         })
-    
+
+    # 累计提问数：新字段优先；旧档案没有该字段时，用对话历史中的提问数兜底
+    if 'total_questions' in student:
+        total_questions = student.get('total_questions', 0)
+    else:
+        total_questions = sum(1 for m in (student.get('conversation_history') or [])
+                              if m.get('is_question', True))
+
     radar_data = []
     category_summary = {}
     
@@ -4899,7 +4917,8 @@ def get_competence_radar():
         'success': True,
         'student_name': student_name,
         'radar_data': radar_data,
-        'category_summary': category_summary
+        'category_summary': category_summary,
+        'total_questions': total_questions
     })
 
 
