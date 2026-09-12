@@ -84,6 +84,8 @@ UPLOAD_HISTORY_FILE = "data/upload_history.json"
 WRONG_QUESTIONS_FILE = "wrong_questions.json"
 LEARNING_RECORDS_FILE = "learning_records.json"
 PPT_METADATA_FILE = "data/ppt_metadata.json"  # PPT课件元数据（持久化到挂载的data目录）
+AVATAR_DIR = "data/avatars"  # 用户头像（持久化到挂载的data目录）
+ALLOWED_AVATAR_EXT = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
 # ====================== 文件上传配置 ======================
 UPLOAD_FOLDER = "uploads"
@@ -97,6 +99,7 @@ ALLOWED_EXTENSIONS = {
 # 确保上传文件夹和持久化数据目录存在
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs("data", exist_ok=True)
+os.makedirs(AVATAR_DIR, exist_ok=True)
 
 
 def _migrate_to_data_dir(data_path: str):
@@ -2551,6 +2554,14 @@ def logout():
     return jsonify({'success': True})
 
 
+@app.after_request
+def no_cache_html(response):
+    """HTML页面不缓存，避免部署后浏览器拿到旧页面"""
+    if response.mimetype == 'text/html':
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    return response
+
+
 @app.route('/current-user', methods=['GET'])
 def get_current_user():
     """获取当前登录用户信息"""
@@ -2560,8 +2571,68 @@ def get_current_user():
     return jsonify({
         'role': session.get('role', 'student'),
         'student_name': session.get('student_name', ''),
-        'class_name': session.get('class_name', '')
+        'class_name': session.get('class_name', ''),
+        'avatar_url': _find_avatar(session.get('role', 'student'), session.get('student_name', ''))
     })
+
+
+# ====================== 用户头像API ======================
+def _avatar_prefix(role, username):
+    """按 角色_用户名 生成头像文件名前缀（学生和教师互不冲突）"""
+    safe = re.sub(r'[^\w\u4e00-\u9fff-]', '_', f"{role}_{username or 'guest'}")
+    return f"avatar_{safe}"
+
+
+def _find_avatar(role, username):
+    """查找用户当前头像的访问URL，没有则返回None"""
+    prefix = _avatar_prefix(role, username)
+    for ext in ALLOWED_AVATAR_EXT:
+        if os.path.exists(os.path.join(AVATAR_DIR, f"{prefix}.{ext}")):
+            return f"/avatars/{prefix}.{ext}"
+    return None
+
+
+@app.route('/api/avatar', methods=['POST'])
+def upload_avatar():
+    """上传/更换当前登录用户的头像"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+
+    file = request.files.get('avatar')
+    if not file or not file.filename:
+        return jsonify({'error': '请选择图片文件'}), 400
+
+    ext = file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else ''
+    if ext not in ALLOWED_AVATAR_EXT:
+        return jsonify({'error': '只支持 png/jpg/jpeg/gif/webp 格式'}), 400
+
+    data = file.read()
+    if len(data) > 2 * 1024 * 1024:
+        return jsonify({'error': '头像图片不能超过2MB'}), 400
+
+    role = session.get('role', 'student')
+    username = session.get('student_name', '')
+    prefix = _avatar_prefix(role, username)
+
+    # 删除旧头像（不同扩展名的旧文件），保证一个用户只保留最新一张
+    for old_ext in ALLOWED_AVATAR_EXT:
+        old_path = os.path.join(AVATAR_DIR, f"{prefix}.{old_ext}")
+        if old_ext != ext and os.path.exists(old_path):
+            try:
+                os.remove(old_path)
+            except OSError:
+                pass
+
+    with open(os.path.join(AVATAR_DIR, f"{prefix}.{ext}"), 'wb') as f:
+        f.write(data)
+
+    return jsonify({'success': True, 'avatar_url': f"/avatars/{prefix}.{ext}"})
+
+
+@app.route('/avatars/<path:filename>')
+def serve_avatar(filename):
+    """提供头像图片访问"""
+    return send_from_directory(AVATAR_DIR, filename)
 
 
 # ====================== 班级管理API ======================

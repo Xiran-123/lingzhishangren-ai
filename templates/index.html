@@ -1024,6 +1024,7 @@
                     currentUser = data;
                     renderNavigation();
                     updateHeaderTitle();
+                    updateUserAvatar();
                     loadNotificationCount();
                 }
             } catch (error) {
@@ -1183,11 +1184,13 @@
                     <button class="nav-btn" style="background: linear-gradient(135deg, #5961f9, #2c3e7a);" onclick="toggleSettings(event)">⚙️ 设置</button>
                     <div class="settings-menu" id="settingsMenu">
                         <a class="settings-item" onclick="closeSettings();showPlatformGuide();">📖 使用说明</a>
+                        <a class="settings-item" onclick="document.getElementById('avatarInput').click();">🖼️ 更换头像</a>
                         <a class="settings-item" id="petToggleItem" onclick="togglePet();">🐾 关闭桌宠</a>
                         <a class="settings-item" onclick="closeSettings();clearChatHistory();">🗑️ 清除对话记录</a>
                         <a class="settings-item settings-danger" onclick="closeSettings();doLogout();">🔓 退出登录</a>
                     </div>
-                </div>`;
+                </div>
+                <input type="file" id="avatarInput" accept="image/png,image/jpeg,image/gif,image/webp" style="display:none" onchange="uploadAvatar(this);">`;
         }
 
         function toggleSettings(e) {
@@ -1202,6 +1205,48 @@
         function closeSettings() {
             const menu = document.getElementById('settingsMenu');
             if (menu) menu.classList.remove('open');
+        }
+
+        // ===== 头像上传 =====
+        async function uploadAvatar(input) {
+            const file = input.files && input.files[0];
+            if (!file) return;
+            if (file.size > 2 * 1024 * 1024) {
+                alert('头像图片不能超过2MB');
+                input.value = '';
+                return;
+            }
+            const fd = new FormData();
+            fd.append('avatar', file);
+            try {
+                const r = await fetch('/api/avatar', { method: 'POST', body: fd });
+                const d = await r.json();
+                if (d.success) {
+                    currentUser.avatar_url = d.avatar_url + '?t=' + Date.now();
+                    updateUserAvatar();
+                    closeSettings();
+                } else {
+                    alert(d.error || '上传失败，请重试');
+                }
+            } catch (e) {
+                alert('上传失败，请检查网络');
+            }
+            input.value = '';
+        }
+
+        // 头部显示/更新用户头像
+        function updateUserAvatar() {
+            const icon = document.querySelector('.header-left .header-icon');
+            if (!icon) return;
+            let img = document.getElementById('userAvatarImg');
+            if (currentUser.avatar_url) {
+                if (!img) {
+                    icon.innerHTML = '<img id="userAvatarImg" alt="头像" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">';
+                    img = document.getElementById('userAvatarImg');
+                    icon.title = '我的头像';
+                }
+                img.src = currentUser.avatar_url;
+            }
         }
 
         function togglePet() {
