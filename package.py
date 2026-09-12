@@ -1,65 +1,63 @@
-import os
-import zipfile
-from datetime import datetime
+import os, zipfile, time
 
-APP_DIR = os.path.dirname(os.path.abspath(__file__))
-PACKAGE_NAME = f"灵智尚人_AI助手_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+src = r'd:\PythonProject3\.venv'
+ts = time.strftime('%Y%m%d')
+out = os.path.join(src, f'project_full_{ts}.zip')
 
-INCLUDE_FILES = [
-    'app.py',
-    'api_public.py',
-    'auto_manage.py',
-    'code_node.py',
-    'requirements.txt',
-    'knowledge.txt',
-    'students.json',
-    'search_logs.json',
+exclude_dirs = {
+    'Lib', 'Scripts', 'share', '__pycache__',
+    'build', 'dist', '.git', 'node_modules',
+    'workbuddy', 'backup_2026-05-09',
+    'temp_package_check', 'temp_stage_pack',
+    'uploads', '_backup_merged', '_merge_other', '_mobile_test', 'backup'
+}
+
+exclude_files = {
+    '.workbuddy',
+    'api_key.local',
+    'project_full_20260904.zip',
+    'project_full_20260909.zip',
+    '灵智尚人_云服务器部署包.zip',
+    'deploy_upload.zip',
+    'CACHEDIR.TAG',
+    'pyvenv.cfg',
+    'flask_err.log',
+    'flask_out.log',
+    'README_备份说明.txt',
+    'README_20260904155847.md',
+    'README_20260904155849.md',
+    'package.py',
+    'test1.py',
     'classes.json',
-    'notifications.json',
-    'wrong_questions.json',
-    'wrong_questions_agent.json',
+    'conversations.json',
+    'search_logs.json',
     'upload_history.json',
-    'deploy.sh',
-    'Dockerfile',
-    'docker-compose.yml',
-    'README.md',
-    'README_备份说明.txt'
-]
+    'siliconflow_qwen35_tongxin_test.py',
+    '灵智尚人_AI助手.spec'
+}
 
-INCLUDE_DIRS = [
-    'templates'
-]
+exclude_prefix = ['temp_', 'test', 'old_', 'project_full_2']
 
-def package_app():
-    print(f"开始打包...")
-    
-    zip_path = os.path.join(APP_DIR, f"{PACKAGE_NAME}.zip")
-    
-    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for filename in INCLUDE_FILES:
-            filepath = os.path.join(APP_DIR, filename)
-            if os.path.exists(filepath):
-                zipf.write(filepath, filename)
-                print(f"添加文件: {filename}")
-            else:
-                print(f"跳过不存在的文件: {filename}")
-        
-        for dirname in INCLUDE_DIRS:
-            dirpath = os.path.join(APP_DIR, dirname)
-            if os.path.isdir(dirpath):
-                for root, _, files in os.walk(dirpath):
-                    for file in files:
-                        filepath = os.path.join(root, file)
-                        arcname = os.path.relpath(filepath, APP_DIR)
-                        zipf.write(filepath, arcname)
-                        print(f"添加文件: {arcname}")
-    
-    size = os.path.getsize(zip_path)
-    print(f"\n打包完成！")
-    print(f"文件路径: {zip_path}")
-    print(f"文件大小: {size / 1024 / 1024:.2f} MB")
-    
-    return zip_path
+count = 0
+total_size = 0
+with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as zf:
+    for root, dirs, files in os.walk(src):
+        dirs[:] = [d for d in dirs if d not in exclude_dirs]
+        for f in files:
+            if f in exclude_files:
+                continue
+            if any(f.startswith(p) for p in exclude_prefix):
+                # check if it's actually a match
+                if f in exclude_files:
+                    continue
+                # allow normal files
+            ext = os.path.splitext(f)[1]
+            full = os.path.join(root, f)
+            rel = os.path.relpath(full, src)
+            zf.write(full, rel)
+            count += 1
+            total_size += os.path.getsize(full)
 
-if __name__ == '__main__':
-    package_app()
+print(f"Package: {os.path.basename(out)}")
+print(f"Size: {os.path.getsize(out) / (1024*1024):.2f} MB")
+print(f"Files: {count}")

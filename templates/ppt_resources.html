@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>课件中心 - 灵智尚人</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .header h1 { color: #333; font-size: 24px; }
+        .btn {
+            padding: 10px 20px;
+            background: #2a5298;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .search-bar {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .search-bar input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+        }
+        .search-bar input:focus { border-color: #2a5298; }
+        .search-bar button {
+            padding: 10px 25px;
+            background: #2a5298;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .search-bar button:hover { background: #1e3c72; }
+        .ppt-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+        .ppt-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .ppt-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+        .ppt-card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .ppt-icon {
+            width: 44px; height: 44px;
+            background: rgba(255,255,255,0.25);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+        .ppt-card-header .info { flex: 1; min-width: 0; }
+        .ppt-card-header .filename {
+            color: white; font-size: 15px; font-weight: 600;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .ppt-card-header .uploader {
+            color: rgba(255,255,255,0.8); font-size: 12px; margin-top: 3px;
+        }
+        .ppt-card-body { padding: 16px 20px; }
+        .ppt-meta {
+            display: flex; gap: 16px; margin-bottom: 12px;
+            font-size: 12px; color: #888;
+        }
+        .ppt-meta span { display: flex; align-items: center; gap: 4px; }
+        .chapter-list, .kp-list { margin-bottom: 12px; }
+        .section-title {
+            font-size: 13px; font-weight: 600; color: #555;
+            margin-bottom: 6px;
+        }
+        .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+        .tag {
+            background: #e8ecfd; color: #5144ad;
+            padding: 3px 10px; border-radius: 8px; font-size: 12px;
+        }
+        .tag.chapter { background: #e6f7ff; color: #096dd9; }
+        .ppt-card-footer {
+            padding: 12px 20px;
+            border-top: 1px solid #f0f2f5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+        .footer-left { font-size: 12px; color: #999; }
+        .footer-actions { display: flex; gap: 8px; }
+        .action-btn {
+            padding: 8px 16px;
+            color: white; border: none; border-radius: 8px;
+            cursor: pointer; font-size: 13px; text-decoration: none;
+            display: inline-flex; align-items: center; gap: 4px;
+        }
+        .preview-btn { background: linear-gradient(135deg, #7b2ff7, #f107a3); }
+        .download-btn { background: linear-gradient(135deg, #52c41a, #389e0d); }
+        .action-btn:hover { opacity: 0.9; }
+        .empty-state {
+            text-align: center; padding: 60px 20px; color: #999;
+            background: white; border-radius: 15px;
+        }
+        .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+        .loading { text-align: center; padding: 40px; color: #fff; font-size: 15px; }
+
+        /* ===== 预览弹窗 ===== */
+        #previewOverlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+            z-index: 100000; display: none; flex-direction: column;
+        }
+        .preview-toolbar {
+            background: #1f1f2e; color: #fff;
+            padding: 10px 20px;
+            display: flex; align-items: center; gap: 14px;
+            flex-shrink: 0;
+        }
+        .preview-toolbar .title {
+            flex: 1; font-size: 14px; font-weight: 600;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .preview-toolbar button {
+            padding: 6px 14px; border: none; border-radius: 6px;
+            cursor: pointer; font-size: 13px;
+        }
+        .tb-download { background: #52c41a; color: #fff; }
+        .tb-close { background: #ff4d4f; color: #fff; }
+        .preview-viewport {
+            flex: 1; overflow: auto; padding: 24px 12px;
+            display: flex; flex-direction: column; align-items: center; gap: 20px;
+            background: #4a4a5a;
+        }
+        .preview-hint { color: #ddd; font-size: 13px; }
+        .preview-error {
+            background: #fff; border-radius: 10px; padding: 30px 40px;
+            text-align: center; color: #d4380d; max-width: 480px;
+        }
+        .preview-error a { color: #1890ff; }
+        #previewStage { position: relative; }
+        #previewStage canvas, #previewStage svg, #previewStage img { max-width: 100%; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 课件中心</h1>
+            <a href="/" class="btn">← 返回主页</a>
+        </div>
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="搜索课件名称、章节或知识点..." onkeydown="if(event.key==='Enter')searchPPT()">
+            <button onclick="searchPPT()">🔍 搜索</button>
+            <button onclick="loadAll()" style="background:#52c41a;">📋 全部</button>
+        </div>
+        <div id="pptContainer">
+            <div class="loading">加载中...</div>
+        </div>
+    </div>
+
+    <!-- PPT 在线预览弹窗 -->
+    <div id="previewOverlay">
+        <div class="preview-toolbar">
+            <span style="font-size:18px;">📊</span>
+            <span class="title" id="previewTitle">课件预览</span>
+            <a class="tb-download" id="previewDownload" style="text-decoration:none;padding:6px 14px;border-radius:6px;font-size:13px;">⬇ 下载</a>
+            <button class="tb-close" onclick="closePreview()">✕ 关闭</button>
+        </div>
+        <div class="preview-viewport" id="previewViewport">
+            <div id="previewStage"></div>
+        </div>
+    </div>
+
+    <!-- pptx-preview UMD 依赖 Node process 全局变量，浏览器环境需垫片 -->
+    <script>
+        window.process = window.process || {
+            env: { NODE_ENV: 'production' },
+            version: 'v16.0.0',
+            browser: true,
+            nextTick: function (fn) {
+                var args = Array.prototype.slice.call(arguments, 1);
+                setTimeout(function () { fn.apply(null, args); }, 0);
+            }
+        };
+    </script>
+    <script src="/static/vendor/pptx/pptx-preview.umd.js"></script>
+    <script>
+        async function loadAll() {
+            document.getElementById('searchInput').value = '';
+            const container = document.getElementById('pptContainer');
+            container.innerHTML = '<div class="loading">加载中...</div>';
+            try {
+                const res = await fetch('/api/ppt/list');
+                const data = await res.json();
+                if (!data.success) {
+                    container.innerHTML = `<div class="empty-state"><div class="icon">😕</div>${data.error || '加载失败'}</div>`;
+                    return;
+                }
+                renderPPT(data.ppt_list || []);
+            } catch (e) {
+                container.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div>网络错误，请稍后重试</div>`;
+            }
+        }
+
+        async function searchPPT() {
+            const keyword = document.getElementById('searchInput').value.trim();
+            if (!keyword) { loadAll(); return; }
+            const container = document.getElementById('pptContainer');
+            container.innerHTML = '<div class="loading">搜索中...</div>';
+            try {
+                const res = await fetch(`/api/ppt/search?keyword=${encodeURIComponent(keyword)}`);
+                const data = await res.json();
+                if (!data.success) {
+                    container.innerHTML = `<div class="empty-state"><div class="icon">😕</div>${data.error || '搜索失败'}</div>`;
+                    return;
+                }
+                renderPPT(data.results || []);
+            } catch (e) {
+                container.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div>网络错误，请稍后重试</div>`;
+            }
+        }
+
+        // ===== PPT 在线预览 =====
+        let currentPreviewer = null;
+        let currentList = [];
+
+        function renderPPT(list) {
+            currentList = list;
+            const container = document.getElementById('pptContainer');
+            if (!list.length) {
+                container.innerHTML = `<div class="empty-state"><div class="icon">📭</div>暂无课件资源<br><span style="font-size:13px;">老师上传 PPT 后会在这里显示</span></div>`;
+                return;
+            }
+            container.innerHTML = '<div class="ppt-grid">' + list.map(ppt => {
+                const chapters = (ppt.chapters || []).slice(0, 5);
+                const kps = (ppt.knowledge_points || []).slice(0, 6);
+                const dn = encodeURIComponent(ppt.download_name);
+                return `
+                <div class="ppt-card">
+                    <div class="ppt-card-header">
+                        <div class="ppt-icon">📊</div>
+                        <div class="info">
+                            <div class="filename" title="${ppt.filename}">${ppt.filename}</div>
+                            <div class="uploader">👨‍🏫 ${ppt.uploader || '未知教师'} · ${ppt.upload_time || ''}</div>
+                        </div>
+                    </div>
+                    <div class="ppt-card-body">
+                        ${chapters.length ? `
+                        <div class="chapter-list">
+                            <div class="section-title">📖 章节</div>
+                            <div class="tags">${chapters.map(c => `<span class="tag chapter">${c.title}</span>`).join('')}</div>
+                        </div>` : ''}
+                        ${kps.length ? `
+                        <div class="kp-list">
+                            <div class="section-title">💡 知识点</div>
+                            <div class="tags">${kps.map(k => `<span class="tag">${k}</span>`).join('')}</div>
+                        </div>` : ''}
+                    </div>
+                    <div class="ppt-card-footer">
+                        <span class="footer-left">${chapters.length} 章 / ${kps.length} 知识点</span>
+                        <div class="footer-actions">
+                            <button class="action-btn preview-btn" onclick="openPreviewById('${ppt.id}')">👁 在线预览</button>
+                            <a href="/uploads/${dn}" class="action-btn download-btn">⬇ 下载</a>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('') + '</div>';
+        }
+
+        function openPreviewById(id) {
+            const ppt = currentList.find(p => p.id === id);
+            if (ppt) openPreview(ppt.filename, ppt.download_name);
+        }
+
+        async function openPreview(filename, downloadName) {
+            const overlay = document.getElementById('previewOverlay');
+            const stage = document.getElementById('previewStage');
+            const viewport = document.getElementById('previewViewport');
+            document.getElementById('previewTitle').textContent = '正在加载：' + filename;
+            document.getElementById('previewDownload').href = '/uploads/' + encodeURIComponent(downloadName);
+            stage.innerHTML = '<div class="preview-hint">📥 正在加载课件，请稍候...</div>';
+            overlay.style.display = 'flex';
+            viewport.scrollTop = 0;
+
+            const ppt = currentList.find(p => p.download_name === downloadName) || {};
+
+            // 方式一：服务器已转好逐页图片 -> 按页懒加载，秒开
+            if (ppt.preview_ready && ppt.page_count > 0 && ppt.preview_dir) {
+                stage.innerHTML = '';
+                const wrap = document.createElement('div');
+                wrap.style.cssText = 'width:100%;max-width:960px;display:flex;flex-direction:column;gap:16px;align-items:center;';
+                const width = Math.min(960, viewport.clientWidth - 48);
+                for (let i = 1; i <= ppt.page_count; i++) {
+                    const img = document.createElement('img');
+                    img.loading = 'lazy';
+                    img.style.cssText = `width:100%;background:#fff;border-radius:6px;box-shadow:0 2px 14px rgba(0,0,0,0.35);min-height:${Math.round(width * 0.56)}px;`;
+                    img.src = `/images/${ppt.preview_dir}/page-${String(i).padStart(2, '0')}.jpg`;
+                    wrap.appendChild(img);
+                }
+                stage.appendChild(wrap);
+                document.getElementById('previewTitle').textContent = `课件预览：${filename}（共${ppt.page_count}页）`;
+                return;
+            }
+
+            // 方式二：图片转换中 -> 提示并轮询，转完自动刷新
+            if (ppt.download_name && ppt.preview_ready === false) {
+                stage.innerHTML = '<div class="preview-hint">⚙️ 服务器正在把课件转成高清页面（大文件约需1-3分钟），转好后自动打开…</div>';
+                const waitReady = setInterval(async () => {
+                    try {
+                        const res = await fetch('/api/ppt/list');
+                        const data = await res.json();
+                        const cur = (data.ppt_list || []).find(p => p.download_name === downloadName);
+                        if (cur && cur.preview_ready) {
+                            clearInterval(waitReady);
+                            if (document.getElementById('previewOverlay').style.display !== 'none') {
+                                currentList = data.ppt_list || [];
+                                openPreview(filename, downloadName);
+                            }
+                        }
+                    } catch (e) { /* 网络抖动继续轮询 */ }
+                }, 8000);
+                return;
+            }
+
+            // 方式三：旧数据兜底 -> 浏览器端解析引擎
+            try {
+                if (!window.pptxPreview || !window.pptxPreview.init) {
+                    throw new Error('预览组件未加载');
+                }
+                const resp = await fetch('/uploads/' + encodeURIComponent(downloadName));
+                if (!resp.ok) throw new Error('文件加载失败 HTTP ' + resp.status);
+                const buf = await resp.arrayBuffer();
+
+                if (currentPreviewer) { try { currentPreviewer.destroy(); } catch (e) {} }
+                stage.innerHTML = '';
+                const width = Math.min(960, viewport.clientWidth - 48);
+                currentPreviewer = window.pptxPreview.init(stage, { width: width, height: Math.round(width * 9 / 16) });
+                await currentPreviewer.preview(buf);
+                document.getElementById('previewTitle').textContent = '课件预览：' + filename;
+            } catch (err) {
+                stage.innerHTML = `
+                    <div class="preview-error">
+                        <div style="font-size:32px;margin-bottom:12px;">😵</div>
+                        <div style="margin-bottom:10px;font-weight:600;">课件预览失败</div>
+                        <div style="color:#666;font-size:13px;margin-bottom:14px;">${String(err.message || err)}</div>
+                        <a href="/uploads/${encodeURIComponent(downloadName)}" style="color:#1890ff;font-size:14px;">点此下载后用 PowerPoint / WPS 打开 →</a>
+                    </div>`;
+            }
+        }
+
+        function closePreview() {
+            document.getElementById('previewOverlay').style.display = 'none';
+            if (currentPreviewer) {
+                try { currentPreviewer.destroy(); } catch (e) {}
+                currentPreviewer = null;
+            }
+            document.getElementById('previewStage').innerHTML = '';
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closePreview();
+        });
+
+        loadAll();
+    </script>
+</body>
+</html>

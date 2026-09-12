@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -371,6 +371,58 @@
             font-size: 12px;
             color: #666;
         }
+
+        .history-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .hbtn {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #fff;
+        }
+        .hbtn-preview { background: linear-gradient(135deg, #7b2ff7, #f107a3); }
+        .hbtn-del { background: #ff4d4f; }
+        .hbtn:hover { opacity: 0.88; }
+
+        /* ===== PPT 预览弹窗 ===== */
+        #pptPreviewOverlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+            z-index: 100000; display: none; flex-direction: column;
+        }
+        .pv-toolbar {
+            background: #1f1f2e; color: #fff;
+            padding: 10px 20px;
+            display: flex; align-items: center; gap: 14px;
+            flex-shrink: 0;
+        }
+        .pv-toolbar .pv-title {
+            flex: 1; font-size: 14px; font-weight: 600;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .pv-toolbar button, .pv-toolbar a {
+            padding: 6px 14px; border: none; border-radius: 6px;
+            cursor: pointer; font-size: 13px; text-decoration: none; color: #fff;
+        }
+        .pv-dl { background: #52c41a; }
+        .pv-close { background: #ff4d4f; }
+        .pv-viewport {
+            flex: 1; overflow: auto; padding: 24px 12px;
+            display: flex; flex-direction: column; align-items: center;
+            background: #4a4a5a;
+        }
+        .pv-hint { color: #ddd; font-size: 14px; }
+        .pv-error {
+            background: #fff; border-radius: 10px; padding: 30px 40px;
+            text-align: center; color: #d4380d; max-width: 480px;
+        }
+        #pptPreviewStage { position: relative; width: 100%; display: flex; justify-content: center; }
+        #pptPreviewStage canvas, #pptPreviewStage svg, #pptPreviewStage img { max-width: 100%; }
         
         .history-status {
             font-size: 14px;
@@ -831,6 +883,7 @@
                 return;
             }
 
+            historyCache = history;
             historyList.innerHTML = history.map(item => `
                 <div class="history-item ${item.status}">
                     <div class="history-info">
@@ -843,13 +896,161 @@
                             <span>📝 ${item.extracted_length.toLocaleString()} 字符</span>
                         </div>
                     </div>
-                    <div class="history-status ${item.status}">
-                        ${item.status === 'success' ? '✅ 成功' : '❌ 失败'}
+                    <div class="history-actions">
+                        ${item.download_name ? `<button class="hbtn hbtn-preview" onclick="previewHistoryById('${item.id}')">👁 预览</button>` : ''}
+                        <button class="hbtn hbtn-del" onclick="deleteUpload('${item.id}')">🗑 删除</button>
+                        <div class="history-status ${item.status}">
+                            ${item.status === 'success' ? '✅ 成功' : '❌ 失败'}
+                        </div>
                     </div>
                 </div>
             `).join('');
         }
+
+        let historyCache = [];
+
+        async function deleteUpload(id) {
+            const item = historyCache.find(h => h.id === id);
+            if (!item) return;
+            if (!confirm(`确定删除 "${item.filename}" 吗？\n将同时从AI知识库中移除该文档内容，学生端课件中心也不再显示。`)) return;
+            try {
+                const res = await fetch(`/api/knowledge/upload/${id}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.success) {
+                    alert(data.message || '删除成功');
+                    loadUploadHistory();
+                } else {
+                    alert(data.error || '删除失败');
+                }
+            } catch (e) {
+                alert('网络错误，删除失败');
+            }
+        }
+
+        function previewHistoryById(id) {
+            const item = historyCache.find(h => h.id === id);
+            if (item && item.download_name) {
+                openUploadPreview(item.filename, item.download_name);
+            }
+        }
+
+        async function openUploadPreview(filename, downloadName) {
+            const overlay = document.getElementById('pptPreviewOverlay');
+            const stage = document.getElementById('pptPreviewStage');
+            const viewport = document.getElementById('pptPreviewViewport');
+            document.getElementById('pptPreviewTitle').textContent = '正在加载：' + filename;
+            document.getElementById('pptPreviewDownload').href = '/uploads/' + encodeURIComponent(downloadName);
+            stage.innerHTML = '<div class="pv-hint">📥 正在加载课件，请稍候...</div>';
+            overlay.style.display = 'flex';
+            viewport.scrollTop = 0;
+
+            const ppt = historyCache.find(h => h.download_name === downloadName) || {};
+
+            // 方式一：服务器已转好逐页图片 -> 按页懒加载，秒开
+            if (ppt.preview_ready && ppt.page_count > 0 && ppt.preview_dir) {
+                stage.innerHTML = '';
+                const wrap = document.createElement('div');
+                wrap.style.cssText = 'width:100%;max-width:960px;display:flex;flex-direction:column;gap:16px;align-items:center;';
+                const width = Math.min(960, viewport.clientWidth - 48);
+                for (let i = 1; i <= ppt.page_count; i++) {
+                    const img = document.createElement('img');
+                    img.loading = 'lazy';
+                    img.style.cssText = `width:100%;background:#fff;border-radius:6px;box-shadow:0 2px 14px rgba(0,0,0,0.35);min-height:${Math.round(width * 0.56)}px;`;
+                    img.src = `/images/${ppt.preview_dir}/page-${String(i).padStart(2, '0')}.jpg`;
+                    wrap.appendChild(img);
+                }
+                stage.appendChild(wrap);
+                document.getElementById('pptPreviewTitle').textContent = `课件预览：${filename}（共${ppt.page_count}页）`;
+                return;
+            }
+
+            // 方式二：转换中 -> 轮询等待
+            if (ppt.download_name && ppt.preview_ready === false) {
+                stage.innerHTML = '<div class="pv-hint">⚙️ 服务器正在把课件转成高清页面（大文件约需1-3分钟），转好后自动打开…</div>';
+                const waitReady = setInterval(async () => {
+                    try {
+                        const res = await fetch('/api/knowledge/history');
+                        const data = await res.json();
+                        const cur = (data.history || []).find(h => h.download_name === downloadName);
+                        if (cur && cur.preview_ready) {
+                            clearInterval(waitReady);
+                            if (document.getElementById('pptPreviewOverlay').style.display !== 'none') {
+                                historyCache = data.history || [];
+                                openUploadPreview(filename, downloadName);
+                            }
+                        }
+                    } catch (e) { /* 继续轮询 */ }
+                }, 8000);
+                return;
+            }
+
+            // 方式三：旧数据兜底 -> 浏览器端解析引擎
+            try {
+                if (!window.pptxPreview || !window.pptxPreview.init) {
+                    throw new Error('预览组件未加载');
+                }
+                const resp = await fetch('/uploads/' + encodeURIComponent(downloadName));
+                if (!resp.ok) throw new Error('文件加载失败 HTTP ' + resp.status);
+                const buf = await resp.arrayBuffer();
+
+                if (currentPptPreviewer) { try { currentPptPreviewer.destroy(); } catch (e) {} }
+                stage.innerHTML = '';
+                const width = Math.min(960, viewport.clientWidth - 48);
+                currentPptPreviewer = window.pptxPreview.init(stage, { width: width, height: Math.round(width * 9 / 16) });
+                await currentPptPreviewer.preview(buf);
+                document.getElementById('pptPreviewTitle').textContent = '课件预览：' + filename;
+            } catch (err) {
+                stage.innerHTML = `
+                    <div class="pv-error">
+                        <div style="font-size:32px;margin-bottom:12px;">😵</div>
+                        <div style="margin-bottom:10px;font-weight:600;">课件预览失败</div>
+                        <div style="color:#666;font-size:13px;margin-bottom:14px;">${String(err.message || err)}</div>
+                        <a href="/uploads/${encodeURIComponent(downloadName)}" style="color:#1890ff;font-size:14px;">点此下载后用 PowerPoint / WPS 打开 →</a>
+                    </div>`;
+            }
+        }
+
+        function closeUploadPreview() {
+            document.getElementById('pptPreviewOverlay').style.display = 'none';
+            if (currentPptPreviewer) {
+                try { currentPptPreviewer.destroy(); } catch (e) {}
+                currentPptPreviewer = null;
+            }
+            document.getElementById('pptPreviewStage').innerHTML = '';
+        }
+
+        let currentPptPreviewer = null;
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeUploadPreview();
+        });
     </script>
+
+    <!-- PPT 在线预览弹窗 -->
+    <div id="pptPreviewOverlay">
+        <div class="pv-toolbar">
+            <span style="font-size:18px;">📊</span>
+            <span class="pv-title" id="pptPreviewTitle">课件预览</span>
+            <a class="pv-dl" id="pptPreviewDownload">⬇ 下载</a>
+            <button class="pv-close" onclick="closeUploadPreview()">✕ 关闭</button>
+        </div>
+        <div class="pv-viewport" id="pptPreviewViewport">
+            <div id="pptPreviewStage"></div>
+        </div>
+    </div>
+
+    <!-- pptx-preview UMD 依赖 Node process 全局变量，浏览器环境需垫片 -->
+    <script>
+        window.process = window.process || {
+            env: { NODE_ENV: 'production' },
+            version: 'v16.0.0',
+            browser: true,
+            nextTick: function (fn) {
+                var args = Array.prototype.slice.call(arguments, 1);
+                setTimeout(function () { fn.apply(null, args); }, 0);
+            }
+        };
+    </script>
+    <script src="/static/vendor/pptx/pptx-preview.umd.js"></script>
 
     <!-- 全局桌宠 Desktop Pet -->
     <link rel="stylesheet" href="/static/desktop_pet.css">

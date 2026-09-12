@@ -9,6 +9,7 @@ import uuid
 import sys
 import time
 import random
+import threading
 from datetime import datetime, timedelta
 from typing import Dict, List
 from werkzeug.utils import secure_filename
@@ -32,7 +33,8 @@ except ImportError:
     PPTX_AVAILABLE = False
 
 app = Flask(__name__)
-app.secret_key = secrets.token_hex(16)  # 安全密钥
+# 优先使用环境变量（docker-compose 已配置），其次使用固定默认值，避免多 worker 间 session 签名不一致
+app.secret_key = os.environ.get('SECRET_KEY', 'lingzhishangren-fixed-secret-key-2024')
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.jinja_env.auto_reload = True
 
@@ -78,10 +80,10 @@ SEARCH_LOG_FILE = "search_logs.json"
 STUDENTS_FILE = "students.json"
 CLASSES_FILE = "classes.json"
 NOTIFICATIONS_FILE = "notifications.json"
-UPLOAD_HISTORY_FILE = "upload_history.json"
+UPLOAD_HISTORY_FILE = "data/upload_history.json"
 WRONG_QUESTIONS_FILE = "wrong_questions.json"
 LEARNING_RECORDS_FILE = "learning_records.json"
-PPT_METADATA_FILE = "ppt_metadata.json"  # 学习曲线记录
+PPT_METADATA_FILE = "data/ppt_metadata.json"  # PPT课件元数据（持久化到挂载的data目录）
 
 # ====================== 文件上传配置 ======================
 UPLOAD_FOLDER = "uploads"
@@ -92,8 +94,25 @@ ALLOWED_EXTENSIONS = {
     'zip', 'rar', '7z'  # 压缩包
 }
 
-# 确保上传文件夹存在
+# 确保上传文件夹和持久化数据目录存在
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs("data", exist_ok=True)
+
+
+def _migrate_to_data_dir(data_path: str):
+    """启动时将镜像根目录下的旧数据迁移到持久化的 data/ 目录（容器重建不丢失）"""
+    legacy_path = os.path.basename(data_path)
+    if not os.path.exists(data_path) and os.path.exists(legacy_path):
+        try:
+            import shutil
+            shutil.move(legacy_path, data_path)
+            print(f"已迁移历史数据: {legacy_path} -> {data_path}")
+        except Exception as e:
+            print(f"迁移 {legacy_path} 失败: {e}")
+
+
+_migrate_to_data_dir(UPLOAD_HISTORY_FILE)
+_migrate_to_data_dir(PPT_METADATA_FILE)
 
 # ====================== 能力评估指标 ======================
 # 12维能力维度配置（对应岗位能力雷达图）
@@ -1536,6 +1555,67 @@ def save_ppt_metadata(metadata: List[Dict]):
             json.dump(metadata, f, ensure_ascii=False, indent=2)
     except Exception as e:
         print(f"保存PPT元数据失败: {e}")
+
+
+# ====================== PPT 转图片预览（大文件秒开） ======================
+PPT_PREVIEW_DIR = os.path.join(UPLOAD_FOLDER, "previews")
+_converting_lock = threading.Lock()
+_converting = set()
+
+
+def convert_pptx_to_images(download_name: str):
+    """后台将PPTX逐页转为JPEG图片，转换完成回写元数据 preview_ready/page_count"""
+    stem = download_name.rsplit('.', 1)[0]
+    with _converting_lock:
+        if stem in _converting:
+            return
+        _converting.add(stem)
+    try:
+        import subprocess
+        import tempfile
+        import glob as globmod
+        src = os.path.join(UPLOAD_FOLDER, download_name)
+        if not os.path.exists(src):
+            print(f"PPT预览转换跳过，源文件不存在: {download_name}")
+            return
+        out_dir = os.path.join(PPT_PREVIEW_DIR, stem)
+        os.makedirs(out_dir, exist_ok=True)
+        with tempfile.TemporaryDirectory() as tmp:
+            # pptx -> pdf（LibreOffice 无头模式；25.x 不支持 --no-sandbox；profile独立避免并发锁）
+            profile_url = 'file://' + os.path.join(tmp, 'lo_profile')
+            r = subprocess.run(
+                ['soffice', '--headless', '--norestore', '--nologo',
+                 f'-env:UserInstallation={profile_url}',
+                 '--convert-to', 'pdf', '--outdir', tmp, src],
+                timeout=600, capture_output=True)
+            pdf_path = os.path.join(tmp, stem + '.pdf')
+            if not os.path.exists(pdf_path):
+                detail = (r.stderr.decode('utf-8', 'ignore') + r.stdout.decode('utf-8', 'ignore'))[:300]
+                raise RuntimeError(f"PDF转换失败: {detail}")
+            # pdf -> 逐页jpg（统一两位编号 page-01.jpg）
+            subprocess.run(
+                ['pdftoppm', '-jpeg', '-r', '90', '-jpegopt', 'quality=80',
+                 pdf_path, os.path.join(out_dir, 'page')],
+                timeout=300, capture_output=True)
+        pages = sorted(globmod.glob(os.path.join(out_dir, 'page*.jpg')))
+        if not pages:
+            raise RuntimeError("PDF未产出页面图片")
+        if len(pages) > 1 or os.path.basename(pages[0]) != 'page-01.jpg':
+            for idx, old in enumerate(pages, 1):
+                os.replace(old, os.path.join(out_dir, f'page-{idx:02d}.jpg'))
+        metadata = load_ppt_metadata()
+        for m in metadata:
+            if m.get('download_name') == download_name:
+                m['preview_ready'] = True
+                m['page_count'] = len(pages)
+                m['preview_dir'] = f'previews/{stem}'
+        save_ppt_metadata(metadata)
+        print(f"PPT预览图转换完成: {download_name} -> {len(pages)}页")
+    except Exception as e:
+        print(f"PPT预览图转换失败 {download_name}: {e}")
+    finally:
+        with _converting_lock:
+            _converting.discard(stem)
 
 
 def save_ppt_for_download(file, file_path: str) -> str:
@@ -3714,9 +3794,14 @@ def process_single_file(file):
                 'chapters': chapters,
                 'knowledge_points': knowledge_points,
                 'upload_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                'uploader': session.get('username', 'unknown')
+                'uploader': session.get('username') or session.get('student_name') or 'unknown',
+                'preview_ready': False,
+                'page_count': 0,
+                'preview_dir': f"previews/{download_name.rsplit('.', 1)[0]}"
             })
             save_ppt_metadata(ppt_metadata)
+            # 后台转图片：学生预览秒开，不阻塞上传响应
+            threading.Thread(target=convert_pptx_to_images, args=(download_name,), daemon=True).start()
         else:
             os.remove(file_path)
         
@@ -3726,7 +3811,7 @@ def process_single_file(file):
             'filename': filename,
             'extracted_length': len(extracted_text),
             'upload_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'uploader': session.get('username', 'unknown'),
+            'uploader': session.get('username') or session.get('student_name') or 'unknown',
             'status': 'success',
             'chapters': chapters,
             'knowledge_points': knowledge_points
@@ -3867,15 +3952,91 @@ def get_upload_history():
     """获取上传历史记录"""
     if not session.get('authenticated'):
         return jsonify({'error': '请先登录'}), 401
-    
+
     history = load_upload_history()
     history.reverse()
-    
+
+    # 合并PPT预览信息（供教师端在线预览使用）
+    ppt_by_name = {p['filename']: p for p in load_ppt_metadata()}
+    for h in history:
+        p = ppt_by_name.get(h.get('filename'))
+        if p:
+            h['download_name'] = p.get('download_name', '')
+            h['preview_ready'] = p.get('preview_ready', False)
+            h['page_count'] = p.get('page_count', 0)
+            h['preview_dir'] = p.get('preview_dir', '')
+
     return jsonify({
         'success': True,
         'history': history,
         'total_count': len(history)
     })
+
+
+def remove_knowledge_sections(filename: str):
+    """从knowledge.txt移除指定文档的导入段落"""
+    try:
+        sep = '=' * 50
+        if os.path.exists(KNOWLEDGE_FILE):
+            with open(KNOWLEDGE_FILE, 'r', encoding='utf-8') as f:
+                content = f.read()
+            parts = content.split(sep)
+            out = []
+            skip_next = False
+            for part in parts:
+                if skip_next:
+                    skip_next = False
+                    continue
+                if filename in part and '【文档导入】' in part:
+                    skip_next = True
+                    continue
+                out.append(part)
+            with open(KNOWLEDGE_FILE, 'w', encoding='utf-8') as f:
+                f.write(sep.join(out))
+    except Exception as e:
+        print(f"清理知识库段落失败: {e}")
+
+
+@app.route('/api/knowledge/upload/<entry_id>', methods=['DELETE'])
+def delete_knowledge_upload(entry_id):
+    """删除上传记录：同时清理知识库段落、PPT文件、预览图和元数据"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'teacher':
+        return jsonify({'error': '只有老师可以删除上传的文件'}), 403
+
+    history = load_upload_history()
+    entry = next((h for h in history if h.get('id') == entry_id), None)
+    if not entry:
+        return jsonify({'error': '记录不存在'}), 404
+
+    filename = entry.get('filename', '')
+
+    # 1. 移除知识库中的导入段落
+    remove_knowledge_sections(filename)
+
+    # 2. 移除PPT文件、预览图目录和元数据
+    meta = load_ppt_metadata()
+    removed = [m for m in meta if m.get('filename') == filename]
+    save_ppt_metadata([m for m in meta if m.get('filename') != filename])
+    for m in removed:
+        fpath = os.path.abspath(os.path.join(UPLOAD_FOLDER, m.get('download_name', '')))
+        if fpath.startswith(os.path.abspath(UPLOAD_FOLDER)) and os.path.exists(fpath):
+            os.remove(fpath)
+        pd_rel = m.get('preview_dir', '')
+        if pd_rel.startswith('previews/'):
+            pdir = os.path.abspath(os.path.join(UPLOAD_FOLDER, pd_rel))
+            if pdir.startswith(os.path.abspath(os.path.join(UPLOAD_FOLDER, 'previews'))):
+                import shutil
+                shutil.rmtree(pdir, ignore_errors=True)
+
+    # 3. 移除上传历史条目
+    save_upload_history([h for h in history if h.get('id') != entry_id])
+
+    # 4. 刷新系统提示词中的知识库内容
+    update_system_prompt()
+
+    return jsonify({'success': True, 'message': f'已删除 "{filename}" 及其知识库内容'})
 
 
 # ====================== 阶段一：核心引擎升级 API ======================
@@ -4646,6 +4807,14 @@ def list_ppt():
         'ppt_list': metadata,
         'count': len(metadata)
     })
+
+
+@app.route('/ppt-resources-page')
+def ppt_resources_page():
+    """课件中心页面 - 查看所有教师上传的PPT"""
+    if not session.get('authenticated'):
+        return render_template('login.html')
+    return render_template('ppt_resources.html')
 
 
 @app.route('/student-portrait-page')

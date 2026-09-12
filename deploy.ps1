@@ -42,12 +42,52 @@ Write-Host "    打包完成：$size MB" -ForegroundColor Green
 
 # ================= 2. 上传 =================
 Write-Host "`n[2/3] 上传到服务器（输入服务器登录密码）..." -ForegroundColor Cyan
-scp $LocalZip "${ServerUser}@${ServerHost}:${RemoteZip}"
-if ($LASTEXITCODE -ne 0) { throw "上传失败" }
+Push-Location $Src
+scp "./deploy_upload.zip" "${ServerUser}@${ServerHost}:${RemoteZip}"
+$zipExit = $LASTEXITCODE
+Pop-Location
+if ($zipExit -ne 0) { throw "上传失败" }
 
-# ================= 3. 远程部署 + 验证 =================
-Write-Host "`n[3/3] 远程重建容器（输入登录密码 + sudo 密码）..." -ForegroundColor Cyan
-ssh -t "${ServerUser}@${ServerHost}" "sudo bash -c 'cd $ServerDir && unzip -o $RemoteZip > /dev/null && docker-compose up -d --build && sleep 8 && echo && echo === HEALTH === && curl -s http://localhost:5000/api/v1/health && echo'"
-if ($LASTEXITCODE -ne 0) { throw "部署失败" }
+# ================= 3. 远程部署（后台构建 + 轮询日志，避免SSH长连接断开） ==================
+Write-Host "`n[3/3] 远程重建容器（构建在服务器后台运行）..." -ForegroundColor Cyan
+
+# 上传远程构建脚本并在服务器后台启动构建（避免多层引号 + SSH长连接断开问题）
+# 注意：Windows OpenSSH 的 scp 在脚本内传盘符绝对路径可能误判为远程路径，先切到脚本目录用相对路径
+Push-Location $Src
+scp "./deploy_remote.sh" "${ServerUser}@${ServerHost}:/tmp/deploy_remote.sh"
+$shExit = $LASTEXITCODE
+Pop-Location
+if ($shExit -ne 0) { throw "远程脚本上传失败" }
+ssh "${ServerUser}@${ServerHost}" "sudo sed -i 's/\r$//' /tmp/deploy_remote.sh && sudo bash /tmp/deploy_remote.sh"
+if ($LASTEXITCODE -ne 0) { throw "远程构建启动失败" }
+
+Write-Host "    构建已在服务器后台运行，轮询进度中（安装LibreOffice首次约需3-8分钟）..." -ForegroundColor DarkGray
+
+$done = $false
+$waited = 0
+while (-not $done -and $waited -lt 520) {
+    Start-Sleep -Seconds 20
+    $waited = $waited + 20
+    $log = ssh "${ServerUser}@${ServerHost}" "sudo tail -3 /tmp/deploy_build.log 2>/dev/null" 2>$null
+    $line = ""
+    if ($log) { $line = @($log)[-1] }
+    Write-Host "    [$waited s] $line" -ForegroundColor DarkGray
+    $joined = $log -join "`n"
+    if ($joined -match "EXIT_CODE=0") {
+        $done = $true
+    }
+    if ($joined -match "EXIT_CODE=[1-9]") {
+        Write-Host "`n构建失败，最后40行日志：" -ForegroundColor Red
+        ssh "${ServerUser}@${ServerHost}" "sudo tail -40 /tmp/deploy_build.log"
+        throw "远程构建失败"
+    }
+}
+
+if (-not $done) { throw "构建超时（520秒），请登录服务器查看 /tmp/deploy_build.log" }
+
+Start-Sleep -Seconds 10
+$health = ssh "${ServerUser}@${ServerHost}" "curl -s http://localhost:5000/api/v1/health"
+Write-Host "`n=== HEALTH ===`n$health" -ForegroundColor Yellow
+if ($health -notmatch '"success":true') { throw "健康检查未通过" }
 
 Write-Host "`n完成！浏览器 Ctrl+Shift+R 强刷 http://${ServerHost}:5000" -ForegroundColor Green
