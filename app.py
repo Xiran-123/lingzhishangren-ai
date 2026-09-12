@@ -5200,15 +5200,35 @@ def update_student(student_id):
 
 @app.route('/students/<string:student_id>', methods=['DELETE'])
 def delete_student(student_id):
-    """删除学生"""
+    """删除学生（同时清理其错题本和学习记录）"""
     if not session.get('authenticated'):
         return jsonify({'error': '请先登录'}), 401
-    
+
+    if session.get('role') != 'teacher':
+        return jsonify({'error': '只有老师才能删除学生'}), 403
+
     students = load_students()
+    target = next((s for s in students if s['id'] == student_id), None)
+    if not target:
+        return jsonify({'error': '学生不存在'}), 404
+
     students = [s for s in students if s['id'] != student_id]
     save_students(students)
-    
-    return jsonify({'success': True})
+
+    # 按姓名清理关联数据：错题本 + 学习记录
+    name = target.get('name', '')
+    if name:
+        questions = load_wrong_questions()
+        remain = [q for q in questions if q.get('student_name') != name]
+        if len(remain) != len(questions):
+            save_wrong_questions(remain)
+
+        records = load_learning_records()
+        if name in records:
+            del records[name]
+            save_learning_records(records)
+
+    return jsonify({'success': True, 'deleted': name})
 
 
 @app.route('/students/<string:student_id>/report', methods=['GET'])

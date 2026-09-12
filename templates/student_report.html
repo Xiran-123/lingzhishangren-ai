@@ -148,6 +148,38 @@
             flex-direction: column;
             align-items: center;
             text-align: center;
+            position: relative;
+        }
+
+        /* 卡片右上角删除按钮：hover 时显现 */
+        .card-delete-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: 50%;
+            background: transparent;
+            color: #c3c8d6;
+            font-size: 15px;
+            line-height: 1;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .student-card:hover .card-delete-btn {
+            opacity: 1;
+        }
+
+        .card-delete-btn:hover {
+            background: #ffeded;
+            color: #e74c3c;
+            transform: scale(1.1);
         }
 
         .student-card:hover {
@@ -855,6 +887,7 @@
                 const studentNo = student.student_no ? student.student_no : '暂无学号';
                 return `
                     <div class="student-card" data-id="${student.id}" onclick="selectStudent('${student.id}')">
+                        <button class="card-delete-btn" title="删除学生" onclick="deleteStudent(event, '${student.id}')">✕</button>
                         ${avatarSrc ? 
                             `<img class="student-avatar" src="${avatarSrc}" alt="${student.name}">` : 
                             `<div class="student-avatar">${avatarLetter}</div>`
@@ -891,6 +924,30 @@
                 openReportModal(info);
             } catch (error) {
                 console.error('获取报告失败:', error);
+            }
+        }
+
+        /* ===== 删除学生 ===== */
+        async function deleteStudent(event, studentId) {
+            // 阻止冒泡，避免同时触发卡片点击（打开报告弹窗）
+            event.stopPropagation();
+            const info = (window._studentsCache || []).find(s => String(s.id) === String(studentId)) || {};
+            const name = info.name || '该学生';
+            if (!confirm(`确定要删除学生「${name}」吗？\n删除后将同时清除其错题本和学习记录，此操作不可恢复！`)) {
+                return;
+            }
+            try {
+                const response = await fetch(`/students/${studentId}`, { method: 'DELETE' });
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    alert(`已删除学生「${data.deleted || name}」`);
+                    loadStudents(); // 刷新列表
+                } else {
+                    alert(data.error || '删除失败');
+                }
+            } catch (error) {
+                console.error('删除学生失败:', error);
+                alert('删除失败，请稍后重试');
             }
         }
 
