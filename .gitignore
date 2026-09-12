@@ -75,3 +75,4 @@ cookies.txt
 _backup_merged/
 _merge_other/
 _mobile_test/
+temp_*.json
