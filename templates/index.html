@@ -1404,7 +1404,7 @@
             headerRight.innerHTML = navHTML;
         }
 
-        // ===== 设置菜单（使用说明/桌宠/清除记录/退出登录） =====
+        // ===== 设置菜单（使用说明/桌宠/清除记录）；退出登录为独立按钮 =====
         function settingsNavHTML() {
             return `
                 <div class="settings-wrap">
@@ -1414,9 +1414,9 @@
                         <a class="settings-item" onclick="document.getElementById('avatarInput').click();">🖼️ 更换头像</a>
                         <a class="settings-item" id="petToggleItem" onclick="togglePet();">🐾 关闭桌宠</a>
                         <a class="settings-item" onclick="closeSettings();clearChatHistory();">🗑️ 清除对话记录</a>
-                        <a class="settings-item settings-danger" onclick="closeSettings();doLogout();">🔓 退出登录</a>
                     </div>
                 </div>
+                <button class="nav-btn" style="background: linear-gradient(135deg, #ff4d4f, #cf1322);" onclick="doLogout()" title="退出登录">🔓 退出登录</button>
                 <input type="file" id="avatarInput" accept="image/png,image/jpeg,image/gif,image/webp" style="display:none" onchange="uploadAvatar(this);">`;
         }
 
