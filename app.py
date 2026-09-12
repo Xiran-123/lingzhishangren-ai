@@ -2512,8 +2512,11 @@ def login():
             is_new_user = False
             
             if existing_student:
+                # 一个学号只能对应一个账号：姓名不一致则拒绝登录
+                if existing_student.get('name') and existing_student['name'] != student_name:
+                    return jsonify({'success': False,
+                                    'message': f'该学号已绑定姓名"{existing_student["name"]}"，一个学号只能对应一个账号'})
                 # 更新现有学生信息
-                existing_student['name'] = student_name
                 if class_name:
                     existing_student['class_name'] = class_name
                 existing_student['last_login'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")

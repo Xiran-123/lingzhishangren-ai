@@ -131,6 +131,34 @@
             box-shadow: 0 4px 12px rgba(0, 130, 255, 0.3);
         }
 
+        /* ===== 设置下拉菜单 ===== */
+        .settings-wrap { position: relative; display: inline-block; }
+        .settings-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: calc(100% + 8px);
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.22);
+            padding: 6px;
+            min-width: 180px;
+            z-index: 10000;
+        }
+        .settings-menu.open { display: block; }
+        .settings-item {
+            display: block;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #333;
+            cursor: pointer;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .settings-item:hover { background: #f0f5ff; }
+        .settings-danger { color: #ff4d4f; }
+
         .header-icon {
             width: 42px;
             height: 42px;
@@ -1122,10 +1150,8 @@
                     <a href="/ppt-resources-page" class="nav-btn" style="background: linear-gradient(135deg, #7b2ff7, #f107a3);">📚 课件中心</a>
                     <a href="/job-recruitment-page" class="nav-btn" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">💼 岗位招聘</a>
                     <button class="nav-btn" style="background: linear-gradient(135deg, #fa541c, #eb2f96);" onclick="showEthicsDebate()">⚖️ 伦理辩论</button>
-                    <button class="nav-btn" style="background: linear-gradient(135deg, #13c2c2, #1890ff);" onclick="showPlatformGuide()">📖 使用说明</button>
                     <button class="nav-btn" onclick="viewMyReport()">📊 我的报告</button>
-                    <button class="nav-btn" onclick="clearChatHistory()">🗑️ 清除记录</button>
-                    <button class="nav-btn logout-btn" onclick="doLogout()">🔓 退出登录</button>
+                    ${settingsNavHTML()}
                 `;
             } else {
                 // 老师端导航
@@ -1143,14 +1169,59 @@
                     <button class="nav-btn" style="background: linear-gradient(135deg,#fa541c,#fa8c16);" onclick="showExerciseManager()">📝 练习题管理</button>
                     <button class="nav-btn" style="background: linear-gradient(135deg,#ff4d4f,#fa541c);" onclick="showTeacherDashboard()">🎛️ 教师驾驶舱</button>
                     <button class="nav-btn" style="background: linear-gradient(135deg,#722ed1,#13c2c2);" onclick="showAgentConfig()">🤖 AI助教配置</button>
-                    <button class="nav-btn" style="background: linear-gradient(135deg, #13c2c2, #1890ff);" onclick="showPlatformGuide()">📖 使用说明</button>
-                    <button class="nav-btn" onclick="clearChatHistory()">🗑️ 清除记录</button>
-                    <button class="nav-btn logout-btn" onclick="doLogout()">🔓 退出登录</button>
+                    ${settingsNavHTML()}
                 `;
             }
-            
+
             headerRight.innerHTML = navHTML;
         }
+
+        // ===== 设置菜单（使用说明/桌宠/清除记录/退出登录） =====
+        function settingsNavHTML() {
+            return `
+                <div class="settings-wrap">
+                    <button class="nav-btn" style="background: linear-gradient(135deg, #5961f9, #2c3e7a);" onclick="toggleSettings(event)">⚙️ 设置</button>
+                    <div class="settings-menu" id="settingsMenu">
+                        <a class="settings-item" onclick="closeSettings();showPlatformGuide();">📖 使用说明</a>
+                        <a class="settings-item" id="petToggleItem" onclick="togglePet();">🐾 关闭桌宠</a>
+                        <a class="settings-item" onclick="closeSettings();clearChatHistory();">🗑️ 清除对话记录</a>
+                        <a class="settings-item settings-danger" onclick="closeSettings();doLogout();">🔓 退出登录</a>
+                    </div>
+                </div>`;
+        }
+
+        function toggleSettings(e) {
+            e.stopPropagation();
+            const menu = document.getElementById('settingsMenu');
+            if (!menu) return;
+            menu.classList.toggle('open');
+            const item = document.getElementById('petToggleItem');
+            if (item) item.textContent = localStorage.getItem('pet_disabled') === '1' ? '🐾 开启桌宠' : '🐾 关闭桌宠';
+        }
+
+        function closeSettings() {
+            const menu = document.getElementById('settingsMenu');
+            if (menu) menu.classList.remove('open');
+        }
+
+        function togglePet() {
+            if (localStorage.getItem('pet_disabled') === '1') {
+                localStorage.removeItem('pet_disabled');
+                location.reload(); // 重新加载以重建桌宠
+            } else {
+                localStorage.setItem('pet_disabled', '1');
+                const pet = document.getElementById('globalPet');
+                if (pet) pet.remove();
+                const menu = document.getElementById('settingsMenu');
+                if (menu) menu.classList.remove('open');
+                const item = document.getElementById('petToggleItem');
+                if (item) item.textContent = '🐾 开启桌宠';
+            }
+        }
+
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('.settings-wrap')) closeSettings();
+        });
         
         // 退出登录
         async function doLogout() {
@@ -1871,33 +1942,37 @@
             document.getElementById('progressFill').style.width = '0%';
         }
 
-        document.getElementById('uploadArea').addEventListener('click', function() {
-            document.getElementById('fileInput').click();
-        });
+        // 上传区域仅教师端存在，学生端跳过绑定
+        const uploadArea = document.getElementById('uploadArea');
+        if (uploadArea) {
+            uploadArea.addEventListener('click', function() {
+                document.getElementById('fileInput').click();
+            });
 
-        document.getElementById('uploadArea').addEventListener('dragover', function(e) {
-            e.preventDefault();
-            this.classList.add('dragover');
-        });
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.classList.add('dragover');
+            });
 
-        document.getElementById('uploadArea').addEventListener('dragleave', function() {
-            this.classList.remove('dragover');
-        });
+            uploadArea.addEventListener('dragleave', function() {
+                this.classList.remove('dragover');
+            });
 
-        document.getElementById('uploadArea').addEventListener('drop', function(e) {
-            e.preventDefault();
-            this.classList.remove('dragover');
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                handleFile(files[0]);
-            }
-        });
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFile(files[0]);
+                }
+            });
 
-        document.getElementById('fileInput').addEventListener('change', function(e) {
-            if (e.target.files.length > 0) {
-                handleFile(e.target.files[0]);
-            }
-        });
+            document.getElementById('fileInput').addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    handleFile(e.target.files[0]);
+                }
+            });
+        }
 
         async function handleFile(file) {
             const allowedExtensions = ['.docx', '.doc', '.pptx', '.ppt', '.txt'];
