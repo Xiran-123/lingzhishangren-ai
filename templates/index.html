@@ -2025,6 +2025,56 @@
             userInput.style.height = Math.min(userInput.scrollHeight, 120) + 'px';
         }
 
+        /* 为AI消息追加操作按钮（追问/复制）
+           注意：流式回复每个chunk会覆盖contentDiv.innerHTML，
+           因此流式场景必须在流结束后再调用本函数 */
+        function appendMessageActions(contentDiv, content) {
+            if (contentDiv.querySelector('.message-actions')) return; // 防止重复添加
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'message-actions';
+
+            const followBtn = document.createElement('button');
+            followBtn.className = 'action-btn';
+            followBtn.innerHTML = '🔄 追问';
+            followBtn.onclick = function() {
+                // 将当前消息内容作为上下文，自动填充到输入框
+                const userInput = document.getElementById('userInput');
+                userInput.value = `针对你的回答，我想追问：${content.substring(0, 50)}...`;
+                userInput.style.height = 'auto';
+                userInput.style.height = Math.min(userInput.scrollHeight, 120) + 'px';
+                userInput.focus();
+                userInput.scrollTop = userInput.scrollHeight;
+            };
+
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'action-btn';
+            copyBtn.innerHTML = '📋 复制';
+            copyBtn.onclick = function() {
+                const done = () => {
+                    copyBtn.innerHTML = '✓ 已复制';
+                    setTimeout(() => { copyBtn.innerHTML = '📋 复制'; }, 2000);
+                };
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(content).then(done);
+                } else {
+                    // 非安全上下文（http）下 clipboard API 不可用，回退 execCommand
+                    const ta = document.createElement('textarea');
+                    ta.value = content;
+                    ta.style.position = 'fixed';
+                    ta.style.opacity = '0';
+                    document.body.appendChild(ta);
+                    ta.select();
+                    try { document.execCommand('copy'); } catch (e) {}
+                    document.body.removeChild(ta);
+                    done(); // 无论复制是否被浏览器拦截都给出反馈
+                }
+            };
+
+            actionsDiv.appendChild(followBtn);
+            actionsDiv.appendChild(copyBtn);
+            contentDiv.appendChild(actionsDiv);
+        }
+
         function addMessage(content, isUser, imageBase64 = null, saveToHistory = true) {
             // 保存到聊天历史（可以选择不立即保存）
             if (saveToHistory) {
@@ -2093,39 +2143,9 @@
             }
             contentDiv.innerHTML = (isUser ? '' : AI_GEN_TAG) + htmlContent;
             
-            // 为AI消息添加操作按钮（追问）
+            // 为AI消息添加操作按钮（追问/复制）
             if (!isUser && content) {
-                const actionsDiv = document.createElement('div');
-                actionsDiv.className = 'message-actions';
-                
-                const followBtn = document.createElement('button');
-                followBtn.className = 'action-btn';
-                followBtn.innerHTML = '🔄 追问';
-                followBtn.onclick = function() {
-                    // 将当前消息内容作为上下文，自动填充到输入框
-                    const userInput = document.getElementById('userInput');
-                    userInput.value = `针对你的回答，我想追问：${content.substring(0, 50)}...`;
-                    userInput.style.height = 'auto';
-                    userInput.style.height = Math.min(userInput.scrollHeight, 120) + 'px';
-                    userInput.focus();
-                    userInput.scrollTop = userInput.scrollHeight;
-                };
-                
-                const copyBtn = document.createElement('button');
-                copyBtn.className = 'action-btn';
-                copyBtn.innerHTML = '📋 复制';
-                copyBtn.onclick = function() {
-                    navigator.clipboard.writeText(content).then(() => {
-                        copyBtn.innerHTML = '✓ 已复制';
-                        setTimeout(() => {
-                            copyBtn.innerHTML = '📋 复制';
-                        }, 2000);
-                    });
-                };
-                
-                actionsDiv.appendChild(followBtn);
-                actionsDiv.appendChild(copyBtn);
-                contentDiv.appendChild(actionsDiv);
+                appendMessageActions(contentDiv, content);
             }
             
             messageDiv.appendChild(avatar);
@@ -2310,6 +2330,9 @@
 
                     // AI 回复落库
                     saveMsgToServer(fullResponse, false, null);
+
+                    // 流式回复补充追问/复制按钮（流中inner被反复覆盖，只能在流结束后添加）
+                    appendMessageActions(messageContentDiv, fullResponse);
                 }
                 
             } catch (error) {
