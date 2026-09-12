@@ -933,6 +933,59 @@
             line-height: 1.9;
         }
 
+        /* ===== 教师驾驶舱班级卡片（可点击下钻） ===== */
+        .dash-class-card {
+            background: #f8f9fc;
+            border-radius: 10px;
+            padding: 14px;
+            flex: 1;
+            min-width: 180px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .dash-class-card:hover {
+            border-color: #ff7a45;
+            background: #fff7f2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(250, 84, 22, 0.18);
+        }
+        .dash-class-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .dash-class-table th {
+            text-align: left;
+            padding: 10px 12px;
+            background: #f0f2f5;
+            color: #555;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .dash-class-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #f0f2f5;
+            color: #333;
+        }
+        .dash-class-table tr:hover td { background: #fafbff; }
+        .dash-score-bar {
+            display: inline-block;
+            width: 70px;
+            height: 6px;
+            background: #f0f0f0;
+            border-radius: 3px;
+            overflow: hidden;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+        .dash-score-bar > i {
+            display: block;
+            height: 100%;
+            border-radius: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
         /* 页面内轻提示（替代 alert） */
         .kb-toast {
             position: fixed;
@@ -1404,14 +1457,14 @@
             headerRight.innerHTML = navHTML;
         }
 
-        // ===== 设置菜单（使用说明/桌宠/清除记录）；退出登录为独立按钮 =====
+        // ===== 设置菜单（使用说明/桌宠/清除记录）；个人中心、退出登录为独立入口 =====
         function settingsNavHTML() {
             return `
                 <div class="settings-wrap">
                     <button class="nav-btn" style="background: linear-gradient(135deg, #5961f9, #2c3e7a);" onclick="toggleSettings(event)">⚙️ 设置</button>
                     <div class="settings-menu" id="settingsMenu">
+                        <a class="settings-item" onclick="closeSettings();showPersonalCenter();">👤 个人中心</a>
                         <a class="settings-item" onclick="closeSettings();showPlatformGuide();">📖 使用说明</a>
-                        <a class="settings-item" onclick="document.getElementById('avatarInput').click();">🖼️ 更换头像</a>
                         <a class="settings-item" id="petToggleItem" onclick="togglePet();">🐾 关闭桌宠</a>
                         <a class="settings-item" onclick="closeSettings();clearChatHistory();">🗑️ 清除对话记录</a>
                     </div>
@@ -1434,6 +1487,55 @@
             if (menu) menu.classList.remove('open');
         }
 
+        // ===== 个人中心 =====
+        function showPersonalCenter() {
+            if (document.getElementById('profileOverlay')) return;
+            const isTeacher = currentUser.role === 'teacher';
+            const avatarHTML = currentUser.avatar_url
+                ? `<img src="${currentUser.avatar_url}" alt="头像" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+                : (currentUser.student_name || '?').charAt(0);
+
+            const rows = isTeacher ? [
+                ['🏷️ 角色', '教师'],
+                ['👤 账号', currentUser.student_name || '-']
+            ] : [
+                ['🏷️ 角色', '学生'],
+                ['👤 姓名', currentUser.student_name || '-'],
+                ['🎓 学号', currentUser.student_no
+                    ? `<span style="font-family:monospace;font-weight:600;letter-spacing:.5px;">${currentUser.student_no}</span>`
+                    : '<span style="color:#fa8c16;">未绑定（可联系老师补录）</span>'],
+                ['📁 班级', currentUser.class_name || '未分班']
+            ];
+            const infoRows = rows.map(([k, v]) => `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:13px 4px;border-bottom:1px solid #f0f2f5;font-size:14px;">
+                    <span style="color:#888;">${k}</span>
+                    <span style="color:#2d3142;font-weight:600;">${v}</span>
+                </div>`).join('');
+
+            const overlay = document.createElement('div');
+            overlay.id = 'profileOverlay';
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.55);backdrop-filter:blur(3px);z-index:100001;display:flex;justify-content:center;align-items:center;padding:20px;';
+            overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+            overlay.innerHTML = `
+                <div style="background:#fff;border-radius:18px;max-width:420px;width:100%;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.3);animation:slideUp .25s ease;">
+                    <div style="background:linear-gradient(135deg,#667eea,#764ba2);padding:26px 24px 56px;position:relative;">
+                        <div style="color:#fff;font-size:17px;font-weight:700;">👤 个人中心</div>
+                        <button onclick="document.getElementById('profileOverlay').remove()" style="position:absolute;top:14px;right:16px;background:rgba(255,255,255,.2);border:none;color:#fff;font-size:16px;cursor:pointer;border-radius:50%;width:30px;height:30px;">×</button>
+                    </div>
+                    <div style="padding:0 24px 22px;margin-top:-40px;">
+                        <div id="profileAvatar" style="width:84px;height:84px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:34px;font-weight:700;display:flex;align-items:center;justify-content:center;border:4px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,.18);overflow:hidden;margin-bottom:12px;">${avatarHTML}</div>
+                        <button onclick="document.getElementById('avatarInput').click()" style="margin-bottom:18px;padding:9px 22px;background:#f0f5ff;border:1.5px solid #667eea;color:#4a5ac8;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;">🖼️ 更换头像</button>
+                        ${infoRows}
+                        <div style="margin-top:16px;font-size:12px;color:#aaa;line-height:1.6;">头像支持 png/jpg/gif/webp，大小不超过 2MB</div>
+                    </div>
+                </div>`;
+            document.body.appendChild(overlay);
+        }
+
+        function closePersonalCenter() {
+            document.getElementById('profileOverlay')?.remove();
+        }
+
         // ===== 头像上传 =====
         async function uploadAvatar(input) {
             const file = input.files && input.files[0];
@@ -1452,6 +1554,10 @@
                     currentUser.avatar_url = d.avatar_url + '?t=' + Date.now();
                     updateUserAvatar();
                     closeSettings();
+                    // 同步刷新个人中心弹窗里的大头像
+                    const pa = document.getElementById('profileAvatar');
+                    if (pa) pa.innerHTML = `<img src="${currentUser.avatar_url}" alt="头像" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+                    showKbToast('✓ 头像已更新');
                 } else {
                     alert(d.error || '上传失败，请重试');
                 }
@@ -2562,9 +2668,12 @@
 
                 const cs = data.class_stats || {};
                 const alerts = data.risk_alerts || [];
+                window.__lastDashboard = data; // 缓存供班级明细返回后重绘
                 let classCards = Object.entries(cs).map(([cls, info]) => `
-                    <div style="background:#f8f9fc;border-radius:10px;padding:14px;flex:1;min-width:180px;">
-                        <div style="font-weight:bold;color:#333;margin-bottom:8px;">${cls}</div>
+                    <div class="dash-class-card" onclick="showClassDetail('${cls.replace(/'/g, "\\'")}')" title="点击查看「${cls}」班级学生明细">
+                        <div style="font-weight:bold;color:#333;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">
+                            <span>${cls}</span><span style="font-size:14px;">👆</span>
+                        </div>
                         <div style="font-size:12px;color:#666;margin-bottom:4px;">👥 ${info.student_count} 名学生</div>
                         <div style="font-size:12px;color:#666;margin-bottom:4px;">📊 平均分: ${(info.avg_score*100).toFixed(0)}</div>
                         <div style="background:#f0f0f0;border-radius:4px;height:6px;overflow:hidden;margin-top:6px;">
@@ -2598,7 +2707,8 @@
                             </div>
                             <button onclick="document.getElementById('dashboardOverlay').remove()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:20px;cursor:pointer;border-radius:50%;width:32px;height:32px;">×</button>
                         </div>
-                        <div style="padding:20px 24px;overflow-y:auto;flex:1;">
+                        <div class="dash-scroll" style="padding:20px 24px;overflow-y:auto;flex:1;">
+                          <div class="dash-body">
                             <div style="margin-bottom:20px;">
                                 <div style="font-size:14px;font-weight:bold;margin-bottom:12px;">📊 班级概况</div>
                                 <div style="display:flex;flex-wrap:wrap;gap:12px;">${classCards}</div>
@@ -2610,6 +2720,7 @@
                                 </div>
                                 ${alertHtml}
                             </div>
+                          </div>
                         </div>
                     </div>
                 `;
@@ -2619,6 +2730,56 @@
         }
 
         async function refreshDashboard() { document.getElementById('dashboardOverlay')?.remove(); showTeacherDashboard(); }
+
+        // 班级下钻：查看某班学生明细
+        async function showClassDetail(className) {
+            const body = document.querySelector('#dashboardOverlay .dash-body');
+            if (!body) return;
+            body.innerHTML = '<div style="text-align:center;color:#999;padding:40px;">正在加载「' + className + '」学生明细...</div>';
+            try {
+                const res = await fetch('/api/double-teacher/class-detail?class_name=' + encodeURIComponent(className));
+                const d = await res.json();
+                if (!d.success) { body.innerHTML = '<div style="color:#ff4d4f;padding:30px;text-align:center;">' + (d.error || '加载失败') + '</div>'; return; }
+
+                const rows = d.students.map(s => `
+                    <tr>
+                        <td style="font-weight:600;">${s.name || '未命名'}</td>
+                        <td style="color:#666;">${s.student_no || '<span style="color:#bbb;">未绑定</span>'}</td>
+                        <td>
+                            <span class="dash-score-bar"><i style="width:${Math.min(100, s.avg_score)}%;"></i></span>${s.avg_score.toFixed(0)}
+                        </td>
+                        <td>${s.completion_rate.toFixed(0)}%</td>
+                        <td>${s.total_questions || 0}</td>
+                        <td style="color:#888;font-size:12px;white-space:nowrap;">${s.last_login ? s.last_login.slice(0, 16) : '从未登录'}</td>
+                    </tr>
+                `).join('');
+
+                body.innerHTML = `
+                    <div style="margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                        <button onclick="refreshDashboard()" style="padding:7px 16px;background:#fff;border:2px solid #ff7a45;color:#fa541c;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;">← 返回班级概况</button>
+                        <div style="font-size:16px;font-weight:bold;color:#333;">🏫 ${d.class_name}</div>
+                        <span style="font-size:12px;color:#999;">点击「学生分析」可查看完整能力画像</span>
+                    </div>
+                    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+                        <div style="background:#f0f5ff;padding:8px 16px;border-radius:9px;font-size:12px;color:#555;">👥 学生 <b style="color:#1d39c4;font-size:15px;">${d.student_count}</b></div>
+                        <div style="background:#f6ffed;padding:8px 16px;border-radius:9px;font-size:12px;color:#555;">📊 平均能力分 <b style="color:#389e0d;font-size:15px;">${d.avg_score.toFixed(0)}</b></div>
+                        <div style="background:#fffbe6;padding:8px 16px;border-radius:9px;font-size:12px;color:#555;">✅ 平均完成率 <b style="color:#d48806;font-size:15px;">${d.avg_completion.toFixed(0)}%</b></div>
+                        <div style="background:#fff0f6;padding:8px 16px;border-radius:9px;font-size:12px;color:#555;">💬 累计提问 <b style="color:#c41d7f;font-size:15px;">${d.total_questions}</b></div>
+                    </div>
+                    <div style="border:1px solid #f0f2f5;border-radius:10px;overflow:hidden;">
+                        <table class="dash-class-table">
+                            <thead><tr>
+                                <th>姓名</th><th>学号</th><th>能力分</th><th>任务完成率</th><th>提问数</th><th>最近登录</th>
+                            </tr></thead>
+                            <tbody>${rows || '<tr><td colspan="6" style="text-align:center;color:#999;padding:24px;">该班级暂无学生</td></tr>'}</tbody>
+                        </table>
+                    </div>`;
+                const overlay = document.getElementById('dashboardOverlay');
+                overlay.querySelector('.dash-scroll')?.scrollTo({ top: 0 });
+            } catch (err) {
+                body.innerHTML = '<div style="color:#ff4d4f;padding:30px;text-align:center;">加载失败：' + err.message + '</div>';
+            }
+        }
 
         async function doTakeover(studentNo, reason) {
             if (!confirm('确认接管学生 ' + studentNo + ' 的学习支持？')) return;

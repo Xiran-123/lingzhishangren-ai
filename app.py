@@ -2643,6 +2643,7 @@ def get_current_user():
     return jsonify({
         'role': session.get('role', 'student'),
         'student_name': session.get('student_name', ''),
+        'student_no': session.get('student_no', ''),
         'class_name': session.get('class_name', ''),
         'avatar_url': _find_avatar(session.get('role', 'student'), session.get('student_name', ''))
     })
@@ -7272,6 +7273,64 @@ def api_double_teacher_dashboard():
         'risk_alerts': risk_alerts[:20],  # 最多返回20条
         'alert_count': len(risk_alerts),
         'agent_configs': list(load_teacher_agent_configs().keys())
+    })
+
+
+def _student_metrics(student):
+    """计算单个学生的能力分(0-100)、周任务完成率、提问数"""
+    comp = student.get('competence_analysis', {})
+    if comp:
+        scores = [v.get('score', 0) for v in comp.values()]
+        avg_score = round(sum(scores) / len(scores), 1) if scores else 0.0
+    else:
+        avg_score = 0.0
+
+    weekly = student.get('weekly_tasks', {})
+    total_t = done_t = 0
+    for wk in weekly.values():
+        for t in wk.get('tasks', []):
+            total_t += 1
+            if t.get('completed'):
+                done_t += 1
+    completion = round(done_t / total_t * 100, 1) if total_t > 0 else 0.0
+
+    return {
+        'name': student.get('name', '未命名'),
+        'student_no': student.get('student_no', ''),
+        'avg_score': avg_score,
+        'completion_rate': completion,
+        'total_questions': student.get('total_questions', 0),
+        'last_login': student.get('last_login', ''),
+        'created_at': student.get('created_at', '')
+    }
+
+
+@app.route('/api/double-teacher/class-detail', methods=['GET'])
+def api_double_teacher_class_detail():
+    """教师驾驶舱：查看某个班级的学生明细"""
+    if not session.get('authenticated') or session.get('role') != 'teacher':
+        return jsonify({'error': '仅老师可访问'}), 401
+
+    class_name = request.args.get('class_name', '')
+    students = load_students()
+    members = [s for s in students if s.get('class_name', '未分班') == class_name]
+    details = [_student_metrics(s) for s in members]
+
+    # 按最近登录时间倒序（未登录的排最后）
+    details.sort(key=lambda d: d.get('last_login') or '', reverse=True)
+
+    avg_score = round(sum(d['avg_score'] for d in details) / len(details), 1) if details else 0.0
+    avg_completion = round(sum(d['completion_rate'] for d in details) / len(details), 1) if details else 0.0
+    total_questions = sum(d['total_questions'] for d in details)
+
+    return jsonify({
+        'success': True,
+        'class_name': class_name,
+        'student_count': len(details),
+        'avg_score': avg_score,
+        'avg_completion': avg_completion,
+        'total_questions': total_questions,
+        'students': details
     })
 
 
