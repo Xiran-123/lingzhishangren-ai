@@ -555,25 +555,39 @@
             }
         }
 
+        // 学生端：下拉框锁定为本人，不允许选择其他学生
+        function lockSelectToSelf(studentName) {
+            const select = document.getElementById('studentSelect');
+            select.innerHTML = `<option value="${studentName}">${studentName}（我）</option>`;
+            select.disabled = true;
+        }
+
         // 默认选择当前用户
         async function init() {
-            await loadStudents();
             try {
                 const userRes = await fetch('/current-user');
                 const userData = await userRes.json();
-                if (userData.student_name) {
-                    document.getElementById('studentSelect').value = userData.student_name;
-                    currentStudent = userData.student_name;
-                    loadAllData();
-                    loadJobGaps();
-                } else if (userData.role === 'teacher') {
-                    // 老师默认选择第一个学生
+
+                if (userData.role === 'teacher') {
+                    // 老师：加载全部学生，可自由切换查看
+                    await loadStudents();
                     const firstOpt = document.querySelector('#studentSelect option:nth-child(2)');
                     if (firstOpt) {
                         firstOpt.selected = true;
                         currentStudent = firstOpt.value;
                         loadAllData();
                         loadJobGaps();
+                    }
+                } else {
+                    // 学生：只显示自己，不能查看他人数据
+                    const myName = userData.student_name || '';
+                    if (myName) {
+                        lockSelectToSelf(myName);
+                        currentStudent = myName;
+                        loadAllData();
+                        loadJobGaps();
+                    } else {
+                        document.getElementById('studentSelect').innerHTML = '<option value="">未获取到学生信息</option>';
                     }
                 }
             } catch (error) {

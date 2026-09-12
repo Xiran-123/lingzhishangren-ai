@@ -1845,6 +1845,19 @@ def save_students(students: List[Dict]):
         print(f"学生档案保存失败: {e}")
 
 
+def next_student_id(students: List[Dict]) -> str:
+    """生成不与现有档案冲突的新学生 ID。
+    旧实现用 len(students)+1，删除学生后会复用已存在的 ID 造成撞号、删错人，
+    故改为取现有最大数字 ID + 1。"""
+    max_id = 0
+    for s in students:
+        try:
+            max_id = max(max_id, int(s.get('id', 0)))
+        except (TypeError, ValueError):
+            continue
+    return str(max_id + 1)
+
+
 def load_classes() -> List[Dict]:
     """加载班级数据"""
     try:
@@ -2546,7 +2559,7 @@ def login():
                 # 创建新学生
                 is_new_user = True
                 new_student = {
-                    'id': str(len(students) + 1),
+                    'id': next_student_id(students),
                     'student_no': student_no,
                     'name': student_name,
                     'class_name': class_name,
@@ -2576,7 +2589,7 @@ def login():
             else:
                 is_new_user = True
                 new_student = {
-                    'id': str(len(students) + 1),
+                    'id': next_student_id(students),
                     'student_no': '',
                     'name': student_name,
                     'class_name': class_name,
@@ -4173,6 +4186,9 @@ def get_wrong_questions():
         return jsonify({'error': '请先登录'}), 401
     
     student_name = request.args.get('student_name', session.get('student_name', ''))
+    # 学生只能查看自己的数据；老师可通过参数查看任意学生
+    if session.get('role') != 'teacher':
+        student_name = session.get('student_name', '')
     questions = load_wrong_questions()
     
     if student_name:
@@ -4236,6 +4252,9 @@ def recommend_review():
         return jsonify({'error': '请先登录'}), 401
     
     student_name = request.args.get('student_name', session.get('student_name', ''))
+    # 学生只能查看自己的数据；老师可通过参数查看任意学生
+    if session.get('role') != 'teacher':
+        student_name = session.get('student_name', '')
     limit = int(request.args.get('limit', 5))
     
     recommendations = get_recommended_review(student_name, limit)
@@ -4740,6 +4759,9 @@ def get_learning_curve():
         return jsonify({'error': '请先登录'}), 401
     
     student_name = request.args.get('student_name', session.get('student_name', ''))
+    # 学生只能查看自己的数据；老师可通过参数查看任意学生
+    if session.get('role') != 'teacher':
+        student_name = session.get('student_name', '')
     days = int(request.args.get('days', 30))
     
     records = load_learning_records()
@@ -4791,6 +4813,9 @@ def get_job_match():
         return jsonify({'error': '请先登录'}), 401
     
     student_name = request.args.get('student_name', session.get('student_name', ''))
+    # 学生只能查看自己的数据；老师可通过参数查看任意学生
+    if session.get('role') != 'teacher':
+        student_name = session.get('student_name', '')
     job_name = request.args.get('job_name', '通信工程师')
     
     students = load_students()
@@ -4829,6 +4854,9 @@ def get_competence_radar():
         return jsonify({'error': '请先登录'}), 401
     
     student_name = request.args.get('student_name', session.get('student_name', ''))
+    # 学生只能查看自己的数据；老师可通过参数查看任意学生
+    if session.get('role') != 'teacher':
+        student_name = session.get('student_name', '')
     
     students = load_students()
     student = next((s for s in students if s.get('name') == student_name), None)
@@ -5133,13 +5161,25 @@ def exercise_page():
 
 
 # ====================== 学生档案管理路由 ======================
+def _student_belongs_to_session(student):
+    """判断学生档案是否属于当前登录的学生本人"""
+    my_no = session.get('student_no', '')
+    my_name = session.get('student_name', '')
+    return (my_no and student.get('student_no') == my_no) or student.get('name') == my_name
+
+
 @app.route('/students', methods=['GET'])
 def get_students():
-    """获取所有学生列表"""
+    """获取学生列表（老师可见全部；学生只能看到自己）"""
     if not session.get('authenticated'):
         return jsonify({'error': '请先登录'}), 401
-    
+
     students = load_students()
+    if session.get('role') != 'teacher':
+        my_no = session.get('student_no', '')
+        my_name = session.get('student_name', '')
+        students = [s for s in students
+                    if (my_no and s.get('student_no') == my_no) or s.get('name') == my_name]
     return jsonify({'students': students})
 
 
@@ -5153,6 +5193,8 @@ def get_student(student_id):
     student = next((s for s in students if s['id'] == student_id), None)
     
     if student:
+        if session.get('role') != 'teacher' and not _student_belongs_to_session(student):
+            return jsonify({'error': '无权查看其他学生的信息'}), 403
         return jsonify({'student': student})
     else:
         return jsonify({'error': '学生不存在'}), 404
@@ -5186,8 +5228,8 @@ def create_student():
         if existing:
             return jsonify({'error': '该学号已存在，一个学号只能注册一个账号'}), 400
     
-    # 生成唯一ID
-    new_id = str(len(students) + 1)
+    # 生成唯一ID（取现有最大ID+1，避免删除学生后撞号）
+    new_id = next_student_id(students)
     
     new_student = {
         'id': new_id,
@@ -5268,7 +5310,14 @@ def get_student_report(student_id):
     """获取学生个性化分析报告"""
     if not session.get('authenticated'):
         return jsonify({'error': '请先登录'}), 401
-    
+
+    students = load_students()
+    student = next((s for s in students if s['id'] == student_id), None)
+    if not student:
+        return jsonify({'error': '学生不存在'}), 404
+    if session.get('role') != 'teacher' and not _student_belongs_to_session(student):
+        return jsonify({'error': '无权查看其他学生的报告'}), 403
+
     report = generate_personalized_report(student_id)
     return jsonify(report)
 
