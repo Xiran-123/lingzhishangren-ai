@@ -760,6 +760,200 @@
         .conv-list::-webkit-scrollbar { width: 5px; }
         .conv-list::-webkit-scrollbar-thumb { background: rgba(0, 200, 255, 0.25); border-radius: 3px; }
 
+        /* ===== 侧边栏底部：知识库课件 ===== */
+        .kb-ppt-panel {
+            flex-shrink: 0;
+            border-top: 1px solid rgba(0, 200, 255, 0.18);
+            padding: 10px 0 8px;
+            background: rgba(8, 20, 58, 0.45);
+            max-height: 42vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .kb-ppt-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 14px 8px;
+        }
+        .kb-ppt-title {
+            color: #cddcff;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: .5px;
+        }
+        .kb-ppt-ops { display: flex; align-items: center; gap: 10px; }
+        .kb-ppt-more {
+            color: rgba(180, 200, 255, 0.6);
+            font-size: 12px;
+            text-decoration: none;
+            transition: color 0.18s;
+        }
+        .kb-ppt-more:hover { color: #8ab4ff; }
+        .kb-ppt-refresh {
+            background: none; border: none;
+            color: rgba(180, 200, 255, 0.6);
+            font-size: 15px; line-height: 1;
+            cursor: pointer; padding: 2px;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+        .kb-ppt-refresh:hover { color: #8ab4ff; transform: rotate(180deg); }
+        .kb-ppt-refresh.spinning { animation: kbSpin 0.9s linear infinite; }
+        @keyframes kbSpin { to { transform: rotate(360deg); } }
+        .kb-ppt-list {
+            overflow-y: auto;
+            padding: 0 10px;
+        }
+        .kb-ppt-list::-webkit-scrollbar { width: 5px; }
+        .kb-ppt-list::-webkit-scrollbar-thumb { background: rgba(0, 200, 255, 0.25); border-radius: 3px; }
+        .kb-ppt-loading, .kb-ppt-empty {
+            color: rgba(200, 216, 255, 0.4);
+            font-size: 12px;
+            text-align: center;
+            padding: 14px 0;
+        }
+        .kb-ppt-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 8px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.18s;
+        }
+        .kb-ppt-item:hover { background: rgba(0, 200, 255, 0.08); }
+        .kb-ppt-item.is-orphan { opacity: 0.45; cursor: not-allowed; }
+        .kb-ppt-item.is-orphan:hover { background: none; }
+        .kb-ppt-icon {
+            width: 38px; height: 38px;
+            border-radius: 11px;
+            background: linear-gradient(135deg, rgba(123, 47, 247, 0.35), rgba(102, 126, 234, 0.35));
+            border: 1px solid rgba(139, 92, 246, 0.45);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .kb-ppt-body { flex: 1; min-width: 0; }
+        .kb-ppt-name {
+            color: #e4eeff;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .kb-ppt-meta {
+            color: rgba(180, 200, 255, 0.45);
+            font-size: 11px;
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .kb-ppt-status { flex-shrink: 0; font-size: 15px; }
+        .kb-ppt-status.ready { color: #3ddc84; }
+        .kb-ppt-status.busy { color: rgba(180, 200, 255, 0.55); animation: kbPulse 1.2s ease-in-out infinite; }
+        @keyframes kbPulse { 0%,100% { opacity: .45; } 50% { opacity: 1; } }
+
+        /* ===== 课件预览弹层 ===== */
+        .kb-preview-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(6, 14, 42, 0.82);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            z-index: 1200;
+            flex-direction: column;
+        }
+        .kb-preview-overlay.show { display: flex; }
+        .kb-preview-bar {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 20px;
+            background: rgba(14, 30, 78, 0.95);
+            border-bottom: 1px solid rgba(0, 200, 255, 0.2);
+        }
+        .kb-preview-title {
+            flex: 1;
+            color: #e4eeff;
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .kb-preview-btn {
+            padding: 7px 16px;
+            border-radius: 9px;
+            border: 1px solid rgba(0, 200, 255, 0.35);
+            background: rgba(0, 200, 255, 0.1);
+            color: #cfe6ff;
+            font-size: 13px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .kb-preview-btn:hover { background: rgba(0, 200, 255, 0.22); color: #fff; }
+        .kb-preview-close {
+            border-color: rgba(255, 120, 120, 0.4);
+            background: rgba(255, 80, 80, 0.12);
+        }
+        .kb-preview-close:hover { background: rgba(255, 80, 80, 0.28); }
+        .kb-preview-viewport {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 16px 40px;
+        }
+        .kb-preview-viewport::-webkit-scrollbar { width: 8px; }
+        .kb-preview-viewport::-webkit-scrollbar-thumb { background: rgba(0, 200, 255, 0.3); border-radius: 4px; }
+        .kb-preview-stage {
+            width: 100%;
+            max-width: 960px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            align-items: center;
+        }
+        .kb-preview-stage img {
+            width: 100%;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 22px rgba(0, 0, 0, 0.45);
+        }
+        .kb-preview-hint {
+            color: rgba(210, 226, 255, 0.75);
+            font-size: 14px;
+            text-align: center;
+            padding: 60px 20px;
+            line-height: 1.9;
+        }
+
+        /* 页面内轻提示（替代 alert） */
+        .kb-toast {
+            position: fixed;
+            left: 50%;
+            bottom: 90px;
+            transform: translateX(-50%) translateY(20px);
+            background: rgba(20, 32, 70, 0.95);
+            border: 1px solid rgba(255, 170, 80, 0.5);
+            color: #ffe8c4;
+            font-size: 13px;
+            padding: 11px 20px;
+            border-radius: 10px;
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
+            z-index: 1300;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.28s ease;
+            max-width: 80vw;
+        }
+        .kb-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
         .conv-item {
             display: flex;
             align-items: center;
@@ -948,8 +1142,34 @@
         <div class="conv-list" id="convList">
             <div class="conv-empty">暂无历史对话<br>发一条消息开始吧 ✨</div>
         </div>
+        <!-- 知识库课件区域：列出教师上传到知识库的 PPT，点击可在线预览 -->
+        <div class="kb-ppt-panel">
+            <div class="kb-ppt-head">
+                <span class="kb-ppt-title">📊 知识库课件</span>
+                <span class="kb-ppt-ops">
+                    <a class="kb-ppt-more" href="/ppt-resources-page" title="打开课件中心">更多</a>
+                    <button class="kb-ppt-refresh" id="kbPptRefresh" onclick="loadKbPpts(true)" title="刷新课件列表">↻</button>
+                </span>
+            </div>
+            <div class="kb-ppt-list" id="kbPptList">
+                <div class="kb-ppt-loading">课件加载中…</div>
+            </div>
+        </div>
     </div>
     <button class="conv-fab" id="convFab" onclick="toggleSidebar()" title="对话历史">💬</button>
+
+    <!-- 知识库课件在线预览 -->
+    <div class="kb-preview-overlay" id="kbPreviewOverlay">
+        <div class="kb-preview-bar">
+            <div class="kb-preview-title" id="kbPreviewTitle">课件预览</div>
+            <a class="kb-preview-btn" id="kbPreviewDownload" href="#" target="_blank">⬇ 下载</a>
+            <button class="kb-preview-btn kb-preview-close" onclick="closeKbPreview()">✕ 关闭</button>
+        </div>
+        <div class="kb-preview-viewport" id="kbPreviewViewport">
+            <div class="kb-preview-stage" id="kbPreviewStage"></div>
+        </div>
+    </div>
+    <div class="kb-toast" id="kbToast"></div>
 
     <div class="chat-container" style="margin: 0 auto;">
         <div class="header">
@@ -1563,11 +1783,165 @@
             document.body.classList.toggle('sidebar-open', open);
             fab.classList.toggle('show', !open);
             localStorage.setItem('lzr_sidebar_open', open ? '1' : '0');
+            if (open) loadKbPpts(); // 侧边栏打开时懒加载知识库课件
         }
         function toggleSidebar() {
             const sb = document.getElementById('convSidebar');
             toggleSidebarForce(!sb.classList.contains('open'));
         }
+
+        /* ===== 知识库课件（侧边栏底部） ===== */
+        let kbPptLoaded = false;
+        let kbPptItems = [];
+        let kbPreviewTimer = null;
+
+        async function loadKbPpts(force) {
+            if (!force && kbPptLoaded) return;
+            const btn = document.getElementById('kbPptRefresh');
+            const listEl = document.getElementById('kbPptList');
+            if (btn) btn.classList.add('spinning');
+            try {
+                const resp = await fetch('/api/knowledge/history', { credentials: 'same-origin' });
+                const data = await resp.json();
+                const all = (data.history || []).filter(h => /\.(ppt|pptx)$/i.test(h.filename || ''));
+                kbPptItems = all;
+                kbPptLoaded = true;
+                renderKbPpts();
+            } catch (e) {
+                listEl.innerHTML = '<div class="kb-ppt-empty">课件加载失败，点 ↻ 重试</div>';
+            } finally {
+                if (btn) btn.classList.remove('spinning');
+            }
+        }
+
+        function renderKbPpts() {
+            const listEl = document.getElementById('kbPptList');
+            if (!kbPptItems.length) {
+                listEl.innerHTML = '<div class="kb-ppt-empty">暂无课件<br>老师可在「上传知识库」中添加</div>';
+                return;
+            }
+            listEl.innerHTML = kbPptItems.map((h, i) => {
+                const ready = h.preview_ready === true && h.page_count > 0;
+                const converting = h.preview_ready === false && !!h.download_name;
+                const orphan = !h.download_name; // 历史记录存在但源文件/元数据已删除
+                const dateStr = (h.upload_time || '').slice(5, 10); // MM-DD
+                let meta, status, itemCls = '';
+                if (orphan) {
+                    meta = `源文件已删除 · ${dateStr}`;
+                    status = '';
+                    itemCls = ' is-orphan';
+                } else if (ready) {
+                    meta = `共 ${h.page_count} 页 · ${dateStr}`;
+                    status = '<span class="kb-ppt-status ready" title="可预览">✅</span>';
+                } else if (converting) {
+                    meta = `转换中… · ${dateStr}`;
+                    status = '<span class="kb-ppt-status busy" title="图片转换中">⚙️</span>';
+                } else {
+                    meta = dateStr;
+                    status = '';
+                }
+                return `
+                <div class="kb-ppt-item${itemCls}" onclick='openKbPreview(${JSON.stringify(i)})' title="${orphan ? '源文件已删除，无法预览' : '点击预览：' + escapeKbHtml(h.filename)}">
+                    <div class="kb-ppt-icon">📊</div>
+                    <div class="kb-ppt-body">
+                        <div class="kb-ppt-name">${escapeKbHtml(h.filename)}</div>
+                        <div class="kb-ppt-meta">${escapeKbHtml(meta)}</div>
+                    </div>
+                    ${status}
+                </div>`;
+            }).join('');
+        }
+
+        function escapeKbHtml(s) {
+            return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
+                { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+            ));
+        }
+
+        function openKbPreview(indexOrItem) {
+            const item = typeof indexOrItem === 'number' ? kbPptItems[indexOrItem] : indexOrItem;
+            if (!item || !item.download_name) {
+                showKbToast('该课件的源文件已被删除，无法预览');
+                return;
+            }
+            const overlay = document.getElementById('kbPreviewOverlay');
+            const stage = document.getElementById('kbPreviewStage');
+            const viewport = document.getElementById('kbPreviewViewport');
+            document.getElementById('kbPreviewTitle').textContent = '正在加载：' + item.filename;
+            document.getElementById('kbPreviewDownload').href = '/uploads/' + encodeURIComponent(item.download_name);
+            stage.innerHTML = '<div class="kb-preview-hint">📥 正在加载课件，请稍候…</div>';
+            overlay.classList.add('show');
+            document.body.style.overflow = 'hidden';
+            viewport.scrollTop = 0;
+
+            if (item.preview_ready && item.page_count > 0 && item.preview_dir) {
+                renderKbPages(item);
+            } else {
+                // 转换中：提示并每 8 秒轮询，转好自动打开
+                stage.innerHTML = '<div class="kb-preview-hint">⚙️ 服务器正在把课件转成高清页面（大文件约需 1-3 分钟）<br>转好后会自动打开，无需手动刷新～</div>';
+                if (kbPreviewTimer) clearInterval(kbPreviewTimer);
+                kbPreviewTimer = setInterval(async () => {
+                    try {
+                        const res = await fetch('/api/ppt/list', { credentials: 'same-origin' });
+                        const data = await res.json();
+                        const cur = (data.ppt_list || []).find(p => p.download_name === item.download_name);
+                        if (cur && cur.preview_ready && cur.page_count > 0) {
+                            clearInterval(kbPreviewTimer);
+                            kbPreviewTimer = null;
+                            // 同步侧边栏缓存数据
+                            const cached = kbPptItems.find(h => h.download_name === item.download_name);
+                            if (cached) {
+                                cached.preview_ready = true;
+                                cached.page_count = cur.page_count;
+                                cached.preview_dir = cur.preview_dir;
+                                renderKbPpts();
+                            }
+                            if (document.getElementById('kbPreviewOverlay').classList.contains('show')) {
+                                renderKbPages(cur);
+                            }
+                        }
+                    } catch (e) { /* 网络抖动，继续轮询 */ }
+                }, 8000);
+            }
+        }
+
+        function renderKbPages(ppt) {
+            const stage = document.getElementById('kbPreviewStage');
+            const viewport = document.getElementById('kbPreviewViewport');
+            stage.innerHTML = '';
+            const width = Math.min(960, viewport.clientWidth - 48);
+            for (let i = 1; i <= ppt.page_count; i++) {
+                const img = document.createElement('img');
+                img.loading = 'lazy';
+                img.style.minHeight = Math.round(width * 0.56) + 'px';
+                img.alt = `第 ${i} 页`;
+                img.src = `/images/${ppt.preview_dir}/page-${String(i).padStart(2, '0')}.jpg`;
+                stage.appendChild(img);
+            }
+            document.getElementById('kbPreviewTitle').textContent = `课件预览：${ppt.filename}（共 ${ppt.page_count} 页）`;
+        }
+
+        function closeKbPreview() {
+            document.getElementById('kbPreviewOverlay').classList.remove('show');
+            document.body.style.overflow = '';
+            if (kbPreviewTimer) { clearInterval(kbPreviewTimer); kbPreviewTimer = null; }
+            document.getElementById('kbPreviewStage').innerHTML = '';
+        }
+
+        let kbToastTimer = null;
+        function showKbToast(msg) {
+            const t = document.getElementById('kbToast');
+            t.textContent = msg;
+            t.classList.add('show');
+            if (kbToastTimer) clearTimeout(kbToastTimer);
+            kbToastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && document.getElementById('kbPreviewOverlay').classList.contains('show')) {
+                closeKbPreview();
+            }
+        });
 
         // 旧版 localStorage 单会话记录 → 一次性迁移到服务器
         async function migrateOldHistory() {
