@@ -7423,6 +7423,7 @@ def _student_metrics(student):
     completion = round(done_t / total_t * 100, 1) if total_t > 0 else 0.0
 
     return {
+        'id': student.get('id', ''),
         'name': student.get('name', '未命名'),
         'student_no': student.get('student_no', ''),
         'avg_score': avg_score,
@@ -7460,6 +7461,121 @@ def api_double_teacher_class_detail():
         'total_questions': total_questions,
         'students': details
     })
+
+
+@app.route('/api/double-teacher/class-ai-analysis', methods=['GET'])
+def api_double_teacher_class_ai_analysis():
+    """教师驾驶舱：对整个班级进行AI综合分析并提供教学建议"""
+    if not session.get('authenticated') or session.get('role') != 'teacher':
+        return jsonify({'error': '仅老师可访问'}), 401
+
+    class_name = request.args.get('class_name', '')
+    students = load_students()
+    members = [s for s in students if s.get('class_name', '未分班') == class_name]
+
+    if not members:
+        return jsonify({'success': False, 'error': '该班级暂无学生'})
+
+    # 汇总班级数据
+    total_q = sum(s.get('total_questions', 0) for s in members)
+    # 12维平均掌握度
+    class_comp = {}
+    for area in COMPETENCE_AREAS:
+        aid = area['id']
+        scores = []
+        for s in members:
+            comp = s.get('competence_analysis', {})
+            d = comp.get(aid, {})
+            if d.get('count', 0) > 0:
+                scores.append(d.get('score', 0))
+        avg = round(sum(scores) / len(scores) * 100) if scores else 0
+        class_comp[area['name']] = {'avg_pct': avg, 'interacted': len(scores), 'total': len(members)}
+
+    # 找出班级薄弱领域（平均分最低的3个）
+    sorted_weak = sorted(class_comp.items(), key=lambda x: x[1]['avg_pct'])[:5]
+    # 找出班级优势领域（平均分最高的3个）
+    sorted_strong = sorted(class_comp.items(), key=lambda x: x[1]['avg_pct'], reverse=True)[:5]
+
+    # 学习活跃度分布
+    active = sum(1 for s in members if s.get('total_questions', 0) > 0)
+    inactive = len(members) - active
+
+    # 构建每个学生的简短摘要
+    student_summaries = []
+    for s in members:
+        comp = s.get('competence_analysis', {})
+        comp_scores = [(a['name'], comp.get(a['id'], {}).get('score', 0) * 100) for a in COMPETENCE_AREAS]
+        comp_scores.sort(key=lambda x: x[1])
+        weakest = comp_scores[0][0] if comp_scores else '无'
+        student_summaries.append(
+            f"- {s.get('name','未命名')}（{s.get('student_no','无学号')}）：提问{s.get('total_questions',0)}次，最薄弱：{weakest}"
+        )
+    student_text = '\n'.join(student_summaries)
+
+    weak_text = '\n'.join(f"- {k}：平均掌握度 {v['avg_pct']}%（{v['interacted']}/{v['total']}人有互动）" for k, v in sorted_weak)
+    strong_text = '\n'.join(f"- {k}：平均掌握度 {v['avg_pct']}%（{v['interacted']}/{v['total']}人有互动）" for k, v in sorted_strong)
+
+    prompt = f"""你是一名通信工程专业的资深教学督导。请根据以下班级整体数据，给出班级学情分析和具体教学建议。
+
+【班级概况】
+班级：{class_name}
+学生总数：{len(members)}
+累计提问总数：{total_q}
+活跃学生（有提问）：{active} 人
+未活跃学生：{inactive} 人
+
+【班级各维度平均掌握度（薄弱领域 Top5）】
+{weak_text}
+
+【班级各维度平均掌握度（优势领域 Top5）】
+{strong_text}
+
+【班级学生个体摘要】
+{student_text}
+
+请输出结构化分析，严格按以下格式返回（不要添加多余说明）：
+
+【班级学情概述】
+（用2-3句话概括班级整体学习状态、活跃度、知识掌握情况）
+
+【共性问题】
+（列出2-4个班级普遍存在的知识薄弱点或学习问题，结合数据说明）
+
+【教学建议】
+（给出4-6条具体可执行的教学建议，针对共性问题，要结合通信工程专业特点，例如：哪些知识点需要重点复习、是否需要安排专项练习、如何提升学生互动积极性等）
+
+【重点关注学生】
+（列出需要重点关注的学生及原因，如长期未活跃、某维度掌握度极低等）
+
+【后续教学重点】
+（用1-2句话说明下一阶段教学应重点关注的方向）"""
+
+    try:
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {API_KEY}"
+        }
+        payload = {
+            "model": MODEL_NAME,
+            "messages": [
+                {"role": "system", "content": "你是通信工程专业的资深教学督导，擅长根据班级整体学情数据给出精准、实用的教学建议。分析要客观，建议要具体可执行。"},
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0.7,
+            "max_tokens": 2500,
+            "stream": False
+        }
+        resp = requests.post(API_URL, headers=headers, json=payload, timeout=120)
+        if resp.status_code == 200:
+            result = resp.json()
+            if "choices" in result and result["choices"]:
+                content = result["choices"][0]["message"]["content"].strip()
+                return jsonify({'success': True, 'analysis': content, 'class_name': class_name})
+        return jsonify({'success': False, 'error': f'AI分析失败: {resp.status_code}'})
+    except requests.exceptions.Timeout:
+        return jsonify({'success': False, 'error': 'AI分析超时，请稍后重试'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'AI分析出错: {str(e)}'})
 
 
 # ====================== 口语化交互排障 ======================
