@@ -1,4 +1,4 @@
-﻿﻿<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -1114,7 +1114,10 @@
         const teacherNameInput = document.getElementById('teacherName');
         
         let selectedRole = 'student';
-        
+
+        // 页面加载完成后默认显示学生登录表单
+        document.addEventListener('DOMContentLoaded', () => selectRole('student'));
+
         function selectRole(role) {
             selectedRole = role;
             
