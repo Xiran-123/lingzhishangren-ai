@@ -1088,6 +1088,10 @@
         function closeReportModal() {
             document.getElementById('reportModalOverlay').classList.remove('show');
             document.body.style.overflow = '';
+            // 学生端：关闭报告弹窗后直接返回首页，避免页面变空白
+            if (currentUser.role === 'student') {
+                window.location.href = '/';
+            }
         }
         // 点遮罩空白处关闭（点在弹窗卡片内不关）
         document.getElementById('reportModalOverlay').addEventListener('click', (e) => {
