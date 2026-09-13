@@ -2351,6 +2351,11 @@
             isGenerating = true;
             let fullResponse = '';
             let messageContentDiv = null;
+            let petWaitTimer1 = null, petWaitTimer2 = null;
+            const petFirstContentArrived = () => {
+                if (petWaitTimer1) { clearTimeout(petWaitTimer1); petWaitTimer1 = null; }
+                if (petWaitTimer2) { clearTimeout(petWaitTimer2); petWaitTimer2 = null; }
+            };
             
             try {
                 // 限制历史记录数量，只发送最近的6条（3轮对话），提高响应速度
@@ -2381,6 +2386,14 @@
                 // 创建AI消息容器，但不立即添加到conversationHistory
                 messageContentDiv = addMessage('', false, null, false);
                 
+                // 桌宠等待陪伴：AI 4秒还没开始回复就让桌宠说句话
+                petWaitTimer1 = setTimeout(() => {
+                    if (typeof window.petSayWaiting === 'function') window.petSayWaiting(3500);
+                }, 4000);
+                petWaitTimer2 = setTimeout(() => {
+                    if (typeof window.petSayWaiting === 'function') window.petSayWaiting(3500);
+                }, 10000);
+                
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
                 let buffer = '';
@@ -2404,10 +2417,12 @@
                             try {
                                 const data = JSON.parse(dataStr);
                                 if (data.content) {
+                                    petFirstContentArrived(); // AI开始回复了，停止桌宠等待
                                     fullResponse += data.content;
                                     messageContentDiv.innerHTML = AI_GEN_TAG + formatMessage(fullResponse);
                                     scrollToBottom();
                                 } else if (data.error) {
+                                    petFirstContentArrived();
                                     messageContentDiv.innerHTML = AI_GEN_TAG + data.error;
                                 }
                             } catch (e) {
@@ -2459,6 +2474,7 @@
                     messageContentDiv.innerHTML = '请求出错，请稍后重试';
                 }
             } finally {
+                petFirstContentArrived(); // 确保清理桌宠等待计时器
                 isGenerating = false;
                 setInputDisabled(false);
                 selectedImage = null;

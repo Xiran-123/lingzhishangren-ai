@@ -2208,6 +2208,117 @@ def generate_suggestion(area_name: str) -> str:
     return suggestions.get(area_name, f"建议加强{area_name}的学习，多做相关练习和实践。")
 
 
+def generate_ai_analysis(student: Dict) -> Dict:
+    """调用大模型对学生进行综合能力分析，返回优缺点与学习建议"""
+    name = student.get('name', '该学生')
+
+    # 1) 对话历史（只取最近30条，避免上下文过长）
+    conv_history = student.get('conversation_history') or []
+    recent_conv = conv_history[-30:]
+    conv_text = '\n'.join(
+        f"- [{m.get('timestamp','')}] {'问' if m.get('is_question') else '说'}：{m.get('message','')[:120]}"
+        for m in recent_conv
+    ) or '（暂无对话记录）'
+
+    # 2) 能力维度得分
+    competence = student.get('competence_analysis') or {}
+    comp_lines = []
+    for area in COMPETENCE_AREAS:
+        aid = area['id']
+        data = competence.get(aid, {})
+        score = data.get('score', 0.0)
+        count = data.get('count', 0)
+        pct = round(score * 100)
+        comp_lines.append(f"- {area['name']}（{area['category']}）：掌握度 {pct}%，互动 {count} 次")
+    comp_text = '\n'.join(comp_lines)
+
+    # 3) 错题本
+    wrong_qs = load_wrong_questions()
+    student_wrong = [q for q in wrong_qs if q.get('student_name') == name][-15:]
+    wrong_text = '\n'.join(
+        f"- [{q.get('knowledge_point','未分类')}] {str(q.get('question',''))[:100]}"
+        for q in student_wrong
+    ) if student_wrong else '（暂无错题记录）'
+
+    # 4) 学习记录（题目/实训）
+    records = load_learning_records()
+    student_records = records.get(name, [])[-30:]
+    # 按活动类型统计
+    type_counts = {}
+    for r in student_records:
+        t = r.get('activity_type', 'other')
+        type_counts[t] = type_counts.get(t, 0) + 1
+    rec_summary = '、'.join(f"{t}:{c}次" for t, c in type_counts.items()) or '（暂无学习记录）'
+    rec_detail = '\n'.join(
+        f"- [{r.get('timestamp','')}] {r.get('activity_type','')} {r.get('knowledge_point','')} 得分:{r.get('score','-')}"
+        for r in student_records[-10:]
+    )
+
+    total_q = student.get('total_questions', len([m for m in conv_history if m.get('is_question')]))
+
+    prompt = f"""你是一名通信工程专业的资深教学导师。请根据以下学生数据，对该学生进行综合能力分析。
+
+【学生基本信息】
+姓名：{name}
+累计提问次数：{total_q}
+对话历史条数：{len(conv_history)}
+
+【最近对话内容】
+{conv_text}
+
+【12维能力掌握度】
+{comp_text}
+
+【错题记录】
+{wrong_text}
+
+【学习/实训记录统计】
+{rec_summary}
+最近学习记录：
+{rec_detail}
+
+请输出结构化分析，严格按以下格式返回（不要添加多余说明）：
+
+【优势】
+（列出2-4个该学生表现较好的方面，结合具体数据说明）
+
+【不足】
+（列出2-4个该学生需要提升的方面，结合具体数据说明）
+
+【学习建议】
+（给出3-5条具体可执行的学习建议，针对其不足，要结合通信工程专业特点）
+
+【整体评价】
+（用1-2句话概括该学生当前的学习状态与成长方向）"""
+
+    try:
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {API_KEY}"
+        }
+        payload = {
+            "model": MODEL_NAME,
+            "messages": [
+                {"role": "system", "content": "你是通信工程专业的资深教学导师，擅长根据学生的学习数据给出精准、实用的能力分析和学习建议。回答要专业但不晦涩，建议要具体可执行。"},
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0.7,
+            "max_tokens": 2000,
+            "stream": False
+        }
+        resp = requests.post(API_URL, headers=headers, json=payload, timeout=120)
+        if resp.status_code == 200:
+            result = resp.json()
+            if "choices" in result and result["choices"]:
+                content = result["choices"][0]["message"]["content"].strip()
+                return {'success': True, 'analysis': content, 'student': name}
+        return {'success': False, 'error': f'AI分析失败: {resp.status_code}'}
+    except requests.exceptions.Timeout:
+        return {'success': False, 'error': 'AI分析超时，请稍后重试'}
+    except Exception as e:
+        return {'success': False, 'error': f'AI分析出错: {str(e)}'}
+
+
 def recommend_scenarios(weaknesses: List[Dict]) -> List[Dict]:
     """根据短板推荐场景"""
     recommended = []
@@ -5340,6 +5451,23 @@ def get_student_report(student_id):
 
     report = generate_personalized_report(student_id)
     return jsonify(report)
+
+
+@app.route('/students/<string:student_id>/ai-analysis', methods=['GET'])
+def ai_student_analysis(student_id):
+    """一键AI个性化分析：综合对话历史+错题+学习记录，生成优缺点与学习建议"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+
+    students = load_students()
+    student = next((s for s in students if s['id'] == student_id), None)
+    if not student:
+        return jsonify({'error': '学生不存在'}), 404
+    if session.get('role') != 'teacher' and not _student_belongs_to_session(student):
+        return jsonify({'error': '无权查看其他学生的报告'}), 403
+
+    analysis = generate_ai_analysis(student)
+    return jsonify(analysis)
 
 
 @app.route('/students/<string:student_id>/update-conversation', methods=['POST'])

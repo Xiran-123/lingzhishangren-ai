@@ -324,6 +324,109 @@
             flex-shrink: 0;
         }
         .report-modal-close:hover { background: #ffeded; color: #e74c3c; transform: rotate(90deg); }
+        .ai-analysis-btn {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s;
+            box-shadow: 0 3px 10px rgba(102,126,234,.35);
+            flex-shrink: 0;
+        }
+        .ai-analysis-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102,126,234,.45); }
+        .ai-analysis-btn:disabled { opacity: .6; cursor: wait; transform: none; }
+        .ai-analysis-btn .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .8s linear infinite; vertical-align: middle; margin-right: 6px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* AI分析弹窗 */
+        .ai-analysis-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.55);
+            backdrop-filter: blur(3px);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .ai-analysis-overlay.show { display: flex; }
+        .ai-analysis-modal {
+            background: #fff;
+            border-radius: 18px;
+            max-width: 720px;
+            width: 100%;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,.3);
+            animation: slideUp .3s ease;
+        }
+        .ai-analysis-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 24px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            flex-shrink: 0;
+        }
+        .ai-analysis-title { font-size: 17px; font-weight: 700; }
+        .ai-analysis-close {
+            background: rgba(255,255,255,.2);
+            border: none;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 50%;
+            width: 30px; height: 30px;
+        }
+        .ai-analysis-body {
+            padding: 24px;
+            overflow-y: auto;
+            line-height: 1.8;
+            color: #333;
+            font-size: 14px;
+        }
+        .ai-analysis-body::-webkit-scrollbar { width: 8px; }
+        .ai-analysis-body::-webkit-scrollbar-thumb { background: #c7cbe0; border-radius: 4px; }
+        .ai-loading {
+            text-align: center;
+            padding: 50px 20px;
+            color: #667eea;
+        }
+        .ai-loading .big-spinner {
+            display: inline-block;
+            width: 40px; height: 40px;
+            border: 4px solid #e8ebf7;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+        .ai-analysis-body h3 {
+            color: #667eea;
+            font-size: 16px;
+            margin: 18px 0 10px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid #eef0fa;
+        }
+        .ai-analysis-body h3:first-child { margin-top: 0; }
+        .ai-analysis-body ul { padding-left: 20px; margin: 8px 0; }
+        .ai-analysis-body li { margin: 6px 0; }
+        .ai-analysis-body p { margin: 8px 0; }
+        .ai-analysis-body strong { color: #764ba2; }
+        .ai-error {
+            color: #d32f2f;
+            background: #ffebee;
+            padding: 14px 18px;
+            border-radius: 10px;
+        }
         .report-modal-body { padding: 25px; }
         .report-modal-body .report-section { max-width: none; }
 
@@ -637,6 +740,7 @@
                         <div class="report-modal-name" id="modalStudentName">--</div>
                         <div class="report-modal-meta" id="modalStudentMeta">--</div>
                     </div>
+                    <button class="ai-analysis-btn" id="aiAnalysisBtn" onclick="runAiAnalysis()">🤖 AI个性化分析</button>
                     <button class="report-modal-close" onclick="closeReportModal()" title="关闭">✕</button>
                 </div>
                 <div class="report-modal-body">
@@ -697,6 +801,22 @@
             </div><!-- /report-modal-overlay -->
         </div><!-- /reportSection -->
     </div><!-- /container -->
+
+    <!-- AI个性化分析弹窗 -->
+    <div class="ai-analysis-overlay" id="aiAnalysisOverlay">
+        <div class="ai-analysis-modal">
+            <div class="ai-analysis-head">
+                <span class="ai-analysis-title">🤖 AI 个性化能力分析</span>
+                <button class="ai-analysis-close" onclick="closeAiAnalysis()" title="关闭">✕</button>
+            </div>
+            <div class="ai-analysis-body" id="aiAnalysisBody">
+                <div style="text-align:center;padding:40px 20px;color:#999;">
+                    <div style="font-size:40px;margin-bottom:12px;">🧠</div>
+                    <div>点击「AI个性化分析」按钮开始分析</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- 添加学生模态框 -->
     <div class="modal-overlay" id="addModal">
@@ -835,6 +955,7 @@
                 const student = data.students.find(s => s.name === studentName);
                 
                 if (student) {
+                    selectedStudentId = student.id;
                     const reportResponse = await fetch(`/students/${student.id}/report`);
                     const reportData = await reportResponse.json();
                     renderReport(reportData);
@@ -974,8 +1095,90 @@
         });
         // ESC 关闭
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeReportModal();
+            if (e.key === 'Escape') { closeReportModal(); closeAiAnalysis(); }
         });
+
+        /* ===== AI 个性化分析 ===== */
+        function closeAiAnalysis() {
+            document.getElementById('aiAnalysisOverlay').classList.remove('show');
+            document.body.style.overflow = '';
+        }
+        document.getElementById('aiAnalysisOverlay').addEventListener('click', (e) => {
+            if (e.target.id === 'aiAnalysisOverlay') closeAiAnalysis();
+        });
+
+        async function runAiAnalysis() {
+            if (!selectedStudentId) {
+                alert('请先选择学生');
+                return;
+            }
+            const btn = document.getElementById('aiAnalysisBtn');
+            const overlay = document.getElementById('aiAnalysisOverlay');
+            const body = document.getElementById('aiAnalysisBody');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>分析中…';
+            overlay.classList.add('show');
+            document.body.style.overflow = 'hidden';
+            body.innerHTML = '<div class="ai-loading"><div class="big-spinner"></div><div>AI 正在综合分析你的对话、错题与学习记录…</div><div style="font-size:12px;color:#aaa;margin-top:8px;">大约需要 10-30 秒，请稍候 ☕</div></div>';
+
+            try {
+                const resp = await fetch(`/students/${selectedStudentId}/ai-analysis`);
+                const data = await resp.json();
+                if (data.success) {
+                    body.innerHTML = formatAiAnalysis(data.analysis);
+                } else {
+                    body.innerHTML = `<div class="ai-error">❌ ${data.error || '分析失败，请稍后重试'}</div>`;
+                }
+            } catch (err) {
+                body.innerHTML = `<div class="ai-error">❌ 网络错误，请稍后重试</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '🤖 AI个性化分析';
+            }
+        }
+
+        // 将AI返回的文本转成带样式的HTML
+        function formatAiAnalysis(text) {
+            if (!text) return '<div class="ai-error">AI未返回内容</div>';
+            // 转义HTML
+            let html = text
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const lines = html.split('\n');
+            const out = [];
+            let inList = false;
+            for (let line of lines) {
+                const trimmed = line.trim();
+                // 标题：【xxx】
+                if (/^【.+】$/.test(trimmed)) {
+                    if (inList) { out.push('</ul>'); inList = false; }
+                    out.push(`<h3>${trimmed.slice(1, -1)}</h3>`);
+                    continue;
+                }
+                // 无序项：- xxx 或 · xxx
+                const bullet = trimmed.match(/^[-·•]\s+(.*)$/);
+                if (bullet) {
+                    if (!inList) { out.push('<ul>'); inList = true; }
+                    out.push(`<li>${bullet[1]}</li>`);
+                    continue;
+                }
+                // 有序项：1. xxx
+                const ordered = trimmed.match(/^(\d+)[\.、]\s+(.*)$/);
+                if (ordered) {
+                    if (!inList) { out.push('<ul>'); inList = true; }
+                    out.push(`<li><strong>${ordered[1]}.</strong> ${ordered[2]}</li>`);
+                    continue;
+                }
+                // 普通文本
+                if (trimmed === '') {
+                    if (inList) { out.push('</ul>'); inList = false; }
+                    continue;
+                }
+                if (inList) { out.push('</ul>'); inList = false; }
+                out.push(`<p>${trimmed}</p>`);
+            }
+            if (inList) out.push('</ul>');
+            return out.join('');
+        }
 
         // 渲染报告
         function renderReport(report) {

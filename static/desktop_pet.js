@@ -709,6 +709,22 @@
         }, 12000 + Math.random() * 8000);
     }
 
+    /* ---------- AI 等待时的消磨时间文案 ---------- */
+    const PET_WAITING = [
+        'AI 正在思考中，给它点时间～ 🤔',
+        '别着急，好答案值得等一等 ✨',
+        '它在翻知识库呢，马上就好 📚',
+        '要不先喝口水？AI 马上回你 ☕',
+        '深度思考模式启动中，稍安勿躁 🧠',
+        '我陪你等～顺便活动活动脖子 🦒',
+        'AI 正在组织语言，快了快了 ⚡',
+        '好饭不怕晚，好回答也一样 🍚',
+        '它可能在算信号与系统的卷积… 📡',
+        '别急别急，让子弹飞一会儿 🎯',
+        'AI 也需要喘口气嘛，等等它 🫧',
+        '要不你猜猜它会怎么回答？😏'
+    ];
+
     /* ---------- 启动 ---------- */
     function init() {
         if (localStorage.getItem('pet_disabled') === '1') return; // 设置里可关闭桌宠
@@ -726,6 +742,20 @@
             say(el, entryGreeting(), 4500);
             playAnim(el, 'pet-anim-bounce', 700);
         }, 600);
+
+        // 暴露全局接口，供聊天页在AI等待时调用
+        window.petSay = function(text, duration) {
+            if (el && el.style.display !== 'none') {
+                say(el, text, duration || 3000);
+                playAnim(el, 'pet-anim-bounce', 600);
+            }
+        };
+        window.petSayWaiting = function(duration) {
+            if (el && el.style.display !== 'none') {
+                say(el, pick(PET_WAITING), duration || 3000);
+                playAnim(el, 'pet-anim-wiggle', 600);
+            }
+        };
     }
 
     if (document.readyState === 'loading') {
