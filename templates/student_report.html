@@ -421,6 +421,14 @@
         .ai-analysis-body li { margin: 6px 0; }
         .ai-analysis-body p { margin: 8px 0; }
         .ai-analysis-body strong { color: #764ba2; }
+        .ai-stream-cursor {
+            display: inline-block;
+            color: #764ba2;
+            font-weight: 400;
+            animation: aiCursorBlink 1s steps(2) infinite;
+            margin-left: 2px;
+        }
+        @keyframes aiCursorBlink { 0%,50% { opacity: 1; } 50.01%,100% { opacity: 0; } }
         .ai-error {
             color: #d32f2f;
             background: #ffebee;
@@ -1123,18 +1131,45 @@
             btn.innerHTML = '<span class="spinner"></span>分析中…';
             overlay.classList.add('show');
             document.body.style.overflow = 'hidden';
-            body.innerHTML = '<div class="ai-loading"><div class="big-spinner"></div><div>AI 正在综合分析你的对话、错题与学习记录…</div><div style="font-size:12px;color:#aaa;margin-top:8px;">大约需要 10-30 秒，请稍候 ☕</div></div>';
+            body.innerHTML = '<div class="ai-loading"><div class="big-spinner"></div><div>AI 正在综合分析你的对话、错题与学习记录…</div><div style="font-size:12px;color:#aaa;margin-top:8px;">AI 会逐字生成结果，通常 20-60 秒，生成中即可阅读 ☕</div></div>';
 
+            let raw = '';
+            let errMsg = '';
             try {
                 const resp = await fetch(`/students/${selectedStudentId}/ai-analysis`);
-                const data = await resp.json();
-                if (data.success) {
-                    body.innerHTML = formatAiAnalysis(data.analysis);
+                if (!resp.ok || !resp.body) throw new Error('HTTP ' + resp.status);
+                const reader = resp.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                let buffer = '';
+                while (true) {
+                    const {done, value} = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, {stream: true});
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop();
+                    for (const line of lines) {
+                        if (!line.startsWith('data: ')) continue;
+                        const payload = line.slice(6).trim();
+                        if (payload === '[DONE]' || !payload) continue;
+                        try {
+                            const j = JSON.parse(payload);
+                            if (j.error) {
+                                errMsg = j.error;
+                            } else if (j.content) {
+                                raw += j.content;
+                                body.innerHTML = formatAiAnalysis(raw) + '<span class="ai-stream-cursor">▍</span>';
+                                body.scrollTop = body.scrollHeight;
+                            }
+                        } catch (e) { /* 忽略半截JSON */ }
+                    }
+                }
+                if (raw) {
+                    body.innerHTML = formatAiAnalysis(raw);
                 } else {
-                    body.innerHTML = `<div class="ai-error">❌ ${data.error || '分析失败，请稍后重试'}</div>`;
+                    body.innerHTML = `<div class="ai-error">❌ ${errMsg || '分析失败，请稍后重试'}</div>`;
                 }
             } catch (err) {
-                body.innerHTML = `<div class="ai-error">❌ 网络错误，请稍后重试</div>`;
+                body.innerHTML = `<div class="ai-error">❌ 网络错误：${err.message}，请稍后重试</div>`;
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '🤖 AI个性化分析';

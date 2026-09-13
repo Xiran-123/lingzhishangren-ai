@@ -2862,37 +2862,74 @@
             if (inList) out.push('</ul>');
             return out.join('');
         }
-        async function showStudentAiAnalysis(studentId, studentName) {
-            const loading = '<div style="text-align:center;padding:50px 20px;color:#667eea;"><div style="display:inline-block;width:40px;height:40px;border:4px solid #e8ebf7;border-top-color:#667eea;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:16px;"></div><div>AI 正在分析「' + studentName + '」的对话、错题与学习记录…</div><div style="font-size:12px;color:#aaa;margin-top:8px;">约需 10-30 秒 ☕</div></div>';
-            openAiAnalysisModal('🤖 ' + studentName + ' · 个性化能力分析', loading);
+        // 通用：读取SSE流式AI分析并实时渲染到弹窗
+        async function streamAiAnalysisToModal(url, title, color) {
+            if (!document.getElementById('aiBlinkStyle')) {
+                const st = document.createElement('style');
+                st.id = 'aiBlinkStyle';
+                st.textContent = '@keyframes aiBlink { 0%,50% { opacity: 1; } 50.01%,100% { opacity: 0; } }';
+                document.head.appendChild(st);
+            }
+            const loading = '<div style="text-align:center;padding:50px 20px;color:' + color + ';"><div style="display:inline-block;width:40px;height:40px;border:4px solid ' + color + '22;border-top-color:' + color + ';border-radius:50%;animation:spin 1s linear infinite;margin-bottom:16px;"></div><div>AI 正在综合分析并逐字生成结果…</div><div style="font-size:12px;color:#aaa;margin-top:8px;">通常 20-60 秒，内容生成中可直接阅读 ☕</div></div>';
+            openAiAnalysisModal(title, loading);
+            let raw = '';
+            let errMsg = '';
+            const renderCursor = () => '<span style="display:inline-block;width:2px;background:' + color + ';animation:aiBlink 1s steps(2) infinite;margin-left:2px;">&nbsp;</span>';
             try {
-                const resp = await fetch('/students/' + encodeURIComponent(studentId) + '/ai-analysis');
-                const data = await resp.json();
+                const resp = await fetch(url);
+                if (!resp.ok || !resp.body) {
+                    throw new Error('HTTP ' + resp.status);
+                }
+                const reader = resp.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                let buffer = '';
+                while (true) {
+                    const {done, value} = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, {stream: true});
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop();
+                    for (const line of lines) {
+                        if (!line.startsWith('data: ')) continue;
+                        const payload = line.slice(6).trim();
+                        if (payload === '[DONE]' || !payload) continue;
+                        try {
+                            const j = JSON.parse(payload);
+                            if (j.error) {
+                                errMsg = j.error;
+                            } else if (j.content) {
+                                raw += j.content;
+                                const body = document.getElementById('aiAnalysisGlobalBody');
+                                if (body) body.innerHTML = renderAiText(raw) + renderCursor();
+                            }
+                        } catch (e) { /* 忽略半截JSON */ }
+                    }
+                }
                 const body = document.getElementById('aiAnalysisGlobalBody');
-                if (data.success) {
-                    body.innerHTML = renderAiText(data.analysis);
+                if (!body) return;
+                if (raw) {
+                    body.innerHTML = renderAiText(raw);
                 } else {
-                    body.innerHTML = '<div style="color:#d32f2f;background:#ffebee;padding:14px 18px;border-radius:10px;">❌ ' + (data.error || '分析失败，请稍后重试') + '</div>';
+                    body.innerHTML = '<div style="color:#d32f2f;background:#ffebee;padding:14px 18px;border-radius:10px;">❌ ' + (errMsg || '分析失败，请稍后重试') + '</div>';
                 }
             } catch (err) {
-                document.getElementById('aiAnalysisGlobalBody').innerHTML = '<div style="color:#d32f2f;">❌ 网络错误，请稍后重试</div>';
+                const body = document.getElementById('aiAnalysisGlobalBody');
+                if (body) body.innerHTML = '<div style="color:#d32f2f;background:#ffebee;padding:14px 18px;border-radius:10px;">❌ 网络错误：' + err.message + '，请稍后重试</div>';
             }
         }
+        async function showStudentAiAnalysis(studentId, studentName) {
+            await streamAiAnalysisToModal(
+                '/students/' + encodeURIComponent(studentId) + '/ai-analysis',
+                '🤖 ' + studentName + ' · 个性化能力分析',
+                '#667eea'
+            );
+        }
         async function showClassAiAnalysis(className) {
-            const loading = '<div style="text-align:center;padding:50px 20px;color:#fa541c;"><div style="display:inline-block;width:40px;height:40px;border:4px solid #ffe7d6;border-top-color:#fa541c;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:16px;"></div><div>AI 正在综合分析「' + className + '」整体学情…</div><div style="font-size:12px;color:#aaa;margin-top:8px;">约需 15-40 秒 ☕</div></div>';
-            openAiAnalysisModal('🧠 ' + className + ' · 班级整体AI分析', loading);
-            try {
-                const resp = await fetch('/api/double-teacher/class-ai-analysis?class_name=' + encodeURIComponent(className));
-                const data = await resp.json();
-                const body = document.getElementById('aiAnalysisGlobalBody');
-                if (data.success) {
-                    body.innerHTML = renderAiText(data.analysis);
-                } else {
-                    body.innerHTML = '<div style="color:#d32f2f;background:#ffebee;padding:14px 18px;border-radius:10px;">❌ ' + (data.error || '分析失败，请稍后重试') + '</div>';
-                }
-            } catch (err) {
-                document.getElementById('aiAnalysisGlobalBody').innerHTML = '<div style="color:#d32f2f;">❌ 网络错误，请稍后重试</div>';
-            }
+            await streamAiAnalysisToModal(
+                '/api/double-teacher/class-ai-analysis?class_name=' + encodeURIComponent(className),
+                '🧠 ' + className + ' · 班级整体AI分析',
+                '#fa541c'
+            );
         }
 
         async function doTakeover(studentNo, reason) {

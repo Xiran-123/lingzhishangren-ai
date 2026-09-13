@@ -2208,13 +2208,13 @@ def generate_suggestion(area_name: str) -> str:
     return suggestions.get(area_name, f"建议加强{area_name}的学习，多做相关练习和实践。")
 
 
-def generate_ai_analysis(student: Dict) -> Dict:
-    """调用大模型对学生进行综合能力分析，返回优缺点与学习建议"""
+def build_student_analysis_prompt(student: Dict):
+    """组装学生AI个性化分析的 system 与 prompt，返回 (system, prompt)"""
     name = student.get('name', '该学生')
 
-    # 1) 对话历史（只取最近30条，避免上下文过长）
+    # 1) 对话历史（只取最近15条，控制上下文长度）
     conv_history = student.get('conversation_history') or []
-    recent_conv = conv_history[-30:]
+    recent_conv = conv_history[-15:]
     conv_text = '\n'.join(
         f"- [{m.get('timestamp','')}] {'问' if m.get('is_question') else '说'}：{m.get('message','')[:120]}"
         for m in recent_conv
@@ -2232,18 +2232,17 @@ def generate_ai_analysis(student: Dict) -> Dict:
         comp_lines.append(f"- {area['name']}（{area['category']}）：掌握度 {pct}%，互动 {count} 次")
     comp_text = '\n'.join(comp_lines)
 
-    # 3) 错题本
+    # 3) 错题本（最近10条）
     wrong_qs = load_wrong_questions()
-    student_wrong = [q for q in wrong_qs if q.get('student_name') == name][-15:]
+    student_wrong = [q for q in wrong_qs if q.get('student_name') == name][-10:]
     wrong_text = '\n'.join(
         f"- [{q.get('knowledge_point','未分类')}] {str(q.get('question',''))[:100]}"
         for q in student_wrong
     ) if student_wrong else '（暂无错题记录）'
 
-    # 4) 学习记录（题目/实训）
+    # 4) 学习记录（题目/实训，只保留汇总与最近5条）
     records = load_learning_records()
     student_records = records.get(name, [])[-30:]
-    # 按活动类型统计
     type_counts = {}
     for r in student_records:
         t = r.get('activity_type', 'other')
@@ -2251,11 +2250,12 @@ def generate_ai_analysis(student: Dict) -> Dict:
     rec_summary = '、'.join(f"{t}:{c}次" for t, c in type_counts.items()) or '（暂无学习记录）'
     rec_detail = '\n'.join(
         f"- [{r.get('timestamp','')}] {r.get('activity_type','')} {r.get('knowledge_point','')} 得分:{r.get('score','-')}"
-        for r in student_records[-10:]
+        for r in student_records[-5:]
     )
 
     total_q = student.get('total_questions', len([m for m in conv_history if m.get('is_question')]))
 
+    system_content = '你是通信工程专业的资深教学导师，擅长根据学生的学习数据给出精准、实用的能力分析和学习建议。回答要专业但不晦涩，建议要具体可执行。'
     prompt = f"""你是一名通信工程专业的资深教学导师。请根据以下学生数据，对该学生进行综合能力分析。
 
 【学生基本信息】
@@ -2290,33 +2290,69 @@ def generate_ai_analysis(student: Dict) -> Dict:
 
 【整体评价】
 （用1-2句话概括该学生当前的学习状态与成长方向）"""
+    return system_content, prompt
 
-    try:
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {API_KEY}"
+
+def analysis_sse_generator(system_content: str, prompt: str, max_tokens: int = 1200, temperature: float = 0.7):
+    """通用AI分析流式生成器（SSE）：data: {"content": "..."}，结束发送 [DONE]"""
+    payload = {
+        "model": MODEL_NAME,
+        "messages": [
+            {"role": "system", "content": system_content},
+            {"role": "user", "content": prompt}
+        ],
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+        "stream": True
+    }
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {API_KEY}"
+    }
+
+    def generate():
+        got_any = False
+        try:
+            resp = requests.post(API_URL, headers=headers, json=payload, stream=True, timeout=120)
+            if resp.status_code != 200:
+                yield f"data: {json.dumps({'error': f'AI分析失败: {resp.status_code}'}, ensure_ascii=False)}\n\n"
+                return
+            for line in resp.iter_lines():
+                if not line:
+                    continue
+                line = line.decode('utf-8')
+                if not line.startswith('data: '):
+                    continue
+                data = line[6:]
+                if data == '[DONE]':
+                    break
+                try:
+                    chunk_json = json.loads(data)
+                    choices = chunk_json.get('choices') or []
+                    if choices:
+                        chunk = choices[0].get('delta', {}).get('content', '')
+                        if chunk:
+                            got_any = True
+                            yield f"data: {json.dumps({'content': chunk}, ensure_ascii=False)}\n\n"
+                except Exception:
+                    continue
+            if not got_any:
+                yield f"data: {json.dumps({'error': 'AI未返回内容，请稍后重试'}, ensure_ascii=False)}\n\n"
+        except requests.exceptions.Timeout:
+            yield f"data: {json.dumps({'error': 'AI分析超时，请稍后重试'}, ensure_ascii=False)}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'error': f'AI分析出错: {str(e)}'}, ensure_ascii=False)}\n\n"
+        finally:
+            yield "data: [DONE]\n\n"
+
+    return Response(
+        generate(),
+        content_type='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache, no-transform',
+            'X-Accel-Buffering': 'no'
         }
-        payload = {
-            "model": MODEL_NAME,
-            "messages": [
-                {"role": "system", "content": "你是通信工程专业的资深教学导师，擅长根据学生的学习数据给出精准、实用的能力分析和学习建议。回答要专业但不晦涩，建议要具体可执行。"},
-                {"role": "user", "content": prompt}
-            ],
-            "temperature": 0.7,
-            "max_tokens": 2000,
-            "stream": False
-        }
-        resp = requests.post(API_URL, headers=headers, json=payload, timeout=120)
-        if resp.status_code == 200:
-            result = resp.json()
-            if "choices" in result and result["choices"]:
-                content = result["choices"][0]["message"]["content"].strip()
-                return {'success': True, 'analysis': content, 'student': name}
-        return {'success': False, 'error': f'AI分析失败: {resp.status_code}'}
-    except requests.exceptions.Timeout:
-        return {'success': False, 'error': 'AI分析超时，请稍后重试'}
-    except Exception as e:
-        return {'success': False, 'error': f'AI分析出错: {str(e)}'}
+    )
 
 
 def recommend_scenarios(weaknesses: List[Dict]) -> List[Dict]:
@@ -5455,7 +5491,7 @@ def get_student_report(student_id):
 
 @app.route('/students/<string:student_id>/ai-analysis', methods=['GET'])
 def ai_student_analysis(student_id):
-    """一键AI个性化分析：综合对话历史+错题+学习记录，生成优缺点与学习建议"""
+    """一键AI个性化分析（SSE流式）：综合对话历史+错题+学习记录，生成优缺点与学习建议"""
     if not session.get('authenticated'):
         return jsonify({'error': '请先登录'}), 401
 
@@ -5466,8 +5502,8 @@ def ai_student_analysis(student_id):
     if session.get('role') != 'teacher' and not _student_belongs_to_session(student):
         return jsonify({'error': '无权查看其他学生的报告'}), 403
 
-    analysis = generate_ai_analysis(student)
-    return jsonify(analysis)
+    system_content, prompt = build_student_analysis_prompt(student)
+    return analysis_sse_generator(system_content, prompt, max_tokens=1200)
 
 
 @app.route('/students/<string:student_id>/update-conversation', methods=['POST'])
@@ -6004,6 +6040,12 @@ def api_get_weekly_tasks():
 
     week_key = f"week_{week_num}"
     weekly_tasks = student.get('weekly_tasks', {})
+
+    # 支持查看已生成的历史周任务（?week=week_1），仅允许查看已存在的周，不会新建
+    view_week = (request.args.get('week') or '').strip()
+    if view_week and re.fullmatch(r'week_\d{1,2}', view_week) and view_week in weekly_tasks:
+        week_num = int(view_week.split('_')[1])
+        week_key = view_week
 
     # 判断阶段
     stage = ""
@@ -7550,32 +7592,9 @@ def api_double_teacher_class_ai_analysis():
 【后续教学重点】
 （用1-2句话说明下一阶段教学应重点关注的方向）"""
 
-    try:
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {API_KEY}"
-        }
-        payload = {
-            "model": MODEL_NAME,
-            "messages": [
-                {"role": "system", "content": "你是通信工程专业的资深教学督导，擅长根据班级整体学情数据给出精准、实用的教学建议。分析要客观，建议要具体可执行。"},
-                {"role": "user", "content": prompt}
-            ],
-            "temperature": 0.7,
-            "max_tokens": 2500,
-            "stream": False
-        }
-        resp = requests.post(API_URL, headers=headers, json=payload, timeout=120)
-        if resp.status_code == 200:
-            result = resp.json()
-            if "choices" in result and result["choices"]:
-                content = result["choices"][0]["message"]["content"].strip()
-                return jsonify({'success': True, 'analysis': content, 'class_name': class_name})
-        return jsonify({'success': False, 'error': f'AI分析失败: {resp.status_code}'})
-    except requests.exceptions.Timeout:
-        return jsonify({'success': False, 'error': 'AI分析超时，请稍后重试'})
-    except Exception as e:
-        return jsonify({'success': False, 'error': f'AI分析出错: {str(e)}'})
+    system_content = '你是通信工程专业的资深教学督导，擅长根据班级整体学情数据给出精准、实用的教学建议。分析要客观，建议要具体可执行。'
+
+    return analysis_sse_generator(system_content, prompt, max_tokens=1500)
 
 
 # ====================== 口语化交互排障 ======================

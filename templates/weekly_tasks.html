@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -1296,8 +1296,9 @@
         let currentDetailData = null;
         let currentQuizData = null;
 
-        async function loadWeeklyTasks() {
-            const res = await fetch('/api/weekly-tasks');
+        async function loadWeeklyTasks(weekKey) {
+            const url = weekKey ? `/api/weekly-tasks?week=${encodeURIComponent(weekKey)}` : '/api/weekly-tasks';
+            const res = await fetch(url);
             const data = await res.json();
 
             if (data.need_target) {
@@ -1386,7 +1387,13 @@
             }).join('');
         }
 
-        function switchWeek(weekKey) {
+        async function switchWeek(weekKey) {
+            if (!currentWeekData || (currentWeekData.all_weeks || []).indexOf(weekKey) === -1) return;
+            // 已在该周则不重复加载
+            if (weekKey === `week_${currentWeekData.week_num}`) return;
+            const grid = document.getElementById('taskGrid');
+            if (grid) grid.innerHTML = '<div style="text-align:center;padding:40px;color:#999;">⏳ 加载中...</div>';
+            await loadWeeklyTasks(weekKey);
         }
 
         function renderCareerInfo(detail) {
@@ -2300,8 +2307,10 @@
         // ===== Full Competency Profile =====
         async function viewFullCompetencyProfile() {
             const modalBody = document.getElementById('modalBody');
+            document.getElementById('modalTitle').textContent = '🎯 岗位胜任力画像';
+            document.getElementById('completeTaskBtn').style.display = 'none';
             modalBody.innerHTML = '<div style="text-align:center;padding:40px;color:#999;">正在生成岗位胜任力画像...</div>';
-            openModal();
+            document.getElementById('taskModal').classList.add('active');
 
             try {
                 const res = await fetch('/api/competency-profile');
