@@ -176,7 +176,7 @@
         el.innerHTML = `
             <div class="pet-drag-handle"></div>
             <div class="pet-body-wrap">
-                <img src="/static/desktop_pet.svg" alt="桌宠" draggable="false">
+                <img src="/static/bot_new.jpg" alt="桌宠" draggable="false">
             </div>
             <div class="pet-bubble" id="petBubble">系统在线 ✨</div>
             <div class="pet-menu" id="petMenu">
