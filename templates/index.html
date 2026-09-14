@@ -2234,8 +2234,20 @@
             const avatar = document.createElement('div');
             avatar.className = 'avatar';
             if (isUser) {
-                avatar.textContent = '👤';
-                avatar.style.fontSize = '20px';
+                // 用户头像：优先用个人中心上传的头像，没设置则用姓名首字
+                if (currentUser.avatar_url) {
+                    const img = document.createElement('img');
+                    img.src = currentUser.avatar_url;
+                    img.alt = '用户头像';
+                    img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:inherit;';
+                    avatar.appendChild(img);
+                    avatar.style.background = 'transparent';
+                    avatar.style.padding = '0';
+                    avatar.style.boxShadow = 'none';
+                } else {
+                    avatar.textContent = (currentUser.student_name || '我').charAt(0);
+                    avatar.style.fontSize = '20px';
+                }
             } else {
                 const img = document.createElement('img');
                 img.src = '/static/bot_new.jpg';
