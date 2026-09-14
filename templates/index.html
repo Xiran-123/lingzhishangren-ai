@@ -2860,7 +2860,7 @@
                 out.push(`<p style="margin:8px 0;">${t}</p>`);
             }
             if (inList) out.push('</ul>');
-            return out.join('');
+            return '<div style="font-size:12px;color:#999;background:#f5f5f5;border-radius:6px;padding:6px 12px;margin-bottom:12px;">✨ 本分析报告由 AI 生成，仅供参考</div>' + out.join('');
         }
         // 通用：读取SSE流式AI分析并实时渲染到弹窗
         async function streamAiAnalysisToModal(url, title, color) {

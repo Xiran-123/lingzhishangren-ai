@@ -2100,6 +2100,7 @@
                     history.innerHTML += `
                         <div class="troubleshoot-msg ai">
                             <div class="msg-label">AI排障分析${data.fallback ? '（离线模式）' : ''}</div>
+                            <div style="font-size:11px;color:#999;margin-bottom:4px;">✨ AI 生成内容</div>
                             ${data.analysis}
                         </div>
                     `;
@@ -2198,6 +2199,7 @@
                             <span class="report-title">工程实训报告</span>
                             <span class="report-time">${report.generated_at}</span>
                         </div>
+                        <div style="font-size:12px;color:#999;background:#f5f5f5;border-radius:6px;padding:6px 12px;margin:12px 0;">✨ 本报告由 AI 生成，仅供参考</div>
 
                         <div class="report-block">
                             <div class="report-block-title">📋 任务信息</div>
@@ -2393,6 +2395,7 @@
                             <span style="font-size:24px;">🎯</span>
                             <span class="report-title">岗位胜任力画像</span>
                         </div>
+                        <div style="font-size:12px;color:#999;background:#f5f5f5;border-radius:6px;padding:6px 12px;margin:12px 0;">✨ 本画像报告由 AI 生成，仅供参考</div>
 
                         <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:16px;padding:24px;color:#fff;margin-bottom:16px;">
                             <div style="display:flex;align-items:center;justify-content:space-between;">
@@ -2599,7 +2602,7 @@
                 const data = await res.json();
                 resultDiv.innerHTML = '';
                 if (data.success) {
-                    resultDiv.innerHTML = `<div class="stress-evaluation">${data.evaluation}</div>`;
+                    resultDiv.innerHTML = `<div style="font-size:11px;color:#999;margin-bottom:4px;">✨ AI 生成内容</div><div class="stress-evaluation">${data.evaluation}</div>`;
                 }
             } catch (err) {
                 resultDiv.innerHTML = '<div class="stress-evaluation" style="background:#fff1f0;border-color:#ffa39e;">评价请求失败：' + err.message + '</div>';
@@ -2619,6 +2622,7 @@
                     </div>
                     <div class="report-block">
                         <div class="report-block-title">AI评价</div>
+                        <div style="font-size:11px;color:#999;margin-bottom:4px;">✨ AI 生成内容</div>
                         <div class="stress-evaluation">${data.evaluation}</div>
                     </div>
                     <div style="display:flex;gap:10px;margin-top:16px;">
