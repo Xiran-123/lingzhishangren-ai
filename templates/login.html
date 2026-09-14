@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -1026,15 +1026,15 @@
         <div class="student-info" id="studentInfo">
             <div class="input-group">
                 <label for="studentNo">学号</label>
-                <input type="text" id="studentNo" placeholder="请输入您的学号">
+                <input type="text" id="studentNo" placeholder="请输入您的学号" value="2505058103112">
             </div>
             <div class="input-group">
                 <label for="studentName">学生姓名</label>
-                <input type="text" id="studentName" placeholder="请输入您的姓名">
+                <input type="text" id="studentName" placeholder="请输入您的姓名" value="张三">
             </div>
             <div class="input-group">
                 <label for="className">班级（可选）</label>
-                <input type="text" id="className" placeholder="请输入班级">
+                <input type="text" id="className" placeholder="请输入班级" value="通信1班">
             </div>
         </div>
         
@@ -1042,14 +1042,14 @@
         <div class="teacher-info" id="teacherInfo">
             <div class="input-group">
                 <label for="teacherName">老师账号</label>
-                <input type="text" id="teacherName" placeholder="请输入老师账号（如：teacher1）">
+                <input type="text" id="teacherName" placeholder="请输入老师账号（如：teacher1、teacher2）">
             </div>
         </div>
         
         <!-- 密码 -->
         <div class="input-group">
             <label for="password" id="passwordLabel">访问密码</label>
-            <input type="password" id="password" placeholder="请输入密码" onkeypress="handleKeyPress(event)">
+            <input type="password" id="password" placeholder="请输入密码（tongxin2024）" value="tongxin2024" onkeypress="handleKeyPress(event)">
         </div>
         
         <button class="login-btn" id="loginBtn" onclick="doLogin()">
@@ -1129,13 +1129,13 @@
                 studentInfo.classList.add('show');
                 teacherInfo.classList.remove('show');
                 passwordLabel.textContent = '访问密码';
-                passwordInput.placeholder = '请输入访问密码';
+                passwordInput.placeholder = '请输入密码（tongxin2024）';
             } else {
                 teacherBtn.classList.add('selected');
                 studentInfo.classList.remove('show');
                 teacherInfo.classList.add('show');
                 passwordLabel.textContent = '老师密码';
-                passwordInput.placeholder = '请输入老师密码';
+                passwordInput.placeholder = '请输入老师密码（与账号密码一致）';
             }
         }
         
