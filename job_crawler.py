@@ -416,16 +416,19 @@ def load_json_file(filepath: str, default=None):
         default = {}
     if os.path.exists(filepath):
         try:
-            with open(filepath, "r", encoding="utf-8") as f:
+            with open(filepath, "r", encoding="utf-8", errors="replace") as f:
                 return json.load(f)
-        except (json.JSONDecodeError, IOError):
+        except (json.JSONDecodeError, IOError, UnicodeDecodeError, OSError):
             return default
     return default
 
 
 def save_json_file(filepath: str, data):
-    with open(filepath, "w", encoding="utf-8") as f:
+    """原子写入：先写临时文件，再重命名，防止并发写入损坏文件"""
+    tmp_path = filepath + ".tmp"
+    with open(tmp_path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+    os.replace(tmp_path, filepath)
 
 
 def load_job_config() -> Dict:

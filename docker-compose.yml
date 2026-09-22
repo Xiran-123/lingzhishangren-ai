@@ -9,9 +9,7 @@ services:
     environment:
       - FLASK_ENV=production
       - SECRET_KEY=your-production-secret-key-change-this
-    # 大模型密钥：由挂载的 api_key.local 提供（见 volumes），或改用环境变量：
-    # environment:
-    #   - SILICONFLOW_API_KEY=sk-xxxxxx
+      - WORKER_INDEX=0
     restart: unless-stopped
     volumes:
       - ./data:/app/data
@@ -22,3 +20,17 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
+    labels:
+      - "autoheal=true"
+
+  autoheal:
+    image: willfarrell/autoheal:latest
+    container_name: lingzhishangren-autoheal
+    restart: unless-stopped
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=autoheal
+      - AUTOHEAL_INTERVAL=30
+      - AUTOHEAL_START_PERIOD=60
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock

@@ -10,6 +10,8 @@ import sys
 import time
 import random
 import threading
+import hashlib
+import difflib
 from datetime import datetime, timedelta
 from typing import Dict, List
 from werkzeug.utils import secure_filename
@@ -1466,6 +1468,14 @@ SCENARIOS = [
 ]
 
 
+def atomic_save_json(filepath: str, data):
+    """原子写入JSON：先写临时文件再重命名，防止并发写入损坏"""
+    tmp_path = filepath + ".tmp"
+    with open(tmp_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    os.replace(tmp_path, filepath)
+
+
 def load_knowledge():
     """加载知识库内容"""
     try:
@@ -1495,8 +1505,7 @@ def load_upload_history() -> List[Dict]:
 def save_upload_history(history: List[Dict]):
     """保存上传历史记录"""
     try:
-        with open(UPLOAD_HISTORY_FILE, "w", encoding="utf-8") as f:
-            json.dump(history, f, ensure_ascii=False, indent=2)
+        atomic_save_json(UPLOAD_HISTORY_FILE, history)
     except Exception as e:
         print(f"保存上传历史失败: {e}")
 
@@ -1517,8 +1526,7 @@ def load_wrong_questions() -> List[Dict]:
 def save_wrong_questions(questions: List[Dict]):
     """保存错题本"""
     try:
-        with open(WRONG_QUESTIONS_FILE, "w", encoding="utf-8") as f:
-            json.dump(questions, f, ensure_ascii=False, indent=2)
+        atomic_save_json(WRONG_QUESTIONS_FILE, questions)
     except Exception as e:
         print(f"保存错题本失败: {e}")
 
@@ -1538,8 +1546,7 @@ def load_learning_records() -> Dict:
 def save_learning_records(records: Dict):
     """保存学习记录"""
     try:
-        with open(LEARNING_RECORDS_FILE, "w", encoding="utf-8") as f:
-            json.dump(records, f, ensure_ascii=False, indent=2)
+        atomic_save_json(LEARNING_RECORDS_FILE, records)
     except Exception as e:
         print(f"保存学习记录失败: {e}")
 
@@ -1560,8 +1567,7 @@ def load_ppt_metadata() -> List[Dict]:
 def save_ppt_metadata(metadata: List[Dict]):
     """保存PPT元数据"""
     try:
-        with open(PPT_METADATA_FILE, "w", encoding="utf-8") as f:
-            json.dump(metadata, f, ensure_ascii=False, indent=2)
+        atomic_save_json(PPT_METADATA_FILE, metadata)
     except Exception as e:
         print(f"保存PPT元数据失败: {e}")
 
@@ -1572,8 +1578,11 @@ _converting_lock = threading.Lock()
 _converting = set()
 
 
-def convert_pptx_to_images(download_name: str):
-    """后台将PPTX逐页转为JPEG图片，转换完成回写元数据 preview_ready/page_count"""
+def convert_document_to_images(download_name: str):
+    """后台将文档（ppt/pptx/doc/docx）逐页转为JPEG图片。
+    转换完成后回写预览状态：PPT写ppt_metadata，Word等写upload_history，
+    字段统一为 preview_ready/page_count/preview_dir，前端按同一套逻辑预览。
+    """
     stem = download_name.rsplit('.', 1)[0]
     with _converting_lock:
         if stem in _converting:
@@ -1585,12 +1594,13 @@ def convert_pptx_to_images(download_name: str):
         import glob as globmod
         src = os.path.join(UPLOAD_FOLDER, download_name)
         if not os.path.exists(src):
-            print(f"PPT预览转换跳过，源文件不存在: {download_name}")
+            print(f"文档预览转换跳过，源文件不存在: {download_name}")
             return
         out_dir = os.path.join(PPT_PREVIEW_DIR, stem)
         os.makedirs(out_dir, exist_ok=True)
         with tempfile.TemporaryDirectory() as tmp:
-            # pptx -> pdf（LibreOffice 无头模式；25.x 不支持 --no-sandbox；profile独立避免并发锁）
+            # 文档 -> pdf（LibreOffice 无头模式，impress/writer 均支持；
+            # 25.x 不支持 --no-sandbox；profile独立避免并发锁）
             profile_url = 'file://' + os.path.join(tmp, 'lo_profile')
             r = subprocess.run(
                 ['soffice', '--headless', '--norestore', '--nologo',
@@ -1612,16 +1622,32 @@ def convert_pptx_to_images(download_name: str):
         if len(pages) > 1 or os.path.basename(pages[0]) != 'page-01.jpg':
             for idx, old in enumerate(pages, 1):
                 os.replace(old, os.path.join(out_dir, f'page-{idx:02d}.jpg'))
+        preview_fields = {
+            'preview_ready': True,
+            'page_count': len(pages),
+            'preview_dir': f'previews/{stem}'
+        }
+        # PPT 课件元数据（学生端课件中心等仍在使用，保持原行为）
         metadata = load_ppt_metadata()
+        changed = False
         for m in metadata:
             if m.get('download_name') == download_name:
-                m['preview_ready'] = True
-                m['page_count'] = len(pages)
-                m['preview_dir'] = f'previews/{stem}'
-        save_ppt_metadata(metadata)
-        print(f"PPT预览图转换完成: {download_name} -> {len(pages)}页")
+                m.update(preview_fields)
+                changed = True
+        if changed:
+            save_ppt_metadata(metadata)
+        # 上传历史条目（Word/通用文档的预览状态存这里）
+        history = load_upload_history()
+        hist_changed = False
+        for h in history:
+            if h.get('download_name') == download_name:
+                h.update(preview_fields)
+                hist_changed = True
+        if hist_changed:
+            save_upload_history(history)
+        print(f"文档预览图转换完成: {download_name} -> {len(pages)}页")
     except Exception as e:
-        print(f"PPT预览图转换失败 {download_name}: {e}")
+        print(f"文档预览图转换失败 {download_name}: {e}")
     finally:
         with _converting_lock:
             _converting.discard(stem)
@@ -1783,20 +1809,38 @@ def calculate_job_match_score(student_scores: Dict, job_name: str) -> Dict:
 
 
 def is_content_duplicate(new_content: str) -> bool:
-    """检查内容是否已存在于知识库中（相似度超过90%）"""
+    """检查内容是否已存在于知识库中。
+    1) 规范化（去除所有空白）后 SHA256 完全一致 -> 同一文件重复上传
+    2) 长度接近的已有条目，用 difflib 计算文本相似度 > 0.92 -> 同一文档的微调版本
+    注意：不能用 Python 内置 hash() 的整数差值比较相似度——哈希值的数量级与内容
+    相似性毫无关系，无关文档也会得到 >0.9 的"相似度"，造成大量误判；且哈希带进程随机盐。
+    """
     kb_content = load_knowledge()
     if not kb_content:
         return False
-    
-    new_hash = hash(new_content.strip())
-    
-    for existing_entry in kb_content.split('='*50):
-        if existing_entry.strip():
-            existing_hash = hash(existing_entry.strip())
-            similarity = 1 - abs(new_hash - existing_hash) / max(abs(new_hash), abs(existing_hash), 1)
-            if similarity > 0.9:
-                return True
-    
+
+    def normalize(text: str) -> str:
+        return ''.join(text.split())
+
+    new_norm = normalize(new_content)
+    if len(new_norm) < 20:
+        return False
+    new_hash = hashlib.sha256(new_norm.encode('utf-8')).hexdigest()
+    new_len = len(new_norm)
+
+    for existing_entry in kb_content.split('=' * 50):
+        existing_norm = normalize(existing_entry)
+        if len(existing_norm) < 20:
+            continue
+        # 精确重复：规范化后的全文哈希一致
+        existing_hash = hashlib.sha256(existing_norm.encode('utf-8')).hexdigest()
+        if existing_hash == new_hash:
+            return True
+        # 高度相似：长度相差超过15%时相似度不可能达到0.92阈值，直接跳过以节省计算
+        len_ratio = min(new_len, len(existing_norm)) / max(new_len, len(existing_norm))
+        if len_ratio >= 0.85 and difflib.SequenceMatcher(None, new_norm, existing_norm).ratio() > 0.92:
+            return True
+
     return False
 
 
@@ -1816,8 +1860,7 @@ def load_search_logs() -> List[Dict]:
 def save_search_logs(logs: List[Dict]):
     """保存搜索日志"""
     try:
-        with open(SEARCH_LOG_FILE, "w", encoding="utf-8") as f:
-            json.dump(logs, f, ensure_ascii=False, indent=2)
+        atomic_save_json(SEARCH_LOG_FILE, logs)
     except Exception as e:
         print(f"搜索日志保存失败: {e}")
 
@@ -1839,8 +1882,7 @@ def load_students() -> List[Dict]:
 def save_students(students: List[Dict]):
     """保存学生档案"""
     try:
-        with open(STUDENTS_FILE, "w", encoding="utf-8") as f:
-            json.dump(students, f, ensure_ascii=False, indent=2)
+        atomic_save_json(STUDENTS_FILE, students)
     except Exception as e:
         print(f"学生档案保存失败: {e}")
 
@@ -1874,8 +1916,7 @@ def load_classes() -> List[Dict]:
 def save_classes(classes: List[Dict]):
     """保存班级数据"""
     try:
-        with open(CLASSES_FILE, "w", encoding="utf-8") as f:
-            json.dump(classes, f, ensure_ascii=False, indent=2)
+        atomic_save_json(CLASSES_FILE, classes)
     except Exception as e:
         print(f"班级数据保存失败: {e}")
 
@@ -1896,8 +1937,7 @@ def load_notifications() -> List[Dict]:
 def save_notifications(notifications: List[Dict]):
     """保存通知数据"""
     try:
-        with open(NOTIFICATIONS_FILE, "w", encoding="utf-8") as f:
-            json.dump(notifications, f, ensure_ascii=False, indent=2)
+        atomic_save_json(NOTIFICATIONS_FILE, notifications)
     except Exception as e:
         print(f"通知数据保存失败: {e}")
 
@@ -1905,6 +1945,18 @@ def save_notifications(notifications: List[Dict]):
 def allowed_file(filename: str) -> bool:
     """检查文件扩展名是否允许"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def safe_upload_filename(filename: str) -> str:
+    """清洗上传文件名：去除路径成分与非法字符，但保留中文、空格等正常字符。
+    不能直接用 werkzeug.secure_filename——它会把中文全部删光
+    （如"通信原理课件.txt"会变成"txt"），造成历史记录丢名，
+    且删除时短名容易匹配到其他文档条目导致误删。
+    """
+    filename = os.path.basename(filename.replace('\\', '/'))
+    filename = re.sub(r'[\\/:*?"<>|\x00-\x1f]+', '_', filename)
+    filename = filename.strip(' .')
+    return filename or 'unnamed'
 
 
 def save_uploaded_file(file, upload_type: str) -> Dict:
@@ -3407,8 +3459,7 @@ def load_conversations():
         return {}
 
 def save_conversations(data):
-    with open(CONVERSATIONS_FILE, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    atomic_save_json(CONVERSATIONS_FILE, data)
 
 def get_user_key():
     role = session.get('role', 'student')
@@ -4045,7 +4096,7 @@ def process_single_file(file):
         return result
     
     try:
-        filename = secure_filename(file.filename)
+        filename = safe_upload_filename(file.filename)
         unique_filename = f"{uuid.uuid4().hex}_{filename}"
         file_path = os.path.join(UPLOAD_FOLDER, unique_filename)
         file.save(file_path)
@@ -4071,17 +4122,22 @@ def process_single_file(file):
         download_name = ""
         chapters = []
         knowledge_points = []
-        
+        # 支持服务端转图片在线预览的格式（LibreOffice 均可转 PDF）
+        image_preview_exts = {'doc', 'docx', 'ppt', 'pptx'}
+        preview_ready = False
+        page_count = 0
+        preview_dir = ""
+
         ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
         if ext == 'pptx':
             ppt_structure = extract_pptx_structure(file_path)
             chapters = ppt_structure['chapters']
             knowledge_points = ppt_structure['knowledge_points']
-            
+
             download_name = f"lecture_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{filename}"
             download_path = os.path.join(UPLOAD_FOLDER, download_name)
             os.rename(file_path, download_path)
-            
+
             ppt_metadata = load_ppt_metadata()
             ppt_metadata.append({
                 'id': str(uuid.uuid4()),
@@ -4097,21 +4153,36 @@ def process_single_file(file):
             })
             save_ppt_metadata(ppt_metadata)
             # 后台转图片：学生预览秒开，不阻塞上传响应
-            threading.Thread(target=convert_pptx_to_images, args=(download_name,), daemon=True).start()
+            threading.Thread(target=convert_document_to_images, args=(download_name,), daemon=True).start()
         else:
-            os.remove(file_path)
-        
-        history = load_upload_history()
-        history.append({
+            # doc/docx/ppt/txt 等文档同样保留原件，供教师在上传历史中查看/下载
+            download_name = f"doc_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{filename}"
+            os.rename(file_path, os.path.join(UPLOAD_FOLDER, download_name))
+            if ext in image_preview_exts:
+                # doc/docx/ppt：后台逐页转图片，前端与PPT共用同一套预览弹窗
+                preview_dir = f"previews/{download_name.rsplit('.', 1)[0]}"
+                threading.Thread(target=convert_document_to_images, args=(download_name,), daemon=True).start()
+
+        history_entry = {
             'id': str(uuid.uuid4()),
             'filename': filename,
+            'download_name': download_name,
+            'file_ext': ext,
             'extracted_length': len(extracted_text),
             'upload_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             'uploader': session.get('username') or session.get('student_name') or 'unknown',
             'status': 'success',
             'chapters': chapters,
             'knowledge_points': knowledge_points
-        })
+        }
+        if ext in image_preview_exts:
+            history_entry.update({
+                'preview_ready': preview_ready,
+                'page_count': page_count,
+                'preview_dir': preview_dir
+            })
+        history = load_upload_history()
+        history.append(history_entry)
         save_upload_history(history)
         
         result['success'] = True
@@ -4252,12 +4323,18 @@ def get_upload_history():
     history = load_upload_history()
     history.reverse()
 
-    # 合并PPT预览信息（供教师端在线预览使用）
+    # 合并文件查看信息：
+    # - 新记录自带 download_name/file_ext（doc/docx/txt/pptx 均保留原件）
+    # - 旧记录没有这些字段，按文件名从 PPT 元数据补全（向后兼容）
     ppt_by_name = {p['filename']: p for p in load_ppt_metadata()}
     for h in history:
+        ext = (h.get('file_ext') or h.get('filename', '').rsplit('.', 1)[-1]).lower()
         p = ppt_by_name.get(h.get('filename'))
-        if p:
+        if not h.get('download_name') and p:
             h['download_name'] = p.get('download_name', '')
+        h['file_ext'] = ext
+        # PPT 的预览状态存于 ppt_metadata；Word 等文档自带于历史条目，自带优先
+        if p and 'preview_ready' not in h:
             h['preview_ready'] = p.get('preview_ready', False)
             h['page_count'] = p.get('page_count', 0)
             h['preview_dir'] = p.get('preview_dir', '')
@@ -4311,25 +4388,47 @@ def delete_knowledge_upload(entry_id):
     # 1. 移除知识库中的导入段落
     remove_knowledge_sections(filename)
 
-    # 2. 移除PPT文件、预览图目录和元数据
+    import shutil
+
+    # 2. 移除历史条目自带的原文件（doc/docx/txt 等非 PPT 文档）
+    #    单个文件清理失败（如 Windows 句柄暂未释放）不应阻断知识库段落和历史记录的清理
+    def safe_remove_file(path: str):
+        try:
+            if os.path.exists(path):
+                os.remove(path)
+        except Exception as e:
+            print(f"上传文件删除失败 {path}: {e}")
+
+    own_dn = entry.get('download_name', '')
+    if own_dn:
+        own_path = os.path.abspath(os.path.join(UPLOAD_FOLDER, own_dn))
+        if own_path.startswith(os.path.abspath(UPLOAD_FOLDER)):
+            safe_remove_file(own_path)
+    # 历史条目自带的预览图目录（doc/docx/ppt 等通用文档）
+    own_pd = entry.get('preview_dir', '')
+    if own_pd.startswith('previews/'):
+        own_pdir = os.path.abspath(os.path.join(UPLOAD_FOLDER, own_pd))
+        if own_pdir.startswith(os.path.abspath(os.path.join(UPLOAD_FOLDER, 'previews'))):
+            shutil.rmtree(own_pdir, ignore_errors=True)
+
+    # 3. 移除PPT文件、预览图目录和元数据
     meta = load_ppt_metadata()
     removed = [m for m in meta if m.get('filename') == filename]
     save_ppt_metadata([m for m in meta if m.get('filename') != filename])
     for m in removed:
         fpath = os.path.abspath(os.path.join(UPLOAD_FOLDER, m.get('download_name', '')))
-        if fpath.startswith(os.path.abspath(UPLOAD_FOLDER)) and os.path.exists(fpath):
-            os.remove(fpath)
+        if fpath.startswith(os.path.abspath(UPLOAD_FOLDER)):
+            safe_remove_file(fpath)
         pd_rel = m.get('preview_dir', '')
         if pd_rel.startswith('previews/'):
             pdir = os.path.abspath(os.path.join(UPLOAD_FOLDER, pd_rel))
             if pdir.startswith(os.path.abspath(os.path.join(UPLOAD_FOLDER, 'previews'))):
-                import shutil
                 shutil.rmtree(pdir, ignore_errors=True)
 
-    # 3. 移除上传历史条目
+    # 4. 移除上传历史条目
     save_upload_history([h for h in history if h.get('id') != entry_id])
 
-    # 4. 刷新系统提示词中的知识库内容
+    # 5. 刷新系统提示词中的知识库内容
     update_system_prompt()
 
     return jsonify({'success': True, 'message': f'已删除 "{filename}" 及其知识库内容'})
@@ -4580,8 +4679,7 @@ def save_custom_exercises(exercises):
     """保存教师自定义练习题"""
     try:
         os.makedirs(os.path.dirname(CUSTOM_EXERCISE_FILE), exist_ok=True)
-        with open(CUSTOM_EXERCISE_FILE, "w", encoding="utf-8") as f:
-            json.dump(exercises, f, ensure_ascii=False, indent=2)
+        atomic_save_json(CUSTOM_EXERCISE_FILE, exercises)
     except Exception as e:
         print(f"自定义练习题保存失败: {e}")
 
@@ -7340,8 +7438,7 @@ def load_teacher_agent_configs():
 def save_teacher_agent_configs(configs):
     try:
         os.makedirs(os.path.dirname(AGENT_CONFIG_FILE), exist_ok=True)
-        with open(AGENT_CONFIG_FILE, 'w', encoding='utf-8') as f:
-            json.dump(configs, f, ensure_ascii=False, indent=2)
+        atomic_save_json(AGENT_CONFIG_FILE, configs)
     except Exception as e:
         print(f"AI 助教配置保存失败: {e}")
 
@@ -7993,6 +8090,23 @@ def weekly_tasks_page():
 def init_job_scheduler_async():
     if JOB_MODULE_AVAILABLE:
         try:
+            import threading
+            import fcntl
+            # 用文件锁确保只有一个 gunicorn worker 启动调度器，避免并发写文件
+            lock_file = open(os.path.join(DATA_DIR, '.scheduler.lock'), 'w')
+            try:
+                fcntl.flock(lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except (IOError, OSError):
+                print("[调度器] 另一个 worker 已持有锁，跳过启动")
+                return
+
+            def _init():
+                _time.sleep(2)
+                job_scheduler.init_scheduler()
+            threading.Thread(target=_init, daemon=True).start()
+            print("[调度器] 本 worker 获得锁，调度器已启动")
+        except ImportError:
+            # Windows 下没有 fcntl，直接启动（开发环境单 worker）
             import threading
             def _init():
                 _time.sleep(2)
