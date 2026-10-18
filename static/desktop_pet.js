@@ -729,6 +729,8 @@
     function init() {
         if (localStorage.getItem('pet_disabled') === '1') return; // 设置里可关闭桌宠
         if (document.getElementById('globalPet')) return; // 防止重复注入
+        // 页面被嵌入 iframe 时（如首页内嵌功能页）不注入，避免和主页面桌宠重复
+        try { if (window.self !== window.top) return; } catch (e) { return; }
         const el = buildPet();
         const state = { moved: false }; // 拖拽状态，拖拽与点击判定共享
         loadPos(el);
