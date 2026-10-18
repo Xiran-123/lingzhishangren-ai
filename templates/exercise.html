@@ -147,15 +147,22 @@
         .options-list {
             list-style: none;
             padding: 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
         }
         .option-item {
-            padding: 15px;
+            padding: 12px 14px;
             background: #f8f9fc;
             border-radius: 10px;
-            margin-bottom: 10px;
+            margin-bottom: 0;
             cursor: pointer;
             transition: all 0.3s;
             border: 2px solid transparent;
+        }
+        .options-list.locked .option-item {
+            pointer-events: none;
+            opacity: 0.85;
         }
         .option-item:hover {
             background: #eef2ff;
@@ -205,11 +212,37 @@
         .feedback-box {
             padding: 15px;
             border-radius: 10px;
-            margin-top: 20px;
+            margin-top: 16px;
             display: none;
         }
         .feedback-box.show {
             display: block;
+            animation: feedbackIn 0.25s ease;
+        }
+        @keyframes feedbackIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .feedback-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        .btn-next-inline {
+            flex: 1;
+            padding: 13px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-next-inline:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102,126,234,0.4);
         }
         .feedback-box.success {
             background: #d3f9d8;
@@ -234,25 +267,26 @@
 
         .stats-row {
             display: flex;
-            gap: 20px;
-            margin-bottom: 20px;
+            gap: 10px;
+            margin-bottom: 12px;
         }
         .stat-box {
             flex: 1;
             text-align: center;
-            padding: 15px;
+            padding: 8px 6px;
             background: #f8f9fc;
-            border-radius: 10px;
+            border-radius: 8px;
         }
         .stat-value {
-            font-size: 28px;
+            font-size: 18px;
             font-weight: 700;
             color: #667eea;
+            line-height: 1.2;
         }
         .stat-label {
-            font-size: 12px;
+            font-size: 11px;
             color: #666;
-            margin-top: 5px;
+            margin-top: 2px;
         }
 
         .action-buttons {
@@ -291,6 +325,7 @@
             .action-buttons .btn { flex: 1 1 auto; padding: 12px; font-size: 15px; }
             .question-header { flex-wrap: wrap; gap: 6px; }
             .question-text { font-size: 15px; }
+            .options-list { grid-template-columns: 1fr; }
             .option-item { padding: 12px; }
             .fill-input, .short-textarea { font-size: 15px; }
             .feedback-text { font-size: 13px; }
@@ -487,7 +522,7 @@
                     <div class="question-text">${exercise.question}</div>
                     ${optionsHtml}
                     ${inputHtml}
-                    <button class="btn" style="margin-top: 15px;" onclick="submitAnswer()">提交答案</button>
+                    <button class="btn" id="submitBtn" style="margin-top: 15px;" onclick="submitAnswer()">提交答案</button>
                     <div class="feedback-box" id="feedbackBox"></div>
                 </div>
             `;
@@ -544,6 +579,13 @@
                     showFeedback(data);
                     updateStats(data.is_correct);
                     document.getElementById('nextBtn').disabled = false;
+                    // 隐藏提交按钮并锁定作答区，避免改选
+                    const submitBtn = document.getElementById('submitBtn');
+                    if (submitBtn) submitBtn.style.display = 'none';
+                    const optionsList = document.querySelector('.options-list');
+                    if (optionsList) optionsList.classList.add('locked');
+                    const answerInput = document.getElementById('answerInput');
+                    if (answerInput) answerInput.disabled = true;
                 }
             } catch (error) {
                 console.error('提交答案失败:', error);
@@ -553,15 +595,23 @@
         function showFeedback(data) {
             const feedbackBox = document.getElementById('feedbackBox');
             feedbackBox.classList.add('show');
-            
+
+            const isLast = currentIndex >= exercises.length - 1;
+            const nextBtnHtml = `
+                <div class="feedback-actions">
+                    <button class="btn-next-inline" onclick="nextQuestion()">${isLast ? '查看结果 🎉' : '下一题 →'}</button>
+                </div>
+            `;
+
             if (data.is_correct) {
                 feedbackBox.classList.remove('error');
                 feedbackBox.classList.add('success');
                 feedbackBox.innerHTML = `
                     <div class="feedback-title">✅ 回答正确！</div>
                     <div class="feedback-text">${data.analysis}</div>
+                    ${nextBtnHtml}
                 `;
-                
+
                 if (exercises[currentIndex].type === 'choice') {
                     document.querySelectorAll('.option-item').forEach(el => {
                         if (el.textContent.charAt(0) === data.correct_answer) {
@@ -577,8 +627,9 @@
                     <div class="feedback-text"><strong>正确答案：</strong>${data.correct_answer}</div>
                     <div class="feedback-text" style="margin-top: 10px;"><strong>解析：</strong>${data.analysis}</div>
                     <div style="margin-top:10px;display:inline-block;background:rgba(255,87,87,0.15);color:#ff5757;border:1px solid rgba(255,87,87,0.3);padding:4px 12px;border-radius:12px;font-size:12px;">📕 已自动记录到错题本</div>
+                    ${nextBtnHtml}
                 `;
-                
+
                 if (exercises[currentIndex].type === 'choice') {
                     document.querySelectorAll('.option-item').forEach(el => {
                         const opt = el.textContent.charAt(0);
@@ -590,6 +641,11 @@
                     });
                 }
             }
+
+            // 自动滚动到解析框，确保无需手动下滑
+            setTimeout(() => {
+                feedbackBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 80);
         }
 
         function updateStats(isCorrect) {

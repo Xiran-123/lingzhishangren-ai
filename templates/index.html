@@ -1410,6 +1410,15 @@
     .hx-qitem:hover span{color:#fff}
     .hx-hide{display:none!important}
     .hx-foot{text-align:center;font-size:11px;color:var(--hx-txt3);padding:12px 0 0}
+    /* ============ 内嵌功能页承载层 ============ */
+    .hx-pageview{margin-top:14px}
+    .hx-pagebar{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;margin-bottom:12px}
+    .hx-pageback{background:rgba(102,126,234,.15);color:#9fb3ff;border:1px solid rgba(102,126,234,.35);padding:8px 16px;border-radius:9px;font-size:13.5px;font-weight:600;cursor:pointer;transition:all .25s;white-space:nowrap}
+    .hx-pageback:hover{background:rgba(102,126,234,.32);color:#fff}
+    .hx-pagetitle{flex:1;font-size:15px;font-weight:700;color:#e8eeff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .hx-pagepop{color:#8ea6e8;font-size:12.5px;text-decoration:none;border:1px solid rgba(142,166,232,.3);padding:6px 12px;border-radius:8px;white-space:nowrap}
+    .hx-pagepop:hover{background:rgba(142,166,232,.15);color:#c7d6ff}
+    .hx-pageview iframe{width:100%;height:calc(100vh - 170px);min-height:540px;border:0;border-radius:14px;background:#fff;box-shadow:0 8px 30px rgba(0,0,0,.25)}
 
     .hx-right{display:flex;flex-direction:column;gap:14px;min-width:0}
     .hx-more{margin-left:auto;font-size:11px;color:var(--hx-txt3);cursor:pointer}
@@ -1440,6 +1449,8 @@
     @media(max-width:900px){
       .hx-layout{grid-template-columns:1fr}.hx-left{display:none}.hx-burger{display:grid;place-items:center}
       .hx-topbar{gap:10px;padding:0 14px}.hx-tabs{overflow-x:auto;scrollbar-width:none;margin-left:0}
+      .hx-pageview iframe{height:calc(100vh - 200px);min-height:480px}
+      .hx-pagebar{padding:9px 12px;gap:8px}.hx-pageback{padding:7px 12px;font-size:12.5px}.hx-pagetitle{font-size:13.5px}.hx-pagepop{display:none}
       .hx-tabs::-webkit-scrollbar{display:none}.hx-tab{padding:6px 12px;font-size:12.5px}
       .hx-herobody{grid-template-columns:1fr}.hx-params{flex-direction:row;flex-wrap:wrap}
       .hx-params .hx-startbtn{margin-top:4px;flex:1 1 100%}
@@ -1458,8 +1469,8 @@
           <button class="hx-tab on" data-view="home" data-cat="all" onclick="hxTab(this)">🧪 实训中心</button>
           <button class="hx-tab" data-view="home" data-cat="study" onclick="hxTab(this)">📖 学习中心</button>
           <button class="hx-tab" data-view="home" data-cat="res" onclick="hxTab(this)">🗂 资源中心</button>
+          <button class="hx-tab" data-view="home" data-cat="grow" onclick="hxTab(this)">🌱 成长中心</button>
           <button class="hx-tab" data-view="chat" onclick="hxTab(this)">🤖 AI 助手</button>
-          <button class="hx-tab" data-view="home" data-cat="grow" onclick="hxTab(this)">📈 成长档案</button>
         </nav>
         <div class="hx-topright">
           <button class="hx-burger" id="hxBurger" onclick="hxToggleDrawer(event)">☰</button>
@@ -1587,8 +1598,8 @@
               <a class="hx-qitem hx-glass" data-cat="res" href="/ppt-resources-page"><div class="hx-qic" style="background:rgba(123,47,247,.15)">📚</div><span>课件中心</span></a>
               <a class="hx-qitem hx-glass" data-cat="res" href="/frontier-update-page"><div class="hx-qic" style="background:rgba(79,172,254,.13)">🚀</div><span>前沿动态</span></a>
               <a class="hx-qitem hx-glass" data-cat="res" href="/interview-cases-page"><div class="hx-qic" style="background:rgba(24,144,255,.13)">📚</div><span>面试案例</span></a>
-              <a class="hx-qitem hx-glass" data-cat="grow" href="/weekly-tasks-page"><div class="hx-qic" style="background:rgba(102,126,234,.15)">📋</div><span>每周任务</span></a>
-              <a class="hx-qitem hx-glass" data-cat="grow" href="/homework-page"><div class="hx-qic" style="background:rgba(250,140,22,.13)">📒</div><span>我的作业</span></a>
+              <a class="hx-qitem hx-glass" data-cat="study" href="/weekly-tasks-page"><div class="hx-qic" style="background:rgba(102,126,234,.15)">📋</div><span>每周任务</span></a>
+              <a class="hx-qitem hx-glass" data-cat="study" href="/homework-page"><div class="hx-qic" style="background:rgba(250,140,22,.13)">📒</div><span>我的作业</span></a>
               <a class="hx-qitem hx-glass" data-cat="grow" href="/student-portrait-page"><div class="hx-qic" style="background:rgba(110,75,255,.15)">🎯</div><span>能力画像</span></a>
               <a class="hx-qitem hx-glass" data-cat="grow" href="/credential-chain"><div class="hx-qic" style="background:rgba(75,108,183,.16)">🎖</div><span>成长档案</span></a>
               <a class="hx-qitem hx-glass" data-cat="grow" href="/job-recruitment-page"><div class="hx-qic" style="background:rgba(250,112,154,.13)">💼</div><span>岗位招聘</span></a>
@@ -1613,6 +1624,16 @@
             <div class="hx-mcin"><input id="hxMiniInput" placeholder="输入问题，回车直达 AI 助手…" onkeydown="if(event.key==='Enter')hxMiniSend()"><button class="hx-send" onclick="hxMiniSend()">➤</button></div>
           </div>
         </aside>
+      </div>
+
+      <!-- 内嵌功能页面承载层：点击侧边导航/宫格时主区域原地切换为对应页面 -->
+      <div class="hx-pageview" id="hxPageView" style="display:none">
+        <div class="hx-pagebar hx-glass">
+          <button class="hx-pageback" onclick="hxClosePage()">← 返回首页</button>
+          <span class="hx-pagetitle" id="hxPageTitle">功能页面</span>
+          <a class="hx-pagepop" id="hxPagePop" href="#" target="_blank" title="在新窗口打开">↗ 新窗口</a>
+        </div>
+        <iframe id="hxPageIframe" src="about:blank" title="功能页面"></iframe>
       </div>
     </div>
 
@@ -1805,7 +1826,7 @@
         function renderNavigation() {
             const isTeacher = currentUser.role === 'teacher';
             const G = (label, items) => `<div class="hx-glabel">${label}</div><div class="hx-gitems">${items}</div>`;
-            const A = (href, ic, txt, badge = '') => `<a class="hx-navitem" href="${href}"><span class="ic">${ic}</span>${txt}${badge ? `<span class="hx-new">${badge}</span>` : ''}</a>`;
+            const A = (href, ic, txt, badge = '') => `<a class="hx-navitem" href="${href}" onclick="event.preventDefault();hxOpenPage('${href}','${txt}');return false;"><span class="ic">${ic}</span>${txt}${badge ? `<span class="hx-new">${badge}</span>` : ''}</a>`;
             const B = (fn, ic, txt, badge = '') => `<button class="hx-navitem" onclick="${fn}"><span class="ic">${ic}</span>${txt}${badge ? `<span class="hx-new">${badge}</span>` : ''}</button>`;
             let html = '';
             if (!isTeacher) {
@@ -1903,6 +1924,7 @@
                 hxCloseDrawer();
             } else {
                 if (chat) chat.style.display = 'none';
+                hxClosePage();
                 if (home) home.style.display = 'block';
                 document.body.style.overflow = 'auto';
                 hxFilter(tabEl.dataset.cat || 'all');
@@ -1915,6 +1937,43 @@
                 it.classList.toggle('hx-hide', cat !== 'all' && it.dataset.cat !== cat);
             });
         }
+        // ===== 主区域内嵌页面切换：点导航不跳转，主区域原地变页面 =====
+        function hxOpenPage(url, title) {
+            const home = document.getElementById('hxHome');
+            const pv = document.getElementById('hxPageView');
+            const frame = document.getElementById('hxPageIframe');
+            if (!pv || !frame) { window.location.href = url; return; }
+            // 隐藏首页内容区（公告条+三栏布局），保留顶部 Tab 栏
+            home.querySelectorAll(':scope > .hx-notice, :scope > .hx-layout').forEach(el => el.style.display = 'none');
+            pv.style.display = 'block';
+            document.getElementById('hxPageTitle').textContent = title || '功能页面';
+            const pop = document.getElementById('hxPagePop');
+            if (pop) pop.href = url;
+            frame.src = url;
+            document.body.style.overflow = 'hidden';
+            hxCloseDrawer();
+            window.scrollTo({ top: 0 });
+        }
+        function hxClosePage() {
+            const pv = document.getElementById('hxPageView');
+            const frame = document.getElementById('hxPageIframe');
+            const home = document.getElementById('hxHome');
+            if (pv) pv.style.display = 'none';
+            if (frame) frame.src = 'about:blank';
+            if (home) home.querySelectorAll(':scope > .hx-notice, :scope > .hx-layout').forEach(el => el.style.display = '');
+            document.body.style.overflow = 'auto';
+        }
+        // 首页内所有内部链接（宫格卡片/快捷卡/开始仿真）统一原地内嵌打开
+        document.getElementById('hxHome').addEventListener('click', function(e) {
+            const a = e.target.closest('a[href^="/"]');
+            if (!a || a.target === '_blank') return;
+            if (a.closest('.hx-left, .hx-drawer, .hx-pagebar')) return; // 导航/承载条有自己的 onclick，防重复
+            e.preventDefault();
+            const h3 = a.querySelector('h3');
+            const span = a.querySelector('span');
+            const label = (h3 && h3.textContent.trim()) || (span && span.textContent.trim()) || a.textContent.trim() || '功能页面';
+            hxOpenPage(a.getAttribute('href'), label);
+        });
         function hxToggleDrawer(e) { if (e) e.stopPropagation();
             document.getElementById('hxDrawer').classList.toggle('hx-open');
             document.getElementById('hxDrawerMask').classList.toggle('hx-open'); }
@@ -2592,7 +2651,9 @@
 
         async function initSidebar() {
             const prefer = localStorage.getItem('lzr_sidebar_open');
-            const wantOpen = window.innerWidth >= 1180 ? prefer !== '0' : prefer === '1';
+            // 默认收起：会话侧边栏打开时会盖住左侧功能导航（270px fixed 层），
+            // 只有点过浮动按钮（记住偏好=1）才自动展开
+            const wantOpen = prefer === '1';
             toggleSidebarForce(wantOpen);
             await migrateOldHistory();
             // 恢复上次会话

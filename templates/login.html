@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -1026,11 +1026,11 @@
         <div class="student-info" id="studentInfo">
             <div class="input-group">
                 <label for="studentNo">学号</label>
-                <input type="text" id="studentNo" placeholder="请输入您的学号">
+                <input type="text" id="studentNo" value="2024001001001" placeholder="请输入您的学号">
             </div>
             <div class="input-group">
                 <label for="studentName">学生姓名</label>
-                <input type="text" id="studentName" placeholder="请输入您的姓名">
+                <input type="text" id="studentName" value="张三" placeholder="请输入您的姓名">
             </div>
             <div class="input-group">
                 <label for="className">班级（可选）</label>
@@ -1042,14 +1042,14 @@
         <div class="teacher-info" id="teacherInfo">
             <div class="input-group">
                 <label for="teacherName">老师账号</label>
-                <input type="text" id="teacherName" placeholder="请输入老师账号" >
+                <input type="text" id="teacherName" value="teacher1" placeholder="请输入老师账号" >
             </div>
         </div>
         
         <!-- 密码 -->
         <div class="input-group">
             <label for="password" id="passwordLabel">访问密码</label>
-            <input type="password" id="password" placeholder="请输入密码" onkeypress="handleKeyPress(event)">
+            <input type="password" id="password" value="tongxin2024" placeholder="请输入密码" onkeypress="handleKeyPress(event)">
         </div>
         
         <button class="login-btn" id="loginBtn" onclick="doLogin()">
@@ -1080,20 +1080,22 @@
         var SPLASH_DURATION = 2500;   // 画面持续时长
         var FADEOUT_DURATION = 700;   // 淡出过渡时长（与 CSS transition 对齐）
         var TOTAL = SPLASH_DURATION + FADEOUT_DURATION;
-
-        if (!sessionStorage.getItem('splashPlayed')) {
-            sessionStorage.setItem('splashPlayed', '1');
+        var splashPlayed = false;
+        try { splashPlayed = !!sessionStorage.getItem('splashPlayed'); } catch (e) { splashPlayed = false; }
+        // 手机浏览器隐私模式下 sessionStorage 可能抛异常，必须容错，否则遮罩永不消失挡住整页
+        function hideSplash() {
+            overlay.classList.add('hidden');
             setTimeout(function() {
-                overlay.classList.add('hidden');
-                setTimeout(function() {
-                    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-                    // 通知其他脚本：splash 已结束，可以弹 guide 了
-                    window.dispatchEvent(new CustomEvent('splashEnded'));
-                }, FADEOUT_DURATION);
-            }, SPLASH_DURATION);
+                if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+                window.dispatchEvent(new CustomEvent('splashEnded'));
+            }, FADEOUT_DURATION);
+        }
+
+        if (!splashPlayed) {
+            try { sessionStorage.setItem('splashPlayed', '1'); } catch (e) {}
+            setTimeout(hideSplash, SPLASH_DURATION);
         } else {
             overlay.style.display = 'none';
-            // 之前已看过 splash，直接通知后续逻辑
             window.dispatchEvent(new CustomEvent('splashEnded'));
         }
     })();
@@ -1130,14 +1132,14 @@
                 teacherInfo.classList.remove('show');
                 passwordLabel.textContent = '访问密码';
                 passwordInput.placeholder = '请输入密码';
-                passwordInput.value = '';
+                passwordInput.value = 'tongxin2024';
             } else {
                 teacherBtn.classList.add('selected');
                 studentInfo.classList.remove('show');
                 teacherInfo.classList.add('show');
                 passwordLabel.textContent = '老师密码';
                 passwordInput.placeholder = '请输入老师密码';
-                passwordInput.value = '';
+                passwordInput.value = '123456';
             }
         }
         
@@ -1333,7 +1335,7 @@
                                 <div class="guide-step-list">
                                     <div class="guide-step">
                                         <div class="guide-step-num" style="background:#ff4d4f;">!</div>
-                                        <div class="guide-step-text"><strong>访问密码</strong>：请向老师或管理员获取访问密码，请勿向他人泄露。</div>
+                                        <div class="guide-step-text"><strong>访问密码</strong>：tongxin2024（演示环境通用密码，请勿外泄）。</div>
                                     </div>
                                     <div class="guide-step">
                                         <div class="guide-step-num" style="background:#fa8c16;">!</div>
@@ -1390,6 +1392,8 @@
             try {
                 if (localStorage.getItem(GUIDE_STORAGE_KEY) === '1') return;
             } catch (e) {}
+            // 手机小屏不自动弹引导，避免挡住登录表单（可用「📖 使用说明」手动打开）
+            if (window.innerWidth < 500) return;
             function tryShow() {
                 setTimeout(showGuide, 300); // 登录页刚露出来时别立刻弹，等 300ms 缓和
             }

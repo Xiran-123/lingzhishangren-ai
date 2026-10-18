@@ -2813,8 +2813,13 @@ def index():
         return render_template('login.html')
 
 
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
+    # GET：直接访问 /login 时渲染登录页（未登录），已登录跳首页；避免 405 白页
+    if request.method == 'GET':
+        if session.get('authenticated'):
+            return redirect(url_for('index'))
+        return render_template('login.html')
     data = request.get_json()
     password = data.get('password', '')
     role = data.get('role', 'student')
