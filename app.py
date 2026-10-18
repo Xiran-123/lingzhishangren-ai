@@ -3028,6 +3028,40 @@ def serve_avatar(filename):
     return send_from_directory(AVATAR_DIR, filename)
 
 
+@app.route('/api/update-class', methods=['POST'])
+def update_my_class():
+    """学生自主修改所在班级（仅限已创建的班级）"""
+    if not session.get('authenticated') or session.get('role') != 'student':
+        return jsonify({'error': '仅学生可修改班级'}), 403
+    data = request.get_json(silent=True) or {}
+    class_name = str(data.get('class_name', '')).strip()
+    if not class_name:
+        return jsonify({'error': '请选择班级'}), 400
+    if len(class_name) > 30:
+        return jsonify({'error': '班级名称过长'}), 400
+    valid_names = {c.get('name') for c in load_classes() if c.get('name')}
+    if valid_names and class_name not in valid_names:
+        return jsonify({'error': '班级不存在，请从列表中选择'}), 400
+    student_no = str(session.get('student_no') or '')
+    student_name = session.get('student_name', '')
+    students = load_students()
+    target = next((s for s in students
+                   if (student_no and s.get('student_no') == student_no)
+                   or (not student_no and s.get('name') == student_name)), None)
+    if target is None:
+        return jsonify({'error': '未找到学生档案，请联系老师'}), 404
+    old = target.get('class_name', '')
+    target['class_name'] = class_name
+    save_students(students)
+    session['class_name'] = class_name
+    try:
+        security.audit('class_self_update', target=class_name,
+                       detail=f'学生 {student_name}({student_no}) 修改班级: {old or "未分班"} -> {class_name}')
+    except Exception:
+        pass
+    return jsonify({'success': True, 'class_name': class_name})
+
+
 # ====================== 班级管理API ======================
 @app.route('/api/classes', methods=['GET'])
 def get_classes():

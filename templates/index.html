@@ -2077,7 +2077,7 @@
                 ['🎓 学号', currentUser.student_no
                     ? `<span style="font-family:monospace;font-weight:600;letter-spacing:.5px;">${currentUser.student_no}</span>`
                     : '<span style="color:#fa8c16;">未绑定（可联系老师补录）</span>'],
-                ['📁 班级', currentUser.class_name || '未分班']
+                ['📁 班级', `${currentUser.class_name || '未分班'} <button onclick="showClassPicker(event)" style="margin-left:8px;padding:3px 10px;background:#f0f5ff;border:1px solid #d6ddff;color:#4a5ac8;border-radius:7px;font-size:12px;cursor:pointer;">修改</button>`]
             ];
             const infoRows = rows.map(([k, v]) => `
                 <div style="display:flex;justify-content:space-between;align-items:center;padding:13px 4px;border-bottom:1px solid #f0f2f5;font-size:14px;">
@@ -2107,6 +2107,70 @@
 
         function closePersonalCenter() {
             document.getElementById('profileOverlay')?.remove();
+        }
+
+        // ===== 修改班级：弹层选择已有班级 =====
+        function _clsEsc(s) {
+            return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        async function showClassPicker(ev) {
+            if (ev) ev.stopPropagation();
+            document.getElementById('classPickerOverlay')?.remove();
+            let list = [];
+            try {
+                const r = await fetch('/api/classes');
+                if (r.ok) {
+                    const d = await r.json();
+                    list = (d.classes || []).map(c => c.name).filter(Boolean);
+                }
+            } catch (e) {}
+            if (!list.length) { alert('暂无可选班级，请联系老师先创建班级'); return; }
+            const overlay = document.createElement('div');
+            overlay.id = 'classPickerOverlay';
+            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);z-index:100002;display:flex;justify-content:center;align-items:center;padding:20px;';
+            overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+            const opts = list.map(name => `
+                <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid #eee;border-radius:10px;cursor:pointer;font-size:14px;margin-bottom:8px;transition:border-color .2s;">
+                    <input type="radio" name="clsPick" value="${_clsEsc(name)}" ${name === currentUser.class_name ? 'checked' : ''}>
+                    <span style="font-weight:600;color:#2d3142;">${_clsEsc(name)}</span>
+                </label>`).join('');
+            overlay.innerHTML = `
+                <div style="background:#fff;border-radius:16px;max-width:360px;width:100%;padding:22px;box-shadow:0 20px 50px rgba(0,0,0,.3);animation:slideUp .25s ease;">
+                    <div style="font-size:16px;font-weight:700;color:#2d3142;margin-bottom:14px;">📁 选择班级</div>
+                    <div style="max-height:260px;overflow-y:auto;">${opts}</div>
+                    <div style="display:flex;gap:10px;margin-top:16px;">
+                        <button onclick="document.getElementById('classPickerOverlay').remove()" style="flex:1;padding:11px;background:#f0f2f5;border:none;border-radius:10px;font-size:14px;cursor:pointer;">取消</button>
+                        <button onclick="saveMyClass()" style="flex:1;padding:11px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;">保存</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(overlay);
+        }
+
+        async function saveMyClass() {
+            const sel = document.querySelector('input[name="clsPick"]:checked');
+            if (!sel) { alert('请选择班级'); return; }
+            try {
+                const r = await fetch('/api/update-class', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ class_name: sel.value })
+                });
+                const d = await r.json();
+                if (d.success) {
+                    currentUser.class_name = d.class_name;
+                    const uc = document.getElementById('hxUcardClass');
+                    if (uc) uc.textContent = d.class_name;
+                    document.getElementById('classPickerOverlay')?.remove();
+                    showKbToast('✓ 班级已更新为 ' + d.class_name);
+                    closePersonalCenter();
+                    showPersonalCenter();
+                } else {
+                    alert(d.error || '修改失败，请重试');
+                }
+            } catch (e) {
+                alert('网络错误，请重试');
+            }
         }
 
         // ===== 头像上传 =====
