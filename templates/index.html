@@ -1283,25 +1283,350 @@
     </div>
     <div class="kb-toast" id="kbToast"></div>
 
-    <div class="chat-container" style="margin: 0 auto;">
-        <div class="header">
-            <div class="header-left">
-                <div class="header-icon"><img src="/static/brand_logo.svg" alt="logo" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"></div>
-                <div class="header-text">
-                    <h1>灵智尚人</h1>
-                    <p>智能对话，随时为您服务</p>
-                </div>
-            </div>
-            <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu(event)" aria-label="打开功能菜单">☰<span>功能</span></button>
-            <div class="header-right" id="headerRight">
-                <!-- 动态生成导航按钮 -->
-            </div>
-            <button class="notification-bell" id="notificationBell" onclick="showNotificationModal()" style="margin-left: 15px; background: rgba(255,255,255,0.2); border: none; border-radius: 10px; padding: 10px 16px; color: white; font-size: 24px; cursor: pointer; position: relative;">
-                🔔
-                <span id="notificationBadge" class="notification-badge" style="position: absolute; top: 10px; right: 10px; background: #ff4757; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; display: none; align-items: center; justify-content: center;">0</span>
-            </button>
-            <button class="mmenu-close" id="mmenuClose" onclick="closeMobileMenu()" aria-label="关闭功能菜单">✕</button>
+    <!-- ==================== 新版主页视图（v1.1 设计稿落地） ==================== -->
+    <style>
+    :root{--hx-bg0:#0A1638;--hx-bg1:#12245C;--hx-card:rgba(255,255,255,.055);--hx-cardb:rgba(255,255,255,.12);
+      --hx-txt:#EAF0FF;--hx-txt2:#8FA3D8;--hx-txt3:#5E6FA8;
+      --hx-blue:#3D7BFF;--hx-cyan:#00C8FF;--hx-purple:#6E4BFF;--hx-green:#2ADFB4;--hx-orange:#FFA24B;
+      --hx-grad:linear-gradient(135deg,#3D7BFF,#6E4BFF);--hx-gradhot:linear-gradient(90deg,#FF6B3D,#FF3D77);--hx-r:16px}
+    #hxHome{position:relative;min-height:100vh;width:100%;background:linear-gradient(160deg,var(--hx-bg0),var(--hx-bg1) 60%,var(--hx-bg0));color:var(--hx-txt);font-family:"PingFang SC","Microsoft YaHei","HarmonyOS Sans SC",system-ui,sans-serif;padding-bottom:26px}
+    #hxHome::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
+      background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:44px 44px}
+    .hx-aurora{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+    .hx-aurora i{position:absolute;border-radius:50%;filter:blur(70px);opacity:.5;animation:hx-drift 16s ease-in-out infinite alternate}
+    .hx-aurora i:nth-child(1){width:520px;height:520px;left:-140px;top:-160px;background:radial-gradient(circle,rgba(61,123,255,.4),transparent 65%)}
+    .hx-aurora i:nth-child(2){width:460px;height:460px;right:-120px;top:12%;background:radial-gradient(circle,rgba(110,75,255,.32),transparent 65%);animation-delay:-6s}
+    .hx-aurora i:nth-child(3){width:420px;height:420px;left:32%;bottom:-200px;background:radial-gradient(circle,rgba(0,200,255,.22),transparent 65%);animation-delay:-11s}
+    @keyframes hx-drift{to{transform:translate(46px,30px) scale(1.08)}}
+    #hxHome a{color:inherit;text-decoration:none}
+    #hxHome ::-webkit-scrollbar{width:6px}#hxHome ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:3px}
+
+    .hx-topbar{position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:18px;padding:0 22px;height:58px;
+      background:rgba(10,22,56,.78);backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,.08)}
+    .hx-logo{display:flex;align-items:center;gap:9px;font-weight:800;font-size:17px;letter-spacing:.5px}
+    .hx-logomark{width:30px;height:30px;border-radius:9px;background:var(--hx-grad);display:grid;place-items:center;box-shadow:0 0 18px rgba(61,123,255,.55);font-size:15px}
+    .hx-tabs{display:flex;gap:4px;margin-left:8px}
+    .hx-tab{padding:7px 16px;border-radius:20px;font-size:13.5px;color:var(--hx-txt2);cursor:pointer;transition:.2s;white-space:nowrap;border:none;background:none;font-family:inherit}
+    .hx-tab:hover{color:var(--hx-txt);background:rgba(255,255,255,.06)}
+    .hx-tab.on{color:#fff;background:var(--hx-grad);box-shadow:0 2px 12px rgba(61,123,255,.45)}
+    .hx-topright{margin-left:auto;display:flex;align-items:center;gap:10px}
+    .hx-burger{display:none;width:34px;height:34px;border-radius:50%;background:var(--hx-card);border:1px solid var(--hx-cardb);color:var(--hx-txt);font-size:15px;cursor:pointer}
+    #hxHome .notification-bell{all:unset;cursor:pointer;position:relative;width:34px;height:34px;border-radius:50%;background:var(--hx-card);border:1px solid var(--hx-cardb);display:grid;place-items:center;font-size:15px;transition:.2s}
+    #hxHome .notification-bell:hover{background:rgba(255,255,255,.1)}
+    #hxHome .notification-bell .notification-badge{position:absolute;top:-3px;right:-3px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--hx-gradhot);color:#fff;border-radius:9px;font-size:10px;font-weight:700;display:none;align-items:center;justify-content:center}
+    .hx-chip{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 6px;border-radius:22px;background:var(--hx-card);border:1px solid var(--hx-cardb);font-size:13px;cursor:pointer;transition:.2s}
+    .hx-chip:hover{background:rgba(255,255,255,.1)}
+    .hx-avatar{width:26px;height:26px;border-radius:50%;background:var(--hx-grad);display:grid;place-items:center;font-size:12px;overflow:hidden}
+    .hx-roletag{font-size:11px;color:var(--hx-cyan)}
+
+    .hx-notice{position:relative;z-index:1;max-width:1560px;margin:10px auto 0;padding:0 22px}
+    .hx-noticein{display:flex;align-items:center;gap:10px;padding:8px 14px;overflow:hidden}
+    .hx-nic{flex-shrink:0;font-size:13px}
+    .hx-ntrack{flex:1;overflow:hidden;white-space:nowrap;-webkit-mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent);mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent)}
+    .hx-nmove{display:inline-block;animation:hx-scrollx 26s linear infinite;font-size:12.5px;color:var(--hx-txt2)}
+    .hx-nmove b{color:var(--hx-cyan);font-weight:600}
+    @keyframes hx-scrollx{from{transform:translateX(60%)}to{transform:translateX(-105%)}}
+
+    .hx-layout{position:relative;z-index:1;display:grid;grid-template-columns:218px 1fr 296px;gap:16px;padding:14px 22px 0;max-width:1560px;margin:0 auto}
+    .hx-glass{background:var(--hx-card);border:1px solid var(--hx-cardb);border-radius:var(--hx-r);backdrop-filter:blur(10px)}
+
+    .hx-left{display:flex;flex-direction:column;gap:14px;min-width:0}
+    .hx-ucard{padding:16px 14px;text-align:center;position:relative;overflow:hidden}
+    .hx-uava{width:52px;height:52px;margin:0 auto 9px;border-radius:50%;background:var(--hx-grad);display:grid;place-items:center;font-size:19px;font-weight:700;box-shadow:0 0 0 3px rgba(61,123,255,.25),0 4px 16px rgba(61,123,255,.4);position:relative}
+    .hx-lv{position:absolute;right:-10px;bottom:-5px;padding:1px 7px;border-radius:9px;font-size:10px;font-weight:800;background:linear-gradient(135deg,#FFB020,#FF6B3D);color:#fff;box-shadow:0 2px 8px rgba(255,107,61,.5)}
+    .hx-ucard h4{font-size:14.5px;font-weight:700;margin:0}
+    .hx-cls{font-size:11px;color:var(--hx-txt3);margin:4px 0 11px}
+    .hx-ubtns{display:flex;gap:7px}
+    .hx-ubtn{flex:1;padding:7px 0;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:var(--hx-txt);font-size:11.5px;cursor:pointer;transition:.2s;font-family:inherit}
+    .hx-ubtn:hover{background:rgba(61,123,255,.22);border-color:rgba(61,123,255,.5)}
+
+    .hx-dirtitle{display:flex;align-items:center;gap:8px;padding:14px 16px 8px;font-size:13px;font-weight:700;letter-spacing:1px}
+    .hx-dot{width:6px;height:6px;border-radius:50%;background:var(--hx-cyan);box-shadow:0 0 8px var(--hx-cyan);flex-shrink:0}
+    .hx-dirgroup{padding:0 10px 14px}
+    .hx-glabel{font-size:11px;color:var(--hx-txt3);padding:9px 8px 5px;letter-spacing:1px}
+    .hx-navitem{display:flex;align-items:center;gap:9px;width:100%;padding:8px 10px;border-radius:10px;font-size:13px;color:var(--hx-txt2);transition:.18s;position:relative;border:none;background:none;text-align:left;font-family:inherit;cursor:pointer}
+    .hx-navitem:hover{background:rgba(255,255,255,.06);color:#fff;transform:translateX(2px)}
+    .hx-navitem .ic{width:17px;text-align:center;font-size:13.5px}
+    .hx-navitem .hx-new{margin-left:auto;font-size:10px;padding:1px 6px;border-radius:8px;background:var(--hx-gradhot);color:#fff}
+    .hx-gitems .nav-btn{background:rgba(255,255,255,.06)!important;border:1px solid rgba(255,255,255,.1)!important;color:var(--hx-txt)!important;width:100%;justify-content:flex-start;font-size:13px;margin:3px 0}
+    .hx-gitems .settings-wrap{width:100%;position:relative}
+    .hx-gitems .settings-menu{background:#182655;border:1px solid rgba(255,255,255,.14)}
+
+    .hx-main{display:flex;flex-direction:column;gap:16px;min-width:0}
+    .hx-hero{position:relative;overflow:hidden;padding:26px 26px 22px;background:linear-gradient(135deg,rgba(42,74,168,.35),rgba(20,36,90,.55)),var(--hx-card);border:1px solid rgba(93,140,255,.28);border-radius:20px}
+    .hx-hero::after{content:"";position:absolute;top:-70px;right:-70px;width:230px;height:230px;border-radius:50%;background:radial-gradient(circle,rgba(0,200,255,.16),transparent 70%);animation:hx-bp 5s ease-in-out infinite}
+    @keyframes hx-bp{50%{opacity:.55;transform:scale(1.15)}}
+    .hx-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:14px;font-size:11.5px;color:#FFD59A;background:rgba(255,162,75,.12);border:1px solid rgba(255,162,75,.4)}
+    .hx-hero h1{font-size:24px;font-weight:800;margin:12px 0 6px;letter-spacing:.5px;background:linear-gradient(90deg,#FFFFFF,#BBD0FF);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .hx-hero .hx-sub{font-size:13px;color:var(--hx-txt2);line-height:1.7;max-width:560px}
+    .hx-meta{display:flex;gap:8px;margin:14px 0 0;flex-wrap:wrap}
+    .hx-mchip{padding:4px 12px;border-radius:14px;font-size:11.5px;color:var(--hx-txt2);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)}
+    .hx-actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;position:relative;z-index:1}
+    .hx-btnp{position:relative;display:inline-flex;align-items:center;gap:7px;padding:10px 26px;border-radius:24px;overflow:hidden;background:var(--hx-grad);font-size:14px;font-weight:700;color:#fff;cursor:pointer;border:none;box-shadow:0 4px 20px rgba(61,123,255,.5);transition:.2s;font-family:inherit}
+    .hx-btnp::before{content:"";position:absolute;top:0;left:-80%;width:50%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);animation:hx-shine 3.2s ease-in-out infinite}
+    @keyframes hx-shine{0%,60%{left:-80%}100%{left:130%}}
+    .hx-btnp:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(61,123,255,.65)}
+    .hx-btng{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;border-radius:24px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);font-size:13px;color:var(--hx-txt);cursor:pointer;transition:.2s;font-family:inherit}
+    .hx-btng:hover{background:rgba(255,255,255,.12)}
+
+    .hx-herobody{display:grid;grid-template-columns:1fr 218px;gap:18px;margin-top:18px;align-items:stretch}
+    .hx-art{border-radius:14px;overflow:hidden;background:rgba(6,14,40,.45);border:1px solid rgba(255,255,255,.07);min-height:236px;position:relative}
+    .hx-art svg{width:100%;height:100%;display:block}
+    .hx-arttag{position:absolute;left:12px;top:11px;font-size:10.5px;letter-spacing:2px;color:var(--hx-txt3);font-family:Consolas,monospace}
+    .hx-arttag b{color:var(--hx-cyan);font-weight:600}
+    .hx-fiber{stroke-dasharray:6 10;animation:hx-flow 1.6s linear infinite}
+    .hx-fiber.slow{animation-duration:2.6s}
+    @keyframes hx-flow{to{stroke-dashoffset:-32}}
+    .hx-pulse{animation:hx-np 2.2s ease-out infinite;transform-origin:center}
+    .hx-pulse.d1{animation-delay:.4s}.hx-pulse.d2{animation-delay:.9s}.hx-pulse.d3{animation-delay:1.4s}
+    @keyframes hx-np{0%{opacity:.9;r:4}70%{opacity:0;r:11}100%{opacity:0;r:11}}
+    .hx-win{animation:hx-wf 4s ease-in-out infinite}
+    .hx-win.d1{animation-delay:1.2s}.hx-win.d2{animation-delay:2.4s}.hx-win.d3{animation-delay:3.1s}
+    @keyframes hx-wf{0%,100%{opacity:.55}50%{opacity:1}}
+
+    .hx-params{display:flex;flex-direction:column;gap:10px;padding:15px;border-radius:14px;background:rgba(10,20,50,.5);border:1px solid rgba(255,255,255,.09)}
+    .hx-prow{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:var(--hx-txt3)}
+    .hx-prow b{color:var(--hx-cyan);font-weight:600;font-size:12px;text-align:right}
+    .hx-startbtn{margin-top:auto;display:block;padding:9px 0;border-radius:20px;text-align:center;font-size:13px;font-weight:700;color:#fff;background:var(--hx-grad);box-shadow:0 3px 16px rgba(61,123,255,.5);transition:.2s}
+    .hx-startbtn:hover{filter:brightness(1.12);transform:translateY(-1px)}
+
+    .hx-frow{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    .hx-fcard{padding:16px 15px;border-radius:14px;transition:.25s;position:relative;display:block}
+    .hx-fcard:hover{transform:translateY(-3px);border-color:rgba(61,123,255,.5);background:rgba(61,123,255,.08)}
+    .hx-fic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:18px;margin-bottom:10px;transition:.25s}
+    .hx-fcard:hover .hx-fic{transform:scale(1.1) rotate(-5deg)}
+    .hx-fcard h3{font-size:14px;font-weight:700;margin:0 0 4px}
+    .hx-fcard p{font-size:11.5px;color:var(--hx-txt3);line-height:1.5;margin:0}
+    .hx-farr{position:absolute;right:14px;top:16px;color:var(--hx-txt3);font-size:13px;transition:.2s}
+    .hx-fcard:hover .hx-farr{color:var(--hx-cyan);transform:translateX(3px)}
+
+    .hx-qtitle{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700}
+    .hx-qgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:10px}
+    .hx-qitem{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 8px;border-radius:13px;transition:.2s;text-align:center}
+    .hx-qitem:hover{background:rgba(61,123,255,.1);border-color:rgba(61,123,255,.45)!important;transform:translateY(-2px)}
+    .hx-qic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:19px;transition:.25s}
+    .hx-qitem:hover .hx-qic{transform:scale(1.12)}
+    .hx-qitem span{font-size:12px;color:var(--hx-txt2)}
+    .hx-qitem:hover span{color:#fff}
+    .hx-hide{display:none!important}
+    .hx-foot{text-align:center;font-size:11px;color:var(--hx-txt3);padding:12px 0 0}
+
+    .hx-right{display:flex;flex-direction:column;gap:14px;min-width:0}
+    .hx-more{margin-left:auto;font-size:11px;color:var(--hx-txt3);cursor:pointer}
+    .hx-more:hover{color:var(--hx-cyan)}
+    .hx-nitem{margin:0 9px;padding:9px 11px;border-radius:10px;font-size:12.5px;color:var(--hx-txt2);line-height:1.55;border:1px solid transparent;transition:.18s;margin-bottom:4px;display:block;cursor:pointer}
+    .hx-nitem:hover{background:rgba(61,123,255,.1);color:#fff;border-color:rgba(61,123,255,.3)}
+    .hx-nitem time{display:block;color:var(--hx-txt3);font-size:10.5px;margin-top:2px}
+    .hx-mcbody{flex:1;padding:4px 13px 10px;display:flex;flex-direction:column;gap:9px;min-height:130px}
+    .hx-msg{max-width:88%;padding:8px 12px;border-radius:12px;font-size:12.5px;line-height:1.6}
+    .hx-msg.ai{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08);border-top-left-radius:4px;align-self:flex-start;color:#DCE6FF}
+    .hx-msg.me{background:var(--hx-grad);border-top-right-radius:4px;align-self:flex-end;color:#fff}
+    .hx-mcin{display:flex;gap:7px;padding:10px;border-top:1px solid rgba(255,255,255,.08)}
+    .hx-mcin input{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:8px 13px;color:var(--hx-txt);font-size:12.5px;outline:none;font-family:inherit}
+    .hx-mcin input:focus{border-color:rgba(61,123,255,.6)}
+    .hx-send{width:34px;height:34px;border-radius:50%;border:none;background:var(--hx-grad);color:#fff;font-size:13px;cursor:pointer;flex-shrink:0}
+
+    .hx-dmask{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:98;opacity:0;pointer-events:none;transition:.25s}
+    .hx-drawer{position:fixed;top:0;right:-290px;width:280px;max-width:82vw;height:100vh;z-index:99;background:linear-gradient(170deg,#0E1D4A,#0A1638);border-left:1px solid rgba(93,140,255,.3);transition:right .3s ease;overflow-y:auto}
+    .hx-drawer.hx-open{right:0}.hx-dmask.hx-open{opacity:1;pointer-events:auto}
+    .hx-drawerhead{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;font-weight:800;font-size:15px;border-bottom:1px solid rgba(255,255,255,.08)}
+    .hx-drawernav{padding:8px 12px 20px}
+
+    .hx-backbtn{position:fixed;top:74px;left:18px;z-index:70;padding:8px 18px;border-radius:20px;border:1px solid rgba(93,140,255,.4);background:rgba(10,22,56,.85);color:#EAF0FF;font-size:13px;cursor:pointer;backdrop-filter:blur(10px)}
+    .hx-backbtn:hover{background:rgba(61,123,255,.3)}
+    #hxChatView{height:100vh;overflow:hidden}
+
+    @media(max-width:1200px){.hx-layout{grid-template-columns:206px 1fr}.hx-right{display:none}.hx-qgrid{grid-template-columns:repeat(4,1fr)}}
+    @media(max-width:900px){
+      .hx-layout{grid-template-columns:1fr}.hx-left{display:none}.hx-burger{display:grid;place-items:center}
+      .hx-topbar{gap:10px;padding:0 14px}.hx-tabs{overflow-x:auto;scrollbar-width:none;margin-left:0}
+      .hx-tabs::-webkit-scrollbar{display:none}.hx-tab{padding:6px 12px;font-size:12.5px}
+      .hx-herobody{grid-template-columns:1fr}.hx-params{flex-direction:row;flex-wrap:wrap}
+      .hx-params .hx-startbtn{margin-top:4px;flex:1 1 100%}
+      .hx-frow{grid-template-columns:repeat(2,1fr)}.hx-qgrid{grid-template-columns:repeat(3,1fr)}
+      .hx-hero{padding:20px 18px}.hx-hero h1{font-size:19px}.hx-chip #hxUserName,.hx-chip .hx-roletag{display:none}
+      .hx-backbtn{top:66px}
+    }
+    </style>
+
+    <div id="hxHome">
+      <div class="hx-aurora"><i></i><i></i><i></i></div>
+
+      <header class="hx-topbar">
+        <div class="hx-logo"><div class="hx-logomark">🧠</div>灵智尚人</div>
+        <nav class="hx-tabs">
+          <button class="hx-tab on" data-view="home" data-cat="all" onclick="hxTab(this)">🧪 实训中心</button>
+          <button class="hx-tab" data-view="home" data-cat="study" onclick="hxTab(this)">📖 学习中心</button>
+          <button class="hx-tab" data-view="home" data-cat="res" onclick="hxTab(this)">🗂 资源中心</button>
+          <button class="hx-tab" data-view="chat" onclick="hxTab(this)">🤖 AI 助手</button>
+          <button class="hx-tab" data-view="home" data-cat="grow" onclick="hxTab(this)">📈 成长档案</button>
+        </nav>
+        <div class="hx-topright">
+          <button class="hx-burger" id="hxBurger" onclick="hxToggleDrawer(event)">☰</button>
+          <button class="notification-bell" id="notificationBell" onclick="showNotificationModal()">🔔
+            <span id="notificationBadge" class="notification-badge">0</span>
+          </button>
+          <div class="hx-chip" onclick="closeSettings();showPersonalCenter();">
+            <div class="hx-avatar" id="hxAvatar">学</div>
+            <span id="hxUserName">同学</span><span class="hx-roletag" id="hxRoleTag">学生端</span>
+          </div>
         </div>
+      </header>
+
+      <div class="hx-notice"><div class="hx-glass hx-noticein">
+        <span class="hx-nic">📢</span>
+        <div class="hx-ntrack"><span class="hx-nmove" id="hxNoticeMove"><b>【新实训】</b>&nbsp;全新「5G 基站工程勘察设计」沉浸式剧情已上线 —— 8 步任务 · 满分 13 分，点击中央卡片立即体验&nbsp;&nbsp;·&nbsp;&nbsp;<b>【提示】</b>右上角 ⚙ 设置可查看使用说明、开启 AI 桌宠</span></div>
+      </div></div>
+
+      <div class="hx-layout">
+        <aside class="hx-left">
+          <div class="hx-glass hx-ucard">
+            <div class="hx-uava" id="hxUcardAvatar">学<span class="hx-lv" id="hxRoleBadge">学生</span></div>
+            <h4 id="hxUcardName">同学</h4>
+            <div class="hx-cls" id="hxUcardClass">欢迎回来，开始今天的实训吧</div>
+            <div class="hx-ubtns">
+              <button class="hx-ubtn" onclick="closeSettings();showPersonalCenter();">👤 个人中心</button>
+              <button class="hx-ubtn" onclick="viewMyReport()">📊 我的报告</button>
+            </div>
+          </div>
+          <div class="hx-glass" style="flex:1;overflow-y:auto;max-height:calc(100vh - 190px)">
+            <div class="hx-dirtitle"><span class="hx-dot"></span>功能导航</div>
+            <div class="hx-dirgroup" id="hxSideNav"></div>
+          </div>
+        </aside>
+
+        <main class="hx-main">
+          <section class="hx-hero">
+            <span class="hx-badge">🚀 全新上线 · 剧情式实训</span>
+            <h1>5G 基站工程勘察设计虚拟仿真</h1>
+            <p class="hx-sub">化身无线网络规划工程师，走进智慧校园 5G 建设项目，完成从工具认知、站址筛选、现场勘察到方案设计的完整工程闭环，最后生成你的工程复盘报告。</p>
+            <div class="hx-meta">
+              <span class="hx-mchip">🎬 8 个剧情步骤</span>
+              <span class="hx-mchip">⏱ 约 25 分钟</span>
+              <span class="hx-mchip">🏅 满分 13 分</span>
+              <span class="hx-mchip">🧠 Massive MIMO · 选址 · 参数规划</span>
+            </div>
+            <div class="hx-actions">
+              <a class="hx-btnp" href="/scenario-demo">▶ 继续实训</a>
+              <button class="hx-btng" onclick="hxTab(document.querySelector('.hx-tab[data-view=chat]'))">🤖 问 AI 助教</button>
+            </div>
+
+            <div class="hx-herobody">
+              <div class="hx-art">
+                <span class="hx-arttag">SITE: <b>智慧校园</b> // 1200亩 · 2.3万师生</span>
+                <svg viewBox="0 0 520 250" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="hxb1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5B8CFF"/><stop offset="1" stop-color="#2C4A9E"/></linearGradient>
+                    <linearGradient id="hxb2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FD4FF"/><stop offset="1" stop-color="#3A6BC9"/></linearGradient>
+                    <linearGradient id="hxb3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9F7BFF"/><stop offset="1" stop-color="#5437B8"/></linearGradient>
+                    <linearGradient id="hxfloor" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22397E"/><stop offset="1" stop-color="#16255C"/></linearGradient>
+                    <filter id="hxglow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                  </defs>
+                  <path d="M260 30 L470 125 L260 220 L50 125 Z" fill="url(#hxfloor)" stroke="rgba(120,160,255,.35)"/>
+                  <path d="M260 52 L425 125 L260 198 L95 125 Z" fill="none" stroke="rgba(120,160,255,.18)" stroke-dasharray="4 5"/>
+                  <g><path d="M150 95 L200 70 L200 130 L150 155 Z" fill="url(#hxb1)"/><path d="M200 70 L235 87 L235 147 L200 130 Z" fill="#22407F"/>
+                    <rect class="hx-win" x="158" y="105" width="7" height="7" fill="rgba(255,255,255,.55)"/><rect class="hx-win d1" x="172" y="98" width="7" height="7" fill="rgba(255,255,255,.3)"/>
+                    <rect class="hx-win d2" x="158" y="122" width="7" height="7" fill="rgba(255,255,255,.3)"/><rect class="hx-win d3" x="172" y="115" width="7" height="7" fill="rgba(255,255,255,.55)"/>
+                    <rect class="hx-win d1" x="207" y="100" width="6" height="6" fill="rgba(160,210,255,.6)"/><rect class="hx-win d3" x="207" y="116" width="6" height="6" fill="rgba(160,210,255,.35)"/></g>
+                  <g><path d="M250 55 L295 33 L295 125 L250 147 Z" fill="url(#hxb2)"/><path d="M295 33 L322 46 L322 138 L295 125 Z" fill="#2A5395"/>
+                    <rect class="hx-win d2" x="258" y="70" width="6" height="6" fill="rgba(255,255,255,.6)"/><rect class="hx-win" x="270" y="64" width="6" height="6" fill="rgba(255,255,255,.35)"/>
+                    <rect class="hx-win d1" x="258" y="88" width="6" height="6" fill="rgba(255,255,255,.35)"/><rect class="hx-win d3" x="270" y="82" width="6" height="6" fill="rgba(255,255,255,.6)"/>
+                    <rect class="hx-win d2" x="258" y="106" width="6" height="6" fill="rgba(255,255,255,.5)"/><rect class="hx-win" x="270" y="100" width="6" height="6" fill="rgba(255,255,255,.3)"/>
+                    <rect class="hx-win d1" x="301" y="66" width="5" height="5" fill="rgba(190,230,255,.6)"/><rect class="hx-win d3" x="301" y="84" width="5" height="5" fill="rgba(190,230,255,.35)"/><rect class="hx-win d2" x="301" y="102" width="5" height="5" fill="rgba(190,230,255,.5)"/></g>
+                  <g><path d="M345 105 L385 86 L385 140 L345 159 Z" fill="url(#hxb3)"/><path d="M385 86 L410 98 L410 152 L385 140 Z" fill="#3D2A80"/>
+                    <circle class="hx-win" cx="365" cy="122" r="5" fill="#00C8FF" opacity=".85"/><circle class="hx-win d2" cx="383" cy="112" r="4" fill="#00C8FF" opacity=".5"/></g>
+                  <path d="M235 87 C 275 95 300 70 322 46" fill="none" stroke="rgba(0,200,255,.25)" stroke-width="2"/>
+                  <path class="hx-fiber" d="M235 87 C 275 95 300 70 322 46" fill="none" stroke="#00C8FF" stroke-width="2" filter="url(#hxglow)"/>
+                  <path d="M200 130 C 260 160 320 150 385 140" fill="none" stroke="rgba(91,140,255,.25)" stroke-width="2"/>
+                  <path class="hx-fiber slow" d="M200 130 C 260 160 320 150 385 140" fill="none" stroke="#5B8CFF" stroke-width="2" filter="url(#hxglow)"/>
+                  <path d="M385 140 C 400 175 330 205 260 198" fill="none" stroke="rgba(159,123,255,.22)" stroke-width="1.6"/>
+                  <path class="hx-fiber slow" d="M385 140 C 400 175 330 205 260 198" fill="none" stroke="#9F7BFF" stroke-width="1.6" filter="url(#hxglow)"/>
+                  <g fill="#2ADFB4"><circle cx="150" cy="155" r="4"/><circle class="hx-pulse" cx="150" cy="155" r="4" fill="none" stroke="#2ADFB4" stroke-width="1.5"/></g>
+                  <g fill="#FFA24B"><circle cx="260" cy="147" r="4"/><circle class="hx-pulse d1" cx="260" cy="147" r="4" fill="none" stroke="#FFA24B" stroke-width="1.5"/></g>
+                  <g fill="#00C8FF"><circle cx="322" cy="46" r="4.5"/><circle class="hx-pulse d2" cx="322" cy="46" r="4.5" fill="none" stroke="#00C8FF" stroke-width="1.5"/></g>
+                  <g fill="#9F7BFF"><circle cx="410" cy="152" r="4"/><circle class="hx-pulse d3" cx="410" cy="152" r="4" fill="none" stroke="#9F7BFF" stroke-width="1.5"/></g>
+                  <g fill="#2ADFB4"><circle cx="95" cy="125" r="3.5"/><circle class="hx-pulse d1" cx="95" cy="125" r="3.5" fill="none" stroke="#2ADFB4" stroke-width="1.5"/></g>
+                  <g fill="#FF6B9D"><circle cx="425" cy="125" r="3.5"/><circle class="hx-pulse d3" cx="425" cy="125" r="3.5" fill="none" stroke="#FF6B9D" stroke-width="1.5"/></g>
+                  <g font-size="9.5" fill="#8FA3D8">
+                    <text x="352" y="36">中心机房 · OLT</text>
+                    <text x="60" y="215">覆盖 28 栋 · 4200 户</text>
+                  </g>
+                </svg>
+              </div>
+              <div class="hx-params">
+                <div class="hx-prow"><span>剧情步骤</span><b>8 步</b></div>
+                <div class="hx-prow"><span>预计用时</span><b>25 分钟</b></div>
+                <div class="hx-prow"><span>任务满分</span><b>13 分</b></div>
+                <div class="hx-prow"><span>角色</span><b>无线网络规划工程师</b></div>
+                <a class="hx-startbtn" href="/scenario-demo">开始仿真</a>
+              </div>
+            </div>
+          </section>
+
+          <div class="hx-frow">
+            <a class="hx-fcard hx-glass" href="/exercise-page"><span class="hx-farr">→</span>
+              <div class="hx-fic" style="background:rgba(42,223,180,.14)">✏️</div><h3>互动练习</h3><p>智能出题 · 即时批改 · 薄弱点追踪</p></a>
+            <a class="hx-fcard hx-glass" href="/wrong-questions-page"><span class="hx-farr">→</span>
+              <div class="hx-fic" style="background:rgba(255,107,157,.14)">📝</div><h3>错题本</h3><p>自动归集 · 变式重练 · 掌握度分析</p></a>
+            <a class="hx-fcard hx-glass" href="/knowledge-graph-page"><span class="hx-farr">→</span>
+              <div class="hx-fic" style="background:rgba(61,123,255,.16)">🕸</div><h3>知识图谱</h3><p>知识关联 · 学习路径 · 缺口定位</p></a>
+            <a class="hx-fcard hx-glass" href="/rag-console"><span class="hx-farr">→</span>
+              <div class="hx-fic" style="background:rgba(110,75,255,.16)">🔎</div><h3>知识检索</h3><p>RAG 问答 · 教材溯源 · 权威引用</p></a>
+          </div>
+
+          <div>
+            <div class="hx-qtitle"><span class="hx-dot" style="background:#6E4BFF;box-shadow:0 0 7px #6E4BFF"></span>全部功能</div>
+            <div class="hx-qgrid" id="hxQuickGrid">
+              <a class="hx-qitem hx-glass" data-cat="all" href="/scenario-page"><div class="hx-qic" style="background:rgba(0,200,255,.13)">🎬</div><span>剧情演绎</span></a>
+              <a class="hx-qitem hx-glass" data-cat="all" href="/scenario-demo"><div class="hx-qic" style="background:rgba(0,128,255,.16)">🎞</div><span>沉浸式剧情</span></a>
+              <a class="hx-qitem hx-glass" data-cat="all" href="/multi-fault-page"><div class="hx-qic" style="background:rgba(255,81,47,.13)">🚨</div><span>多故障应急</span></a>
+              <a class="hx-qitem hx-glass" data-cat="all" href="/fault-chain"><div class="hx-qic" style="background:rgba(235,51,73,.13)">🧬</div><span>因果故障链</span></a>
+              <a class="hx-qitem hx-glass" data-cat="study" href="/exercise-page"><div class="hx-qic" style="background:rgba(42,223,180,.13)">✏️</div><span>互动练习</span></a>
+              <a class="hx-qitem hx-glass" data-cat="study" href="/wrong-questions-page"><div class="hx-qic" style="background:rgba(255,107,157,.13)">📝</div><span>错题本</span></a>
+              <a class="hx-qitem hx-glass" data-cat="study" href="/knowledge-graph-page"><div class="hx-qic" style="background:rgba(42,82,152,.2)">🕸</div><span>知识图谱</span></a>
+              <a class="hx-qitem hx-glass" data-cat="res" href="/ppt-resources-page"><div class="hx-qic" style="background:rgba(123,47,247,.15)">📚</div><span>课件中心</span></a>
+              <a class="hx-qitem hx-glass" data-cat="res" href="/frontier-update-page"><div class="hx-qic" style="background:rgba(79,172,254,.13)">🚀</div><span>前沿动态</span></a>
+              <a class="hx-qitem hx-glass" data-cat="res" href="/interview-cases-page"><div class="hx-qic" style="background:rgba(24,144,255,.13)">📚</div><span>面试案例</span></a>
+              <a class="hx-qitem hx-glass" data-cat="grow" href="/weekly-tasks-page"><div class="hx-qic" style="background:rgba(102,126,234,.15)">📋</div><span>每周任务</span></a>
+              <a class="hx-qitem hx-glass" data-cat="grow" href="/homework-page"><div class="hx-qic" style="background:rgba(250,140,22,.13)">📒</div><span>我的作业</span></a>
+              <a class="hx-qitem hx-glass" data-cat="grow" href="/student-portrait-page"><div class="hx-qic" style="background:rgba(110,75,255,.15)">🎯</div><span>能力画像</span></a>
+              <a class="hx-qitem hx-glass" data-cat="grow" href="/credential-chain"><div class="hx-qic" style="background:rgba(75,108,183,.16)">🎖</div><span>成长档案</span></a>
+              <a class="hx-qitem hx-glass" data-cat="grow" href="/job-recruitment-page"><div class="hx-qic" style="background:rgba(250,112,154,.13)">💼</div><span>岗位招聘</span></a>
+              <a class="hx-qitem hx-glass" data-cat="grow" href="/job-match-page"><div class="hx-qic" style="background:rgba(15,220,120,.13)">🤝</div><span>岗位匹配</span></a>
+              <a class="hx-qitem hx-glass" data-cat="grow" href="/mock-interview-page"><div class="hx-qic" style="background:rgba(102,126,234,.15)">🎤</div><span>AI 模拟面试</span></a>
+            </div>
+          </div>
+
+          <div class="hx-foot">灵智尚人 · 通信工程智能学习平台</div>
+        </main>
+
+        <aside class="hx-right">
+          <div class="hx-glass">
+            <div class="hx-dirtitle" style="padding:13px 15px 9px"><span class="hx-dot" style="background:#2ADFB4;box-shadow:0 0 8px #2ADFB4"></span>最新通知<span class="hx-more" onclick="showNotificationModal()">全部 ›</span></div>
+            <div id="hxNoticeList" style="padding:0 0 10px"><div class="hx-nitem">加载中…</div></div>
+          </div>
+          <div class="hx-glass" style="display:flex;flex-direction:column">
+            <div class="hx-dirtitle" style="padding:13px 16px 8px"><span class="hx-dot" style="background:#6E4BFF;box-shadow:0 0 8px #6E4BFF"></span>灵智 AI 助教</div>
+            <div class="hx-mcbody">
+              <div class="hx-msg ai">你好，我是灵智 AI 助教。可以问我知识点、帮你分析错题，或聊聊 5G 基站勘察实训 👋</div>
+            </div>
+            <div class="hx-mcin"><input id="hxMiniInput" placeholder="输入问题，回车直达 AI 助手…" onkeydown="if(event.key==='Enter')hxMiniSend()"><button class="hx-send" onclick="hxMiniSend()">➤</button></div>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- 移动端功能抽屉 -->
+    <div class="hx-dmask" id="hxDrawerMask" onclick="hxCloseDrawer()"></div>
+    <div class="hx-drawer" id="hxDrawer">
+      <div class="hx-drawerhead">功能导航 <span onclick="hxCloseDrawer()" style="cursor:pointer;font-size:18px">✕</span></div>
+      <div class="hx-drawernav" id="hxDrawerNav" onclick="if(event.target.closest('.hx-navitem'))hxCloseDrawer()"></div>
+    </div>
+
+    <!-- ==================== AI 助手聊天视图 ==================== -->
+    <div id="hxChatView" style="display:none">
+      <button class="hx-backbtn" onclick="hxTab(document.querySelector('.hx-tab[data-cat=all]'))">← 返回主页</button>
+      <div class="chat-container" style="margin: 0 auto;">
 
         <div class="mode-selector">
             <button class="mode-btn active" data-mode="fast" onclick="switchMode('fast')">
@@ -1336,6 +1661,7 @@
             </button>
         </div>
     </div>
+    </div><!-- /hxChatView -->
 
     <script>
         const messagesArea = document.getElementById('messagesArea');
@@ -1475,68 +1801,150 @@
             return div.innerHTML;
         }
         
-        // 渲染导航菜单
+        // 渲染导航菜单（新版：填充左侧栏 + 移动端抽屉）
         function renderNavigation() {
-            const headerRight = document.getElementById('headerRight');
-            let navHTML = '';
-            
-            // 学生端导航
-            if (currentUser.role === 'student') {
-                navHTML = `
-                    <a href="/scenario-page" class="nav-btn">🎬 剧情演绎</a>
-                    <a href="/scenario-demo" class="nav-btn" style="background: linear-gradient(135deg, #0080ff, #00c8ff);">🎞️ 沉浸式剧情</a>
-                    <a href="/exercise-page" class="nav-btn" style="background: rgba(67, 233, 123, 0.8);">✏️ 互动练习</a>
-                    <a href="/student-portrait-page" class="nav-btn" style="background: rgba(102, 126, 234, 0.8);">🎯 我的能力</a>
-                    <a href="/weekly-tasks-page" class="nav-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">📋 每周任务</a>
-                    <a href="/wrong-questions-page" class="nav-btn" style="background: rgba(245, 87, 108, 0.8);">📝 错题本</a>
-                    <a href="/homework-page" class="nav-btn" style="background: linear-gradient(135deg, #fa8c16, #f5222d);">📒 我的作业</a>
-                    <a href="/knowledge-graph-page" class="nav-btn" style="background: rgba(42, 82, 152, 0.8);">🕸️ 知识图谱</a>
-                    <a href="/ppt-resources-page" class="nav-btn" style="background: linear-gradient(135deg, #7b2ff7, #f107a3);">📚 课件中心</a>
-                    <a href="/job-recruitment-page" class="nav-btn" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">💼 岗位招聘</a>
-                    <a href="/frontier-update-page" class="nav-btn" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">🚀 前沿动态</a>
-                    <a href="/credential-chain" class="nav-btn" style="background: linear-gradient(135deg, #4b6cb7, #182848);">🎖 可信成长档案</a>
-                    <a href="/fault-chain" class="nav-btn" style="background: linear-gradient(135deg, #eb3349, #f45c43);">🧬 因果故障链</a>
-                    <a href="/multi-fault-page" class="nav-btn" style="background: linear-gradient(135deg, #ff512f, #dd2476);">🚨 多故障应急</a>
-                    <a href="/rag-console" class="nav-btn" style="background: linear-gradient(135deg, #0f2027, #2c5364);">🔎 知识检索</a>
-                    <a href="/job-match-page" class="nav-btn" style="background: linear-gradient(135deg, #0FDC78, #004D26);">🎯 岗位匹配</a>
-                    <a href="/mock-interview-page" class="nav-btn" style="background: linear-gradient(135deg, #667eea, #764ba2);">🎤 AI模拟面试</a>
-                    <a href="/interview-cases-page" class="nav-btn" style="background: linear-gradient(135deg, #1890ff, #096dd9);">📚 面试案例</a>
-                    <button class="nav-btn" style="background: linear-gradient(135deg, #fa541c, #eb2f96);" onclick="showEthicsDebate()">⚖️ 伦理辩论</button>
-                    <button class="nav-btn" onclick="viewMyReport()">📊 我的报告</button>
-                    ${settingsNavHTML()}
-                `;
+            const isTeacher = currentUser.role === 'teacher';
+            const G = (label, items) => `<div class="hx-glabel">${label}</div><div class="hx-gitems">${items}</div>`;
+            const A = (href, ic, txt, badge = '') => `<a class="hx-navitem" href="${href}"><span class="ic">${ic}</span>${txt}${badge ? `<span class="hx-new">${badge}</span>` : ''}</a>`;
+            const B = (fn, ic, txt, badge = '') => `<button class="hx-navitem" onclick="${fn}"><span class="ic">${ic}</span>${txt}${badge ? `<span class="hx-new">${badge}</span>` : ''}</button>`;
+            let html = '';
+            if (!isTeacher) {
+                // 学生端导航
+                html += G('实 训',
+                    A('/scenario-page', '🎬', '剧情演绎') +
+                    A('/scenario-demo', '🎞', '沉浸式剧情', '新') +
+                    A('/multi-fault-page', '🚨', '多故障应急') +
+                    A('/fault-chain', '🧬', '因果故障链'));
+                html += G('学 习',
+                    A('/exercise-page', '✏️', '互动练习') +
+                    A('/wrong-questions-page', '📝', '错题本') +
+                    A('/knowledge-graph-page', '🕸', '知识图谱') +
+                    A('/rag-console', '🔎', '知识检索') +
+                    A('/ppt-resources-page', '📚', '课件中心'));
+                html += G('成 长',
+                    A('/student-portrait-page', '🎯', '能力画像') +
+                    A('/weekly-tasks-page', '📋', '每周任务') +
+                    A('/homework-page', '📒', '我的作业') +
+                    B('viewMyReport()', '📊', '我的报告') +
+                    A('/credential-chain', '🎖', '可信成长档案'));
+                html += G('就 业',
+                    A('/job-recruitment-page', '💼', '岗位招聘') +
+                    A('/job-match-page', '🤝', '岗位匹配') +
+                    A('/mock-interview-page', '🎤', 'AI 模拟面试') +
+                    A('/interview-cases-page', '📚', '面试案例'));
             } else {
-                // 老师端导航
-                navHTML = `
-                    <a href="/scenario-page" class="nav-btn">🎬 剧情演绎</a>
-                    <a href="/scenario-demo" class="nav-btn" style="background: linear-gradient(135deg, #0080ff, #00c8ff);">🎞️ 沉浸式剧情</a>
-                    <a href="/exercise-page" class="nav-btn" style="background: rgba(67, 233, 123, 0.8);">✏️ 互动练习</a>
-                    <a href="/search-logs-page" class="nav-btn">📚 搜索日志</a>
-                    <a href="/student-report-page" class="nav-btn">📊 学生分析</a>
-                    <a href="/student-portrait-page" class="nav-btn" style="background: rgba(102, 126, 234, 0.8);">🎯 能力画像</a>
-                    <a href="/knowledge-graph-page" class="nav-btn" style="background: rgba(42, 82, 152, 0.8);">🕸️ 知识图谱</a>
-                    <a href="/job-recruitment-page" class="nav-btn" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">💼 岗位招聘</a>
-                    <a href="/job-match-page" class="nav-btn" style="background: linear-gradient(135deg, #0FDC78, #004D26);">🎯 岗位匹配</a>
-                    <a href="/mock-interview-page" class="nav-btn" style="background: linear-gradient(135deg, #667eea, #764ba2);">🎤 AI模拟面试</a>
-                    <a href="/interview-cases-page" class="nav-btn" style="background: linear-gradient(135deg, #1890ff, #096dd9);">📚 面试案例</a>
-                    <a href="/class-notification-page" class="nav-btn">📢 班级通知</a>
-                    <a href="/upload-knowledge-page" class="nav-btn" style="background: rgba(17, 153, 142, 0.8);">📤 上传知识库</a>
-                    <a href="/frontier-update-page" class="nav-btn" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">🚀 前沿知识更新</a>
-                    <a href="/credential-chain" class="nav-btn" style="background: linear-gradient(135deg, #4b6cb7, #182848);">🎖 可信成长档案</a>
-                    <a href="/fault-chain" class="nav-btn" style="background: linear-gradient(135deg, #eb3349, #f45c43);">🧬 因果故障链</a>
-                    <a href="/multi-fault-page" class="nav-btn" style="background: linear-gradient(135deg, #ff512f, #dd2476);">🚨 多故障应急</a>
-                    <a href="/rag-console" class="nav-btn" style="background: linear-gradient(135deg, #0f2027, #2c5364);">🔎 知识检索</a>
-                    <a href="/audit-log-page" class="nav-btn" style="background: linear-gradient(135deg, #232526, #414345);">🛡 安全审计</a>
-                    <button class="nav-btn" style="background: linear-gradient(135deg,#fa541c,#fa8c16);" onclick="showExerciseManager()">📝 练习题管理</button>
-                    <button class="nav-btn" style="background: linear-gradient(135deg,#ff4d4f,#fa541c);" onclick="showTeacherDashboard()">🎛️ 教师驾驶舱</button>
-                    <a href="/homework-page" class="nav-btn" style="background: linear-gradient(135deg,#fa8c16,#f5222d);">📝 作业管理</a>
-                    <button class="nav-btn" style="background: linear-gradient(135deg,#2f54eb,#13c2c2);" onclick="showLessonPlanGenerator()">📑 一键生成教案</button>
-                    <button class="nav-btn" style="background: linear-gradient(135deg,#722ed1,#13c2c2);" onclick="showAgentConfig()">🤖 AI助教配置</button>
-                    ${settingsNavHTML()}
-                `;
+                // 教师端导航
+                html += G('实训 · 通用',
+                    A('/scenario-page', '🎬', '剧情演绎') +
+                    A('/scenario-demo', '🎞', '沉浸式剧情', '新') +
+                    A('/multi-fault-page', '🚨', '多故障应急') +
+                    A('/fault-chain', '🧬', '因果故障链') +
+                    A('/exercise-page', '✏️', '互动练习') +
+                    A('/knowledge-graph-page', '🕸', '知识图谱') +
+                    A('/rag-console', '🔎', '知识检索') +
+                    A('/frontier-update-page', '🚀', '前沿知识更新') +
+                    A('/credential-chain', '🎖', '可信成长档案'));
+                html += G('学情分析',
+                    A('/student-report-page', '📊', '学生分析') +
+                    A('/student-portrait-page', '🎯', '能力画像') +
+                    A('/search-logs-page', '📚', '搜索日志'));
+                html += G('教学管理',
+                    A('/class-notification-page', '📢', '班级通知') +
+                    A('/homework-page', '📝', '作业管理') +
+                    B('showExerciseManager()', '📋', '练习题管理') +
+                    B('showTeacherDashboard()', '🎛', '教师驾驶舱') +
+                    B('showLessonPlanGenerator()', '📑', '一键生成教案') +
+                    B('showAgentConfig()', '🤖', 'AI助教配置') +
+                    A('/upload-knowledge-page', '📤', '上传知识库') +
+                    A('/audit-log-page', '🛡', '安全审计'));
+                html += G('就业指导',
+                    A('/job-recruitment-page', '💼', '岗位招聘') +
+                    A('/job-match-page', '🤝', '岗位匹配') +
+                    A('/mock-interview-page', '🎤', 'AI 模拟面试') +
+                    A('/interview-cases-page', '📚', '面试案例'));
             }
+            html += G('工 具', settingsNavHTML() + B('doLogout()', '🔓', '退出登录'));
 
-            headerRight.innerHTML = navHTML;
+            const side = document.getElementById('hxSideNav');
+            const drawer = document.getElementById('hxDrawerNav');
+            if (side) side.innerHTML = html;
+            if (drawer) drawer.innerHTML = html;
+
+            // 用户信息填充
+            const name = currentUser.student_name || currentUser.username || (isTeacher ? '老师' : '同学');
+            const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+            set('hxUserName', name);
+            set('hxUcardName', name);
+            set('hxRoleTag', isTeacher ? '教师端' : '学生端');
+            set('hxRoleBadge', isTeacher ? '教师' : '学生');
+            set('hxUcardClass', currentUser.class_name || (isTeacher ? '教师工作台' : '欢迎回来，开始今天的实训吧'));
+            const avEl = document.getElementById('hxAvatar');
+            if (avEl) avEl.innerHTML = currentUser.avatar_url
+                ? `<img src="${currentUser.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
+                : (name[0] || '学');
+            const ua = document.getElementById('hxUcardAvatar');
+            if (ua && ua.firstChild) ua.firstChild.textContent = name[0] || '学';
+
+            hxLoadNotices();
+        }
+
+        // ===== 新版主页：视图切换 / 抽屉 / 迷你聊天 / 通知 =====
+        function hxTab(tabEl) {
+            if (!tabEl) return;
+            const view = tabEl.dataset.view;
+            document.querySelectorAll('.hx-tab').forEach(t => t.classList.remove('on'));
+            tabEl.classList.add('on');
+            const home = document.getElementById('hxHome');
+            const chat = document.getElementById('hxChatView');
+            if (view === 'chat') {
+                if (home) home.style.display = 'none';
+                if (chat) chat.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+                hxCloseDrawer();
+            } else {
+                if (chat) chat.style.display = 'none';
+                if (home) home.style.display = 'block';
+                document.body.style.overflow = 'auto';
+                hxFilter(tabEl.dataset.cat || 'all');
+                hxCloseDrawer();
+                window.scrollTo({ top: 0 });
+            }
+        }
+        function hxFilter(cat) {
+            document.querySelectorAll('#hxQuickGrid .hx-qitem').forEach(it => {
+                it.classList.toggle('hx-hide', cat !== 'all' && it.dataset.cat !== cat);
+            });
+        }
+        function hxToggleDrawer(e) { if (e) e.stopPropagation();
+            document.getElementById('hxDrawer').classList.toggle('hx-open');
+            document.getElementById('hxDrawerMask').classList.toggle('hx-open'); }
+        function hxCloseDrawer() {
+            document.getElementById('hxDrawer').classList.remove('hx-open');
+            document.getElementById('hxDrawerMask').classList.remove('hx-open'); }
+        function hxMiniSend() {
+            const v = document.getElementById('hxMiniInput').value.trim();
+            if (!v) return;
+            hxTab(document.querySelector('.hx-tab[data-view="chat"]'));
+            const inp = document.getElementById('userInput');
+            inp.value = v; autoResize();
+            setTimeout(() => inp.focus(), 100);
+        }
+        async function hxLoadNotices() {
+            const box = document.getElementById('hxNoticeList');
+            if (!box) return;
+            try {
+                const resp = await fetch('/api/notifications');
+                const data = await resp.json();
+                const list = (data.notifications || []).slice(0, 3);
+                if (!list.length) { box.innerHTML = '<div class="hx-nitem">暂无新通知</div>'; return; }
+                box.innerHTML = list.map(n => {
+                    const txt = escapeHtml(n.title || n.content || '通知');
+                    const time = n.created_at || n.time || '';
+                    return `<div class="hx-nitem" onclick="showNotificationModal()">${txt.length > 42 ? txt.slice(0, 42) + '…' : txt}${time ? `<time>${escapeHtml(String(time))}</time>` : ''}</div>`;
+                }).join('');
+            } catch (e) {
+                box.innerHTML = '<div class="hx-nitem">暂无新通知</div>';
+            }
         }
 
         // ===== 设置菜单（使用说明/桌宠/清除记录）；个人中心、退出登录为独立入口 =====
@@ -1733,6 +2141,7 @@
         // 更新头部标题
         function updateHeaderTitle() {
             const headerText = document.querySelector('.header-text p');
+            if (!headerText) return; // 旧版聊天头部已由新版主页取代
             if (currentUser.role === 'student' && currentUser.student_name) {
                 headerText.textContent = `欢迎, ${currentUser.student_name}！`;
             } else if (currentUser.role === 'teacher') {
