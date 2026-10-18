@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -1026,11 +1026,11 @@
         <div class="student-info" id="studentInfo">
             <div class="input-group">
                 <label for="studentNo">学号</label>
-                <input type="text" id="studentNo" placeholder="请输入您的学号" value="2024001001001">
+                <input type="text" id="studentNo" placeholder="请输入您的学号">
             </div>
             <div class="input-group">
                 <label for="studentName">学生姓名</label>
-                <input type="text" id="studentName" placeholder="请输入您的姓名" value="张三">
+                <input type="text" id="studentName" placeholder="请输入您的姓名">
             </div>
             <div class="input-group">
                 <label for="className">班级（可选）</label>
@@ -1042,14 +1042,14 @@
         <div class="teacher-info" id="teacherInfo">
             <div class="input-group">
                 <label for="teacherName">老师账号</label>
-                <input type="text" id="teacherName" placeholder="请输入老师账号（如：teacher1、teacher2）" value="teacher1">
+                <input type="text" id="teacherName" placeholder="请输入老师账号" >
             </div>
         </div>
         
         <!-- 密码 -->
         <div class="input-group">
             <label for="password" id="passwordLabel">访问密码</label>
-            <input type="password" id="password" placeholder="请输入密码（tongxin2024）" value="tongxin2024" onkeypress="handleKeyPress(event)">
+            <input type="password" id="password" placeholder="请输入密码" onkeypress="handleKeyPress(event)">
         </div>
         
         <button class="login-btn" id="loginBtn" onclick="doLogin()">
@@ -1129,15 +1129,15 @@
                 studentInfo.classList.add('show');
                 teacherInfo.classList.remove('show');
                 passwordLabel.textContent = '访问密码';
-                passwordInput.placeholder = '请输入密码（tongxin2024）';
-                passwordInput.value = 'tongxin2024';
+                passwordInput.placeholder = '请输入密码';
+                passwordInput.value = '';
             } else {
                 teacherBtn.classList.add('selected');
                 studentInfo.classList.remove('show');
                 teacherInfo.classList.add('show');
                 passwordLabel.textContent = '老师密码';
-                passwordInput.placeholder = '请输入老师密码（与账号密码一致）';
-                passwordInput.value = '123456';
+                passwordInput.placeholder = '请输入老师密码';
+                passwordInput.value = '';
             }
         }
         
@@ -1281,7 +1281,7 @@
                                 <div class="guide-step-list">
                                     <div class="guide-step">
                                         <div class="guide-step-num">1</div>
-                                        <div class="guide-step-text"><strong>选择角色并登录</strong>：学生输入 13 位学号、姓名和访问密码（<code>tongxin2024</code>），首次登录会自动创建学习档案。页面默认展示学生登录入口。</div>
+                                        <div class="guide-step-text"><strong>选择角色并登录</strong>：学生输入 13 位学号、姓名和访问密码，首次登录会自动创建学习档案。页面默认展示学生登录入口。</div>
                                     </div>
                                     <div class="guide-step">
                                         <div class="guide-step-num">2</div>
@@ -1333,7 +1333,7 @@
                                 <div class="guide-step-list">
                                     <div class="guide-step">
                                         <div class="guide-step-num" style="background:#ff4d4f;">!</div>
-                                        <div class="guide-step-text"><strong>访问密码</strong>：默认访问密码为 <code style="background:#fff2f0;color:#ff4d4f;padding:2px 6px;border-radius:4px;">tongxin2024</code>，老师账号请在后台配置。</div>
+                                        <div class="guide-step-text"><strong>访问密码</strong>：请向老师或管理员获取访问密码，请勿向他人泄露。</div>
                                     </div>
                                     <div class="guide-step">
                                         <div class="guide-step-num" style="background:#fa8c16;">!</div>

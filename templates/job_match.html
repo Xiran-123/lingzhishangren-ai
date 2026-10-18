@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>岗位匹配 - 灵智尚人</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px 24px; border-radius: 12px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 24px; font-weight: 600; }
+        .nav-btn { background: rgba(255,255,255,0.2); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-size: 14px; cursor: pointer; text-decoration: none; transition: all 0.3s; }
+        .nav-btn:hover { background: rgba(255,255,255,0.3); }
+        .tabs { display: flex; gap: 12px; margin-bottom: 24px; }
+        .tab { background: white; border: none; padding: 14px 28px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .tab.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .tab:hover:not(.active) { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102,126,234,0.2); }
+        .content { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+        .section-title { font-size: 20px; font-weight: 600; color: #333; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #f0f2f5; }
+        .btn { padding: 12px 24px; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102,126,234,0.4); }
+        .btn-secondary { background: #e8e8f0; color: #333; }
+        .btn-secondary:hover { background: #d8d8e0; }
+        .job-card { background: #f8f9fc; border-radius: 12px; padding: 20px; border: 2px solid transparent; transition: all 0.3s; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+        .job-card:hover { border-color: #667eea; transform: translateY(-3px); box-shadow: 0 6px 20px rgba(102,126,234,0.15); }
+        .job-info { flex: 1; }
+        .job-title { font-size: 18px; font-weight: 600; color: #333; margin-bottom: 6px; }
+        .job-meta { font-size: 13px; color: #666; margin-bottom: 8px; }
+        .job-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+        .tag { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+        .tag-salary { background: #fff3e0; color: #e65100; }
+        .tag-location { background: #e3f2fd; color: #1565c0; }
+        .tag-education { background: #f3e5f5; color: #7b1fa2; }
+        .match-badge { min-width: 120px; text-align: center; }
+        .match-pct { font-size: 32px; font-weight: 700; line-height: 1; }
+        .match-pct.high { color: #0FDC78; }
+        .match-pct.mid { color: #EFAA17; }
+        .match-pct.low { color: #999; }
+        .match-label { font-size: 12px; color: #999; margin-top: 4px; }
+        .confidence-label { font-size: 11px; padding: 2px 8px; border-radius: 8px; margin-top: 4px; display: inline-block; }
+        .confidence-high { background: #e8f5e9; color: #2e7d32; }
+        .confidence-mid { background: #fff3e0; color: #e65100; }
+        .confidence-low { background: #ffebee; color: #c62828; }
+        .gap-chip { display: inline-block; padding: 3px 8px; background: #ffebee; color: #c62828; border-radius: 6px; font-size: 11px; margin: 2px; }
+        .strength-chip { display: inline-block; padding: 3px 8px; background: #e8f5e9; color: #2e7d32; border-radius: 6px; font-size: 11px; margin: 2px; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
+        .modal.show { display: flex; justify-content: center; align-items: center; }
+        .modal-content { background: white; border-radius: 16px; padding: 28px; max-width: 700px; width: 90%; max-height: 85vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #f0f0f0; }
+        .modal-title { font-size: 20px; font-weight: 600; color: #333; }
+        .modal-close { background: none; border: none; font-size: 28px; color: #999; cursor: pointer; }
+        .ai-content { font-size: 14px; line-height: 1.8; color: #333; min-height: 100px; white-space: pre-wrap; }
+        .ai-content h2 { font-size: 18px; font-weight: 600; margin: 16px 0 8px; color: #333; }
+        .ai-content h3 { font-size: 16px; font-weight: 600; margin: 12px 0 6px; color: #555; }
+        .ai-content ul, .ai-content ol { margin-left: 20px; margin-bottom: 8px; }
+        .cursor { display: inline-block; width: 2px; height: 16px; background: #667eea; animation: blink 1s infinite; }
+        @keyframes blink { 0%,50% { opacity: 1; } 51%,100% { opacity: 0; } }
+        .sa-panel { background: #f8f9fc; border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+        .sa-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 16px; }
+        .sa-dim { display: flex; align-items: center; gap: 12px; }
+        .sa-dim label { min-width: 100px; font-size: 14px; color: #333; }
+        .sa-dim input[type=range] { flex: 1; }
+        .sa-dim .val { min-width: 30px; text-align: center; font-weight: 600; color: #667eea; }
+        .sa-section { margin-bottom: 16px; }
+        .sa-section h4 { font-size: 15px; font-weight: 600; margin-bottom: 8px; color: #333; }
+        .input { width: 100%; padding: 10px 14px; border: 2px solid #e8e8f0; border-radius: 8px; font-size: 14px; margin-bottom: 8px; }
+        .input:focus { outline: none; border-color: #667eea; }
+        .empty-state { text-align: center; padding: 60px 20px; color: #999; }
+        .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+        .loading { text-align: center; padding: 40px; color: #667eea; }
+        .spinner { display: inline-block; width: 32px; height: 32px; border: 3px solid #e8e8f0; border-top-color: #667eea; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .stats-row { display: flex; gap: 16px; margin-bottom: 20px; }
+        .stat-card { flex: 1; background: #f8f9fc; border-radius: 10px; padding: 16px; text-align: center; }
+        .stat-num { font-size: 28px; font-weight: 700; color: #667eea; }
+        .stat-label { font-size: 12px; color: #999; margin-top: 4px; }
+
+        /* ============ 移动端适配 ============ */
+        @media (max-width: 768px) {
+            body { padding: 12px; }
+            .header { padding: 16px 18px; margin-bottom: 16px; border-radius: 10px; }
+            .header h1 { font-size: 19px; }
+            .nav-btn { padding: 8px 14px; font-size: 13px; }
+            .tabs { gap: 8px; margin-bottom: 16px; }
+            .tab { flex: 1; padding: 12px 10px; font-size: 14px; }
+            .content { padding: 18px 16px; border-radius: 12px; }
+            .section-title { font-size: 17px; margin-bottom: 14px; }
+            .job-card { padding: 16px; gap: 12px; align-items: center; }
+            .job-title { font-size: 16px; }
+            .job-meta { font-size: 12px; }
+            .match-badge { min-width: 0; flex: 0 0 84px; }
+            .match-pct { font-size: 24px; }
+            .sa-panel { padding: 16px; margin-bottom: 16px; }
+            .sa-grid { grid-template-columns: 1fr; gap: 14px; }
+            .sa-dim { flex-wrap: wrap; gap: 6px 10px; }
+            .sa-dim label { min-width: 0; flex: 0 0 100%; font-size: 13.5px; }
+            .sa-dim input[type=range] { flex: 1; min-width: 0; }
+            .sa-dim .val { min-width: 24px; }
+            .stats-row { gap: 10px; }
+            .stat-card { padding: 12px 8px; }
+            .stat-num { font-size: 22px; }
+            .stat-label { font-size: 11px; }
+            .btn-primary { width: 100%; padding: 13px; font-size: 15px; }
+            /* 自评表单内联宽度输入框改为整行堆叠 */
+            .sa-section input.input[style*="width"] {
+                width: 100% !important; display: block !important;
+                margin-left: 0 !important; margin-bottom: 8px;
+            }
+            .sa-section .btn-secondary[style*="padding:8px"] { display: block; margin-top: 2px; }
+            .modal-content { width: 94%; padding: 18px 16px; border-radius: 12px; }
+            .modal-title { font-size: 17px; }
+            .ai-content { font-size: 13.5px; }
+        }
+        @media (max-width: 480px) {
+            body { padding: 8px; }
+            .header { padding: 14px; }
+            .header h1 { font-size: 17px; }
+            .nav-btn { padding: 7px 12px; font-size: 12.5px; }
+            .content { padding: 14px 12px; }
+            .job-card { padding: 14px 12px; }
+            .match-badge { flex-basis: 72px; }
+            .match-pct { font-size: 21px; }
+            .match-label, .confidence-label { font-size: 10.5px; }
+            .tab { padding: 11px 8px; font-size: 13.5px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>💼 岗位匹配</h1>
+        <a href="/" class="nav-btn">← 返回主页</a>
+    </div>
+    <div id="appContent"><div class="loading"><div class="spinner"></div><p>加载中...</p></div></div>
+</div>
+
+<!-- AI分析弹窗 -->
+<div class="modal" id="aiModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title" id="aiModalTitle">岗位匹配深度分析</div>
+            <button class="modal-close" onclick="closeAiModal()">&times;</button>
+        </div>
+        <div class="ai-content" id="aiContent"></div>
+    </div>
+</div>
+
+<script>
+let dimNames = {};
+let studentProfile = null;
+let jobList = [];
+
+function init() {
+    fetch('/current-user').then(r => r.json()).then(u => {
+        if (!u.authenticated) { window.location.href = '/login'; return; }
+        if (u.role === 'teacher') { renderTeacherView(); }
+        else { renderStudentView(); }
+    }).catch(() => { window.location.href = '/login'; });
+}
+
+function renderStudentView() {
+    document.getElementById('appContent').innerHTML = `
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('jobs')" id="tab-jobs">匹配岗位</button>
+            <button class="tab" onclick="switchTab('sa')" id="tab-sa">我的画像</button>
+        </div>
+        <div id="tabContent"></div>
+    `;
+    loadJobs();
+}
+
+function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    if (tab === 'jobs') loadJobs();
+    else loadSelfAssessment();
+}
+
+function loadJobs() {
+    document.getElementById('tabContent').innerHTML = '<div class="loading"><div class="spinner"></div><p>正在计算匹配度...</p></div>';
+    fetch('/api/career-match').then(r => r.json()).then(data => {
+        if (!data.success) {
+            document.getElementById('tabContent').innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>' + (data.error || '加载失败') + '</p></div>';
+            return;
+        }
+        dimNames = data.dim_names || {};
+        studentProfile = data.student_profile || {};
+        jobList = data.jobs || [];
+        renderJobList();
+    }).catch(() => {
+        document.getElementById('tabContent').innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>网络错误</p></div>';
+    });
+}
+
+function renderJobList() {
+    if (!jobList.length) {
+        document.getElementById('tabContent').innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>暂无招聘数据</p></div>';
+        return;
+    }
+    const unparsed = jobList.filter(j => !j.parsed).length;
+    let html = '';
+    if (unparsed > 0) {
+        html += '<div style="background:#fff3e0;padding:12px 16px;border-radius:8px;margin-bottom:16px;font-size:13px;color:#e65100;">' +
+                '⚠️ 有 ' + unparsed + ' 个岗位尚未解析能力权重，匹配度为0。请联系教师点击「批量解析岗位能力」。</div>';
+    }
+    if (studentProfile && studentProfile.data_dimensions < 3) {
+        html += '<div style="background:#e3f2fd;padding:12px 16px;border-radius:8px;margin-bottom:16px;font-size:13px;color:#1565c0;">' +
+                '💡 你的能力画像数据较少（仅' + studentProfile.data_dimensions + '个维度有数据），匹配精度可能不高。请先完善「我的画像」中的自评。</div>';
+    }
+    jobList.forEach(job => {
+        const matchClass = job.match_pct >= 60 ? 'high' : job.match_pct >= 30 ? 'mid' : 'low';
+        const confClass = job.confidence >= 70 ? 'confidence-high' : job.confidence >= 40 ? 'confidence-mid' : 'confidence-low';
+        const confText = job.confidence >= 70 ? '高可信' : job.confidence >= 40 ? '中可信' : '低可信';
+        const gapChips = (job.gaps || []).map(g => '<span class="gap-chip">' + (dimNames[g.dim] || g.dim) + '</span>').join('');
+        const strChips = (job.strengths || []).map(s => '<span class="strength-chip">' + (dimNames[s.dim] || s.dim) + '</span>').join('');
+        html += '<div class="job-card" onclick="analyzeJob(\'' + job.id + '\', \'' + (job.title||'').replace(/'/g,"") + '\')" style="cursor:pointer;">' +
+            '<div class="job-info">' +
+                '<div class="job-title">' + (job.title||'') + '</div>' +
+                '<div class="job-meta">' + (job.company||'') + ' · ' + (job.location||'') + ' · ' + (job.source||'') + '</div>' +
+                '<div class="job-tags">' +
+                    (job.salary ? '<span class="tag tag-salary">' + job.salary + '</span>' : '') +
+                    (job.education ? '<span class="tag tag-education">' + job.education + '</span>' : '') +
+                    (job.experience ? '<span class="tag tag-location">' + job.experience + '</span>' : '') +
+                    (job.career_type ? '<span class="tag tag-location">' + job.career_type + '</span>' : '') +
+                '</div>' +
+                (gapChips ? '<div style="margin-top:8px;"><span style="font-size:11px;color:#999;">差距：</span>' + gapChips + '</div>' : '') +
+                (strChips ? '<div style="margin-top:4px;"><span style="font-size:11px;color:#999;">优势：</span>' + strChips + '</div>' : '') +
+            '</div>' +
+            '<div class="match-badge">' +
+                '<div class="match-pct ' + matchClass + '">' + job.match_pct + '%</div>' +
+                '<div class="match-label">匹配度</div>' +
+                (job.parsed ? '<div class="confidence-label ' + confClass + '">' + confText + '</div>' : '<div class="match-label" style="color:#ccc;">未解析</div>') +
+            '</div>' +
+        '</div>';
+    });
+    document.getElementById('tabContent').innerHTML = html;
+}
+
+function analyzeJob(jobId, jobTitle) {
+    document.getElementById('aiModalTitle').textContent = '💼 ' + jobTitle + ' - 深度匹配分析';
+    document.getElementById('aiContent').innerHTML = '<div class="loading"><div class="spinner"></div><p>AI 正在分析匹配度...</p></div>';
+    document.getElementById('aiModal').classList.add('show');
+    const es = new EventSource('/api/career-match/' + jobId + '/analysis');
+    let html = '';
+    let started = false;
+    es.onmessage = function(e) {
+        try {
+            const data = JSON.parse(e.data);
+            if (data.error) { es.close(); document.getElementById('aiContent').innerHTML = '<p style="color:#e8463a;">' + data.error + '</p>'; return; }
+            if (data.content) {
+                if (!started) { started = true; document.getElementById('aiContent').innerHTML = ''; }
+                html += data.content;
+                document.getElementById('aiContent').innerHTML = renderMd(html) + '<span class="cursor"></span>';
+            }
+            if (data.done) { es.close(); document.getElementById('aiContent').innerHTML = renderMd(html); }
+        } catch(err) { es.close(); }
+    };
+    es.onerror = function() { es.close(); if (!started) document.getElementById('aiContent').innerHTML = '<p>分析失败，请稍后重试</p>'; };
+}
+
+function renderMd(text) {
+    let html = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+    html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+    html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+    html = html.replace(/(<li>[\s\S]*?<\/li>)/g, '<ul>$1</ul>');
+    html = html.replace(/\n/g, '<br>');
+    return html;
+}
+
+function closeAiModal() {
+    document.getElementById('aiModal').classList.remove('show');
+}
+
+function loadSelfAssessment() {
+    document.getElementById('tabContent').innerHTML = '<div class="loading"><div class="spinner"></div><p>加载自评数据...</p></div>';
+    fetch('/api/student/self-assessment').then(r => r.json()).then(data => {
+        if (!data.success) return;
+        const sa = data.assessment || {};
+        const dims = data.dimensions || [];
+        const rating = sa.self_rating || {};
+        const projects = sa.projects || [];
+        const certs = sa.certifications || [];
+        const internship = sa.internship || {};
+
+        let dimHtml = '';
+        dims.forEach(d => {
+            const v = rating[d.id] || 0;
+            dimHtml += '<div class="sa-dim"><label>' + d.name + '</label>' +
+                '<input type="range" min="0" max="5" value="' + v + '" oninput="this.nextElementSibling.textContent=this.value" data-dim="' + d.id + '">' +
+                '<span class="val">' + v + '</span></div>';
+        });
+
+        document.getElementById('tabContent').innerHTML = `
+            <div class="content">
+                <div class="section-title">我的能力画像</div>
+                <div class="sa-panel">
+                    <div class="sa-section">
+                        <h4>📊 能力维度自评（0=未掌握，5=精通）</h4>
+                        <div class="sa-grid">${dimHtml}</div>
+                    </div>
+                    <div class="sa-section">
+                        <h4>🎓 证书与资质</h4>
+                        <div id="certList"></div>
+                        <input class="input" id="certName" placeholder="证书名称" style="width:60%;display:inline-block;">
+                        <input class="input" id="certDate" placeholder="获得日期" style="width:30%;display:inline-block;margin-left:4px;">
+                        <button class="btn btn-secondary" onclick="addCert()" style="padding:8px 16px;">添加</button>
+                    </div>
+                    <div class="sa-section">
+                        <h4>🏢 实习经历</h4>
+                        <input class="input" id="internCompany" placeholder="公司" value="${internship.company||''}">
+                        <input class="input" id="internPosition" placeholder="职位" value="${internship.position||''}">
+                        <input class="input" id="internDuration" placeholder="时长（如：3个月）" value="${internship.duration||''}">
+                        <textarea class="input" id="internDesc" placeholder="工作内容描述" style="min-height:60px;">${internship.desc||''}</textarea>
+                    </div>
+                    <div class="sa-section">
+                        <h4>📁 项目经验</h4>
+                        <div id="projList"></div>
+                        <input class="input" id="projName" placeholder="项目名称" style="width:40%;display:inline-block;">
+                        <input class="input" id="projRole" placeholder="担任角色" style="width:30%;display:inline-block;margin-left:4px;">
+                        <input class="input" id="projDesc" placeholder="简述" style="width:25%;display:inline-block;margin-left:4px;">
+                        <button class="btn btn-secondary" onclick="addProj()" style="padding:8px 16px;">添加</button>
+                    </div>
+                    <button class="btn btn-primary" onclick="saveSelfAssessment()" style="margin-top:16px;">💾 保存自评</button>
+                </div>
+            </div>
+        `;
+        certs.forEach((c, i) => addCertRow(c.name, c.date));
+        projects.forEach(p => addProjRow(p.name, p.role, p.desc));
+    });
+}
+
+let certData = [];
+let projData = [];
+
+function addCert() {
+    const name = document.getElementById('certName').value.trim();
+    const date = document.getElementById('certDate').value.trim();
+    if (!name) return;
+    addCertRow(name, date);
+    document.getElementById('certName').value = '';
+    document.getElementById('certDate').value = '';
+}
+
+function addCertRow(name, date) {
+    certData.push({ name, date });
+    const div = document.getElementById('certList');
+    if (!div) return;
+    div.innerHTML += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">' +
+        '<span style="font-size:14px;">📜 ' + name + (date ? ' (' + date + ')' : '') + '</span>' +
+        '<button class="btn btn-secondary" style="padding:4px 8px;font-size:12px;" onclick="this.parentElement.remove();certData.splice(certData.findIndex(c=>c.name===\'' + name + '\'),1);">删除</button>' +
+        '</div>';
+}
+
+function addProj() {
+    const name = document.getElementById('projName').value.trim();
+    const role = document.getElementById('projRole').value.trim();
+    const desc = document.getElementById('projDesc').value.trim();
+    if (!name) return;
+    addProjRow(name, role, desc);
+    document.getElementById('projName').value = '';
+    document.getElementById('projRole').value = '';
+    document.getElementById('projDesc').value = '';
+}
+
+function addProjRow(name, role, desc) {
+    projData.push({ name, role, desc });
+    const div = document.getElementById('projList');
+    if (!div) return;
+    div.innerHTML += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">' +
+        '<span style="font-size:14px;">📁 ' + name + (role ? ' - ' + role : '') + (desc ? ' (' + desc + ')' : '') + '</span>' +
+        '<button class="btn btn-secondary" style="padding:4px 8px;font-size:12px;" onclick="this.parentElement.remove();projData.splice(projData.findIndex(p=>p.name===\'' + name.replace(/'/g,"") + '\'),1);">删除</button>' +
+        '</div>';
+}
+
+function saveSelfAssessment() {
+    const selfRating = {};
+    document.querySelectorAll('input[type=range][data-dim]').forEach(el => {
+        selfRating[el.dataset.dim] = parseInt(el.value);
+    });
+    const internship = {};
+    ['internCompany','internPosition','internDuration','internDesc'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el && el.value.trim()) {
+            const key = id.replace('intern','').toLowerCase();
+            internship[{interncompany:'company',internposition:'position',internduration:'duration',interndesc:'desc'}[id]] = el.value.trim();
+        }
+    });
+    fetch('/api/student/self-assessment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            projects: projData,
+            certifications: certData,
+            internship: Object.keys(internship).length ? internship : null,
+            self_rating: selfRating,
+        })
+    }).then(r => r.json()).then(data => {
+        if (data.success) alert('✅ 自评已保存，匹配度将自动更新！');
+        else alert('保存失败：' + (data.error || ''));
+    }).catch(() => alert('网络错误'));
+}
+
+function renderTeacherView() {
+    document.getElementById('appContent').innerHTML = `
+        <div class="content">
+            <div class="section-title">岗位匹配 - 教师管理</div>
+            <p style="color:#666;margin-bottom:20px;">点击下方按钮，AI 将批量解析所有未解析岗位的能力权重（12维度），解析后学生即可看到匹配度。</p>
+            <div class="stats-row" id="parseStats"></div>
+            <button class="btn btn-primary" id="parseBtn" onclick="parseCompetence()">🤖 批量解析岗位能力</button>
+            <div id="parseProgress" style="margin-top:16px;"></div>
+        </div>
+    `;
+    loadParseStats();
+}
+
+function loadParseStats() {
+    fetch('/api/career-match').then(r => r.json()).then(data => {
+        if (!data.success) return;
+        const total = (data.jobs || []).length;
+        const parsed = (data.jobs || []).filter(j => j.parsed).length;
+        const unparsed = total - parsed;
+        document.getElementById('parseStats').innerHTML = `
+            <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">岗位总数</div></div>
+            <div class="stat-card"><div class="stat-num" style="color:#0FDC78;">${parsed}</div><div class="stat-label">已解析</div></div>
+            <div class="stat-card"><div class="stat-num" style="color:#EFAA17;">${unparsed}</div><div class="stat-label">待解析</div></div>
+        `;
+    }).catch(() => {});
+}
+
+function parseCompetence() {
+    const btn = document.getElementById('parseBtn');
+    btn.disabled = true;
+    btn.textContent = '解析中...请等待（每个岗位约3-5秒）';
+    document.getElementById('parseProgress').innerHTML = '<div class="loading"><div class="spinner"></div><p>AI 正在解析岗位能力权重，请勿关闭页面...</p></div>';
+    fetch('/api/career-match/parse-competence', { method: 'POST' }).then(r => r.json()).then(data => {
+        btn.disabled = false;
+        btn.textContent = '🤖 批量解析岗位能力';
+        if (data.success) {
+            document.getElementById('parseProgress').innerHTML =
+                '<div style="background:#e8f5e9;padding:16px;border-radius:8px;color:#2e7d32;">' +
+                '✅ 解析完成！新解析 ' + data.parsed + ' 个，失败 ' + data.failed + ' 个，跳过 ' + data.skipped + ' 个（已解析），共 ' + data.total + ' 个岗位。</div>';
+            loadParseStats();
+        } else {
+            document.getElementById('parseProgress').innerHTML = '<div style="color:#e8463a;">解析失败：' + (data.error || '') + '</div>';
+        }
+    }).catch(() => {
+        btn.disabled = false;
+        btn.textContent = '🤖 批量解析岗位能力';
+        document.getElementById('parseProgress').innerHTML = '<div style="color:#e8463a;">网络错误</div>';
+    });
+}
+
+init();
+</script>
+</body>
+</html>

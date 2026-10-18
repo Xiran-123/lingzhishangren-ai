@@ -180,6 +180,27 @@
         .preview-error a { color: #1890ff; }
         #previewStage { position: relative; }
         #previewStage canvas, #previewStage svg, #previewStage img { max-width: 100%; }
+
+        /* ============ 移动端适配 ============ */
+        @media (max-width: 768px) {
+            body { padding: 12px; }
+            .header { padding: 16px 18px; margin-bottom: 14px; border-radius: 12px; }
+            .header h1 { font-size: 19px; }
+            .header .btn { padding: 8px 14px; font-size: 13px; }
+            .search-bar { flex-direction: column; padding: 16px; gap: 10px; }
+            .search-bar button { width: 100%; padding: 11px; }
+            .ppt-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+            .ppt-card-header, .ppt-card-body { padding: 14px 16px; }
+            .footer-actions { flex-wrap: wrap; }
+            .preview-toolbar { padding: 8px 12px; gap: 8px; flex-wrap: wrap; }
+            .preview-viewport { padding: 14px 8px; gap: 14px; }
+        }
+        @media (max-width: 480px) {
+            body { padding: 8px; }
+            .header { padding: 14px; }
+            .header h1 { font-size: 17px; }
+            .ppt-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>

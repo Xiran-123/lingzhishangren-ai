@@ -379,12 +379,14 @@
         }
 
         .hbtn {
+            display: inline-block;
             padding: 6px 14px;
             border: none;
             border-radius: 8px;
             cursor: pointer;
             font-size: 13px;
             color: #fff;
+            text-decoration: none;
         }
         .hbtn-preview { background: linear-gradient(135deg, #7b2ff7, #f107a3); }
         .hbtn-del { background: #ff4d4f; }
@@ -897,7 +899,7 @@
                         </div>
                     </div>
                     <div class="history-actions">
-                        ${item.download_name ? `<button class="hbtn hbtn-preview" onclick="previewHistoryById('${item.id}')">👁 预览</button>` : ''}
+                        ${renderViewButton(item)}
                         <button class="hbtn hbtn-del" onclick="deleteUpload('${item.id}')">🗑 删除</button>
                         <div class="history-status ${item.status}">
                             ${item.status === 'success' ? '✅ 成功' : '❌ 失败'}
@@ -927,10 +929,54 @@
             }
         }
 
+        function renderViewButton(item) {
+            if (!item.download_name) return '';
+            const ext = (item.file_ext || '').toLowerCase();
+            const url = '/uploads/' + encodeURIComponent(item.download_name);
+            // PPT/Word：服务端已逐页转为高清图片，共用同一套在线预览弹窗
+            if (['pptx', 'ppt', 'docx', 'doc'].includes(ext)) {
+                return `<button class="hbtn hbtn-preview" onclick="previewHistoryById('${item.id}')">👁 预览</button>`;
+            }
+            if (ext === 'txt') {
+                return `<button class="hbtn hbtn-preview" onclick="previewTextById('${item.id}')">👁 查看</button>`;
+            }
+            // 其他格式：下载后用本地软件打开查看
+            return `<a class="hbtn hbtn-preview" href="${url}">⬇ 下载</a>`;
+        }
+
         function previewHistoryById(id) {
             const item = historyCache.find(h => h.id === id);
             if (item && item.download_name) {
                 openUploadPreview(item.filename, item.download_name);
+            }
+        }
+
+        async function previewTextById(id) {
+            const item = historyCache.find(h => h.id === id);
+            if (!item || !item.download_name) return;
+            const overlay = document.getElementById('pptPreviewOverlay');
+            const stage = document.getElementById('pptPreviewStage');
+            document.getElementById('pptPreviewTitle').textContent = '文档查看：' + item.filename;
+            document.getElementById('pptPreviewDownload').href = '/uploads/' + encodeURIComponent(item.download_name);
+            stage.innerHTML = '<div class="pv-hint">📥 正在加载文档，请稍候...</div>';
+            overlay.style.display = 'flex';
+            try {
+                const resp = await fetch('/uploads/' + encodeURIComponent(item.download_name));
+                if (!resp.ok) throw new Error('文件加载失败 HTTP ' + resp.status);
+                const text = await resp.text();
+                stage.innerHTML = '';
+                const box = document.createElement('pre');
+                box.style.cssText = 'background:#fff;border-radius:8px;padding:28px 32px;width:100%;max-width:860px;font-size:15px;line-height:1.9;white-space:pre-wrap;word-wrap:break-word;color:#333;font-family:inherit;margin:0;';
+                box.textContent = text;
+                stage.appendChild(box);
+            } catch (err) {
+                stage.innerHTML = `
+                    <div class="pv-error">
+                        <div style="font-size:32px;margin-bottom:12px;">😵</div>
+                        <div style="margin-bottom:10px;font-weight:600;">文档加载失败</div>
+                        <div style="color:#666;font-size:13px;margin-bottom:14px;">${String(err.message || err)}</div>
+                        <a href="/uploads/${encodeURIComponent(item.download_name)}" style="color:#1890ff;font-size:14px;">点此下载后查看 →</a>
+                    </div>`;
             }
         }
 
@@ -940,7 +986,7 @@
             const viewport = document.getElementById('pptPreviewViewport');
             document.getElementById('pptPreviewTitle').textContent = '正在加载：' + filename;
             document.getElementById('pptPreviewDownload').href = '/uploads/' + encodeURIComponent(downloadName);
-            stage.innerHTML = '<div class="pv-hint">📥 正在加载课件，请稍候...</div>';
+            stage.innerHTML = '<div class="pv-hint">📥 正在加载文档，请稍候...</div>';
             overlay.style.display = 'flex';
             viewport.scrollTop = 0;
 
@@ -960,31 +1006,59 @@
                     wrap.appendChild(img);
                 }
                 stage.appendChild(wrap);
-                document.getElementById('pptPreviewTitle').textContent = `课件预览：${filename}（共${ppt.page_count}页）`;
+                document.getElementById('pptPreviewTitle').textContent = `文档预览：${filename}（共${ppt.page_count}页）`;
                 return;
             }
 
-            // 方式二：转换中 -> 轮询等待
+            // 方式二：转换中 -> 轮询等待（最多约5分钟，防止转换失败时无限等待）
             if (ppt.download_name && ppt.preview_ready === false) {
-                stage.innerHTML = '<div class="pv-hint">⚙️ 服务器正在把课件转成高清页面（大文件约需1-3分钟），转好后自动打开…</div>';
-                const waitReady = setInterval(async () => {
+                if (previewWaitTimer) { clearInterval(previewWaitTimer); previewWaitTimer = null; }
+                stage.innerHTML = '<div class="pv-hint">⚙️ 服务器正在把文档转成高清页面（大文件约需1-3分钟），转好后自动打开…</div>';
+                let polls = 0;
+                const maxPolls = 40;
+                previewWaitTimer = setInterval(async () => {
+                    polls++;
                     try {
                         const res = await fetch('/api/knowledge/history');
                         const data = await res.json();
                         const cur = (data.history || []).find(h => h.download_name === downloadName);
                         if (cur && cur.preview_ready) {
-                            clearInterval(waitReady);
+                            clearInterval(previewWaitTimer);
+                            previewWaitTimer = null;
                             if (document.getElementById('pptPreviewOverlay').style.display !== 'none') {
                                 historyCache = data.history || [];
                                 openUploadPreview(filename, downloadName);
                             }
+                            return;
                         }
                     } catch (e) { /* 继续轮询 */ }
+                    if (polls >= maxPolls && document.getElementById('pptPreviewOverlay').style.display !== 'none') {
+                        clearInterval(previewWaitTimer);
+                        previewWaitTimer = null;
+                        document.getElementById('pptPreviewStage').innerHTML = `
+                            <div class="pv-error">
+                                <div style="font-size:32px;margin-bottom:12px;">⏱️</div>
+                                <div style="margin-bottom:10px;font-weight:600;">文档预览转换超时</div>
+                                <div style="color:#666;font-size:13px;margin-bottom:14px;">文件较大或服务器转换失败，请下载后用 Word / WPS 打开查看</div>
+                                <a href="/uploads/${encodeURIComponent(downloadName)}" style="color:#1890ff;font-size:14px;">⬇ 点此下载文档</a>
+                            </div>`;
+                    }
                 }, 8000);
                 return;
             }
 
-            // 方式三：旧数据兜底 -> 浏览器端解析引擎
+            // 方式三：旧数据兜底 -> 浏览器端解析引擎（仅支持 PPTX/PPT，Word 不能用此引擎）
+            const fallbackExt = (ppt.file_ext || filename.split('.').pop() || '').toLowerCase();
+            if (!['pptx', 'ppt'].includes(fallbackExt)) {
+                stage.innerHTML = `
+                    <div class="pv-error">
+                        <div style="font-size:32px;margin-bottom:12px;">📄</div>
+                        <div style="margin-bottom:10px;font-weight:600;">该文件暂不支持在线预览</div>
+                        <div style="color:#666;font-size:13px;margin-bottom:14px;">请下载后用 Word / WPS 等本地软件打开查看（新上传的文档服务器会自动转换，稍后可重试预览）</div>
+                        <a href="/uploads/${encodeURIComponent(downloadName)}" style="color:#1890ff;font-size:14px;">⬇ 点此下载文档</a>
+                    </div>`;
+                return;
+            }
             try {
                 if (!window.pptxPreview || !window.pptxPreview.init) {
                     throw new Error('预览组件未加载');
@@ -1012,6 +1086,10 @@
 
         function closeUploadPreview() {
             document.getElementById('pptPreviewOverlay').style.display = 'none';
+            if (previewWaitTimer) {
+                clearInterval(previewWaitTimer);
+                previewWaitTimer = null;
+            }
             if (currentPptPreviewer) {
                 try { currentPptPreviewer.destroy(); } catch (e) {}
                 currentPptPreviewer = null;
@@ -1020,6 +1098,7 @@
         }
 
         let currentPptPreviewer = null;
+        let previewWaitTimer = null;
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape') closeUploadPreview();
         });

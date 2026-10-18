@@ -58,7 +58,7 @@
                 radial-gradient(ellipse at 50% 30%, rgba(100,180,220,0.3) 0%, transparent 50%),
                 linear-gradient(180deg, #1a2a3a 0%, #2a4a5a 40%, #1a3a4a 70%, #0f2030 100%);
         }
-        /* 场景4：基站选址 - 黄金时刻 */
+        /* 场景4：分光器选址 - 黄金时刻 */
         .scene-bg[data-step="4"] {
             background:
                 radial-gradient(ellipse at 80% 25%, #ffb347 0%, rgba(255,179,71,0) 50%),
@@ -71,7 +71,7 @@
                 radial-gradient(ellipse at 50% 30%, rgba(255,200,120,0.25) 0%, transparent 50%),
                 linear-gradient(180deg, #2a2420 0%, #3a3028 50%, #2a2420 100%);
         }
-        /* 场景6：基站设计 - 会议室 */
+        /* 场景6：工程设计 - 会议室 */
         .scene-bg[data-step="6"] {
             background:
                 radial-gradient(ellipse at 50% 20%, rgba(255,180,100,0.2) 0%, transparent 50%),
@@ -528,6 +528,13 @@
             box-shadow: 0 0 16px rgba(0, 180, 255, 0.45);
         }
         .opt-card.multi.selected { background: linear-gradient(135deg, #0e7a4a, #0c6a40); }
+        /* quiz：作答前隐藏解析，作答后揭示并标对错 */
+        .quiz-grid .opt-sub { display: none; margin-top: 5px; line-height: 1.5; }
+        .quiz-grid.revealed .opt-sub { display: block; }
+        .quiz-grid .opt-card.right { border-color: #37b24d; background: rgba(32, 140, 80, 0.35); box-shadow: 0 0 14px rgba(55,178,77,0.35); }
+        .quiz-grid .opt-card.wrong { border-color: #e03131; background: rgba(200, 50, 50, 0.28); }
+        .quiz-grid.revealed .opt-card { cursor: default; }
+        .quiz-grid.revealed .opt-card:hover { transform: none; }
         .opt-name { color: #fff; font-size: 14px; font-weight: 700; }
         .opt-sub { color: rgba(170, 210, 255, 0.65); font-size: 12px; margin-top: 3px; }
 
@@ -814,6 +821,9 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
         .gen-loading p { color: #a0e8ff; font-size: 14px; }
+        .gen-loading .gen-load-sub { color: #5bc7ff; font-size: 12.5px; min-height: 18px; margin-top: 2px; }
+        .gen-loading .gen-load-time { color: #7d93b3; font-size: 12px; margin-top: 10px; }
+        .gen-loading .gen-load-time b { color: #ffd66b; }
         /* ============ 移动端适配（新增） ============ */
         @media (max-width: 768px) {
             .top-bar {
@@ -933,202 +943,105 @@
         <div class="scene-bg" id="sceneBg" data-step="0">
             <svg class="decor" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
                 <defs>
-                    <linearGradient id="roadGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stop-color="rgba(50,50,55,0.7)"/>
-                        <stop offset="100%" stop-color="rgba(30,30,35,0.9)"/>
+                    <linearGradient id="gridGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="rgba(0,180,220,0.18)"/>
+                        <stop offset="100%" stop-color="rgba(0,60,140,0.04)"/>
                     </linearGradient>
+                    <radialGradient id="signalGrad" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="rgba(0,220,255,0.28)"/>
+                        <stop offset="100%" stop-color="rgba(0,220,255,0)"/>
+                    </radialGradient>
+                    <pattern id="hexPat" x="0" y="0" width="120" height="104" patternUnits="userSpaceOnUse">
+                        <polygon points="60,2 110,30 110,74 60,102 10,74 10,30" fill="none" stroke="rgba(0,180,220,0.10)" stroke-width="1"/>
+                    </pattern>
                 </defs>
 
-                <!-- 云朵 -->
-                <g opacity="0.85" fill="rgba(255,255,255,0.7)">
-                    <ellipse cx="200" cy="120" rx="80" ry="22"/>
-                    <ellipse cx="240" cy="108" rx="55" ry="20"/>
-                    <ellipse cx="1100" cy="95" rx="90" ry="24"/>
-                    <ellipse cx="1140" cy="82" rx="60" ry="22"/>
+                <!-- 蓝图底色 + 蜂窝网格 -->
+                <rect x="0" y="0" width="1440" height="900" fill="url(#gridGrad)"/>
+                <rect x="0" y="0" width="1440" height="900" fill="url(#hexPat)"/>
+
+                <!-- 主网格线 -->
+                <g stroke="rgba(0,180,220,0.07)" stroke-width="1">
+                    <line x1="0" y1="225" x2="1440" y2="225"/>
+                    <line x1="0" y1="450" x2="1440" y2="450"/>
+                    <line x1="0" y1="675" x2="1440" y2="675"/>
+                    <line x1="360" y1="0" x2="360" y2="900"/>
+                    <line x1="720" y1="0" x2="720" y2="900"/>
+                    <line x1="1080" y1="0" x2="1080" y2="900"/>
                 </g>
 
-                <!-- 远处山脉轮廓 -->
-                <path d="M0,580 L180,440 L320,510 L480,380 L620,460 L780,360 L940,420 L1100,350 L1260,410 L1440,370 L1440,900 L0,900Z" fill="rgba(50,70,90,0.55)"/>
-                <path d="M0,620 L150,500 L300,560 L450,460 L600,530 L750,440 L900,500 L1050,440 L1200,500 L1440,460 L1440,900 L0,900Z" fill="rgba(60,85,70,0.6)"/>
-
-                <!-- 校园主体建筑群（带窗户） -->
+                <!-- 中心信号源 + 扩散波纹 -->
                 <g>
-                    <!-- 左楼：信息楼 -->
-                    <rect x="260" y="420" width="160" height="200" fill="rgba(180,195,210,0.85)" stroke="rgba(80,95,110,0.6)" stroke-width="1.5"/>
-                    <rect x="260" y="420" width="160" height="30" fill="rgba(200,210,220,0.85)"/>
-                    <!-- 窗户网格 -->
-                    <g fill="rgba(255,240,180,0.7)">
-                        <rect x="275" y="470" width="18" height="24"/>
-                        <rect x="305" y="470" width="18" height="24"/>
-                        <rect x="335" y="470" width="18" height="24"/>
-                        <rect x="365" y="470" width="18" height="24"/>
-                        <rect x="275" y="520" width="18" height="24"/>
-                        <rect x="305" y="520" width="18" height="24"/>
-                        <rect x="335" y="520" width="18" height="24"/>
-                        <rect x="365" y="520" width="18" height="24"/>
-                    </g>
-                    <g fill="rgba(140,170,130,0.7)">
-                        <rect x="275" y="570" width="18" height="24"/>
-                        <rect x="305" y="570" width="18" height="24"/>
-                        <rect x="335" y="570" width="18" height="24"/>
-                        <rect x="365" y="570" width="18" height="24"/>
-                    </g>
-
-                    <!-- 中楼：图书馆（带圆顶） -->
-                    <rect x="520" y="380" width="180" height="240" fill="rgba(165,180,200,0.9)" stroke="rgba(70,85,105,0.6)" stroke-width="1.5"/>
-                    <ellipse cx="610" cy="370" rx="95" ry="35" fill="rgba(145,160,180,0.9)" stroke="rgba(70,85,105,0.6)"/>
-                    <circle cx="610" cy="335" r="10" fill="rgba(220,200,80,0.9)"/>
-                    <!-- 大玻璃窗 -->
-                    <g fill="rgba(255,240,180,0.85)">
-                        <rect x="540" y="430" width="28" height="36"/>
-                        <rect x="580" y="430" width="28" height="36"/>
-                        <rect x="620" y="430" width="28" height="36"/>
-                        <rect x="660" y="430" width="28" height="36"/>
-                        <rect x="540" y="490" width="28" height="36"/>
-                        <rect x="580" y="490" width="28" height="36"/>
-                        <rect x="620" y="490" width="28" height="36"/>
-                        <rect x="660" y="490" width="28" height="36"/>
-                    </g>
-                    <!-- 大门 -->
-                    <rect x="595" y="550" width="30" height="70" fill="rgba(80,60,40,0.9)"/>
-
-                    <!-- 右楼：教学楼 -->
-                    <rect x="820" y="400" width="200" height="220" fill="rgba(175,190,205,0.85)" stroke="rgba(75,90,105,0.6)" stroke-width="1.5"/>
-                    <!-- 窗户 -->
-                    <g fill="rgba(255,240,180,0.75)">
-                        <rect x="840" y="450" width="20" height="26"/>
-                        <rect x="872" y="450" width="20" height="26"/>
-                        <rect x="904" y="450" width="20" height="26"/>
-                        <rect x="936" y="450" width="20" height="26"/>
-                        <rect x="968" y="450" width="20" height="26"/>
-                        <rect x="840" y="500" width="20" height="26"/>
-                        <rect x="872" y="500" width="20" height="26"/>
-                        <rect x="904" y="500" width="20" height="26"/>
-                        <rect x="936" y="500" width="20" height="26"/>
-                        <rect x="968" y="500" width="20" height="26"/>
-                    </g>
-                    <g fill="rgba(140,170,130,0.7)">
-                        <rect x="840" y="550" width="20" height="26"/>
-                        <rect x="872" y="550" width="20" height="26"/>
-                        <rect x="904" y="550" width="20" height="26"/>
-                        <rect x="936" y="550" width="20" height="26"/>
-                        <rect x="968" y="550" width="20" height="26"/>
-                    </g>
-                </g>
-
-                <!-- 基站塔（右侧教学楼顶） -->
-                <g transform="translate(910, 400)">
-                    <line x1="0" y1="0" x2="0" y2="-90" stroke="rgba(40,40,45,0.9)" stroke-width="3"/>
-                    <line x1="-35" y1="-25" x2="35" y2="-25" stroke="rgba(40,40,45,0.9)" stroke-width="2"/>
-                    <line x1="-28" y1="-45" x2="28" y2="-45" stroke="rgba(40,40,45,0.85)" stroke-width="2"/>
-                    <line x1="-22" y1="-60" x2="22" y2="-60" stroke="rgba(40,40,45,0.8)" stroke-width="1.5"/>
-                    <rect x="-8" y="-105" width="16" height="12" fill="rgba(50,50,55,0.9)"/>
-                    <rect x="-20" y="-110" width="6" height="20" fill="rgba(80,80,85,0.9)"/>
-                    <rect x="-4" y="-110" width="6" height="20" fill="rgba(80,80,85,0.9)"/>
-                    <rect x="12" y="-110" width="6" height="20" fill="rgba(80,80,85,0.9)"/>
-                    <!-- 信号灯 -->
-                    <circle cx="0" cy="-115" r="3" fill="#ff4444">
-                        <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/>
+                    <circle cx="720" cy="450" r="70" fill="url(#signalGrad)"/>
+                    <circle cx="720" cy="450" r="70" fill="none" stroke="rgba(0,220,255,0.22)" stroke-width="1.5">
+                        <animate attributeName="r" values="60;320;60" dur="7s" repeatCount="indefinite"/>
+                        <animate attributeName="opacity" values="0.55;0;0.55" dur="7s" repeatCount="indefinite"/>
                     </circle>
+                    <circle cx="720" cy="450" r="140" fill="none" stroke="rgba(0,220,255,0.16)" stroke-width="1.2">
+                        <animate attributeName="r" values="60;300;60" dur="7s" begin="2.3s" repeatCount="indefinite"/>
+                        <animate attributeName="opacity" values="0.45;0;0.45" dur="7s" begin="2.3s" repeatCount="indefinite"/>
+                    </circle>
+                    <g transform="translate(720,450)">
+                        <polygon points="0,-26 22,-13 22,13 0,26 -22,13 -22,-13" fill="rgba(0,200,255,0.18)" stroke="rgba(0,220,255,0.65)" stroke-width="1.5"/>
+                        <circle cx="0" cy="0" r="5" fill="#00e5ff"/>
+                    </g>
                 </g>
-                <!-- 信号波纹 -->
-                <g stroke="rgba(255,100,100,0.4)" fill="none" stroke-width="1">
-                    <circle cx="910" cy="-55" r="40" transform="translate(0,455)">
-                        <animate attributeName="r" values="10;60;10" dur="3s" repeatCount="indefinite"/>
-                        <animate attributeName="opacity" values="0.6;0;0.6" dur="3s" repeatCount="indefinite"/>
+
+                <!-- 副信号节点（左上 / 右下） -->
+                <g>
+                    <circle cx="300" cy="250" r="40" fill="url(#signalGrad)"/>
+                    <circle cx="300" cy="250" r="40" fill="none" stroke="rgba(0,220,255,0.18)" stroke-width="1.2">
+                        <animate attributeName="r" values="30;180;30" dur="9s" begin="1s" repeatCount="indefinite"/>
+                        <animate attributeName="opacity" values="0.45;0;0.45" dur="9s" begin="1s" repeatCount="indefinite"/>
+                    </circle>
+                    <g transform="translate(300,250)">
+                        <polygon points="0,-18 16,-9 16,9 0,18 -16,9 -16,-9" fill="rgba(0,200,255,0.14)" stroke="rgba(0,220,255,0.55)" stroke-width="1.2"/>
+                        <circle cx="0" cy="0" r="4" fill="#5be5ff"/>
+                    </g>
+                </g>
+                <g>
+                    <circle cx="1140" cy="650" r="44" fill="url(#signalGrad)"/>
+                    <circle cx="1140" cy="650" r="44" fill="none" stroke="rgba(0,220,255,0.18)" stroke-width="1.2">
+                        <animate attributeName="r" values="30;200;30" dur="10s" begin="3s" repeatCount="indefinite"/>
+                        <animate attributeName="opacity" values="0.45;0;0.45" dur="10s" begin="3s" repeatCount="indefinite"/>
+                    </circle>
+                    <g transform="translate(1140,650)">
+                        <polygon points="0,-20 18,-10 18,10 0,20 -18,10 -18,-10" fill="rgba(0,200,255,0.14)" stroke="rgba(0,220,255,0.55)" stroke-width="1.2"/>
+                        <circle cx="0" cy="0" r="4" fill="#5be5ff"/>
+                    </g>
+                </g>
+
+                <!-- 数据流连线 -->
+                <g fill="none" stroke="rgba(0,220,255,0.22)" stroke-width="1.2" stroke-dasharray="6,8">
+                    <path d="M300,250 Q510,350 720,450"/>
+                    <path d="M720,450 Q930,550 1140,650"/>
+                    <path d="M300,250 Q200,500 720,450" stroke="rgba(0,220,255,0.12)"/>
+                    <path d="M720,450 Q1000,400 1140,650" stroke="rgba(0,220,255,0.12)"/>
+                    <circle r="3" fill="#00e5ff">
+                        <animateMotion dur="6s" repeatCount="indefinite" path="M300,250 Q510,350 720,450"/>
+                        <animate attributeName="opacity" values="0;1;0" dur="6s" repeatCount="indefinite"/>
+                    </circle>
+                    <circle r="3" fill="#00e5ff">
+                        <animateMotion dur="7s" begin="2s" repeatCount="indefinite" path="M720,450 Q930,550 1140,650"/>
+                        <animate attributeName="opacity" values="0;1;0" dur="7s" begin="2s" repeatCount="indefinite"/>
+                    </circle>
+                    <circle r="3" fill="#5be5ff">
+                        <animateMotion dur="8s" begin="1s" repeatCount="indefinite" path="M1140,650 Q930,550 720,450"/>
+                        <animate attributeName="opacity" values="0;1;0" dur="8s" begin="1s" repeatCount="indefinite"/>
                     </circle>
                 </g>
 
-                <!-- 校园树木 -->
-                <g>
-                    <!-- 树1 -->
-                    <rect x="150" y="600" width="8" height="40" fill="rgba(80,55,30,0.9)"/>
-                    <circle cx="154" cy="590" r="32" fill="rgba(50,110,50,0.85)"/>
-                    <circle cx="142" cy="580" r="20" fill="rgba(60,120,55,0.85)"/>
-                    <circle cx="168" cy="585" r="22" fill="rgba(55,115,50,0.85)"/>
-
-                    <!-- 树2 -->
-                    <rect x="430" y="640" width="10" height="50" fill="rgba(80,55,30,0.9)"/>
-                    <circle cx="435" cy="625" r="38" fill="rgba(55,115,55,0.9)"/>
-                    <circle cx="420" cy="615" r="24" fill="rgba(65,125,60,0.9)"/>
-                    <circle cx="450" cy="620" r="26" fill="rgba(50,110,50,0.9)"/>
-
-                    <!-- 树3 -->
-                    <rect x="750" y="650" width="9" height="45" fill="rgba(80,55,30,0.9)"/>
-                    <circle cx="754" cy="638" r="34" fill="rgba(55,115,55,0.85)"/>
-
-                    <!-- 树4 -->
-                    <rect x="1180" y="580" width="8" height="40" fill="rgba(80,55,30,0.9)"/>
-                    <circle cx="1184" cy="570" r="30" fill="rgba(50,110,50,0.85)"/>
-                    <circle cx="1172" cy="562" r="18" fill="rgba(60,120,55,0.85)"/>
+                <!-- 信号波形条（底部装饰） -->
+                <g stroke="rgba(0,220,255,0.18)" stroke-width="1.5" fill="none">
+                    <path d="M0,820 Q120,790 240,820 T480,820 T720,820 T960,820 T1200,820 T1440,820"/>
+                    <path d="M0,845 Q120,815 240,845 T480,845 T720,845 T960,845 T1200,845 T1440,845" stroke="rgba(0,220,255,0.10)"/>
                 </g>
 
-                <!-- 道路 -->
-                <path d="M0,780 Q360,750 720,770 T1440,760 L1440,810 Q1080,825 720,810 T0,820Z" fill="url(#roadGrad)"/>
-                <!-- 道路虚线 -->
-                <g stroke="rgba(255,255,200,0.5)" stroke-width="3" stroke-dasharray="30,25">
-                    <path d="M0,795 Q360,770 720,785 T1440,780" fill="none"/>
-                </g>
-
-                <!-- 勘测设备三脚架 -->
-                <g transform="translate(350, 680)">
-                    <line x1="0" y1="0" x2="-15" y2="50" stroke="rgba(60,60,65,0.9)" stroke-width="3"/>
-                    <line x1="0" y1="0" x2="15" y2="50" stroke="rgba(60,60,65,0.9)" stroke-width="3"/>
-                    <line x1="0" y1="0" x2="0" y2="55" stroke="rgba(60,60,65,0.9)" stroke-width="2.5"/>
-                    <line x1="-12" y1="25" x2="12" y2="25" stroke="rgba(60,60,65,0.8)" stroke-width="1.5"/>
-                    <!-- 仪器 -->
-                    <rect x="-10" y="-18" width="20" height="18" fill="rgba(70,70,80,0.95)" rx="2"/>
-                    <circle cx="0" cy="-9" r="5" fill="rgba(100,180,220,0.9)"/>
-                    <!-- 小天线 -->
-                    <line x1="0" y1="-18" x2="0" y2="-30" stroke="rgba(80,80,90,0.9)" stroke-width="2"/>
-                </g>
-
-                <!-- 勘测人员剪影 -->
-                <g transform="translate(310, 695)" fill="rgba(30,30,35,0.9)">
-                    <circle cx="0" cy="0" r="10"/>
-                    <rect x="-7" y="8" width="14" height="30" rx="3"/>
-                    <line x1="-7" y1="38" x2="-10" y2="55" stroke="rgba(30,30,35,0.9)" stroke-width="4"/>
-                    <line x1="7" y1="38" x2="10" y2="55" stroke="rgba(30,30,35,0.9)" stroke-width="4"/>
-                    <line x1="-7" y1="15" x2="-18" y2="25" stroke="rgba(30,30,35,0.9)" stroke-width="4"/>
-                    <line x1="7" y1="15" x2="18" y2="22" stroke="rgba(30,30,35,0.9)" stroke-width="4"/>
-                </g>
-
-                <!-- 勘测人员2 -->
-                <g transform="translate(580, 700)" fill="rgba(35,35,40,0.9)">
-                    <circle cx="0" cy="0" r="9"/>
-                    <rect x="-6" y="7" width="12" height="28" rx="3"/>
-                    <line x1="-6" y1="35" x2="-9" y2="52" stroke="rgba(35,35,40,0.9)" stroke-width="4"/>
-                    <line x1="6" y1="35" x2="9" y2="52" stroke="rgba(35,35,40,0.9)" stroke-width="4"/>
-                    <!-- 手持板子 -->
-                    <rect x="10" y="12" width="14" height="20" fill="rgba(200,200,180,0.9)"/>
-                </g>
-
-                <!-- 勘测车辆 -->
-                <g transform="translate(720, 750)">
-                    <rect x="0" y="0" width="50" height="22" fill="rgba(50,55,60,0.95)" rx="3"/>
-                    <rect x="8" y="-10" width="34" height="14" fill="rgba(40,45,50,0.95)" rx="2"/>
-                    <rect x="12" y="-8" width="12" height="10" fill="rgba(150,200,220,0.6)"/>
-                    <rect x="26" y="-8" width="12" height="10" fill="rgba(150,200,220,0.6)"/>
-                    <circle cx="12" cy="24" r="7" fill="rgba(20,20,25,0.95)"/>
-                    <circle cx="38" cy="24" r="7" fill="rgba(20,20,25,0.95)"/>
-                    <!-- 车顶天线 -->
-                    <line x1="25" y1="-10" x2="25" y2="-22" stroke="rgba(50,55,60,0.9)" stroke-width="2"/>
-                    <circle cx="25" cy="-24" r="2" fill="rgba(255,200,50,0.9)"/>
-                </g>
-
-                <!-- 路灯 -->
-                <g transform="translate(180, 670)">
-                    <line x1="0" y1="0" x2="0" y2="60" stroke="rgba(40,40,45,0.85)" stroke-width="3"/>
-                    <ellipse cx="0" cy="-3" rx="12" ry="5" fill="rgba(255,240,150,0.85)" opacity="0.7"/>
-                </g>
-                <g transform="translate(1100, 660)">
-                    <line x1="0" y1="0" x2="0" y2="60" stroke="rgba(40,40,45,0.85)" stroke-width="3"/>
-                    <ellipse cx="0" cy="-3" rx="12" ry="5" fill="rgba(255,240,150,0.85)" opacity="0.7"/>
-                </g>
-
-                <!-- 近景透视地面 -->
-                <g fill="rgba(50,80,50,0.45)">
-                    <polygon points="0,820 720,780 1440,820 1440,900 0,900"/>
+                <!-- 角落坐标刻度（蓝图感） -->
+                <g fill="rgba(0,220,255,0.30)" font-size="11" font-family="monospace">
+                    <text x="24" y="28">N 32&#176;06&#8242;</text>
+                    <text x="24" y="884">FIG.01 / FTTH SURVEY</text>
+                    <text x="1340" y="884" text-anchor="end">REV 2.0</text>
                 </g>
             </svg>
         </div>
@@ -1141,7 +1054,7 @@
                 <button class="mode-btn active" onclick="switchMode('story')" id="btnModeStory">剧情演绎模式</button>
                 <button class="mode-btn" onclick="switchMode('explore')" id="btnModeExplore">自由探索模式</button>
             </div>
-            <div class="title">站点工程勘查设计虚拟仿真实训平台</div>
+            <div class="title">光纤到户工程勘察设计虚拟仿真实训平台</div>
             <button class="end-btn" onclick="showEndScreen()">结束实训</button>
         </div>
 
@@ -1149,7 +1062,7 @@
         <div class="main-header">
             <div class="deco">
                 <span class="line"></span>
-                <h1 id="sceneTitle">站点工程勘查设计虚拟仿真实训平台</h1>
+                <h1 id="sceneTitle">光纤到户工程勘察设计虚拟仿真实训平台</h1>
                 <span class="line"></span>
             </div>
             <div class="clock">
@@ -1184,7 +1097,7 @@
             <div class="end-card">
                 <h2>🎉 实训完成</h2>
                 <div class="score-badge" id="scoreBox"></div>
-                <p>恭喜你完成了站点勘查设计实训任务！<br>你可以选择重新开始或返回主菜单。</p>
+                <p>恭喜你完成了 FTTH 光纤到户工程勘察设计实训任务！<br>你可以选择重新开始或返回主菜单。</p>
                 <button class="btn-back" onclick="restart()">重新开始</button>
                 <button class="btn-secondary" onclick="goBack()">返回主菜单</button>
             </div>
@@ -1212,7 +1125,7 @@
                         <span onclick="document.getElementById('genTopic').value='光纤铺设工程勘察'">光纤铺设勘察</span>
                         <span onclick="document.getElementById('genTopic').value='数据中心机房设计'">数据中心设计</span>
                         <span onclick="document.getElementById('genTopic').value='通信线路故障排查'">线路故障排查</span>
-                        <span onclick="document.getElementById('genTopic').value='5G基站勘察设计'">5G基站勘察</span>
+                        <span onclick="document.getElementById('genTopic').value='FTTH光纤到户勘察设计'">FTTH勘察</span>
                     </div>
                     <div class="gen-btns">
                         <button class="gen-btn gen-submit" id="genBtn" onclick="generateScenario()">生成实训</button>
@@ -1221,7 +1134,9 @@
                 </div>
                 <div class="gen-loading" id="genLoading">
                     <div class="spinner"></div>
-                    <p>AI正在生成实训场景，请稍候…</p>
+                    <p id="genLoadMain">AI 正在创作专属实训场景…</p>
+                    <p class="gen-load-sub" id="genLoadSub"></p>
+                    <p class="gen-load-time">已等待 <b id="genLoadSec">0</b> 秒 · 预计 1~3 分钟，请勿关闭窗口</p>
                 </div>
             </div>
         </div>
@@ -1232,7 +1147,7 @@
         let currentStep = 0;
         let score = 0;          // 实训得分
         let scoreMax = 0;       // 满分
-        let quizIdx = 0;        // 摸测子步骤
+        let quizIdx = 0;        // 工具选型子步骤
         let quizSel = [];       // 当前子步选择
         let quizDone = false;
         let mapShown = false;
@@ -1251,144 +1166,158 @@
                 type: 'text',
                 title: "背景",
                 label: "项目背景",
-                content: `一所大学为加快智慧校园的数字化转型，准备在校内搭建5G通信网络，用于支持智能教学、跨校区协同以及各类物联网终端的接入。当地某通信运营商承接了此项目，现需对校内重点区域开展5G信号覆盖情况摸排与基站点位规划，涉及范围涵盖<b>教学楼、图书馆、学生宿舍楼以及室外公共活动区域</b>。<br><br>当前处于<b>5G校园网建设项目首期工程</b>的勘察设计环节，需要前往现场实测、采集核心参数、筛选备选站址，并最终形成完整的设计方案。<br><br><span style="color:#4dd8ff">请代入勘察设计工程师的角色，依次完成本次实训的各项任务。</span>`,
+                content: `某市新建大型居住社区"云锦华庭"已完成主体建设，共计 <b>28 栋高层住宅、约 4200 户</b>居民，配套有社区服务中心、幼儿园及地下车库。当地广电运营商承接了该小区的<b>光纤到户（FTTH）接入网建设</b>项目，要求实现千兆宽带入户、4K/8K 超高清电视及物联网智能家居业务承载。<br><br>当前处于<b>FTTH 工程勘察设计阶段</b>，需对小区管道路由、光缆分纤点、分光器部署位置及入户方式进行现场勘测，采集关键参数后形成完整的设计方案。<br><br><span style="color:#4dd8ff">请代入传输线路设计工程师的角色，依次完成本次实训的各项任务。</span>`,
                 nextText: "下一步"
             },
             {
                 type: 'choice',
                 title: "岗位选择",
                 label: "岗位选择",
-                intro: `<b>人物描述：</b>本次勘查任务为智慧校园5G基站建设，需要对校园内的教学楼、图书馆、宿舍楼及户外活动区进行信号覆盖评估和基站选址。<br><b>请根据任务要求，从以下角色中选择适合完成基站选址的人员：</b>`,
+                intro: `<b>任务描述：</b>云锦华庭小区 FTTH 光纤到户工程，需完成小区管道路由勘测、光缆分纤点选址、分光比设计及入户光缆敷设方案。<br><b>请从以下角色中选择最适合主导本次勘察设计任务的人员：</b>`,
                 options: [
-                    { name: "无线网络与规划优化工程师", sub: "负责覆盖评估、站址规划与网络优化", good: true, feedback: "✅ 选择正确！无线网络与规划优化工程师正是本次5G校园勘察设计的核心岗位——负责覆盖评估、候选站址规划与网络优化，本次任务将由此岗位主导完成。" },
-                    { name: "无线通信基站设计工程师", sub: "负责基站设备选型与参数设计", feedback: "❌ 该岗位偏重后期的基站设备选型与参数设计，本次任务的核心是<b>现场勘查与站址规划</b>，建议选择无线网络与规划优化工程师。" },
-                    { name: "通信概算员", sub: "负责工程预算与造价核算", feedback: "❌ 通信概算员负责工程预算与造价核算，属于<b>后续概算阶段</b>的岗位，不适合主导本次选址勘察任务。" },
-                    { name: "通信督导", sub: "负责施工现场督导与质量检查", feedback: "❌ 通信督导负责施工阶段的现场督导与质量检查，是<b>建设实施阶段</b>的岗位，而当前处于规划勘察阶段。" },
-                    { name: "基站通信工程师", sub: "负责基站设备安装与维护", feedback: "❌ 基站通信工程师负责基站设备的安装与维护，属于<b>工程落地阶段</b>，本次勘察选址任务应由规划优化工程师承担。" }
+                    { name: "传输线路设计工程师", sub: "负责光缆路由、分光网络与入户方案设计", good: true, feedback: "✅ 选择正确！传输线路设计工程师正是本次 FTTH 勘察设计的核心岗位——负责管道路由勘测、分光器部署规划与入户光缆方案设计，本次任务将由此岗位主导完成。" },
+                    { name: "光纤熔接工程师", sub: "负责现场光纤熔接与测试", feedback: "❌ 光纤熔接工程师负责施工阶段的熔接与测试，属于<b>工程实施阶段</b>的岗位，当前处于勘察设计阶段。" },
+                    { name: "通信工程概预算员", sub: "负责工程预算与造价核算", feedback: "❌ 概预算员负责造价核算，属于<b>后续概算阶段</b>，不适合主导本次勘察设计任务。" },
+                    { name: "驻地网监理工程师", sub: "负责施工现场监理与质量管控", feedback: "❌ 监理工程师负责施工阶段的质量监督，是<b>建设实施阶段</b>的岗位，当前处于规划勘察阶段。" },
+                    { name: "光缆线路维护员", sub: "负责光缆线路日常巡检与故障抢修", feedback: "❌ 维护员负责建成后的运维与抢修，属于<b>运维阶段</b>，本次勘察设计应由传输线路设计工程师承担。" }
                 ]
             },
             {
                 type: 'quiz',
-                title: "站点摸测",
-                label: "站点摸测",
+                title: "勘察工具准备",
+                label: "工具准备",
                 subSteps: [
                     {
-                        q: "第一步：选择网络制式",
+                        q: "第一步：选择光纤路由勘测的核心仪表",
                         options: [
-                            { name: "GSM网络", sub: "2G网络" }, { name: "TD-SCDMA网络", sub: "3G网络" },
-                            { name: "WCDMA网络", sub: "3G网络" }, { name: "CDMA网络", sub: "3G网络" },
-                            { name: "广电700M网络", sub: "700M频段" }, { name: "LTE网络", sub: "4G网络" },
-                            { name: "5GNR网络", sub: "5G网络" }
+                            { name: "OTDR 光时域反射仪", sub: "测光缆长度/损耗/断点" },
+                            { name: "光功率计", sub: "测光信号功率" },
+                            { name: "光纤识别仪", sub: "识别在用/备用纤芯" },
+                            { name: "万用表", sub: "测电气参数" }
                         ],
-                        correct: 6
+                        correct: 0
                     },
                     {
-                        q: "第二步：选择测试SIM卡",
+                        q: "第二步：选择入户光缆类型（高层住宅）",
                         options: [
-                            { name: "2G全网通SIM卡", sub: "仅支持2G网络" }, { name: "3G全网通SIM卡", sub: "支持2G/3G网络" },
-                            { name: "4G全网通SIM卡", sub: "支持2G/3G/4G网络" }, { name: "5G全网通SIM卡", sub: "支持2G/3G/4G/5G网络" }
+                            { name: "G.652D 室外光缆", sub: "适用于长距传输" },
+                            { name: "G.657A2 蝶形引入光缆", sub: "抗弯曲、易敷设" },
+                            { name: "G.655 非零色散光缆", sub: "适用于DWDM系统" },
+                            { name: "GYTA 层绞式铠装光缆", sub: "适用于直埋/架空" }
                         ],
-                        correct: 3
+                        correct: 1
                     },
                     {
-                        q: "第三步：选择测试手机",
+                        q: "第三步：选择分光器类型（FTTH 一级分光）",
                         options: [
-                            { name: "2G全网通测试手机", sub: "仅支持2G频段" }, { name: "3G全网通测试手机", sub: "支持2G/3G网络" },
-                            { name: "4G全网通测试手机", sub: "支持2G/3G/4G网络" }, { name: "5G全网通测试手机", sub: "支持2G/3G/4G/5G网络" }
+                            { name: "FBT 熔融拉锥型", sub: "分光比固定" },
+                            { name: "PLC 平面光波导型", sub: "均分、低偏振相关损耗" },
+                            { name: "AWG 阵列波导光栅", sub: "用于WDM系统" }
                         ],
-                        correct: 3
+                        correct: 1
                     },
                     {
-                        q: "第四步：选择测试装备",
+                        q: "第四步：施工前必须携带的安全与辅助装备（多选）",
                         options: [
-                            { name: "笔记本电脑", sub: "测试数据处理设备" }, { name: "USB接口GPS", sub: "位置定位设备" },
-                            { name: "加密狗", sub: "测试软件授权设备" }, { name: "测试软件", sub: "网络测试工具" }
+                            { name: "安全帽", sub: "防坠落物" },
+                            { name: "反光背心", sub: "道路施工警示" },
+                            { name: "光纤切割刀", sub: "端面制备" },
+                            { name: "红光笔", sub: "寻障/通断测试" }
                         ],
-                        multi: true, required: 3
+                        multi: true, required: [0, 1, 2, 3]
                     }
                 ]
             },
             {
                 type: 'text',
-                title: "基站参数查询",
+                title: "光纤参数查询",
                 label: "参数查询",
-                content: `通过查询3GPP标准和设备手册，你了解到：<br><br>· 5G NR频段 <b>n78（3.5GHz）</b>在城区覆盖半径约 <b>300-500米</b>；<br>· 使用 <b>64T64R Massive MIMO</b> 天线可提升频谱效率 3-5 倍；<br>· 小区最大发射功率为 <b>24 dBm</b>；<br>· 广播信道功率配比 PBCH = 30 dBm。<br><br><span style="color:#4dd8ff">这些参数将作为下一步基站选址与设计的核心依据。</span>`,
+                content: `通过查阅 YD/T 标准与设备手册，你了解到：<br><br>· G.657A2 蝶形光缆在 <b>1310nm</b> 窗口衰减 ≤ <b>0.36 dB/km</b>，<b>1550nm</b> 窗口 ≤ <b>0.22 dB/km</b>；<br>· 1×32 PLC 分光器插入损耗典型值 <b>16.5 dB</b>，1×16 约 <b>13.5 dB</b>；<br>· 活接头（SC/APC）单端插入损耗 ≤ <b>0.3 dB</b>；<br>· 光纤熔接损耗平均值 ≤ <b>0.05 dB/点</b>；<br>· GPON 系统光功率预算（B+ 类）为 <b>28 dB</b>。<br><br><span style="color:#4dd8ff">以上参数将作为分光比选择与链路损耗核算的核心依据。</span>`,
                 nextText: "开始选址"
             },
             {
                 type: 'siteselect',
-                title: "基站选址",
-                label: "基站选址",
-                intro: `请结合<b>信号热力图</b>与现场环境，在校园中为本批次5G基站选择合适的建设位置。点击位置查看选址分析，找到<b>最合理</b>的站址后点击"选址确认"。`,
+                title: "分光器选址",
+                label: "分光选址",
+                intro: `请结合<b>小区平面图</b>与管道路由条件，为本次 FTTH 工程选择一级分光器的部署位置。点击位置查看分析，找到<b>最合理</b>的分纤点后点击"选址确认"。`,
                 spots: [
                     {
-                        name: "位置1", ok: true, x: 46, y: 38,
-                        feedback: `✅ <b>选址分析（位置1 · 中心教学楼楼顶）：</b>视野开阔，天线挂高充足，可高效覆盖教学楼、图书馆与宿舍区；楼顶便于施工与后续维护，市电与传输引入方便。是本次基站建设的<b>理想站址</b>！`
+                        name: "位置1", ok: true, x: 48, y: 42,
+                        feedback: `✅ <b>选址分析（位置1 · 小区中心地下车库通信机房）：</b>位于小区几何中心，到各楼栋距离均衡，管孔资源充足、便于二级分光器箱引入；机房有市电与接地，便于设备维护。是本次 FTTH 分光器部署的<b>理想位置</b>！`
                     },
                     {
-                        name: "位置2", ok: false, x: 78, y: 30,
-                        feedback: `❌ <b>选址分析（位置2 · 实验楼群旁）：</b>1. 周边高层实验楼遮挡严重，可能导致校园内信号覆盖分布不均衡。2. 信号覆盖范围可能得不到有效利用，造成通信资源的闲置。3. 该区域建筑密集，天线施工与后期维护难度较大。`
+                        name: "位置2", ok: false, x: 80, y: 25,
+                        feedback: `❌ <b>选址分析（位置2 · 东北角设备间）：</b>1. 偏于一隅，至西南片区楼栋光缆路由过长，超出 GPON 最大传输距离预算。2. 管道路由需穿越多个化粪池与绿化区，施工难度大、维护不便。3. 覆盖范围不均衡，后期扩容受限。`
                     },
                     {
-                        name: "位置3", ok: false, x: 30, y: 66,
-                        feedback: `❌ <b>选址分析（位置3 · 运动场中央）：</b>1. 占用运动场地，影响师生日常活动。2. 信号覆盖范围可能得不到有效利用，造成通信资源的闲置。3. 该区域所提供的通信服务对用户的实际帮助和价值有限。`
+                        name: "位置3", ok: false, x: 22, y: 70,
+                        feedback: `❌ <b>选址分析（位置3 · 小区入口门卫室旁）：</b>1. 距远端楼栋距离过大，链路损耗可能超标。2. 门卫室空间狭小，无专用机房条件，温湿度难以保障。3. 靠近主路，存在施工与安全风险。`
                     },
                     {
-                        name: "位置4", ok: false, x: 62, y: 60,
-                        feedback: `❌ <b>选址分析（位置4 · 校园边缘围墙处）：</b>1. 此区域建设基站，可能导致校园内信号覆盖分布不均衡。2. 信号覆盖范围可能得不到有效利用，造成通信资源的闲置。3. 该区域建设基站，所提供的通信服务对用户的实际帮助和价值有限。`
+                        name: "位置4", ok: false, x: 66, y: 62,
+                        feedback: `❌ <b>选址分析（位置4 · 地下车库坡道侧壁）：</b>1. 坡道区域湿度大、温差大，不符合通信设备运行环境要求。2. 车辆通行易剐蹭光交箱，存在安全隐患。3. 管孔引接需穿越车行道，施工影响大。`
                     },
                     {
-                        name: "位置5", ok: false, x: 20, y: 26,
-                        feedback: `❌ <b>选址分析（位置5 · 高压电塔附近）：</b>1. 此区域存在高压电场和磁场，基站建设过程中可能引发触电、电弧放电等安全事故。2. 强电磁场可能干扰基站通信设备，导致信号传输不稳定、通信质量下降。3. 进行设备维护或升级，需协调电力部门，可能面临停电、封路等复杂情况。`
+                        name: "位置5", ok: false, x: 30, y: 30,
+                        feedback: `❌ <b>选址分析（位置5 · 配电房隔壁）：</b>1. 紧邻强电配电房，电磁干扰可能影响光信号质量与设备稳定。2. 配电房检修时可能波及通信设备。3. 缺乏独立的接地与防雷条件。`
                     }
                 ],
                 correctIdx: 0
             },
             {
                 type: 'survey',
-                title: "基站勘察表填写",
+                title: "光纤勘察表填写",
                 label: "勘察填写",
-                intro: `请根据现场勘查与工程规划资料，填写<b>基站勘察表</b>。带 🔍 的字段可通过<b>专业测量设备</b>现场测量获得（点击"测量"按钮），其余信息可通过右上角"工程规划"参考资料核对。`,
-                tabs: ["基础信息", "基站电源", "传输信息"],
+                intro: `请根据现场勘测与工程规划资料，填写<b>FTTH 光缆勘察表</b>。带 🔍 的字段可通过<b>专业测量设备</b>现场测量获得（点击"测量"按钮），其余信息可通过右上角"工程规划"参考资料核对。`,
+                tabs: ["路由信息", "光缆参数", "分光与入户"],
                 plan: [
-                    [["楼层数", "4"], ["站名", "信息工程大学"], ["站址", "石门市经济开发区天给大道88号"], ["民航/民风问题", "否"], ["层高", "4m"], ["频段", "2600MHZ"], ["经纬度海拔", "经度114.41083，北纬38.02465，海拔52m"]],
-                    [["下行总容量请求数", "8.96Gbit/s"], ["单扇区下行容量", "2.24Gbit/s"], ["机房市电引入位置", "市区电力端引入"], ["引入电源电压", "380V"], ["市电引入距离", "38米"]],
-                    [["传输路由方式", "管道"], ["上传传输机房名称", "开发区承受机房"], ["传输引入距离", "2800m"]]
+                    [["小区名称", "云锦华庭"], ["栋数", "28栋"], ["户数", "4200户"], ["管道材质", "PVCΦ110"], ["管孔占用率", "约65%"], ["敷设方式", "管道+室内暗管"], ["经纬度", "东经118.79632，北纬32.06148"]],
+                    [["主干光缆型号", "GYTA-144B1.3"], ["引入光缆型号", "G.657A2蝶形"], ["光缆总长度", "约15.6km"], ["熔接点数", "约96个"], ["最大链路损耗", "22.8dB"]],
+                    [["一级分光比", "1:8"], ["二级分光比", "1:8"], ["总分光比", "1:64"], ["光交箱位置", "中心车库机房"], ["入户方式", "暗管穿放"]]
                 ],
                 fields: [
-                    { tab: 0, key: "站名", type: "input", ph: "如：信息工程大学" },
-                    { tab: 0, key: "站址", type: "input", ph: "如：××市××区××大道88号" },
-                    { tab: 0, key: "民航/民风问题", type: "select", opts: ["否", "是"] },
-                    { tab: 0, key: "层数", type: "input", ph: "如：4" },
-                    { tab: 0, key: "层高", type: "input", ph: "点击右侧测量获取", measure: { device: "laser", icon: "🔴", name: "激光测距仪", value: "4m" } },
-                    { tab: 0, key: "频段", type: "select", opts: ["700MHZ", "1800MHZ", "2600MHZ", "3500MHZ"] },
-                    { tab: 0, key: "经纬度海拔", type: "input", ph: "点击右侧测量获取", measure: { device: "gps", icon: "📡", name: "USB接口GPS", value: "经度114.41083，北纬38.02465，海拔52m" } },
-                    { tab: 1, key: "下行总容量请求数", type: "input", ph: "如：8.96Gbit/s" },
-                    { tab: 1, key: "单扇区下行容量", type: "input", ph: "如：2.24Gbit/s" },
-                    { tab: 1, key: "机房市电引入位置", type: "select", opts: ["市区电力端引入", "备用发电机引入", "太阳能电源引入"] },
-                    { tab: 1, key: "引入电源电压", type: "select", opts: ["220V", "380V", "10kV"] },
-                    { tab: 1, key: "市电引入距离", type: "input", ph: "点击右侧测量获取", measure: { device: "tape", icon: "📏", name: "激光测距仪", value: "38米" } },
-                    { tab: 2, key: "传输路由方式", type: "select", opts: ["管道", "架空", "直埋"] },
-                    { tab: 2, key: "上传传输机房名称", type: "input", ph: "如：开发区承受机房" },
-                    { tab: 2, key: "传输引入距离", type: "input", ph: "如：2800m" }
+                    { tab: 0, key: "小区名称", type: "input", ph: "如：云锦华庭" },
+                    { tab: 0, key: "栋数", type: "input", ph: "如：28栋" },
+                    { tab: 0, key: "户数", type: "input", ph: "如：4200户" },
+                    { tab: 0, key: "管道材质", type: "select", opts: ["PVCΦ110", "镀锌钢管", "硅芯管", "水泥管块"] },
+                    { tab: 0, key: "管孔占用率", type: "input", ph: "如：约65%" },
+                    { tab: 0, key: "敷设方式", type: "select", opts: ["管道", "架空", "直埋", "管道+室内暗管"] },
+                    { tab: 0, key: "经纬度", type: "input", ph: "点击右侧测量获取", measure: { device: "gps", icon: "📡", name: "USB接口GPS", value: "东经118.79632，北纬32.06148" } },
+                    { tab: 1, key: "主干光缆型号", type: "input", ph: "如：GYTA-144B1.3" },
+                    { tab: 1, key: "引入光缆型号", type: "select", opts: ["G.652D", "G.657A1", "G.657A2", "G.655"] },
+                    { tab: 1, key: "光缆总长度", type: "input", ph: "点击右侧测量获取", measure: { device: "otdr", icon: "📟", name: "OTDR光时域反射仪", value: "约15.6km" } },
+                    { tab: 1, key: "熔接点数", type: "input", ph: "如：约96个" },
+                    { tab: 1, key: "最大链路损耗", type: "input", ph: "点击右侧测量获取", measure: { device: "opm", icon: "🔆", name: "光功率计", value: "22.8dB" } },
+                    { tab: 2, key: "一级分光比", type: "select", opts: ["1:4", "1:8", "1:16", "1:32"] },
+                    { tab: 2, key: "二级分光比", type: "select", opts: ["1:4", "1:8", "1:16"] },
+                    { tab: 2, key: "总分光比", type: "select", opts: ["1:16", "1:32", "1:64", "1:128"] },
+                    { tab: 2, key: "光交箱位置", type: "input", ph: "如：中心车库机房" },
+                    { tab: 2, key: "入户方式", type: "select", opts: ["暗管穿放", "明线钉固", "线槽敷设", "架空引入"] }
                 ]
             },
             {
                 type: 'design',
-                title: "基站设计",
-                label: "基站设计",
-                intro: `综合勘查数据与参数手册，完成<b>最终设计方案</b>。请结合前面的参数查询知识做出选择：`,
+                title: "工程设计",
+                label: "工程设计",
+                intro: `综合勘测数据与标准手册，完成<b>FTTH 最终设计方案</b>。请结合前面的参数查询知识做出选择：`,
                 groups: [
-                    { q: "天线型号", options: ["4T4R 天线", "32T32R Massive MIMO", "64T64R Massive MIMO"], correct: 2 },
-                    { q: "天线挂高", options: ["25 米", "35 米", "45 米"], correct: 1 },
-                    { q: "发射功率", options: ["17.4 dBm", "21 dBm", "24 dBm"], correct: 1 },
-                    { q: "下倾角", options: ["3°", "8°", "15°"], correct: 1 }
+                    { q: "一级分光器部署位置", options: ["小区中心机房", "每栋楼弱电井", "小区入口门卫室"], correct: 0 },
+                    { q: "总分光比设计", options: ["1:16", "1:32", "1:64"], correct: 2 },
+                    { q: "入户光缆选型", options: ["G.652D 室外光缆", "G.657A2 蝶形光缆", "GYTA 铠装光缆"], correct: 1 },
+                    { q: "光连接器类型", options: ["SC/UPC", "SC/APC", "LC/UPC"], correct: 1 }
                 ],
-                result: `最终方案：在校园中心教学楼楼顶部署 1 个 5G 宏基站，配置 64T64R Massive MIMO 天线，挂高 35 米；发射功率 21 dBm，下倾角 8°；小区边缘覆盖预计可满足 98% 区域的信号需求，覆盖教学楼、图书馆、宿舍区及户外活动区。方案已提交审核！`
+                result: `最终方案：在云锦华庭中心车库机房部署 1×8 一级 PLC 分光器，各楼栋弱电井部署 1×8 二级分光器，总分光比 1:64，可覆盖 4096 户（满足 4200 户并预留扩容）；入户采用 G.657A2 蝶形光缆暗管穿放，光连接器使用 SC/APC 以降低回波损耗；链路最大损耗 22.8dB，符合 GPON B+ 类 28dB 光功率预算要求。方案已提交审核！`
+            },
+            {
+                type: 'text',
+                title: "工程复盘",
+                label: "工程复盘",
+                content: `<b>📋 项目回顾：</b><br>本次 FTTH 光纤到户工程勘察设计围绕云锦华庭小区展开，从项目背景理解、岗位角色定位、勘察工具选型、光纤参数核算、分光器选址、勘察表填写到最终方案设计，完整覆盖了<b>传输线路设计工程师</b>的核心工作流。<br><br><b>🔑 关键知识点：</b><br>· <b>分光器选型</b>：PLC 平面光波导型适合 FTTH 均分场景，偏振相关损耗低；<br>· <b>入户光缆</b>：G.657A2 蝶形光缆抗弯曲半径小，适合楼内暗管穿放；<br>· <b>链路预算</b>：需核算光缆损耗 + 分光器损耗 + 接头损耗，确保不超过系统光功率预算（GPON B+ 为 28dB）；<br>· <b>光连接器</b>：模拟视频业务推荐 SC/APC 斜面连接器，回波损耗 ≥ 60dB，优于 UPC。<br><br><b>⚠️ 常见误区：</b>分光器位置偏于一隅导致路由过长损耗超标、入户光缆选型不当造成弯曲损耗过大、忽视强电干扰将光交箱部署于配电房附近。<br><br><span style="color:#4dd8ff">恭喜完成本次 FTTH 工程勘察设计实训！</span>`,
+                nextText: "完成实训"
             }
         ];
-        // 满分：摸测3分 + 选址2分 + 测量3分 + 设计4分
-        scoreMax = 12;
+        // 满分：工具4分 + 选址2分 + 测量3分 + 设计4分
+        scoreMax = 13;
 
         // ============ 初始化 ============
         function init() {
@@ -1525,7 +1454,12 @@
 
         function updateNextBtn(step) {
             const btn = document.getElementById('btnNext');
-            if (step.type === 'quiz') btn.textContent = mapShown ? '下一步' : (quizIdx === step.subSteps.length - 1 ? '查看信号热力图' : '下一步');
+            if (step.type === 'quiz') {
+                const heatPending = (step.heatmap === true && !step._heatDrawn) ||
+                                    (step.heatmap === undefined && !mapShown);
+                btn.textContent = (heatPending && quizIdx === step.subSteps.length - 1)
+                    ? '查看光功率测试图' : '下一步';
+            }
             else if (step.type === 'design') btn.textContent = designDone ? '完成实训' : '提交方案';
             else btn.textContent = step.nextText || '下一步';
         }
@@ -1563,35 +1497,81 @@
             });
         }
 
-        /* ---- 站点摸测（分步选择） ---- */
+        /* ---- 勘察工具准备（分步选择） ---- */
+        function quizHeatOn(step) {
+            // true=本步骤要求测试图且已答完；false=本步骤明确不要图；字段缺失=兼容老数据走全局mapShown
+            if (step.heatmap === true) return !!step._heatDrawn;
+            if (step.heatmap === false) return false;
+            return mapShown;
+        }
+        // quiz 判定与解析揭示（首次作答计分；错也放行，正确项标绿）
+        function quizRequired(sub) {
+            if (sub.multi) return Array.isArray(sub.required) ? sub.required : [sub.required];
+            return [sub.correct];
+        }
+        function revealQuiz(step, sub, grid, fb) {
+            const req = quizRequired(sub);
+            const ok = sub.multi
+                ? (quizSel.length === req.length && req.every(i => quizSel.includes(i)))
+                : quizSel[0] === sub.correct;
+            grid.classList.add('revealed');
+            grid.querySelectorAll('.opt-card').forEach(c => {
+                const i = parseInt(c.dataset.idx);
+                if (req.includes(i)) c.classList.add('right');
+                else if (quizSel.includes(i)) c.classList.add('wrong');
+            });
+            fb.className = 'feedback-bar show ' + (ok ? 'good' : 'bad');
+            if (sub.multi) {
+                fb.innerHTML = ok ? '✓ <b>全部选对</b>，可进入下一步'
+                                  : '✗ <b>选择不全或选入了无关项</b>，正确项已标绿，请阅读各项解析后继续';
+            } else {
+                fb.innerHTML = ok ? '✓ <b>回答正确</b>，可进入下一步'
+                                  : '✗ <b>回答不正确</b>，正确答案已标绿，请阅读各项解析后继续';
+            }
+            if (!step._scored) step._scored = [];
+            if (!step._scored[quizIdx]) { if (ok) addScore(1); step._scored[quizIdx] = true; }
+            if (!step._qlock) step._qlock = {};
+            step._qlock[quizIdx] = true;
+            updateNextBtn(step);
+        }
+
         function renderQuiz(step, content) {
-            if (mapShown) { renderHeatmap(content); return; }
+            if (quizHeatOn(step)) { renderHeatmap(content); return; }
+            // 多 quiz 步骤：小题索引按步骤隔离
+            quizIdx = (typeof step._qidx === 'number') ? step._qidx : 0;
             const sub = step.subSteps[quizIdx];
             quizSel = [];
             content.innerHTML = `
                 <div class="opt-intro">${sub.q}${sub.multi ? '<span style="color:#ffd66b;font-size:12px">（可多选）</span>' : ''}</div>
-                <div class="opt-grid" id="quizGrid">${sub.options.map((o, i) => optCardHtml(o, i, sub.multi)).join('')}</div>
+                <div class="opt-grid quiz-grid" id="quizGrid">${sub.options.map((o, i) => optCardHtml(o, i, sub.multi)).join('')}</div>
                 <div class="feedback-bar" id="quizFb"></div>`;
-            content.querySelectorAll('#quizGrid .opt-card').forEach(card => {
+            const grid = content.querySelector('#quizGrid');
+            const fb = content.querySelector('#quizFb');
+            grid.querySelectorAll('.opt-card').forEach(card => {
                 card.addEventListener('click', () => {
+                    if (step._qlock && step._qlock[quizIdx]) return; // 已判定，锁定
                     const idx = parseInt(card.dataset.idx);
                     if (sub.multi) {
                         card.classList.toggle('selected');
                         quizSel = quizSel.includes(idx) ? quizSel.filter(x => x !== idx) : quizSel.concat(idx);
                     } else {
-                        content.querySelectorAll('.opt-card').forEach(c => c.classList.remove('selected'));
-                        card.classList.add('selected');
                         quizSel = [idx];
+                        // 单选：点选即判定并揭示解析
+                        grid.querySelectorAll('.opt-card').forEach(c => c.classList.remove('selected'));
+                        card.classList.add('selected');
+                        revealQuiz(step, sub, grid, fb);
                     }
                 });
             });
+            // 恢复已判定小题的揭示态（理论上只会前进，此处兜底）
+            if (step._qlock && step._qlock[quizIdx]) revealQuiz(step, sub, grid, fb);
         }
 
-        /* ---- 信号热力图 ---- */
+        /* ---- 光功率测试图 ---- */
         function renderHeatmap(content) {
             const legend = `
                 <div class="heat-legend">
-                    <div style="color:#8fc7ff;font-weight:700;margin-bottom:2px">RSRP(dBm):</div>
+                    <div style="color:#8fc7ff;font-weight:700;margin-bottom:2px">光功率(dBm):</div>
                     <div class="li"><span class="sw" style="background:#e03131"></span>[-140,-115]</div>
                     <div class="li"><span class="sw" style="background:#f59f00"></span>(-115,-105]</div>
                     <div class="li"><span class="sw" style="background:#ffe066"></span>(-105,-95]</div>
@@ -1604,7 +1584,7 @@
             const R = (x1, y1, x2, y2, color) =>
                 `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="7" stroke-linecap="round"/>`;
             content.innerHTML = `
-                <div class="opt-step-label">第五步：室外信号强度测试结果</div>
+                <div class="opt-step-label">第五步：小区光功率测试结果</div>
                 <div style="display:flex;gap:12px;align-items:stretch">
                     <svg viewBox="0 0 560 300" style="flex:1;background:#f8f9fa;border-radius:8px;min-height:250px">
                         ${R(40, 70, 520, 70, '#e03131')}
@@ -1612,31 +1592,31 @@
                         ${R(300, 20, 300, 280, '#f59f00')}
                         ${R(40, 170, 520, 170, '#ffe066')}
                         ${R(430, 130, 430, 280, '#51cf66')}
-                        ${B(50, 25, 80, 32, '教学楼1')}
-                        ${B(190, 25, 80, 32, '教学楼2')}
-                        ${B(330, 25, 80, 32, '实验楼', 10)}
-                        ${B(50, 95, 80, 32, '宿舍1', 10)}
-                        ${B(190, 95, 90, 32, '校医院', 10)}
-                        ${B(330, 95, 80, 32, '图书馆', 10)}
-                        ${B(50, 195, 80, 32, '男生宿舍', 10)}
-                        ${B(190, 195, 90, 32, '女生宿舍', 10)}
-                        ${B(330, 195, 80, 32, '食堂', 10)}
-                        ${B(50, 240, 80, 32, '操场1', 10)}
-                        ${B(190, 240, 90, 32, '操场2', 10)}
+                        ${B(50, 25, 80, 32, '1-3栋')}
+                        ${B(190, 25, 80, 32, '4-7栋')}
+                        ${B(330, 25, 80, 32, '8-10栋', 10)}
+                        ${B(50, 95, 80, 32, '11-14栋', 10)}
+                        ${B(190, 95, 90, 32, '社区中心', 10)}
+                        ${B(330, 95, 80, 32, '幼儿园', 10)}
+                        ${B(50, 195, 80, 32, '15-18栋', 10)}
+                        ${B(190, 195, 90, 32, '19-22栋', 10)}
+                        ${B(330, 195, 80, 32, '23-26栋', 10)}
+                        ${B(50, 240, 80, 32, '地下车库', 10)}
+                        ${B(190, 240, 90, 32, '27-28栋', 10)}
                         <g opacity="0.85">
                             <circle cx="465" cy="90" r="26" fill="none" stroke="#2f9e44" stroke-width="2"/>
                             <circle cx="465" cy="90" r="14" fill="rgba(47,158,68,0.35)"/>
-                            <text x="465" y="94" text-anchor="middle" font-size="10" fill="#2b8a3e">基站</text>
+                            <text x="465" y="94" text-anchor="middle" font-size="10" fill="#2b8a3e">光交</text>
                         </g>
                     </svg>
                     ${legend}
                 </div>
                 <div class="feedback-bar show" style="margin-top:10px">
-                    📡 <b>测试结论：</b>校园主干道以 <b style="color:#ff8787">弱覆盖（红/橙）</b>为主，宿舍区与食堂周边 <b style="color:#ffe066">中等覆盖（黄）</b>，仅现有站址周边小范围为良好覆盖。需新建 5G 基站补盲——请进入下一步完成选址。
+                    📡 <b>测试结论：</b>小区东北片区以 <b style="color:#ff8787">弱光功率（红/橙）</b>为主，中心区域与西南片区 <b style="color:#ffe066">中等覆盖（黄）</b>，仅现有光交箱周边小范围为良好。需合理部署分光器补盲——请进入下一步完成选址。
                 </div>`;
         }
 
-        /* ---- 基站选址 ---- */
+        /* ---- 分光器选址 ---- */
         function siteMapSvg() {
             const bld = (x, y, w, h, f) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="${f}" stroke="rgba(0,60,110,0.5)"/>`;
             return `<svg viewBox="0 0 420 260" style="width:100%;height:100%;display:block">
@@ -1650,15 +1630,15 @@
                 ${bld(30, 30, 90, 50, '#8d6e63')}${bld(140, 25, 110, 55, '#a1887f')}${bld(280, 30, 100, 50, '#8d6e63')}
                 ${bld(35, 120, 80, 45, '#bcaaa4')}${bld(150, 115, 100, 50, '#a1887f')}${bld(290, 120, 90, 45, '#8d6e63')}
                 <ellipse cx="60" cy="215" rx="40" ry="20" fill="#66bb6a" stroke="rgba(255,255,255,0.3)"/>
-                <text x="60" y="219" text-anchor="middle" font-size="10" fill="#e8f5e9">操场</text>
+                <text x="60" y="219" text-anchor="middle" font-size="10" fill="#e8f5e9">中心花园</text>
                 <ellipse cx="350" cy="218" rx="42" ry="20" fill="#66bb6a" stroke="rgba(255,255,255,0.3)"/>
-                <text x="350" y="222" text-anchor="middle" font-size="10" fill="#e8f5e9">运动场</text>
+                <text x="350" y="222" text-anchor="middle" font-size="10" fill="#e8f5e9">儿童活动区</text>
                 <line x1="0" y1="95" x2="420" y2="95" stroke="#eceff1" stroke-width="10" opacity="0.85"/>
                 <line x1="0" y1="185" x2="420" y2="185" stroke="#eceff1" stroke-width="10" opacity="0.85"/>
                 <line x1="120" y1="0" x2="120" y2="260" stroke="#eceff1" stroke-width="9" opacity="0.85"/>
                 <line x1="265" y1="0" x2="265" y2="260" stroke="#eceff1" stroke-width="9" opacity="0.85"/>
                 <g opacity="0.9"><polygon points="392,20 398,42 386,42" fill="#ff8f00"/><line x1="392" y1="42" x2="392" y2="62" stroke="#5d4037" stroke-width="3"/><line x1="384" y1="48" x2="400" y2="48" stroke="#5d4037" stroke-width="2"/></g>
-                <text x="392" y="76" text-anchor="middle" font-size="9" fill="#fff59d">高压电塔</text>
+                <text x="392" y="76" text-anchor="middle" font-size="9" fill="#fff59d">配电房</text>
                 <g transform="translate(210,130)"><circle r="9" fill="#ff5252" opacity="0.9"/><circle r="16" fill="none" stroke="#ff5252" opacity="0.5"/><circle r="24" fill="none" stroke="#ff5252" opacity="0.25"/></g>
             </svg>`;
         }
@@ -1698,12 +1678,14 @@
                 confirmBtn.textContent = '✅ 已确认选址';
                 const s = step.spots[siteSel];
                 if (s.ok && !step._scored) { addScore(2); step._scored = true; }
-                fb.innerHTML += `<div style="margin-top:6px;color:#5eff9b">已确认站址！点击"下一步"进入基站勘察表填写。</div>`;
+                fb.innerHTML += `<div style="margin-top:6px;color:#5eff9b">已确认！点击"下一步"继续。</div>`;
             });
         }
 
         /* ---- 勘察表填写 ---- */
         function renderSurvey(step, content) {
+            // 多 survey 步骤：tab 索引按步骤隔离
+            surveyTab = (typeof step._tab === 'number') ? step._tab : 0;
             content.innerHTML = `
                 <div class="opt-intro" style="font-size:12.5px;margin-bottom:8px">${step.intro}</div>
                 <button class="plan-fab" onclick="showPlan()">工程规划</button>
@@ -1714,6 +1696,7 @@
                 t.addEventListener('click', () => {
                     collectSurveyVals(content, step);
                     surveyTab = parseInt(t.dataset.tab);
+                    step._tab = surveyTab;
                     content.querySelectorAll('.survey-tab').forEach(x => x.classList.remove('active'));
                     t.classList.add('active');
                     renderSurveyTab(step, content);
@@ -1764,7 +1747,7 @@
                 const input = document.querySelector(`#surveyForm input[data-key="${f.key}"]`);
                 if (input) { input.value = f.measure.value; input.classList.add('filled-auto'); }
                 f._val = f.measure.value;
-                if (!surveyMeasured.has(f.key)) { surveyMeasured.add(f.key); addScore(1); }
+                if (!f._measured) { f._measured = true; addScore(1); }
                 setTimeout(() => { pop.remove(); btn.disabled = false; btn.textContent = '✅ 已测'; }, 1100);
             }, 1500);
         }
@@ -1773,7 +1756,7 @@
             const modal = document.createElement('div');
             modal.className = 'plan-modal';
             modal.innerHTML = `<div class="plan-card"><h4>📋 工程规划（参考资料）</h4>
-                ${step.plan.map((rows, i) => `<div style="color:#4dd8ff;font-size:12px;margin:8px 0 2px">—— ${step.tabs[i]} ——</div>` +
+                ${(step.plan || []).map((rows, i) => `<div style="color:#4dd8ff;font-size:12px;margin:8px 0 2px">—— ${step.tabs[i] || ('参考' + (i + 1))} ——</div>` +
                     rows.map(r => `<div class="plan-row"><span class="k">${r[0]}</span><span class="v">${r[1]}</span></div>`).join('')).join('')}
                 <div class="plan-close"><button class="measure-btn" onclick="this.closest('.plan-modal').remove()">关闭</button></div></div>`;
             document.querySelector('#dialogPanel .dialog-box').appendChild(modal);
@@ -1782,15 +1765,15 @@
             return step.fields.filter(f => f.type === 'input' && !(f._val || '').trim()).length;
         }
 
-        /* ---- 基站设计 ---- */
+        /* ---- 工程设计 ---- */
         function renderDesign(step, content) {
-            designSel = [-1, -1, -1, -1];
+            designSel = new Array(step.groups.length).fill(-1);
             designDone = false;
             content.innerHTML = `<div class="opt-intro">${step.intro}</div>` +
                 step.groups.map((g, gi) => `
                     <div class="opt-step-label">${gi + 1}. ${g.q}</div>
-                    <div class="opt-grid design-g" data-g="${gi}" style="grid-template-columns:repeat(3,1fr)">${g.options.map((o, oi) => optCardHtml(o, oi, false)).join('')}</div>
-                `).join('') +
+                    <div class="opt-grid design-g" data-g="${gi}" style="grid-template-columns:repeat(${Math.min((g.options || []).length, 4)},1fr)">${g.options.map((o, oi) => optCardHtml(o, oi, false)).join('')}</div>`
+                ).join('') +
                 `<div class="design-result" id="designResult"></div>`;
             content.querySelectorAll('.design-g').forEach(grid => {
                 bindSingleSel(grid, (idx) => { designSel[parseInt(grid.dataset.g)] = idx; });
@@ -1801,7 +1784,8 @@
             const rows = step.groups.map((g, gi) => {
                 const ok = designSel[gi] === g.correct;
                 if (ok) got++;
-                return `<div>· <b>${g.q}</b>：${g.options[designSel[gi]]} ${ok ? '✅' : '❌（建议：' + g.options[g.correct] + '）'}</div>`;
+                const pick = o => (typeof o === 'string' ? o : (o && o.name) || '');
+                return `<div>· <b>${g.q}</b>：${pick(g.options[designSel[gi]])} ${ok ? '✅' : '❌（建议：' + pick(g.options[g.correct]) + '）'}</div>`;
             }).join('');
             addScore(got);
             designDone = true;
@@ -1818,28 +1802,43 @@
             const content = document.getElementById('dialogContent');
             switch (step.type) {
                 case 'choice':
-                    if (choiceSel < 0) { alert('请先选择一个岗位角色'); return; }
+                    if (choiceSel < 0) { alert('请先做出选择后继续'); return; }
                     break;
                 case 'quiz': {
-                    if (mapShown) break;
+                    const wantHeat = step.heatmap === true;
+                    const legacyHeat = step.heatmap === undefined;
+                    if (quizHeatOn(step)) break;
                     const sub = step.subSteps[quizIdx];
-                    if (!sub.multi && quizSel.length !== 1) { alert('请先完成选择'); return; }
-                    if (sub.multi) {
-                        if (!quizSel.includes(sub.required)) { alert('网络测试离不开测试软件，请选择"测试软件"！'); return; }
-                    }
-                    if (!step._scored) step._scored = [];
-                    if (!step._scored[quizIdx]) {
-                        if (sub.multi) { if (quizSel.includes(sub.required)) addScore(1); }
-                        else if (quizSel[0] === sub.correct) addScore(1);
-                        step._scored[quizIdx] = true;
+                    const locked = step._qlock && step._qlock[quizIdx];
+                    if (!locked) {
+                        // 首次点"下一步"：多选在此判定；单选点选时已即时判定
+                        if (sub.multi) {
+                            if (!quizSel.length) { alert('请先选择后继续'); return; }
+                            revealQuiz(step, sub,
+                                content.querySelector('#quizGrid'),
+                                content.querySelector('#quizFb'));
+                            return; // 先揭示对错与解析，再点一次进入下一题
+                        }
+                        if (quizSel.length !== 1) { alert('请先完成本题选择'); return; }
+                        revealQuiz(step, sub,
+                            content.querySelector('#quizGrid'),
+                            content.querySelector('#quizFb'));
+                        return;
                     }
                     if (quizIdx < step.subSteps.length - 1) {
                         quizIdx++;
+                        step._qidx = quizIdx;
                         renderQuiz(step, content);
                         updateNextBtn(step);
                         return;
                     }
-                    if (!mapShown) {
+                    if (wantHeat && !step._heatDrawn) {
+                        step._heatDrawn = true;
+                        renderHeatmap(content);
+                        updateNextBtn(step);
+                        return;
+                    }
+                    if (legacyHeat && !mapShown) {
                         mapShown = true;
                         renderHeatmap(content);
                         updateNextBtn(step);
@@ -1858,7 +1857,7 @@
                 }
                 case 'design':
                     if (!designDone) {
-                        if (designSel.some(v => v < 0)) { alert('请完成全部 4 项设计选择'); return; }
+                        if (designSel.some(v => v < 0)) { alert(`请完成全部 ${step.groups.length} 项决策选择`); return; }
                         submitDesign(step);
                         return;
                     }
@@ -1880,7 +1879,7 @@
         function showEndScreen() {
             const pct = scoreMax ? Math.round(score / scoreMax * 100) : 100;
             const stars = pct >= 90 ? 5 : pct >= 75 ? 4 : pct >= 60 ? 3 : pct >= 40 ? 2 : 1;
-            const comment = pct >= 90 ? '优秀！你就是王牌勘察工程师！' :
+            const comment = pct >= 90 ? '优秀！你就是王牌传输线路设计工程师！' :
                 pct >= 75 ? '良好！离专家只差一点点！' :
                 pct >= 60 ? '合格！继续加油！' : '再接再厉，回看流程再来一次！';
             document.getElementById('scoreBox').innerHTML = `
@@ -1894,8 +1893,12 @@
         function restart() {
             score = 0; quizIdx = 0; quizSel = []; quizDone = false; mapShown = false;
             choiceSel = -1; siteSel = -1; siteConfirmed = false; surveyTab = 0;
-            surveyMeasured = new Set(); designSel = [-1, -1, -1, -1]; designDone = false;
-            steps.forEach(s => { s._scored = undefined; s.fields && s.fields.forEach(f => f._val = ''); });
+            surveyMeasured = new Set(); designSel = new Array((steps.find(s => s.type === 'design') || { groups: [] }).groups.length || 4).fill(-1); designDone = false;
+            steps.forEach(s => {
+                s._scored = undefined; s._qlock = undefined;
+                s._qidx = 0; s._heatDrawn = false; s._tab = 0;
+                s.fields && s.fields.forEach(f => { f._val = ''; f._measured = false; });
+            });
             document.getElementById('endScreen').classList.remove('show');
             goToStep(0);
         }
@@ -1925,6 +1928,34 @@
         function hideGenPanel() {
             document.getElementById('genMask').classList.remove('show');
         }
+        let genTimer = null;
+        function startGenLoading() {
+            const lines = [
+                '正在梳理"接报→研判→现场→处置→验收"工程全流程…',
+                '正在编写告警研判与诊断推理题目…',
+                '正在设计仪表实测数据与判定门限…',
+                '正在布置误判陷阱与安全红线考点…',
+                '正在生成处置方案、验收标准与复盘总结…'
+            ];
+            let sec = 0, li = 0;
+            document.getElementById('genLoadSub').textContent = lines[0];
+            document.getElementById('genLoadSec').textContent = '0';
+            stopGenLoading();
+            genTimer = setInterval(() => {
+                sec++;
+                document.getElementById('genLoadSec').textContent = sec;
+                if (sec % 8 === 0) { li = (li + 1) % lines.length; document.getElementById('genLoadSub').textContent = lines[li]; }
+            }, 1000);
+        }
+        function stopGenLoading() {
+            if (genTimer) { clearInterval(genTimer); genTimer = null; }
+        }
+        function backToGenForm() {
+            stopGenLoading();
+            document.getElementById('genForm').style.display = 'block';
+            document.getElementById('genLoading').classList.remove('show');
+            document.getElementById('genBtn').disabled = false;
+        }
         async function generateScenario() {
             const topic = document.getElementById('genTopic').value.trim();
             const question = document.getElementById('genQuestion').value.trim();
@@ -1934,29 +1965,36 @@
             document.getElementById('genForm').style.display = 'none';
             document.getElementById('genLoading').classList.add('show');
             document.getElementById('genBtn').disabled = true;
+            startGenLoading();
 
+            // 前端 500 秒超时保护（略大于后端 480 秒墙钟）
+            const ctrl = new AbortController();
+            const timeoutId = setTimeout(() => ctrl.abort(), 500000);
             try {
                 const resp = await fetch('/api/scenario/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ topic, question })
+                    body: JSON.stringify({ topic, question }),
+                    signal: ctrl.signal
                 });
+                clearTimeout(timeoutId);
                 const data = await resp.json();
                 if (!resp.ok) {
                     alert('生成失败：' + (data.error || '未知错误'));
-                    document.getElementById('genForm').style.display = 'block';
-                    document.getElementById('genLoading').classList.remove('show');
-                    document.getElementById('genBtn').disabled = false;
+                    backToGenForm();
                     return;
                 }
                 // 成功：替换steps并重新初始化
+                stopGenLoading();
                 hideGenPanel();
                 loadNewScenario(data.steps, data.scoreMax, topic);
             } catch (e) {
-                alert('请求失败：' + e.message);
-                document.getElementById('genForm').style.display = 'block';
-                document.getElementById('genLoading').classList.remove('show');
-                document.getElementById('genBtn').disabled = false;
+                clearTimeout(timeoutId);
+                const aborted = e.name === 'AbortError';
+                alert(aborted
+                    ? '生成超时（已等待约8分钟），AI 当前排队较忙，请点击"生成实训"重试一次'
+                    : '请求失败：' + e.message);
+                backToGenForm();
             }
         }
 
@@ -1964,12 +2002,28 @@
             // 重置所有状态
             currentStep = 0; score = 0; quizIdx = 0; quizSel = []; quizDone = false; mapShown = false;
             choiceSel = -1; siteSel = -1; siteConfirmed = false; surveyTab = 0;
-            surveyMeasured = new Set(); designSel = [-1, -1, -1, -1]; designDone = false;
+            surveyMeasured = new Set(); designSel = []; designDone = false;
+
+            // AI 返回数据轻度规范化（防御缺失字段导致渲染崩溃）
+            newSteps.forEach(s => {
+                if (s.type === 'survey') {
+                    if (!Array.isArray(s.tabs) || !s.tabs.length) s.tabs = ['现场记录'];
+                    if (!Array.isArray(s.plan) || s.plan.length !== s.tabs.length) {
+                        s.plan = s.tabs.map(() => []);
+                    }
+                }
+                if (s.type === 'quiz' && !Array.isArray(s.subSteps)) s.subSteps = [];
+                if (s.type === 'design' && !Array.isArray(s.groups)) s.groups = [];
+            });
 
             // 替换steps数据和满分
             steps = newSteps;
             scoreMax = newScoreMax || 12;
-            steps.forEach(s => { s._scored = undefined; s.fields && s.fields.forEach(f => f._val = ''); });
+            steps.forEach(s => {
+                s._scored = undefined; s._qlock = undefined;
+                s._qidx = 0; s._heatDrawn = false; s._tab = 0;
+                s.fields && s.fields.forEach(f => { f._val = ''; f._measured = false; });
+            });
 
             // 更新页面标题
             const titleEl = document.getElementById('sceneTitle');

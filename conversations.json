@@ -114,6 +114,46 @@
   "teacher:teacher1": {
     "convs": [
       {
+        "id": "ef091b39b759",
+        "title": "你好",
+        "created_at": "2026-10-15T16:57:45",
+        "updated_at": "2026-10-15T16:57:57",
+        "messages": [
+          {
+            "content": "你好",
+            "isUser": true,
+            "image": null,
+            "timestamp": 1792054665467
+          },
+          {
+            "content": "你好！我是灵智尚人，通信工程专家助手。\n\n专注于移动通信、网络架构、通信原理及工程实战等领域，可为你提供专业知识解答、故障排查思路或技术方案建议。\n\n有什么通信工程相关的问题需要我协助吗？",
+            "isUser": false,
+            "image": null,
+            "timestamp": 1792054677096
+          }
+        ]
+      },
+      {
+        "id": "71df8179543f",
+        "title": "什么是波束赋形？请用两句话解释",
+        "created_at": "2026-10-15T14:40:39",
+        "updated_at": "2026-10-15T14:41:06",
+        "messages": [
+          {
+            "content": "什么是波束赋形？请用两句话解释",
+            "isUser": true,
+            "image": null,
+            "timestamp": 1792046439736
+          },
+          {
+            "content": "波束赋形是5G Massive MIMO的关键技术，通过调控天线阵列各单元的相位与幅度，将发射能量聚焦成指向特定终端的窄波束，从而提升信号覆盖能力与传输速率。该技术依托CSI-RS或SRS等参考信号完成信道测量与波束管理，实现收发双方的空间精准匹配，并有效降低对非目标用户的干扰。",
+            "isUser": false,
+            "image": null,
+            "timestamp": 1792046466962
+          }
+        ]
+      },
+      {
         "id": "4c8690f627ee",
         "title": "你好",
         "created_at": "2026-09-02T12:59:35",

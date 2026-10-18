@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI模拟面试</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1250px;
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 20px;
+        }
+
+        /* ============ 左栏 ============ */
+        .config-panel {
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            padding: 25px;
+            height: calc(100vh - 80px);
+            overflow-y: auto;
+        }
+
+        .back-btn {
+            padding: 10px 20px;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            color: #667eea;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .back-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .panel-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .config-card {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.04) 0%, rgba(118, 75, 162, 0.04) 100%);
+            border: 1.5px solid rgba(102, 126, 234, 0.15);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .config-card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-group {
+            margin-bottom: 14px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 6px;
+        }
+
+        .input-group select,
+        .input-group input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e0e0e8;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+            background: white;
+            cursor: pointer;
+        }
+
+        .input-group select:focus,
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .start-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 6px;
+        }
+
+        .start-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .start-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ============ 历史记录 ============ */
+        .history-section {
+            margin-top: 8px;
+        }
+
+        .history-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .history-item {
+            background: #f8f9fc;
+            border: 1.5px solid #e8e8f0;
+            border-radius: 10px;
+            padding: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .history-item:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+
+        .history-item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .history-company {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .history-score {
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2px 10px;
+            border-radius: 10px;
+        }
+
+        .history-meta {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .history-tag {
+            font-size: 12px;
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.08);
+            padding: 2px 8px;
+            border-radius: 8px;
+        }
+
+        .history-date {
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        .history-empty {
+            text-align: center;
+            color: #bbb;
+            padding: 30px 0;
+            font-size: 14px;
+        }
+
+        /* ============ 右栏 ============ */
+        .chat-panel {
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            height: calc(100vh - 80px);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 18px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .chat-icon {
+            font-size: 30px;
+        }
+
+        .chat-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .chat-subtitle {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-top: 2px;
+        }
+
+        .messages-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fc;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 12px;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .message.assistant .avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .message.user .avatar {
+            background: #e9eff6;
+        }
+
+        .message-content {
+            max-width: 72%;
+            padding: 14px 18px;
+            border-radius: 16px;
+            line-height: 1.6;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-top-right-radius: 4px;
+        }
+
+        .message.assistant .message-content {
+            background: white;
+            color: #333;
+            border-top-left-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .message-content pre {
+            background: #1a1a2e;
+            color: #e8e8e8;
+            padding: 14px 16px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 12px 0;
+            font-family: 'SF Mono', Consolas, Monaco, 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .message-content code {
+            font-family: 'SF Mono', Consolas, Monaco, 'Courier New', monospace;
+        }
+
+        .message-content strong {
+            font-weight: 700;
+        }
+
+        .typing-indicator .message-content {
+            padding: 18px 20px;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .typing-dots span {
+            width: 8px;
+            height: 8px;
+            background: #667eea;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite;
+        }
+
+        .typing-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-8px); }
+        }
+
+        .empty-chat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #999;
+            text-align: center;
+        }
+
+        .empty-chat-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .empty-chat-text {
+            font-size: 18px;
+        }
+
+        /* ============ 输入区 ============ */
+        .input-area {
+            padding: 16px 20px;
+            background: white;
+            border-top: 1px solid #e8e8f0;
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            flex-shrink: 0;
+        }
+
+        .input-box {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f0f2f5;
+            border-radius: 12px;
+        }
+
+        .input-box textarea {
+            width: 100%;
+            padding: 14px 16px;
+            border: none;
+            background: transparent;
+            font-size: 15px;
+            resize: none;
+            max-height: 120px;
+            outline: none;
+            font-family: inherit;
+            border-radius: 12px;
+        }
+
+        .send-btn {
+            padding: 14px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            white-space: nowrap;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .end-btn {
+            padding: 14px 20px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            white-space: nowrap;
+        }
+
+        .end-btn:hover:not(:disabled) {
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .end-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* ============ 评分报告 ============ */
+        .score-report {
+            display: none;
+            padding: 24px;
+            background: #f8f9fc;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .score-report-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .score-content {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            line-height: 1.8;
+            color: #333;
+            font-size: 14px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .score-content pre {
+            background: #1a1a2e;
+            color: #e8e8e8;
+            padding: 14px 16px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 12px 0;
+            font-family: 'SF Mono', Consolas, Monaco, 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .score-content strong {
+            font-weight: 700;
+        }
+
+        .score-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 24px;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 14px rgba(102, 126, 234, 0.35);
+        }
+
+        .score-badge span {
+            font-size: 24px;
+        }
+
+        .score-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .score-actions button {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .score-actions .again-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .score-actions .again-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .score-actions .back-history-btn {
+            background: #f0f2f5;
+            color: #555;
+        }
+
+        .score-actions .back-history-btn:hover {
+            background: #e8e8f0;
+        }
+
+        /* ============ 移动端适配 ============ */
+        @media (max-width: 768px) {
+            body { padding: 12px !important; }
+            .container {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+            .config-panel {
+                height: auto;
+                max-height: none;
+                padding: 18px;
+            }
+            .chat-panel {
+                height: 70vh;
+                min-height: 400px;
+            }
+            .panel-title { font-size: 19px; }
+            .config-card { padding: 16px; }
+            .chat-header { padding: 14px 16px; gap: 10px; }
+            .chat-icon { font-size: 26px; }
+            .chat-title { font-size: 16px; }
+            .chat-subtitle { font-size: 12px; }
+            .messages-area { padding: 14px; }
+            .message { gap: 8px; margin-bottom: 14px; }
+            .avatar { width: 34px; height: 34px; font-size: 18px; }
+            .message-content { max-width: 82%; padding: 10px 14px; font-size: 14px; }
+            .input-area { padding: 10px 12px; gap: 8px; }
+            .input-box textarea { font-size: 15px; padding: 10px 12px; }
+            .send-btn { padding: 10px 14px; font-size: 14px; }
+            .end-btn { padding: 10px 12px; font-size: 13px; }
+            .empty-chat-icon { font-size: 48px; }
+            .empty-chat-text { font-size: 15px; }
+            .start-btn { padding: 12px; font-size: 15px; }
+            .score-report { padding: 16px; }
+            .score-content { padding: 16px; font-size: 13px; }
+            .score-badge { font-size: 15px; padding: 8px 18px; }
+            .score-badge span { font-size: 20px; }
+        }
+
+        @media (max-width: 480px) {
+            body { padding: 8px !important; }
+            .config-panel { padding: 14px; }
+            .chat-header { padding: 12px 14px; }
+            .chat-icon { font-size: 22px; }
+            .chat-title { font-size: 15px; }
+            .message-content { max-width: 86%; padding: 9px 12px; font-size: 13.5px; }
+            .input-area { padding: 8px 10px; }
+            .send-btn { padding: 9px 12px; font-size: 13px; }
+            .end-btn { padding: 9px 10px; font-size: 12px; }
+            .input-group select, .input-group input { padding: 9px 12px; font-size: 14px; }
+        }
+    </style>
+    <link rel="stylesheet" href="/static/global_buttons.css">
+    <link rel="stylesheet" href="/static/global_pages.css">
+</head>
+<body>
+    <div class="container">
+        <!-- ============ 左栏：面试配置 + 历史记录 ============ -->
+        <div class="config-panel">
+            <a href="/" class="back-btn">← 返回</a>
+
+            <h2 class="panel-title">🎯 AI模拟面试</h2>
+
+            <!-- 面试配置卡片 -->
+            <div class="config-card">
+                <div class="config-card-title">⚙️ 面试配置</div>
+
+                <div class="input-group">
+                    <label>目标企业</label>
+                    <div id="companyWrap">
+                        <select id="companySelect">
+                            <option value="">请先加载企业列表...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>目标岗位</label>
+                    <div id="positionWrap">
+                        <select id="positionSelect">
+                            <option value="">请先选择企业</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>面试类型</label>
+                    <select id="typeSelect">
+                        <option value="技术面">技术面</option>
+                        <option value="HR面">HR面</option>
+                        <option value="综合面">综合面</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>难度</label>
+                    <select id="difficultySelect">
+                        <option value="简单">简单</option>
+                        <option value="中等" selected>中等</option>
+                        <option value="困难">困难</option>
+                    </select>
+                </div>
+
+                <button class="start-btn" id="startBtn" onclick="startInterview()">🚀 开始模拟面试</button>
+            </div>
+
+            <!-- 历史面试记录 -->
+            <div class="history-section">
+                <div class="history-title">📜 历史面试记录</div>
+                <div class="history-list" id="historyList">
+                    <div class="history-empty">加载中...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ 右栏：聊天 + 评分 ============ -->
+        <div class="chat-panel">
+            <!-- 面试信息栏 -->
+            <div class="chat-header">
+                <div class="chat-icon">💼</div>
+                <div>
+                    <div class="chat-title" id="chatTitle">AI模拟面试</div>
+                    <div class="chat-subtitle" id="chatSubtitle">请选择面试配置并点击开始</div>
+                </div>
+            </div>
+
+            <!-- 消息区 -->
+            <div class="messages-area" id="messagesArea">
+                <div class="empty-chat" id="emptyState">
+                    <div class="empty-chat-icon">🎯</div>
+                    <div class="empty-chat-text">请选择面试配置并点击开始</div>
+                </div>
+            </div>
+
+            <!-- 输入区 -->
+            <div class="input-area" id="inputArea" style="display: none;">
+                <div class="input-box">
+                    <textarea id="userInput" placeholder="请输入你的回答...（Enter发送，Shift+Enter换行）"
+                              rows="1" onkeydown="handleKeyDown(event)" oninput="autoResize()"></textarea>
+                </div>
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()">发送</button>
+                <button class="end-btn" id="endBtn" onclick="endInterview()">结束面试并评分</button>
+            </div>
+
+            <!-- 评分报告区域 -->
+            <div class="score-report" id="scoreReport">
+                <div class="score-report-title">📊 面试评分报告</div>
+                <div class="score-content" id="scoreContent">
+                    <span style="color:#999;">正在生成评分报告...</span>
+                </div>
+                <div class="score-actions" id="scoreActions" style="display:none;">
+                    <button class="again-btn" onclick="resetInterview()">再来一次</button>
+                    <button class="back-history-btn" onclick="backToChat()">返回</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============ 全局状态 ============
+        let currentInterviewId = null;      // 当前面试ID
+        let isGenerating = false;           // 是否正在生成中
+        let companyJobMap = {};             // 企业 -> 岗位列表映射
+        let isCustomCompany = false;        // 是否自定义企业
+        let isCustomPosition = false;       // 是否自定义岗位
+
+        // ============ 初始化 ============
+        // 检查登录状态和角色
+        fetch('/current-user').then(r => r.json()).then(u => {
+            if (!u.authenticated) {
+                window.location.href = '/login';
+                return;
+            }
+            // 加载企业岗位列表
+            loadCompanyPositions();
+            // 加载历史记录
+            loadRecords();
+        }).catch(() => {
+            window.location.href = '/login';
+        });
+
+        // ============ 加载企业/岗位列表 ============
+        async function loadCompanyPositions() {
+            try {
+                const response = await fetch('/api/career-match');
+                const data = await response.json();
+                if (!data.success) {
+                    document.getElementById('companySelect').innerHTML =
+                        '<option value="">加载企业失败</option>';
+                    return;
+                }
+                const jobs = data.jobs || [];
+                // 提取企业名并去重
+                const companyNames = [];
+                companyJobMap = {};
+                jobs.forEach(j => {
+                    const company = (j.company || '').trim();
+                    if (!company) return;
+                    if (!companyJobMap[company]) {
+                        companyJobMap[company] = [];
+                        companyNames.push(company);
+                    }
+                    const position = (j.position || '').trim();
+                    if (position && !companyJobMap[company].includes(position)) {
+                        companyJobMap[company].push(position);
+                    }
+                });
+
+                // 填充企业下拉框
+                const companySelect = document.getElementById('companySelect');
+                companySelect.innerHTML = '<option value="">请选择企业</option>' +
+                    companyNames.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('') +
+                    '<option value="__custom__">✏️ 自定义输入</option>';
+            } catch (error) {
+                console.error('加载企业列表失败:', error);
+                document.getElementById('companySelect').innerHTML =
+                    '<option value="">加载企业失败</option>';
+            }
+        }
+
+        // ============ 企业选择联动（事件委托） ============
+        document.addEventListener('change', function(e) {
+            if (e.target && e.target.id === 'companySelect' && e.target.tagName === 'SELECT') {
+                handleCompanyChange(e.target.value);
+            }
+            if (e.target && e.target.id === 'positionSelect' && e.target.tagName === 'SELECT') {
+                handlePositionChange(e.target.value);
+            }
+        });
+
+        // 企业选择变化处理
+        function handleCompanyChange(val) {
+            const companyWrap = document.getElementById('companyWrap');
+            const positionWrap = document.getElementById('positionWrap');
+            isCustomPosition = false; // 切换企业时重置岗位为下拉模式
+
+            if (val === '__custom__') {
+                // 切换为自定义输入企业名
+                isCustomCompany = true;
+                companyWrap.innerHTML =
+                    '<input type="text" id="companyInput" placeholder="请输入企业名称" style="width:calc(100% - 70px);padding:10px 14px;border:2px solid #e0e0e8;border-radius:8px;font-size:14px;" oninput="onCustomCompanyInput()">' +
+                    '<a href="javascript:restoreCompanySelect()" style="font-size:13px;color:#667eea;margin-left:8px;white-space:nowrap;">↩ 选择</a>';
+                document.getElementById('companyInput').focus();
+                positionWrap.innerHTML = '<select id="positionSelect">' +
+                    '<option value="">请选择或自定义岗位</option>' +
+                    '<option value="__custom__">✏️ 自定义输入</option>' +
+                    '</select>';
+            } else if (val) {
+                // 联动填充该企业的岗位
+                const positions = companyJobMap[val] || [];
+                positionWrap.innerHTML = '<select id="positionSelect">' +
+                    '<option value="">请选择岗位</option>' +
+                    positions.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('') +
+                    '<option value="__custom__">✏️ 自定义输入</option>' +
+                    '</select>';
+            } else {
+                positionWrap.innerHTML = '<select id="positionSelect">' +
+                    '<option value="">请先选择企业</option>' +
+                    '</select>';
+            }
+        }
+
+        // 岗位选择变化处理
+        function handlePositionChange(val) {
+            const positionWrap = document.getElementById('positionWrap');
+            if (val === '__custom__') {
+                // 切换为自定义输入岗位
+                isCustomPosition = true;
+                positionWrap.innerHTML =
+                    '<input type="text" id="positionInput" placeholder="请输入岗位名称" style="width:calc(100% - 70px);padding:10px 14px;border:2px solid #e0e0e8;border-radius:8px;font-size:14px;">' +
+                    '<a href="javascript:restorePositionSelect()" style="font-size:13px;color:#667eea;margin-left:8px;white-space:nowrap;">↩ 选择</a>';
+                document.getElementById('positionInput').focus();
+            } else {
+                isCustomPosition = false;
+            }
+        }
+
+        // 自定义企业输入时联动岗位
+        function onCustomCompanyInput() {
+            const companyInput = document.getElementById('companyInput');
+            if (!companyInput) return;
+            const val = companyInput.value.trim();
+            const positionWrap = document.getElementById('positionWrap');
+            if (val && companyJobMap[val]) {
+                const positions = companyJobMap[val];
+                positionWrap.innerHTML = '<select id="positionSelect">' +
+                    '<option value="">请选择岗位</option>' +
+                    positions.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('') +
+                    '<option value="__custom__">✏️ 自定义输入</option>' +
+                    '</select>';
+            } else {
+                positionWrap.innerHTML = '<select id="positionSelect">' +
+                    '<option value="">请选择或自定义岗位</option>' +
+                    '<option value="__custom__">✏️ 自定义输入</option>' +
+                    '</select>';
+            }
+        }
+
+        // 恢复企业下拉框
+        function restoreCompanySelect() {
+            isCustomCompany = false;
+            const companyNames = Object.keys(companyJobMap);
+            const companyWrap = document.getElementById('companyWrap');
+            companyWrap.innerHTML = '<select id="companySelect">' +
+                '<option value="">请选择企业</option>' +
+                companyNames.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('') +
+                '<option value="__custom__">✏️ 自定义输入</option>' +
+                '</select>';
+            // 清空岗位
+            isCustomPosition = false;
+            document.getElementById('positionWrap').innerHTML = '<select id="positionSelect">' +
+                '<option value="">请先选择企业</option>' +
+                '</select>';
+        }
+
+        // 恢复岗位下拉框
+        function restorePositionSelect() {
+            isCustomPosition = false;
+            const companyVal = getCompanyValue();
+            const positionWrap = document.getElementById('positionWrap');
+            const positions = (companyVal && companyJobMap[companyVal]) || [];
+            positionWrap.innerHTML = '<select id="positionSelect">' +
+                '<option value="">请选择岗位</option>' +
+                positions.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('') +
+                '<option value="__custom__">✏️ 自定义输入</option>' +
+                '</select>';
+        }
+
+        // 获取企业值
+        function getCompanyValue() {
+            // 优先检查自定义输入框
+            const companyInput = document.getElementById('companyInput');
+            if (companyInput) return companyInput.value.trim();
+            const companySelect = document.getElementById('companySelect');
+            if (companySelect && companySelect.tagName === 'SELECT') {
+                const val = companySelect.value;
+                return val === '__custom__' ? '' : val;
+            }
+            return '';
+        }
+
+        // 获取岗位值
+        function getPositionValue() {
+            // 优先检查自定义输入框
+            const positionInput = document.getElementById('positionInput');
+            if (positionInput) return positionInput.value.trim();
+            const positionSelect = document.getElementById('positionSelect');
+            if (positionSelect && positionSelect.tagName === 'SELECT') {
+                const val = positionSelect.value;
+                return val === '__custom__' ? '' : val;
+            }
+            return '';
+        }
+
+        // ============ 开始面试（SSE流式） ============
+        async function startInterview() {
+            if (isGenerating) return;
+
+            const company = getCompanyValue();
+            const position = getPositionValue();
+            const interviewType = document.getElementById('typeSelect').value;
+            const difficulty = document.getElementById('difficultySelect').value;
+
+            if (!company) { alert('请选择或输入目标企业'); return; }
+            if (!position) { alert('请选择或输入目标岗位'); return; }
+
+            // 更新面试信息栏
+            document.getElementById('chatTitle').textContent = company + ' · ' + position;
+            document.getElementById('chatSubtitle').textContent = interviewType + ' · ' + difficulty;
+
+            // 清空消息区，显示typing
+            clearMessages();
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('scoreReport').style.display = 'none';
+            document.getElementById('scoreActions').style.display = 'none';
+            addTypingIndicator();
+
+            const startBtn = document.getElementById('startBtn');
+            startBtn.disabled = true;
+            isGenerating = true;
+
+            try {
+                const response = await fetch('/api/mock-interview/start', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        company: company,
+                        position: position,
+                        interview_type: interviewType,
+                        difficulty: difficulty
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('请求失败: ' + response.status);
+                }
+
+                removeTypingIndicator();
+                const msgDiv = addMessage('', false); // 面试官消息气泡
+                let fullText = '';
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                while (true) {
+                    const {done, value} = await reader.read();
+                    if (done) break;
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n\n');
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const dataStr = line.slice(6);
+                            if (dataStr === '[DONE]') continue;
+                            try {
+                                const data = JSON.parse(dataStr);
+                                if (data.interview_id) {
+                                    // 收到面试ID，显示输入区
+                                    currentInterviewId = data.interview_id;
+                                    showChatInput();
+                                } else if (data.content) {
+                                    // 流式追加内容
+                                    fullText += data.content;
+                                    msgDiv.innerHTML = '<div style="font-size:11px;color:#999;margin-bottom:4px;">✨ AI 生成内容</div>' + formatMessage(fullText);
+                                    scrollToBottom();
+                                } else if (data.error) {
+                                    msgDiv.innerHTML = '<div style="font-size:11px;color:#999;margin-bottom:4px;">✨ AI 生成内容</div>' +
+                                        '<span style="color:#e8463a;">' + escapeHtml(data.error) + '</span>';
+                                }
+                            } catch(e) {}
+                        }
+                    }
+                }
+            } catch (error) {
+                removeTypingIndicator();
+                const errDiv = addMessage('面试启动失败，请稍后重试', false);
+                console.error('开始面试失败:', error);
+            } finally {
+                isGenerating = false;
+                startBtn.disabled = false;
+            }
+        }
+
+        // ============ 发送消息（SSE流式） ============
+        async function sendMessage() {
+            if (!currentInterviewId || isGenerating) return;
+
+            const input = document.getElementById('userInput');
+            const msg = input.value.trim();
+            if (!msg) return;
+
+            // 显示学生消息
+            addMessage(msg, true);
+            input.value = '';
+            input.style.height = 'auto';
+            addTypingIndicator();
+
+            // 禁用输入
+            setInputDisabled(true);
+            isGenerating = true;
+
+            try {
+                const response = await fetch('/api/mock-interview/chat', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        interview_id: currentInterviewId,
+                        message: msg
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('请求失败: ' + response.status);
+                }
+
+                removeTypingIndicator();
+                const msgDiv = addMessage('', false); // 面试官回复气泡
+                let fullText = '';
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                while (true) {
+                    const {done, value} = await reader.read();
+                    if (done) break;
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n\n');
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const dataStr = line.slice(6);
+                            if (dataStr === '[DONE]') continue;
+                            try {
+                                const data = JSON.parse(dataStr);
+                                if (data.content) {
+                                    fullText += data.content;
+                                    msgDiv.innerHTML = '<div style="font-size:11px;color:#999;margin-bottom:4px;">✨ AI 生成内容</div>' + formatMessage(fullText);
+                                    scrollToBottom();
+                                } else if (data.error) {
+                                    msgDiv.innerHTML = '<div style="font-size:11px;color:#999;margin-bottom:4px;">✨ AI 生成内容</div>' +
+                                        '<span style="color:#e8463a;">' + escapeHtml(data.error) + '</span>';
+                                }
+                            } catch(e) {}
+                        }
+                    }
+                }
+            } catch (error) {
+                removeTypingIndicator();
+                addMessage('发送失败，请稍后重试', false);
+                console.error('发送消息失败:', error);
+            } finally {
+                isGenerating = false;
+                setInputDisabled(false);
+                const userInput = document.getElementById('userInput');
+                if (userInput) userInput.focus();
+            }
+        }
+
+        // ============ 结束面试并评分（SSE流式） ============
+        async function endInterview() {
+            if (!currentInterviewId || isGenerating) return;
+            if (!confirm('确定要结束本次面试并生成评分报告吗？')) return;
+
+            // 隐藏输入区，显示评分区
+            document.getElementById('inputArea').style.display = 'none';
+            document.getElementById('scoreReport').style.display = 'block';
+            document.getElementById('scoreActions').style.display = 'none';
+
+            const reportDiv = document.getElementById('scoreContent');
+            reportDiv.innerHTML = '<span style="color:#999;">正在生成评分报告...</span>';
+            let fullText = '';
+            isGenerating = true;
+
+            try {
+                const response = await fetch('/api/mock-interview/end', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({interview_id: currentInterviewId})
+                });
+
+                if (!response.ok) {
+                    throw new Error('请求失败: ' + response.status);
+                }
+
+                reportDiv.innerHTML = '';
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                while (true) {
+                    const {done, value} = await reader.read();
+                    if (done) break;
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n\n');
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const dataStr = line.slice(6);
+                            if (dataStr === '[DONE]') continue;
+                            try {
+                                const data = JSON.parse(dataStr);
+                                if (data.content) {
+                                    fullText += data.content;
+                                    reportDiv.innerHTML = formatMessage(fullText);
+                                } else if (data.error) {
+                                    reportDiv.innerHTML = '<span style="color:#e8463a;">' + escapeHtml(data.error) + '</span>';
+                                }
+                            } catch(e) {}
+                        }
+                    }
+                }
+
+                // 流结束后获取记录详情，显示分数徽章
+                try {
+                    const detailResp = await fetch('/api/mock-interview/records/' + currentInterviewId);
+                    const detail = await detailResp.json();
+                    if (detail.success && detail.record && detail.record.score != null) {
+                        const scoreBadge = document.createElement('div');
+                        scoreBadge.className = 'score-badge';
+                        scoreBadge.innerHTML = '🏆 综合得分：<span>' + escapeHtml(String(detail.record.score)) + '</span>';
+                        reportDiv.insertBefore(scoreBadge, reportDiv.firstChild);
+                    }
+                } catch(e) {}
+
+                // 显示操作按钮
+                document.getElementById('scoreActions').style.display = 'flex';
+            } catch (error) {
+                reportDiv.innerHTML = '<span style="color:#e8463a;">评分生成失败，请稍后重试</span>';
+                document.getElementById('scoreActions').style.display = 'flex';
+                console.error('结束面试失败:', error);
+            } finally {
+                isGenerating = false;
+                // 刷新历史列表
+                loadRecords();
+            }
+        }
+
+        // ============ 显示聊天输入区 ============
+        function showChatInput() {
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('inputArea').style.display = 'flex';
+            document.getElementById('scoreReport').style.display = 'none';
+        }
+
+        // ============ 添加消息 ============
+        function addMessage(content, isUser) {
+            const messagesArea = document.getElementById('messagesArea');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ' + (isUser ? 'user' : 'assistant');
+
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar';
+            avatar.textContent = isUser ? '👤' : '🧑‍💼';
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+
+            // AI生成内容前加标签
+            if (!isUser) {
+                contentDiv.innerHTML = '<div style="font-size:11px;color:#999;margin-bottom:4px;">✨ AI 生成内容</div>' + formatMessage(content);
+            } else {
+                contentDiv.innerHTML = formatMessage(content);
+            }
+
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(contentDiv);
+            messagesArea.appendChild(messageDiv);
+
+            scrollToBottom();
+            return contentDiv; // 返回内容div供流式更新
+        }
+
+        // ============ 格式化消息（简单Markdown渲染） ============
+        function formatMessage(content) {
+            if (!content) return '';
+            let html = escapeHtml(content);
+            // 代码块
+            html = html.replace(/```([\s\S]*?)```/g, function(m, p1) {
+                return '<pre><code>' + p1.replace(/<br>/g, '\n') + '</code></pre>';
+            });
+            // 加粗
+            html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            // 换行
+            html = html.replace(/\n/g, '<br>');
+            // 修复pre标签内的<br>为\n
+            html = html.replace(/<pre><code>([\s\S]*?)<\/code><\/pre>/g, function(m, p1) {
+                return '<pre><code>' + p1.replace(/<br>/g, '\n') + '</code></pre>';
+            });
+            return html;
+        }
+
+        // ============ HTML转义 ============
+        function escapeHtml(text) {
+            if (text == null) return '';
+            const div = document.createElement('div');
+            div.textContent = String(text);
+            return div.innerHTML;
+        }
+
+        // ============ 打字指示器 ============
+        function addTypingIndicator() {
+            const messagesArea = document.getElementById('messagesArea');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message assistant';
+            messageDiv.id = 'typingIndicator';
+
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar';
+            avatar.textContent = '🧑‍💼';
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content typing-indicator';
+            contentDiv.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(contentDiv);
+            messagesArea.appendChild(messageDiv);
+
+            scrollToBottom();
+            return messageDiv;
+        }
+
+        // ============ 移除打字指示器 ============
+        function removeTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+
+        // ============ 清空消息区 ============
+        function clearMessages() {
+            document.getElementById('messagesArea').innerHTML = '';
+        }
+
+        // ============ 滚动到底部 ============
+        function scrollToBottom() {
+            const messagesArea = document.getElementById('messagesArea');
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        }
+
+        // ============ 设置输入框禁用 ============
+        function setInputDisabled(disabled) {
+            const userInput = document.getElementById('userInput');
+            const sendBtn = document.getElementById('sendBtn');
+            if (userInput) userInput.disabled = disabled;
+            if (sendBtn) sendBtn.disabled = disabled;
+        }
+
+        // ============ 键盘事件 ============
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // ============ 自动调整输入框高度 ============
+        function autoResize() {
+            const input = document.getElementById('userInput');
+            if (!input) return;
+            input.style.height = 'auto';
+            input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+        }
+
+        // ============ 加载历史记录列表 ============
+        async function loadRecords() {
+            try {
+                const response = await fetch('/api/mock-interview/records');
+                const data = await response.json();
+                if (!data.success) {
+                    document.getElementById('historyList').innerHTML =
+                        '<div class="history-empty">加载失败</div>';
+                    return;
+                }
+                renderRecords(data.records || []);
+            } catch (error) {
+                console.error('加载历史记录失败:', error);
+                document.getElementById('historyList').innerHTML =
+                    '<div class="history-empty">加载失败</div>';
+            }
+        }
+
+        // ============ 渲染历史记录列表 ============
+        function renderRecords(records) {
+            const container = document.getElementById('historyList');
+            if (records.length === 0) {
+                container.innerHTML = '<div class="history-empty">暂无面试记录</div>';
+                return;
+            }
+            container.innerHTML = records.map(r => {
+                const scoreHtml = (r.score != null && r.score !== undefined) ?
+                    '<span class="history-score">' + escapeHtml(String(r.score)) + '分</span>' : '';
+                const date = r.started_at || r.completed_at || '';
+                return `
+                    <div class="history-item" onclick="loadHistoryRecord('${escapeHtml(r.id)}')">
+                        <div class="history-item-row">
+                            <span class="history-company">${escapeHtml(r.target_company || '未知企业')} · ${escapeHtml(r.target_position || '未知岗位')}</span>
+                            ${scoreHtml}
+                        </div>
+                        <div class="history-meta">
+                            <span class="history-tag">${escapeHtml(r.interview_type || '')}</span>
+                            <span class="history-tag">${escapeHtml(r.difficulty || '')}</span>
+                            <span class="history-tag">🔄 ${r.rounds || 0}轮</span>
+                            <span class="history-date">${escapeHtml(date)}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ============ 加载历史记录详情（回放） ============
+        async function loadHistoryRecord(id) {
+            try {
+                const response = await fetch('/api/mock-interview/records/' + id);
+                const data = await response.json();
+                if (!data.success) {
+                    alert('加载记录失败');
+                    return;
+                }
+                const record = data.record;
+                currentInterviewId = null; // 回放模式不可继续对话
+
+                // 更新面试信息栏
+                document.getElementById('chatTitle').textContent =
+                    (record.target_company || '未知企业') + ' · ' + (record.target_position || '未知岗位');
+                document.getElementById('chatSubtitle').textContent =
+                    (record.interview_type || '') + ' · ' + (record.difficulty || '') + ' · 回放模式';
+
+                // 隐藏输入区，显示消息区
+                document.getElementById('inputArea').style.display = 'none';
+                document.getElementById('scoreReport').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'none';
+                clearMessages();
+
+                // 回放所有消息
+                const messages = record.messages || [];
+                messages.forEach(msg => {
+                    if (msg.role === 'interviewer') {
+                        addMessage(msg.content, false);
+                    } else if (msg.role === 'student') {
+                        addMessage(msg.content, true);
+                    }
+                });
+
+                // 如果有评分报告，显示
+                if (record.score_report) {
+                    document.getElementById('scoreReport').style.display = 'block';
+                    const reportDiv = document.getElementById('scoreContent');
+                    let reportHtml = '';
+                    if (record.score != null && record.score !== undefined) {
+                        reportHtml += '<div class="score-badge">🏆 综合得分：<span>' + escapeHtml(String(record.score)) + '</span></div>';
+                    }
+                    reportHtml += formatMessage(record.score_report);
+                    reportDiv.innerHTML = reportHtml;
+                    document.getElementById('scoreActions').style.display = 'flex';
+                }
+            } catch (error) {
+                console.error('加载历史记录详情失败:', error);
+                alert('加载记录失败');
+            }
+        }
+
+        // ============ 重置面试（再来一次） ============
+        function resetInterview() {
+            currentInterviewId = null;
+            clearMessages();
+            document.getElementById('scoreReport').style.display = 'none';
+            document.getElementById('inputArea').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'flex';
+            document.getElementById('chatTitle').textContent = 'AI模拟面试';
+            document.getElementById('chatSubtitle').textContent = '请选择面试配置并点击开始';
+        }
+
+        // ============ 返回聊天视图 ============
+        function backToChat() {
+            document.getElementById('scoreReport').style.display = 'none';
+            if (currentInterviewId) {
+                document.getElementById('inputArea').style.display = 'flex';
+            } else {
+                document.getElementById('emptyState').style.display = 'flex';
+            }
+        }
+    </script>
+</body>
+</html>

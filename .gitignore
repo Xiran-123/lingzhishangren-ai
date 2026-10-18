@@ -70,6 +70,24 @@ api_key.local
 cookie.txt
 cookies.txt
 
+# ================= 运行时数据（学生信息、错题本等，不上传仓库） =================
+data/
+
+# ================= IDE/编辑器配置 =================
+.trae/
+.vscode/
+.idea/
+*.suo
+*.user
+
+# ================= 部署脚本（含服务器密码，不提交） =================
+_deploy.py
+_rebuild.py
+_push_index.py
+_update_login.py
+_verify_modules.py
+DEPLOY_README.md
+
 # ================= 本地临时/备份/合并参考目录（不提交） =================
 .workbuddy/
 _backup_merged/

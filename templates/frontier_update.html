@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>前沿知识实时更新 · 灵智尚人</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #eef2ff 0%, #dfe7fb 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #1f2937;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        /* ===== 头部 ===== */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 24px 32px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+        }
+        .header-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+        .header h1 { font-size: 26px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
+        .header p { opacity: 0.9; font-size: 14px; }
+        .back-btn {
+            padding: 10px 20px; background: rgba(255,255,255,0.2); border: none; border-radius: 10px;
+            color: #fff; font-size: 14px; cursor: pointer; text-decoration: none; white-space: nowrap;
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.3); }
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 18px; }
+        .stat-card { background: rgba(255,255,255,0.16); backdrop-filter: blur(10px); padding: 14px 18px; border-radius: 12px; }
+        .stat-label { font-size: 12px; opacity: 0.85; margin-bottom: 6px; }
+        .stat-value { font-size: 26px; font-weight: 700; }
+
+        /* ===== 通用面板 ===== */
+        .panel { background: #fff; border-radius: 14px; padding: 18px 20px; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(31,41,55,0.06); }
+        .panel-title { font-size: 15px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+        .panel-title .hint { font-size: 12px; font-weight: 400; color: #6b7280; }
+        .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .btn {
+            padding: 9px 16px; border: none; border-radius: 9px; font-size: 13px; cursor: pointer;
+            background: #667eea; color: #fff; transition: opacity .15s;
+        }
+        .btn:hover { opacity: .88; }
+        .btn:disabled { opacity: .5; cursor: not-allowed; }
+        .btn.ghost { background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; }
+        .btn.ghost.active { background: #667eea; color: #fff; border-color: #667eea; }
+        .btn.ok { background: #10b981; }
+        .btn.warn { background: #f59e0b; }
+        .btn.danger { background: #ef4444; }
+        .btn.purple { background: #8b5cf6; }
+
+        input[type="text"], input[type="number"], select, textarea {
+            padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px;
+            font-size: 13px; font-family: inherit; background: #fff; color: #1f2937;
+        }
+        input[type="text"] { min-width: 200px; }
+        textarea { width: 100%; resize: vertical; line-height: 1.6; }
+        label.inline { font-size: 13px; color: #374151; display: inline-flex; align-items: center; gap: 6px; }
+
+        /* ===== 数据源芯片 ===== */
+        .chip {
+            padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer;
+            border: 1px solid #d1d5db; background: #f9fafb; color: #374151; user-select: none;
+        }
+        .chip.on { background: #eef2ff; border-color: #667eea; color: #4338ca; font-weight: 600; }
+        .chip small { opacity: .7; margin-left: 4px; }
+
+        /* ===== 标签页 ===== */
+        .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+        .tab {
+            padding: 9px 18px; border-radius: 10px; font-size: 13px; cursor: pointer;
+            background: #fff; border: 1px solid #e5e7eb; color: #4b5563;
+        }
+        .tab.active { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; border-color: transparent; font-weight: 600; }
+        .tab .count { opacity: .75; margin-left: 4px; }
+
+        /* ===== 内容卡片 ===== */
+        .card {
+            background: #fff; border-radius: 14px; padding: 18px 20px; margin-bottom: 14px;
+            box-shadow: 0 2px 10px rgba(31,41,55,0.06); border-left: 4px solid #667eea;
+        }
+        .card.approved { border-left-color: #10b981; }
+        .card.rejected { border-left-color: #9ca3af; opacity: .75; }
+        .card.discarded { border-left-color: #ef4444; opacity: .7; }
+        .card.expired { background: #fffdf5; }
+        .card-head { display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+        .card-title { font-size: 16px; font-weight: 700; line-height: 1.5; margin-bottom: 8px; flex: 1 1 60%; }
+        .badges { display: flex; gap: 6px; flex-wrap: wrap; align-items: flex-start; }
+        .badge { font-size: 11px; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+        .badge.src { background: #eef2ff; color: #4338ca; }
+        .badge.tag { background: #f3f4f6; color: #4b5563; }
+        .badge.dispute { background: #fef3c7; color: #b45309; font-weight: 600; }
+        .badge.ai { background: #ede9fe; color: #6d28d9; }
+        .badge.rule { background: #e5e7eb; color: #4b5563; }
+        .badge.kb { background: #d1fae5; color: #047857; }
+        .badge.st-pending { background: #dbeafe; color: #1d4ed8; }
+        .badge.st-approved { background: #d1fae5; color: #047857; }
+        .badge.st-rejected { background: #e5e7eb; color: #4b5563; }
+        .badge.st-discarded { background: #fee2e2; color: #b91c1c; }
+        .badge.age { background: #ffedd5; color: #c2410c; }
+
+        .meta { font-size: 12px; color: #6b7280; margin: 6px 0 12px; }
+        .versions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .version { background: #f9fafb; border-radius: 10px; padding: 12px 14px; font-size: 13px; line-height: 1.7; }
+        .version .vlabel { font-size: 12px; font-weight: 700; color: #667eea; margin-bottom: 6px; }
+        .version.eng .vlabel { color: #0d9488; }
+        .dispute-box {
+            margin-top: 12px; background: #fffbeb; border: 1px dashed #fcd34d; border-radius: 10px;
+            padding: 12px 14px; font-size: 13px; line-height: 1.7; color: #92400e;
+        }
+        .dispute-box .q { font-weight: 700; margin-top: 6px; }
+        .review-note { margin-top: 12px; font-size: 12px; color: #6b7280; }
+        .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; padding-top: 14px; border-top: 1px dashed #e5e7eb; }
+        .actions .btn { padding: 7px 14px; font-size: 12px; }
+
+        .empty { text-align: center; color: #9ca3af; padding: 50px 20px; font-size: 14px; }
+        .empty .big { font-size: 42px; margin-bottom: 10px; }
+
+        /* ===== 弹窗 ===== */
+        .overlay {
+            position: fixed; inset: 0; background: rgba(17,24,39,.55); display: none;
+            align-items: center; justify-content: center; padding: 24px; z-index: 999;
+        }
+        .overlay.show { display: flex; }
+        .modal {
+            background: #fff; border-radius: 16px; width: 100%; max-width: 760px;
+            max-height: 88vh; overflow-y: auto; padding: 24px 26px;
+        }
+        .modal h3 { font-size: 17px; margin-bottom: 6px; }
+        .modal .sub { font-size: 12px; color: #6b7280; margin-bottom: 18px; }
+        .field { margin-bottom: 14px; }
+        .field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #374151; }
+        .modal-foot { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+        /* ===== 提示条 ===== */
+        .toast {
+            position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+            background: #111827; color: #fff; padding: 12px 22px; border-radius: 10px;
+            font-size: 13px; z-index: 1200; opacity: 0; transition: opacity .2s; pointer-events: none;
+        }
+        .toast.show { opacity: .95; }
+
+        .teacher-only { display: none; }
+        body.role-teacher .teacher-only { display: block; }
+        body.role-teacher .teacher-inline { display: inline-flex; }
+        .teacher-inline { display: none; }
+
+        @media (max-width: 760px) {
+            .versions { grid-template-columns: 1fr; }
+            body { padding: 12px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="header-top">
+            <div>
+                <h1>🚀 前沿知识实时更新</h1>
+                <p>与 3GPP、设备商、运营商同步进化 · 抓取 → 教学分级 → 争议标注 → 教师审核 → 老化淘汰</p>
+            </div>
+            <a href="/" class="back-btn">← 返回首页</a>
+        </div>
+        <div class="stats-row" id="statsRow"></div>
+    </div>
+
+    <!-- 教师工具区 -->
+    <div class="panel teacher-only">
+        <div class="panel-title">🛠 抓取与审核控制 <span class="hint" id="schedulerHint"></span></div>
+        <div class="row" style="margin-bottom:12px;">
+            <button class="btn" id="btnFetch">🔄 立即抓取</button>
+            <button class="btn warn" id="btnScan">⏳ 生命周期扫描</button>
+            <button class="btn ghost" id="btnConfig">⚙️ 抓取设置</button>
+        </div>
+        <div class="row" id="sourceChips"></div>
+    </div>
+
+    <!-- 筛选 -->
+    <div class="panel">
+        <div class="row">
+            <input type="text" id="kw" placeholder="搜索标题 / 摘要 / 标签">
+            <select id="srcFilter"><option value="">全部来源</option></select>
+            <select id="tagFilter"><option value="">全部标签</option></select>
+            <button class="btn ghost" id="btnSearch">搜索</button>
+            <button class="btn ghost" id="btnReset">重置</button>
+        </div>
+    </div>
+
+    <div class="tabs" id="tabs"></div>
+    <div id="list"></div>
+</div>
+
+<!-- 详情 / 修订弹窗 -->
+<div class="overlay" id="overlay">
+    <div class="modal">
+        <h3 id="mTitle">内容详情</h3>
+        <div class="sub" id="mSub"></div>
+        <div class="field"><label>标题</label><input type="text" id="mTitleInput" style="width:100%"></div>
+        <div class="field"><label>本科通识版</label><textarea id="mUndergrad" rows="3"></textarea></div>
+        <div class="field"><label>工程师实战版</label><textarea id="mEngineer" rows="4"></textarea></div>
+        <div class="field"><label>标签（逗号分隔）</label><input type="text" id="mTags" style="width:100%"></div>
+        <div class="field">
+            <label class="inline"><input type="checkbox" id="mDispute"> 标记为「前沿争议」话题</label>
+        </div>
+        <div class="field"><label>争议说明</label><textarea id="mDisputeReason" rows="2"></textarea></div>
+        <div class="field"><label>开放讨论题</label><textarea id="mQuestion" rows="2"></textarea></div>
+        <div class="modal-foot">
+            <button class="btn ghost" id="mCancel">关闭</button>
+            <button class="btn purple teacher-inline" id="mRegrade">🤖 重新AI分级</button>
+            <button class="btn ok teacher-inline" id="mSave">保存修订</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    let role = 'student';
+    let allItems = [];
+    let currentTab = 'pending';
+    let currentItem = null;
+    let config = null;
+    let sources = [];
+
+    const STATUS_LABEL = { pending: '待审核', approved: '已发布', rejected: '已驳回', discarded: '已淘汰' };
+
+    function esc(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function toast(msg, ms) {
+        const el = document.getElementById('toast');
+        el.textContent = msg;
+        el.classList.add('show');
+        clearTimeout(el._t);
+        el._t = setTimeout(() => el.classList.remove('show'), ms || 2600);
+    }
+    async function api(url, options) {
+        const res = await fetch(url, Object.assign({ headers: { 'Content-Type': 'application/json' } }, options || {}));
+        if (res.status === 401) { location.href = '/'; return null; }
+        try { return await res.json(); } catch (e) { return { success: false, error: '响应解析失败' }; }
+    }
+
+    // ===================== 初始化 =====================
+    async function init() {
+        const me = await api('/current-user');
+        if (!me || !me.authenticated) { location.href = '/'; return; }
+        role = me.role || 'student';
+        if (role === 'teacher') document.body.classList.add('role-teacher');
+
+        buildTabs();
+        if (role === 'teacher') {
+            await loadConfig();
+            loadSchedulerStatus();
+        }
+        await loadStats();
+        if (role === 'teacher' && config) {
+            document.querySelectorAll('.chip').forEach(c =>
+                c.classList.toggle('on', (config.sources || []).includes(c.dataset.src)));
+        }
+        loadList();
+    }
+
+    function buildTabs() {
+        const tabs = role === 'teacher'
+            ? [['pending', '待审核队列'], ['approved', '已发布'], ['dispute', '前沿争议'], ['aging', '待淘汰'], ['all', '全部']]
+            : [['approved', '前沿动态'], ['dispute', '前沿争议讨论']];
+        if (role !== 'teacher') currentTab = 'approved';
+        document.getElementById('tabs').innerHTML = tabs.map(([k, label]) =>
+            `<div class="tab${k === currentTab ? ' active' : ''}" data-tab="${k}">${label}<span class="count" data-count="${k}"></span></div>`
+        ).join('');
+        document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+            currentTab = t.dataset.tab;
+            document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x === t));
+            renderList();
+        });
+    }
+
+    // ===================== 数据加载 =====================
+    async function loadStats() {
+        const data = await api('/api/frontier/stats');
+        if (!data || !data.success) { document.getElementById('statsRow').innerHTML = ''; return; }
+        const s = data.stats;
+        sources = data.sources || [];
+        const cards = role === 'teacher'
+            ? [['内容总数', s.total], ['待审核', s.pending], ['已发布', s.approved],
+               ['前沿争议', s.dispute], ['待淘汰', s.expired], ['已入库', s.added_to_kb]]
+            : [['前沿动态', s.approved], ['前沿争议', s.dispute], ['累计更新', s.total]];
+        document.getElementById('statsRow').innerHTML = cards.map(([label, val]) =>
+            `<div class="stat-card"><div class="stat-label">${label}</div><div class="stat-value">${val == null ? 0 : val}</div></div>`
+        ).join('');
+
+        const srcSel = document.getElementById('srcFilter');
+        srcSel.innerHTML = '<option value="">全部来源</option>' +
+            sources.map(s => `<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('');
+
+        if (role === 'teacher') {
+            document.getElementById('sourceChips').innerHTML =
+                '<span class="hint" style="font-size:12px;color:#6b7280;">已启用信源：</span>' +
+                sources.map(s => `<span class="chip" data-src="${esc(s.id)}">${esc(s.name)}<small>${esc(s.category || '')}</small></span>`).join('');
+        }
+    }
+
+    async function loadList() {
+        const data = await api('/api/frontier/list');
+        allItems = (data && data.items) || [];
+        // 标签下拉
+        const tags = [...new Set(allItems.flatMap(i => i.tags || []))].sort();
+        document.getElementById('tagFilter').innerHTML = '<option value="">全部标签</option>' +
+            tags.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+        updateCounts();
+        renderList();
+    }
+
+    function bucket(kind) {
+        switch (kind) {
+            case 'pending': return allItems.filter(i => i.status === 'pending');
+            case 'approved': return allItems.filter(i => i.status === 'approved');
+            case 'rejected': return allItems.filter(i => i.status === 'rejected');
+            case 'dispute': return allItems.filter(i => i.is_frontier_dispute && i.status !== 'rejected' && i.status !== 'discarded');
+            case 'aging': return allItems.filter(i => i.expired && i.status !== 'discarded' && i.status !== 'rejected');
+            default: return allItems;
+        }
+    }
+    function updateCounts() {
+        document.querySelectorAll('[data-count]').forEach(el => {
+            const n = bucket(el.dataset.count).length;
+            el.textContent = role === 'teacher' ? `(${n})` : '';
+        });
+    }
+
+    function renderList() {
+        let items = bucket(currentTab);
+        const kw = document.getElementById('kw').value.trim().toLowerCase();
+        const src = document.getElementById('srcFilter').value;
+        const tag = document.getElementById('tagFilter').value;
+        if (kw) items = items.filter(i => (i.title || '').toLowerCase().includes(kw)
+            || (i.summary_raw || '').toLowerCase().includes(kw)
+            || (i.tags || []).some(t => t.toLowerCase().includes(kw)));
+        if (src) items = items.filter(i => i.source_id === src);
+        if (tag) items = items.filter(i => (i.tags || []).includes(tag));
+
+        if (!items.length) {
+            document.getElementById('list').innerHTML =
+                `<div class="empty"><div class="big">📡</div>暂无内容。${role === 'teacher' ? '点击「立即抓取」拉取最新前沿资讯。' : '等待教师发布前沿动态。'}</div>`;
+            return;
+        }
+        document.getElementById('list').innerHTML = items.map(cardHTML).join('');
+        bindActions();
+    }
+
+    function cardHTML(item) {
+        const v = item.difficulty_versions || {};
+        const badges = [];
+        badges.push(`<span class="badge src">${esc(item.source_name || '未知来源')}</span>`);
+        (item.tags || []).slice(0, 5).forEach(t => badges.push(`<span class="badge tag">${esc(t)}</span>`));
+        if (item.is_frontier_dispute) badges.push('<span class="badge dispute">⚡ 前沿争议</span>');
+        badges.push(item.graded_by === 'ai'
+            ? '<span class="badge ai">✨ AI 分级</span>'
+            : (item.graded_by === 'teacher' ? '<span class="badge kb">教师修订</span>' : '<span class="badge rule">规则分级</span>'));
+        if (item.added_to_kb) badges.push('<span class="badge kb">已入知识库</span>');
+        if (role === 'teacher') badges.push(`<span class="badge st-${esc(item.status)}">${STATUS_LABEL[item.status] || item.status}</span>`);
+        if (item.expired) badges.push(`<span class="badge age">⏳ 已过期 ${item.age_days || 0} 天</span>`);
+
+        const disputeBox = item.is_frontier_dispute && (item.dispute_reason || item.discussion_question) ? `
+            <div class="dispute-box">
+                ${item.dispute_reason ? `⚡ ${esc(item.dispute_reason)}` : ''}
+                ${item.discussion_question ? `<div class="q">💬 开放讨论题：${esc(item.discussion_question)}</div>` : ''}
+            </div>` : '';
+
+        const teacherActions = role === 'teacher' ? `
+            <div class="actions">
+                ${item.status === 'pending'
+                    ? `<button class="btn ok" data-act="approve" data-id="${esc(item.id)}">✅ 批准并入库</button>
+                       <button class="btn danger" data-act="reject" data-id="${esc(item.id)}">✖ 驳回</button>`
+                    : `<button class="btn ok" data-act="approve" data-id="${esc(item.id)}">重新入库</button>`}
+                <button class="btn ghost" data-act="edit" data-id="${esc(item.id)}">✏️ 在线修订</button>
+                <button class="btn purple" data-act="regrade" data-id="${esc(item.id)}">🤖 重新AI分级</button>
+                ${item.status !== 'discarded' ? `<button class="btn warn" data-act="discard" data-id="${esc(item.id)}">🗑 淘汰</button>` : ''}
+            </div>` : '';
+
+        return `
+        <div class="card ${esc(item.status)}${item.expired ? ' expired' : ''}">
+            <div class="card-head">
+                <div class="card-title">${esc(item.title)}</div>
+                <div class="badges">${badges.join('')}</div>
+            </div>
+            <div class="meta">📅 ${esc(item.published_at)} ｜ 抓取于 ${esc(item.fetched_at || '')}
+                ${item.valid_until ? `｜ 有效期至 ${esc(item.valid_until)}` : ''}
+                ${item.source_url ? `｜ <a href="${esc(item.source_url)}" target="_blank" rel="noopener" style="color:#667eea;">原文链接</a>` : ''}</div>
+            <div class="versions">
+                <div class="version"><div class="vlabel">🎓 本科通识版</div>${esc(v.undergrad || item.summary_raw || '')}</div>
+                <div class="version eng"><div class="vlabel">🔧 工程师实战版</div>${esc(v.engineer || '')}</div>
+            </div>
+            ${disputeBox}
+            ${item.review_note ? `<div class="review-note">📝 审核备注：${esc(item.review_note)}</div>` : ''}
+            ${teacherActions}
+        </div>`;
+    }
+
+    function bindActions() {
+        document.querySelectorAll('[data-act]').forEach(btn => {
+            btn.onclick = async () => {
+                const id = btn.dataset.id, act = btn.dataset.act;
+                if (act === 'edit') return openEdit(id);
+                if (act === 'approve') {
+                    btn.disabled = true;
+                    const r = await api(`/api/frontier/${id}/review`, { method: 'POST', body: JSON.stringify({ action: 'approve' }) });
+                    toast(r && r.message ? r.message : '操作完成');
+                    await refreshAll();
+                } else if (act === 'reject') {
+                    const note = prompt('驳回原因（可选）：') || '';
+                    const r = await api(`/api/frontier/${id}/review`, { method: 'POST', body: JSON.stringify({ action: 'reject', note }) });
+                    toast(r && r.message ? r.message : '已驳回');
+                    await refreshAll();
+                } else if (act === 'discard') {
+                    if (!confirm('确认淘汰该内容？淘汰后不再参与教学推送。')) return;
+                    const r = await api(`/api/frontier/${id}/discard`, { method: 'POST', body: JSON.stringify({ reason: '内容老化淘汰' }) });
+                    toast(r && r.message ? r.message : '已淘汰');
+                    await refreshAll();
+                } else if (act === 'regrade') {
+                    btn.disabled = true;
+                    toast('AI 重新分级中…', 8000);
+                    const r = await api(`/api/frontier/${id}/regrade`, { method: 'POST' });
+                    toast(r && r.success ? `重新分级完成（${r.graded_by === 'ai' ? 'AI 分级' : '规则分级'}）` : '分级失败');
+                    await refreshAll();
+                }
+            };
+        });
+    }
+
+    // ===================== 弹窗 =====================
+    function openEdit(id) {
+        const item = allItems.find(i => i.id === id);
+        if (!item) return;
+        currentItem = item;
+        const v = item.difficulty_versions || {};
+        document.getElementById('mTitle').textContent = '在线修订';
+        document.getElementById('mSub').textContent =
+            `来源：${item.source_name} ｜ 发布：${item.published_at} ｜ 状态：${STATUS_LABEL[item.status] || item.status}`;
+        document.getElementById('mTitleInput').value = item.title || '';
+        document.getElementById('mUndergrad').value = v.undergrad || '';
+        document.getElementById('mEngineer').value = v.engineer || '';
+        document.getElementById('mTags').value = (item.tags || []).join(', ');
+        document.getElementById('mDispute').checked = !!item.is_frontier_dispute;
+        document.getElementById('mDisputeReason').value = item.dispute_reason || '';
+        document.getElementById('mQuestion').value = item.discussion_question || '';
+        document.getElementById('overlay').classList.add('show');
+    }
+    document.getElementById('mCancel').onclick = () => document.getElementById('overlay').classList.remove('show');
+    document.getElementById('overlay').onclick = e => { if (e.target.id === 'overlay') e.currentTarget.classList.remove('show'); };
+
+    document.getElementById('mSave').onclick = async () => {
+        if (!currentItem) return;
+        const body = {
+            title: document.getElementById('mTitleInput').value,
+            undergrad: document.getElementById('mUndergrad').value,
+            engineer: document.getElementById('mEngineer').value,
+            tags: document.getElementById('mTags').value.split(/[,，]/).map(s => s.trim()).filter(Boolean),
+            is_frontier_dispute: document.getElementById('mDispute').checked,
+            dispute_reason: document.getElementById('mDisputeReason').value,
+            discussion_question: document.getElementById('mQuestion').value
+        };
+        const r = await api(`/api/frontier/${currentItem.id}/revise`, { method: 'POST', body: JSON.stringify(body) });
+        toast(r && r.message ? r.message : '已保存');
+        document.getElementById('overlay').classList.remove('show');
+        await refreshAll();
+    };
+
+    document.getElementById('mRegrade').onclick = async () => {
+        if (!currentItem) return;
+        toast('AI 重新分级中…', 8000);
+        const r = await api(`/api/frontier/${currentItem.id}/regrade`, { method: 'POST' });
+        if (r && r.success) {
+            const v = r.item.difficulty_versions || {};
+            document.getElementById('mUndergrad').value = v.undergrad || '';
+            document.getElementById('mEngineer').value = v.engineer || '';
+            document.getElementById('mTags').value = (r.item.tags || []).join(', ');
+            document.getElementById('mDispute').checked = !!r.item.is_frontier_dispute;
+            document.getElementById('mDisputeReason').value = r.item.dispute_reason || '';
+            document.getElementById('mQuestion').value = r.item.discussion_question || '';
+            toast(`分级完成（${r.graded_by === 'ai' ? 'AI 分级' : '规则分级'}）`);
+        } else {
+            toast('分级失败');
+        }
+    };
+
+    // ===================== 教师操作 =====================
+    document.getElementById('btnFetch').onclick = async (e) => {
+        const btn = e.target;
+        btn.disabled = true;
+        toast('正在抓取权威信源并进行教学分级，请稍候…', 30000);
+        const r = await api('/api/frontier/fetch-now', { method: 'POST' });
+        btn.disabled = false;
+        if (r && r.success) {
+            const s = r.stats;
+            toast(`抓取完成：新增 ${s.added} 条，去重跳过 ${s.skipped_duplicate} 条，争议标注 ${s.dispute_count} 条`
+                + (s.used_fallback ? '（信源不可达，已使用预置内容）' : ''), 6000);
+        } else {
+            toast((r && r.error) || '抓取失败');
+        }
+        await refreshAll();
+        loadSchedulerStatus();
+    };
+
+    document.getElementById('btnScan').onclick = async () => {
+        const r = await api('/api/frontier/refresh-status', { method: 'POST' });
+        toast(r && r.message ? r.message : '扫描完成');
+        await refreshAll();
+    };
+
+    async function loadSchedulerStatus() {
+        const r = await api('/api/frontier/scheduler/status');
+        if (!r || !r.success) return;
+        const s = r.status;
+        document.getElementById('schedulerHint').textContent =
+            `｜调度：${s.scheduler_type}｜${s.auto_fetch_enabled ? '自动抓取已开启' : '自动抓取已关闭'}｜间隔 ${s.fetch_interval_hours}h｜老化阈值 ${s.freshness_days} 天｜AI分级${s.ai_grading_enabled ? '开' : '关'}｜上次 ${s.last_fetch_time || '—'}`;
+    }
+
+    async function loadConfig() {
+        if (role !== 'teacher') return;
+        const r = await api('/api/frontier/config');
+        if (r && r.success) config = r.config;
+    }
+
+    document.getElementById('btnConfig').onclick = async () => {
+        if (!config) await loadConfig();
+        if (!config) return;
+        const hours = prompt('自动抓取间隔（小时）：', config.fetch_interval_hours);
+        if (hours === null) return;
+        const days = prompt('内容老化阈值（天）：', config.freshness_days);
+        if (days === null) return;
+        const ai = confirm('是否开启 AI 教学难度分级？（取消=仅规则分级）');
+        const auto = confirm('是否开启自动定时抓取？（取消=仅手动抓取）');
+        const body = {
+            fetch_interval_hours: parseInt(hours, 10) || 12,
+            freshness_days: parseInt(days, 10) || 180,
+            ai_grading_enabled: ai,
+            auto_fetch_enabled: auto
+        };
+        const r = await api('/api/frontier/config', { method: 'POST', body: JSON.stringify(body) });
+        toast(r && r.message ? r.message : '配置已保存');
+        await loadConfig();
+        loadSchedulerStatus();
+    };
+
+    document.getElementById('btnSearch').onclick = renderList;
+    document.getElementById('kw').addEventListener('keydown', e => { if (e.key === 'Enter') renderList(); });
+    document.getElementById('srcFilter').onchange = renderList;
+    document.getElementById('tagFilter').onchange = renderList;
+    document.getElementById('btnReset').onclick = () => {
+        document.getElementById('kw').value = '';
+        document.getElementById('srcFilter').value = '';
+        document.getElementById('tagFilter').value = '';
+        renderList();
+    };
+    document.getElementById('sourceChips').addEventListener('click', async e => {
+        const chip = e.target.closest('.chip');
+        if (!chip || !config) return;
+        const id = chip.dataset.src;
+        const enabled = new Set(config.sources || []);
+        enabled.has(id) ? enabled.delete(id) : enabled.add(id);
+        config.sources = [...enabled];
+        const r = await api('/api/frontier/config', { method: 'POST', body: JSON.stringify({ sources: config.sources }) });
+        if (r && r.success) {
+            chip.classList.toggle('on', enabled.has(id));
+            toast('信源已更新');
+        }
+    });
+
+    async function refreshAll() {
+        await loadList();
+        await loadStats();
+        if (config) {
+            const r = await api('/api/frontier/config');
+            if (r && r.success) config = r.config;
+        }
+        document.querySelectorAll('.chip').forEach(c =>
+            c.classList.toggle('on', (config && (config.sources || []).includes(c.dataset.src))));
+    }
+
+    init();
+</script>
+</body>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>证书验真 · 灵智尚人平台</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+        background: linear-gradient(160deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh; padding: 22px 14px; color: #2d3748;
+    }
+    .shell { max-width: 620px; margin: 0 auto; }
+    .brand { color: #fff; text-align: center; margin-bottom: 16px; }
+    .brand h1 { font-size: 17px; font-weight: 600; letter-spacing: 1px; }
+    .brand .sub { font-size: 12px; opacity: .85; margin-top: 5px; }
+    .card { background: #fff; border-radius: 16px; padding: 24px 22px; box-shadow: 0 10px 40px rgba(0,0,0,.18); }
+    .badge {
+        text-align: center; padding: 20px 16px; border-radius: 13px; margin-bottom: 20px;
+    }
+    .badge.ok { background: #f0fdf4; border: 1px solid #bbf7d0; }
+    .badge.bad { background: #fef2f2; border: 1px solid #fecaca; }
+    .badge.idle { background: #f8fafc; border: 1px solid #e2e8f0; }
+    .badge .icon { font-size: 40px; line-height: 1; }
+    .badge .label { font-size: 18px; font-weight: 700; margin-top: 10px; }
+    .badge.ok .label { color: #15803d; }
+    .badge.bad .label { color: #b91c1c; }
+    .badge.idle .label { color: #64748b; }
+    .badge .msg { font-size: 13px; margin-top: 8px; line-height: 1.7; color: #475569; }
+    .sect { margin-top: 20px; }
+    .sect-title { font-size: 12px; color: #718096; letter-spacing: 1px; margin-bottom: 10px; font-weight: 600; }
+    .kv { display: flex; justify-content: space-between; gap: 14px; padding: 10px 0; border-bottom: 1px dashed #e6ecf5; font-size: 13px; }
+    .kv:last-child { border-bottom: none; }
+    .kv .k { color: #718096; flex: 0 0 auto; }
+    .kv .v { text-align: right; word-break: break-all; font-weight: 500; }
+    .mono { font-family: ui-monospace, Consolas, monospace; font-size: 11px; color: #4a5568; }
+    .tag { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 11px; background: #eef2ff; color: #4c51bf; margin: 0 6px 6px 0; }
+    .notice {
+        margin-top: 20px; background: #f8fafc; border: 1px solid #edf1f7; border-radius: 11px;
+        padding: 14px 16px; font-size: 12px; color: #64748b; line-height: 1.8;
+    }
+    .foot { text-align: center; color: rgba(255,255,255,.8); font-size: 11px; margin-top: 16px; line-height: 1.8; }
+    .loading { text-align: center; padding: 40px 0; color: #a0aec0; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="shell">
+    <div class="brand">
+        <h1>灵智尚人 · 可信成长证书验真</h1>
+        <div class="sub">哈希链存证 · 实时校验 · 脱敏展示</div>
+    </div>
+    <div class="card">
+        <div id="body"><div class="loading">正在校验证书…</div></div>
+        <div class="notice">
+            本页由灵智尚人平台提供，用于企业及第三方核验证书真伪。<br>
+            校验方式：实时重算档案哈希链 —— 每条记录的指纹都与前一条记录串联，
+            任何内容被修改、记录被删除或插入，校验都会失败。<br>
+            展示信息已脱敏：姓名打码、学号仅保留末 4 位，不含联系方式等隐私数据。
+        </div>
+    </div>
+    <div class="foot">
+        证书编号：{{ certificate_id }}<br>
+        校验时间：<span id="checkedAt">—</span>
+    </div>
+</div>
+
+<script>
+const CERT_ID = {{ certificate_id|tojson }};
+
+function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function kv(k, v, mono) {
+    return `<div class="kv"><div class="k">${esc(k)}</div><div class="v ${mono ? 'mono' : ''}">${esc(v || '—')}</div></div>`;
+}
+
+async function load() {
+    const box = document.getElementById('body');
+    try {
+        const r = await fetch('/api/credential/public-verify/' + encodeURIComponent(CERT_ID));
+        const d = await r.json();
+        document.getElementById('checkedAt').textContent = d.checked_at || '—';
+
+        if (!d.found) {
+            box.innerHTML = `<div class="badge bad"><div class="icon">⚠️</div>
+                <div class="label">未查询到该证书</div>
+                <div class="msg">${esc(d.message || '证书编号不存在，请核对后重试')}</div></div>
+                ${kv('证书编号', CERT_ID, true)}`;
+            return;
+        }
+
+        const cls = d.valid ? 'ok' : 'bad';
+        const icon = d.valid ? '✅' : '❌';
+        const label = d.valid ? '校验通过 · 证书有效' : '校验失败 · 证书存疑';
+        const h = d.holder || {}, s = d.summary || {}, c = d.chain || {};
+        const stats = (s.type_stats || []).map(t => `<span class="tag">${esc(t.label)} ${t.count}</span>`).join('');
+
+        box.innerHTML = `
+            <div class="badge ${cls}">
+                <div class="icon">${icon}</div>
+                <div class="label">${label}</div>
+                <div class="msg">${esc(d.message || '')}</div>
+            </div>
+            <div class="sect">
+                <div class="sect-title">证书信息</div>
+                ${kv('证书编号', d.certificate_id, true)}
+                ${kv('签发方', d.issuer)}
+                ${kv('签发时间', d.issued_at)}
+                ${kv('持证人', h.name)}
+                ${kv('学号（脱敏）', h.student_no)}
+                ${kv('班级', h.class_name)}
+                ${kv('专业', h.major)}
+                ${h.ability_summary ? kv('优势能力维度', h.ability_summary) : ''}
+            </div>
+            <div class="sect">
+                <div class="sect-title">成长档案概览</div>
+                ${kv('上链记录数', (s.record_count || 0) + ' 条')}
+                ${kv('记录区间', (s.first_record_at || '—') + '  至  ' + (s.last_record_at || '—'))}
+                <div style="margin-top:10px;">${stats || '<span style="font-size:12px;color:#94a3b8;">暂无记录分类</span>'}</div>
+            </div>
+            <div class="sect">
+                <div class="sect-title">哈希链校验明细</div>
+                ${kv('校验结果', c.valid ? '通过' : '失败')}
+                ${kv('已校验记录', (c.checked || 0) + ' / ' + (c.total || 0))}
+                ${kv('校验说明', c.reason || '—')}
+                ${c.broken_at ? kv('断裂位置', '第 ' + c.broken_at + ' 条') : ''}
+                ${kv('证书固化链头', d.cert_head_hash, true)}
+                ${kv('当前实际链头', d.current_head_hash, true)}
+            </div>`;
+    } catch (e) {
+        box.innerHTML = `<div class="badge bad"><div class="icon">⚠️</div>
+            <div class="label">校验服务异常</div><div class="msg">${esc(e.message)}</div></div>`;
+    }
+}
+load();
+</script>
+</body>
+</html>

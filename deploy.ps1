@@ -1,97 +1,63 @@
-# deploy.ps1 — 一键打包并部署到云服务器
-# 用法：在项目目录下运行  .\deploy.ps1
-# 需要输入密码：scp 1 次 + ssh 1 次 + sudo 1 次（配置免密后可全自动）
+# 靈智尚人 - 云服务器一键部署脚本
+# 用法: .\deploy.ps1
+# 排除 data/ 和 uploads/ 目录，不覆盖服务器数据
 
-$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = "Stop"
+$SERVER = "root@121.40.21.238"
+$REMOTE_DIR = "/opt/lingzhishangren"
+$PACKAGE = "deploy_package.tar.gz"
 
-# ================= 服务器配置 =================
-$ServerUser = "ubuntu"
-$ServerHost = "150.158.149.95"
-$ServerDir  = "/opt/lingzhishangren"
-$RemoteZip  = "/tmp/deploy_upload.zip"
+Write-Host "==========================================" -ForegroundColor Cyan
+Write-Host "  靈智尚人 - 云服务器部署" -ForegroundColor Cyan
+Write-Host "==========================================" -ForegroundColor Cyan
 
-# ================= 路径 =================
-$Src      = $PSScriptRoot
-$LocalZip = Join-Path $Src "deploy_upload.zip"
+# 1. 打包代码（排除数据/上传/临时/Docker配置文件）
+Write-Host "`n[1/5] 打包代码..." -ForegroundColor Yellow
+$excludeStr = "--exclude=data --exclude=uploads --exclude=__pycache__ --exclude=.git --exclude=*.pyc --exclude=Dockerfile --exclude=docker-compose.yml --exclude=deploy.sh --exclude=deploy_remote.sh --exclude=_test_*.py --exclude=_*.js --exclude=*.tar.gz --exclude=*.zip --exclude=backup_* --exclude=temp_* --exclude=dist --exclude=Lib --exclude=.vscode --exclude=.trae --exclude=*.log --exclude=conversations.json --exclude=login_resp.json --exclude=cookies.txt --exclude=cookie.txt --exclude=deploy_package.tar.gz"
+cmd /c "tar czf $PACKAGE -C . . $excludeStr 2>nul"
+if (-not (Test-Path $PACKAGE)) { Write-Host "打包失败!" -ForegroundColor Red; exit 1 }
+$size = [math]::Round((Get-Item $PACKAGE).Length / 1KB, 0)
+Write-Host "  打包完成: $PACKAGE ($size KB)" -ForegroundColor Green
 
-# ================= 1. 打包 =================
-Write-Host "`n[1/3] 打包代码中..." -ForegroundColor Cyan
-if (Test-Path $LocalZip) { Remove-Item $LocalZip -Force }
+# 2. 上传到服务器
+Write-Host "`n[2/5] 上传到服务器..." -ForegroundColor Yellow
+scp -o BatchMode=yes $PACKAGE "${SERVER}:/tmp/"
+if ($LASTEXITCODE -ne 0) { Write-Host "上传失败! 检查SSH连接." -ForegroundColor Red; exit 1 }
+Write-Host "  上传完成" -ForegroundColor Green
 
-Add-Type -AssemblyName System.IO.Compression.FileSystem
-$zip = [System.IO.Compression.ZipFile]::Open($LocalZip, 'Create')
+# 3. 解压并重建容器
+Write-Host "`n[3/5] 解压代码并重建容器..." -ForegroundColor Yellow
+$remoteCmd = @"
+cd $REMOTE_DIR
+tar xzf /tmp/$PACKAGE
+rm -f /tmp/$PACKAGE
+sudo docker-compose up -d --build 2>&1
+"@
+ssh -o BatchMode=yes $SERVER $remoteCmd
+if ($LASTEXITCODE -ne 0) { Write-Host "重建失败!" -ForegroundColor Red; exit 1 }
 
-$exts = @('.py','.txt','.yml','.yaml','.css','.js','.html','.json','.sh','.bat','.md',
-          '.png','.jpg','.jpeg','.gif','.svg','.ico','.woff','.woff2','.ttf')
-$excludeDirs = @('__pycache__','.git','node_modules','_merge_other','_backup_merged','.venv','.workbuddy','_mobile_test')
-$excludeFiles = @('api_key.local','deploy_upload.zip','*.log','*.pyc','project_full_20260904.zip',
-                  'students.json','classes.json','notifications.json','wrong_questions.json',
-                  'learning_records.json','search_logs.json','cookie.txt')
-$excludeRel = @('data\students.json','data/students.json')
+# 4. 等待容器启动
+Write-Host "`n[4/5] 等待容器启动..." -ForegroundColor Yellow
+Start-Sleep -Seconds 15
+$status = ssh -o BatchMode=yes $SERVER "sudo docker ps --format '{{.Names}} {{.Status}}' | grep lingzhishangren-api"
+Write-Host "  容器状态: $status" -ForegroundColor Green
 
-Get-ChildItem $Src -Recurse -File | ForEach-Object {
-    $rel = $_.FullName.Substring($Src.Length + 1)
-    $skip = $false
-    foreach ($ed in $excludeDirs) { if ($rel -match "(^|\\|/)$ed(\\|/|$)") { $skip = $true; break } }
-    if (-not $skip) { foreach ($er in $excludeRel) { if ($rel -eq $er) { $skip = $true; break } } }
-    if (-not $skip) { foreach ($ef in $excludeFiles) { if ($rel -like "*\$ef" -or $rel -like "*/$ef") { $skip = $true; break } } }
-    if (-not $skip -and $rel -match '[^\x00-\x7F]') { $skip = $true }
-    if (-not $skip -and ($_.Extension -in $exts -or $_.Name -eq 'Dockerfile')) {
-        [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $_.FullName, $rel.Replace('\','/')) | Out-Null
-    }
-}
-$zip.Dispose()
-$size = [math]::Round((Get-Item $LocalZip).Length / 1MB, 1)
-Write-Host "    打包完成：$size MB" -ForegroundColor Green
-
-# ================= 2. 上传 =================
-Write-Host "`n[2/3] 上传到服务器（输入服务器登录密码）..." -ForegroundColor Cyan
-Push-Location $Src
-scp "./deploy_upload.zip" "${ServerUser}@${ServerHost}:${RemoteZip}"
-$zipExit = $LASTEXITCODE
-Pop-Location
-if ($zipExit -ne 0) { throw "上传失败" }
-
-# ================= 3. 远程部署（后台构建 + 轮询日志，避免SSH长连接断开） ==================
-Write-Host "`n[3/3] 远程重建容器（构建在服务器后台运行）..." -ForegroundColor Cyan
-
-# 上传远程构建脚本并在服务器后台启动构建（避免多层引号 + SSH长连接断开问题）
-# 注意：Windows OpenSSH 的 scp 在脚本内传盘符绝对路径可能误判为远程路径，先切到脚本目录用相对路径
-Push-Location $Src
-scp "./deploy_remote.sh" "${ServerUser}@${ServerHost}:/tmp/deploy_remote.sh"
-$shExit = $LASTEXITCODE
-Pop-Location
-if ($shExit -ne 0) { throw "远程脚本上传失败" }
-ssh "${ServerUser}@${ServerHost}" "sudo sed -i 's/\r$//' /tmp/deploy_remote.sh && sudo bash /tmp/deploy_remote.sh"
-if ($LASTEXITCODE -ne 0) { throw "远程构建启动失败" }
-
-Write-Host "    构建已在服务器后台运行，轮询进度中（安装LibreOffice首次约需3-8分钟）..." -ForegroundColor DarkGray
-
-$done = $false
-$waited = 0
-while (-not $done -and $waited -lt 520) {
-    Start-Sleep -Seconds 20
-    $waited = $waited + 20
-    $log = ssh "${ServerUser}@${ServerHost}" "sudo tail -3 /tmp/deploy_build.log 2>/dev/null" 2>$null
-    $line = ""
-    if ($log) { $line = @($log)[-1] }
-    Write-Host "    [$waited s] $line" -ForegroundColor DarkGray
-    $joined = $log -join "`n"
-    if ($joined -match "EXIT_CODE=0") {
-        $done = $true
-    }
-    if ($joined -match "EXIT_CODE=[1-9]") {
-        Write-Host "`n构建失败，最后40行日志：" -ForegroundColor Red
-        ssh "${ServerUser}@${ServerHost}" "sudo tail -40 /tmp/deploy_build.log"
-        throw "远程构建失败"
-    }
+# 5. 健康检查
+Write-Host "`n[5/5] 健康检查..." -ForegroundColor Yellow
+$health = ssh -o BatchMode=yes $SERVER "curl -s -o /dev/null -w '%{http_code}' http://localhost:5000/ 2>/dev/null || echo 'fail'"
+if ($health -eq "200" -or $health -eq "302") {
+    Write-Host "  健康检查通过 (HTTP $health)" -ForegroundColor Green
+} else {
+    Write-Host "  健康检查异常 (HTTP $health)，容器可能仍在启动中..." -ForegroundColor Yellow
+    Write-Host "  请稍后访问 http://121.40.21.238:5000 确认" -ForegroundColor Yellow
 }
 
-if (-not $done) { throw "构建超时（520秒），请登录服务器查看 /tmp/deploy_build.log" }
+Write-Host "`n==========================================" -ForegroundColor Cyan
+Write-Host "  部署完成!" -ForegroundColor Green
+Write-Host "  访问地址: http://121.40.21.238:5000" -ForegroundColor Cyan
+Write-Host "  新功能: AI模拟面试 + 面试案例知识库" -ForegroundColor Cyan
+Write-Host "  导航: 登录后点击「🎤 AI模拟面试」或「📚 面试案例」" -ForegroundColor Cyan
+Write-Host "==========================================" -ForegroundColor Cyan
 
-Start-Sleep -Seconds 10
-$health = ssh "${ServerUser}@${ServerHost}" "curl -s http://localhost:5000/api/v1/health"
-Write-Host "`n=== HEALTH ===`n$health" -ForegroundColor Yellow
-if ($health -notmatch '"success":true') { throw "健康检查未通过" }
-
-Write-Host "`n完成！浏览器 Ctrl+Shift+R 强刷 http://${ServerHost}:5000" -ForegroundColor Green
+# 清理本地包
+Remove-Item $PACKAGE -Force -ErrorAction SilentlyContinue

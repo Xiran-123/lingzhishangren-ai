@@ -1104,6 +1104,53 @@
         .conv-fab.show { transform: translateY(-50%) translateX(0); }
         .conv-fab:hover { box-shadow: 0 6px 28px rgba(102, 126, 234, 0.7); }
 
+        /* ============ 移动端功能导航（汉堡菜单） ============ */
+        .mobile-menu-btn { display: none; }
+        .mmenu-close { display: none; }
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: inline-flex; align-items: center; gap: 5px;
+                margin-left: auto;
+                background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.28);
+                color: #fff; border-radius: 10px; padding: 8px 14px;
+                font-size: 15px; font-weight: 600; cursor: pointer; line-height: 1;
+            }
+            .mobile-menu-btn span { font-size: 13px; }
+            .header-right { display: none; }
+            body.mmenu-open .header-right {
+                display: flex;
+                position: fixed; inset: 0; z-index: 10001;
+                flex-direction: column; align-items: stretch;
+                gap: 10px; flex-wrap: nowrap;
+                padding: 62px 16px calc(20px + env(safe-area-inset-bottom));
+                background: linear-gradient(160deg, #0a1a4a 0%, #162a5e 60%, #1e3c72 100%);
+                overflow-y: auto; -webkit-overflow-scrolling: touch;
+            }
+            body.mmenu-open .header-right::before {
+                content: '功能导航'; color: #9fc0ff; font-size: 14px; font-weight: 600;
+                letter-spacing: 2px; padding: 0 4px 2px;
+            }
+            body.mmenu-open .header-right .nav-btn {
+                width: 100%; text-align: center; padding: 13px 16px; font-size: 15px; white-space: normal;
+            }
+            body.mmenu-open .header-right .settings-wrap { width: 100%; }
+            body.mmenu-open .header-right .settings-wrap .nav-btn { width: 100%; }
+            body.mmenu-open .header-right .settings-menu {
+                position: static; width: 100%; min-width: 0; box-shadow: none;
+                margin-top: 8px; padding: 4px; background: rgba(255,255,255,0.08);
+            }
+            body.mmenu-open .header-right .settings-item { color: #e0ecff; white-space: normal; text-align: center; }
+            body.mmenu-open .header-right .settings-item:hover { background: rgba(255,255,255,0.12); }
+            body.mmenu-open .mmenu-close {
+                display: flex; align-items: center; justify-content: center;
+                position: fixed; top: 12px; right: 12px; z-index: 10002;
+                width: 42px; height: 42px; border-radius: 50%;
+                background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+                color: #fff; font-size: 19px; cursor: pointer;
+            }
+            body.mmenu-open .notification-bell { display: none; }
+        }
+
         /* 侧边栏展开时主容器右移 */
         body.sidebar-open .chat-container { margin-left: 300px !important; margin-right: 30px; }
         /* 中等屏幕：侧边栏改为覆盖模式，不挤容器 */
@@ -1159,7 +1206,9 @@
             .header-left { gap: 6px; }
             .header-right .nav-btn { padding: 4px 8px; font-size: 11.5px; }
             .header-text h1 { font-size: 14px; }
-            .header-text p { font-size: 10.5px; }
+            .header-text p { display: none; }
+            .mobile-menu-btn { padding: 7px 12px; }
+            .mobile-menu-btn span { display: none; }
             .mode-selector { padding: 6px 10px; }
             .mode-btn { padding: 5px 10px; font-size: 12px; }
             .messages-area { padding: 12px 10px; }
@@ -1243,13 +1292,15 @@
                     <p>智能对话，随时为您服务</p>
                 </div>
             </div>
+            <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu(event)" aria-label="打开功能菜单">☰<span>功能</span></button>
             <div class="header-right" id="headerRight">
                 <!-- 动态生成导航按钮 -->
             </div>
-            <button class="notification-bell" id="notificationBell" onclick="showNotificationModal()" style="margin-left: 15px; background: rgba(255,255,255,0.2); border: none; border-radius: 10px; padding: 10px 16px; color: white; font-size: 24px; cursor: pointer;">
+            <button class="notification-bell" id="notificationBell" onclick="showNotificationModal()" style="margin-left: 15px; background: rgba(255,255,255,0.2); border: none; border-radius: 10px; padding: 10px 16px; color: white; font-size: 24px; cursor: pointer; position: relative;">
                 🔔
                 <span id="notificationBadge" class="notification-badge" style="position: absolute; top: 10px; right: 10px; background: #ff4757; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; display: none; align-items: center; justify-content: center;">0</span>
             </button>
+            <button class="mmenu-close" id="mmenuClose" onclick="closeMobileMenu()" aria-label="关闭功能菜单">✕</button>
         </div>
 
         <div class="mode-selector">
@@ -1276,6 +1327,7 @@
             <button class="upload-btn" onclick="document.getElementById('imageUpload').click()">
                 📷
             </button>
+            <button class="upload-btn" id="voiceModeBtn" title="语音播报模式：开启后 AI 回答自动朗读">🔈</button>
             <div class="input-box">
                 <textarea id="userInput" placeholder="请输入您的问题..." rows="1" onkeydown="handleKeyDown(event)" oninput="autoResize()"></textarea>
             </div>
@@ -1437,9 +1489,18 @@
                     <a href="/student-portrait-page" class="nav-btn" style="background: rgba(102, 126, 234, 0.8);">🎯 我的能力</a>
                     <a href="/weekly-tasks-page" class="nav-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">📋 每周任务</a>
                     <a href="/wrong-questions-page" class="nav-btn" style="background: rgba(245, 87, 108, 0.8);">📝 错题本</a>
+                    <a href="/homework-page" class="nav-btn" style="background: linear-gradient(135deg, #fa8c16, #f5222d);">📒 我的作业</a>
                     <a href="/knowledge-graph-page" class="nav-btn" style="background: rgba(42, 82, 152, 0.8);">🕸️ 知识图谱</a>
                     <a href="/ppt-resources-page" class="nav-btn" style="background: linear-gradient(135deg, #7b2ff7, #f107a3);">📚 课件中心</a>
                     <a href="/job-recruitment-page" class="nav-btn" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">💼 岗位招聘</a>
+                    <a href="/frontier-update-page" class="nav-btn" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">🚀 前沿动态</a>
+                    <a href="/credential-chain" class="nav-btn" style="background: linear-gradient(135deg, #4b6cb7, #182848);">🎖 可信成长档案</a>
+                    <a href="/fault-chain" class="nav-btn" style="background: linear-gradient(135deg, #eb3349, #f45c43);">🧬 因果故障链</a>
+                    <a href="/multi-fault-page" class="nav-btn" style="background: linear-gradient(135deg, #ff512f, #dd2476);">🚨 多故障应急</a>
+                    <a href="/rag-console" class="nav-btn" style="background: linear-gradient(135deg, #0f2027, #2c5364);">🔎 知识检索</a>
+                    <a href="/job-match-page" class="nav-btn" style="background: linear-gradient(135deg, #0FDC78, #004D26);">🎯 岗位匹配</a>
+                    <a href="/mock-interview-page" class="nav-btn" style="background: linear-gradient(135deg, #667eea, #764ba2);">🎤 AI模拟面试</a>
+                    <a href="/interview-cases-page" class="nav-btn" style="background: linear-gradient(135deg, #1890ff, #096dd9);">📚 面试案例</a>
                     <button class="nav-btn" style="background: linear-gradient(135deg, #fa541c, #eb2f96);" onclick="showEthicsDebate()">⚖️ 伦理辩论</button>
                     <button class="nav-btn" onclick="viewMyReport()">📊 我的报告</button>
                     ${settingsNavHTML()}
@@ -1455,10 +1516,21 @@
                     <a href="/student-portrait-page" class="nav-btn" style="background: rgba(102, 126, 234, 0.8);">🎯 能力画像</a>
                     <a href="/knowledge-graph-page" class="nav-btn" style="background: rgba(42, 82, 152, 0.8);">🕸️ 知识图谱</a>
                     <a href="/job-recruitment-page" class="nav-btn" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">💼 岗位招聘</a>
+                    <a href="/job-match-page" class="nav-btn" style="background: linear-gradient(135deg, #0FDC78, #004D26);">🎯 岗位匹配</a>
+                    <a href="/mock-interview-page" class="nav-btn" style="background: linear-gradient(135deg, #667eea, #764ba2);">🎤 AI模拟面试</a>
+                    <a href="/interview-cases-page" class="nav-btn" style="background: linear-gradient(135deg, #1890ff, #096dd9);">📚 面试案例</a>
                     <a href="/class-notification-page" class="nav-btn">📢 班级通知</a>
                     <a href="/upload-knowledge-page" class="nav-btn" style="background: rgba(17, 153, 142, 0.8);">📤 上传知识库</a>
+                    <a href="/frontier-update-page" class="nav-btn" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">🚀 前沿知识更新</a>
+                    <a href="/credential-chain" class="nav-btn" style="background: linear-gradient(135deg, #4b6cb7, #182848);">🎖 可信成长档案</a>
+                    <a href="/fault-chain" class="nav-btn" style="background: linear-gradient(135deg, #eb3349, #f45c43);">🧬 因果故障链</a>
+                    <a href="/multi-fault-page" class="nav-btn" style="background: linear-gradient(135deg, #ff512f, #dd2476);">🚨 多故障应急</a>
+                    <a href="/rag-console" class="nav-btn" style="background: linear-gradient(135deg, #0f2027, #2c5364);">🔎 知识检索</a>
+                    <a href="/audit-log-page" class="nav-btn" style="background: linear-gradient(135deg, #232526, #414345);">🛡 安全审计</a>
                     <button class="nav-btn" style="background: linear-gradient(135deg,#fa541c,#fa8c16);" onclick="showExerciseManager()">📝 练习题管理</button>
                     <button class="nav-btn" style="background: linear-gradient(135deg,#ff4d4f,#fa541c);" onclick="showTeacherDashboard()">🎛️ 教师驾驶舱</button>
+                    <a href="/homework-page" class="nav-btn" style="background: linear-gradient(135deg,#fa8c16,#f5222d);">📝 作业管理</a>
+                    <button class="nav-btn" style="background: linear-gradient(135deg,#2f54eb,#13c2c2);" onclick="showLessonPlanGenerator()">📑 一键生成教案</button>
                     <button class="nav-btn" style="background: linear-gradient(135deg,#722ed1,#13c2c2);" onclick="showAgentConfig()">🤖 AI助教配置</button>
                     ${settingsNavHTML()}
                 `;
@@ -1496,6 +1568,30 @@
             const menu = document.getElementById('settingsMenu');
             if (menu) menu.classList.remove('open');
         }
+
+        // ===== 移动端功能导航抽屉 =====
+        function toggleMobileMenu(e) {
+            if (e) e.stopPropagation();
+            document.body.classList.toggle('mmenu-open');
+            closeSettings();
+        }
+        function closeMobileMenu() {
+            document.body.classList.remove('mmenu-open');
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+            // 点击抽屉内任意导航项后自动收起（设置按钮自身已 stopPropagation，不会误关）
+            const header = document.querySelector('.header');
+            if (header) {
+                header.addEventListener('click', function (e) {
+                    if (!document.body.classList.contains('mmenu-open')) return;
+                    if (e.target.closest('.header-right')) closeMobileMenu();
+                });
+            }
+            // ESC 关闭抽屉
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') closeMobileMenu();
+            });
+        });
 
         // ===== 个人中心 =====
         function showPersonalCenter() {
@@ -2141,7 +2237,85 @@
             userInput.style.height = Math.min(userInput.scrollHeight, 120) + 'px';
         }
 
-        /* 为AI消息追加操作按钮（追问/复制）
+        // ====================== 语音播报（多模态学习交互） ======================
+        let voiceMode = localStorage.getItem('voiceMode') === '1';
+        let ttsAudio = null;
+        let ttsBtn = null;
+
+        function updateVoiceModeBtn() {
+            const btn = document.getElementById('voiceModeBtn');
+            if (!btn) return;
+            btn.textContent = voiceMode ? '🔊' : '🔈';
+            btn.title = voiceMode ? '语音播报已开启：AI 回答自动朗读' : '语音播报已关闭：可点回答下方「朗读」按钮';
+            btn.style.background = voiceMode ? 'linear-gradient(135deg, #667eea, #764ba2)' : '';
+        }
+
+        function toggleVoiceMode() {
+            voiceMode = !voiceMode;
+            localStorage.setItem('voiceMode', voiceMode ? '1' : '0');
+            updateVoiceModeBtn();
+            if (!voiceMode) stopSpeak();
+        }
+
+        function resetTtsBtn() {
+            if (ttsBtn) { ttsBtn.innerHTML = '🔊 朗读'; ttsBtn = null; }
+        }
+
+        function stopSpeak() {
+            if (ttsAudio) {
+                try { ttsAudio.pause(); } catch (e) {}
+                ttsAudio = null;
+            }
+            resetTtsBtn();
+        }
+
+        async function speakText(text, btn) {
+            // 再次点击同一按钮 = 停止朗读
+            if (btn && ttsBtn === btn) { stopSpeak(); return; }
+            stopSpeak();
+            const plain = String(text || '').replace(/[#*`>|~_]/g, ' ').trim();
+            if (!plain) return;
+
+            ttsBtn = btn || null;
+            if (ttsBtn) ttsBtn.innerHTML = '⏳ 合成中';
+            try {
+                const resp = await fetch('/api/tts/speak', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: plain })
+                });
+                if (!resp.ok) {
+                    const err = await resp.json().catch(() => ({}));
+                    resetTtsBtn();
+                    alert(err.error || '语音合成失败，请稍后重试');
+                    return;
+                }
+                const url = URL.createObjectURL(await resp.blob());
+                const audio = new Audio(url);
+                ttsAudio = audio;
+                if (ttsBtn) ttsBtn.innerHTML = '⏸ 停止朗读';
+                audio.onended = function() {
+                    URL.revokeObjectURL(url);
+                    if (ttsAudio === audio) { ttsAudio = null; resetTtsBtn(); }
+                };
+                await audio.play();
+            } catch (e) {
+                resetTtsBtn();
+                alert('语音播放失败：' + e.message);
+            }
+        }
+
+        // 语音模式开启时，AI 回答完成后自动播报
+        function maybeAutoSpeak(text) {
+            if (!voiceMode) return;
+            speakText(text, null);
+        }
+
+        const voiceBtnEl = document.getElementById('voiceModeBtn');
+        if (voiceBtnEl) voiceBtnEl.addEventListener('click', toggleVoiceMode);
+        updateVoiceModeBtn();   // 按本地记忆还原开关状态
+
+        /* 为AI消息追加操作按钮（追问/复制/朗读）
            注意：流式回复每个chunk会覆盖contentDiv.innerHTML，
            因此流式场景必须在流结束后再调用本函数 */
         function appendMessageActions(contentDiv, content) {
@@ -2186,8 +2360,14 @@
                 }
             };
 
+            const speakBtn = document.createElement('button');
+            speakBtn.className = 'action-btn';
+            speakBtn.innerHTML = '🔊 朗读';
+            speakBtn.onclick = function() { speakText(content, speakBtn); };
+
             actionsDiv.appendChild(followBtn);
             actionsDiv.appendChild(copyBtn);
+            actionsDiv.appendChild(speakBtn);
             contentDiv.appendChild(actionsDiv);
         }
 
@@ -2474,8 +2654,11 @@
                     // AI 回复落库
                     saveMsgToServer(fullResponse, false, null);
 
-                    // 流式回复补充追问/复制按钮（流中inner被反复覆盖，只能在流结束后添加）
+                    // 流式回复补充追问/复制/朗读按钮（流中inner被反复覆盖，只能在流结束后添加）
                     appendMessageActions(messageContentDiv, fullResponse);
+
+                    // 语音播报模式开启时，自动朗读本次回答
+                    maybeAutoSpeak(fullResponse);
                 }
                 
             } catch (error) {
@@ -2749,7 +2932,10 @@
                         <div class="dash-scroll" style="padding:20px 24px;overflow-y:auto;flex:1;">
                           <div class="dash-body">
                             <div style="margin-bottom:20px;">
-                                <div style="font-size:14px;font-weight:bold;margin-bottom:12px;">📊 班级概况</div>
+                                <div style="font-size:14px;font-weight:bold;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+                                    <span>📊 班级概况</span>
+                                    <a href="/homework-page" class="btn btn-primary" style="padding:5px 14px;font-size:12px;text-decoration:none;background:linear-gradient(135deg,#fa8c16,#f5222d);">📝 发布作业</a>
+                                </div>
                                 <div style="display:flex;flex-wrap:wrap;gap:12px;">${classCards}</div>
                             </div>
                             <div style="margin-bottom:16px;">
@@ -2923,6 +3109,134 @@
                     body.innerHTML = renderAiText(raw);
                 } else {
                     body.innerHTML = '<div style="color:#d32f2f;background:#ffebee;padding:14px 18px;border-radius:10px;">❌ ' + (errMsg || '分析失败，请稍后重试') + '</div>';
+                }
+            } catch (err) {
+                const body = document.getElementById('aiAnalysisGlobalBody');
+                if (body) body.innerHTML = '<div style="color:#d32f2f;background:#ffebee;padding:14px 18px;border-radius:10px;">❌ 网络错误：' + err.message + '，请稍后重试</div>';
+            }
+        }
+        // ===== 教师一键生成教案 =====
+        function renderLessonPlanText(text) {
+            if (!text) return '<div style="color:#d32f2f;">AI未返回内容</div>';
+            let html = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            const lines = html.split('\n');
+            const out = []; let inList = false;
+            for (let line of lines) {
+                const t = line.trim();
+                const h2 = t.match(/^##\s+(.*)$/);
+                if (h2) { if (inList) { out.push('</ul>'); inList = false; } out.push(`<h3 style="color:#2f54eb;font-size:16px;margin:18px 0 10px;padding-bottom:6px;border-bottom:2px solid #e6eefa;">${h2[1]}</h3>`); continue; }
+                const h3 = t.match(/^###\s+(.*)$/);
+                if (h3) { if (inList) { out.push('</ul>'); inList = false; } out.push(`<h4 style="color:#13c2c2;font-size:14px;margin:14px 0 8px;">${h3[1]}</h4>`); continue; }
+                const bullet = t.match(/^[-·•]\s+(.*)$/);
+                if (bullet) { if (!inList) { out.push('<ul style="padding-left:20px;margin:8px 0;">'); inList = true; } out.push(`<li style="margin:5px 0;">${bullet[1]}</li>`); continue; }
+                const ordered = t.match(/^(\d+)[\.、]\s+(.*)$/);
+                if (ordered) { if (!inList) { out.push('<ul style="padding-left:20px;margin:8px 0;">'); inList = true; } out.push(`<li style="margin:5px 0;"><strong style="color:#2f54eb;">${ordered[1]}.</strong> ${ordered[2]}</li>`); continue; }
+                if (t === '') { if (inList) { out.push('</ul>'); inList = false; } continue; }
+                if (inList) { out.push('</ul>'); inList = false; }
+                out.push(`<p style="margin:8px 0;">${t}</p>`);
+            }
+            if (inList) out.push('</ul>');
+            return '<div style="font-size:12px;color:#999;background:#f5f7fa;border-radius:6px;padding:6px 12px;margin-bottom:12px;">✨ 本教案由 AI 生成，仅供参考</div>' + out.join('');
+        }
+        function showLessonPlanGenerator() {
+            let overlay = document.getElementById('lessonPlanInputOverlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'lessonPlanInputOverlay';
+                overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.55);backdrop-filter:blur(3px);z-index:100002;display:flex;justify-content:center;align-items:center;padding:20px;';
+                overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+                document.body.appendChild(overlay);
+            }
+            overlay.innerHTML = `
+                <div style="background:#fff;border-radius:18px;max-width:620px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,.35);animation:slideUp .3s ease;">
+                    <div style="background:linear-gradient(135deg,#2f54eb,#13c2c2);padding:18px 24px;color:#fff;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;border-radius:18px 18px 0 0;">
+                        <div style="font-size:17px;font-weight:700;">📑 一键生成教案</div>
+                        <button onclick="document.getElementById('lessonPlanInputOverlay').remove()" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:18px;cursor:pointer;border-radius:50%;width:32px;height:32px;">×</button>
+                    </div>
+                    <div style="padding:22px 26px;">
+                        <div style="font-size:13px;color:#888;margin-bottom:6px;">课程 / 章节主题 <span style="color:#ff4d4f;">*</span></div>
+                        <input id="lpTopic" type="text" placeholder="如：5G移动通信——Massive MIMO原理与应用" style="width:100%;padding:10px 12px;border:1px solid #d9d9d9;border-radius:8px;font-size:14px;box-sizing:border-box;margin-bottom:16px;" />
+                        <div style="font-size:13px;color:#888;margin-bottom:6px;">教学目标 / 学生情况 / 课时 / 特殊要求</div>
+                        <textarea id="lpReq" rows="5" placeholder="如：2课时，学生已学过OFDM基础；重点掌握波束成形原理；需结合工程案例" style="width:100%;padding:10px 12px;border:1px solid #d9d9d9;border-radius:8px;font-size:14px;box-sizing:border-box;margin-bottom:16px;resize:vertical;"></textarea>
+                        <div style="font-size:13px;color:#888;margin-bottom:6px;">上传资料（可选，支持 PPT/Word/TXT）</div>
+                        <input id="lpFile" type="file" accept=".pptx,.docx,.txt" style="width:100%;font-size:13px;margin-bottom:8px;" />
+                        <div style="font-size:12px;color:#aaa;margin-bottom:18px;">AI 会从资料中提取文本作为生成参考，文件用后即删。</div>
+                        <div id="lpErr" style="color:#d32f2f;font-size:13px;margin-bottom:10px;display:none;"></div>
+                        <button onclick="generateLessonPlan()" style="width:100%;padding:12px;background:linear-gradient(135deg,#2f54eb,#13c2c2);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;">✨ 生成教案</button>
+                    </div>
+                </div>`;
+        }
+        async function generateLessonPlan() {
+            const topicEl = document.getElementById('lpTopic');
+            const reqEl = document.getElementById('lpReq');
+            const fileEl = document.getElementById('lpFile');
+            const errEl = document.getElementById('lpErr');
+            const topic = (topicEl.value || '').trim();
+            const requirements = (reqEl.value || '').trim();
+            errEl.style.display = 'none';
+            if (!topic) { errEl.textContent = '请填写课程/章节主题'; errEl.style.display = 'block'; topicEl.focus(); return; }
+            const fd = new FormData();
+            fd.append('topic', topic);
+            fd.append('requirements', requirements);
+            if (fileEl.files && fileEl.files[0]) fd.append('file', fileEl.files[0]);
+            // 关闭输入弹窗，打开AI输出弹窗
+            const inputOverlay = document.getElementById('lessonPlanInputOverlay');
+            if (inputOverlay) inputOverlay.remove();
+            await streamLessonPlanToModal(fd);
+        }
+        async function streamLessonPlanToModal(formData) {
+            const color = '#2f54eb';
+            if (!document.getElementById('aiBlinkStyle')) {
+                const st = document.createElement('style');
+                st.id = 'aiBlinkStyle';
+                st.textContent = '@keyframes aiBlink { 0%,50% { opacity: 1; } 50.01%,100% { opacity: 0; } }';
+                document.head.appendChild(st);
+            }
+            const loading = '<div style="text-align:center;padding:50px 20px;color:' + color + ';"><div style="display:inline-block;width:40px;height:40px;border:4px solid ' + color + '22;border-top-color:' + color + ';border-radius:50%;animation:spin 1s linear infinite;margin-bottom:16px;"></div><div>AI 正在根据您的资料生成教案…</div><div style="font-size:12px;color:#aaa;margin-top:8px;">通常 20-60 秒，内容生成中可直接阅读 ☕</div></div>';
+            openAiAnalysisModal('📑 AI 教案生成', loading);
+            let raw = '';
+            let errMsg = '';
+            const renderCursor = () => '<span style="display:inline-block;width:2px;background:' + color + ';animation:aiBlink 1s steps(2) infinite;margin-left:2px;">&nbsp;</span>';
+            try {
+                const resp = await fetch('/api/teacher/lesson-plan', { method: 'POST', body: formData });
+                if (!resp.ok || !resp.body) {
+                    // 非流式错误（如400/403）
+                    let msg = 'HTTP ' + resp.status;
+                    try { const j = await resp.json(); if (j.error) msg = j.error; } catch (e) {}
+                    const body0 = document.getElementById('aiAnalysisGlobalBody');
+                    if (body0) body0.innerHTML = '<div style="color:#d32f2f;background:#ffebee;padding:14px 18px;border-radius:10px;">❌ ' + msg + '</div>';
+                    return;
+                }
+                const reader = resp.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                let buffer = '';
+                while (true) {
+                    const {done, value} = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, {stream: true});
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop();
+                    for (const line of lines) {
+                        if (!line.startsWith('data: ')) continue;
+                        const payload = line.slice(6).trim();
+                        if (payload === '[DONE]' || !payload) continue;
+                        try {
+                            const j = JSON.parse(payload);
+                            if (j.error) { errMsg = j.error; }
+                            else if (j.content) {
+                                raw += j.content;
+                                const body = document.getElementById('aiAnalysisGlobalBody');
+                                if (body) body.innerHTML = renderLessonPlanText(raw) + renderCursor();
+                            }
+                        } catch (e) { /* 忽略半截JSON */ }
+                    }
+                }
+                const body = document.getElementById('aiAnalysisGlobalBody');
+                if (!body) return;
+                if (raw) {
+                    body.innerHTML = renderLessonPlanText(raw);
+                } else {
+                    body.innerHTML = '<div style="color:#d32f2f;background:#ffebee;padding:14px 18px;border-radius:10px;">❌ ' + (errMsg || '教案生成失败，请稍后重试') + '</div>';
                 }
             } catch (err) {
                 const body = document.getElementById('aiAnalysisGlobalBody');

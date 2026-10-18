@@ -4,3 +4,4 @@ Werkzeug==3.0.1
 Jinja2==3.1.2
 python-docx==1.2.0
 python-pptx==1.0.2
+APScheduler==3.10.4

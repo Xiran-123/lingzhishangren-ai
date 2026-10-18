@@ -86,6 +86,11 @@ UPLOAD_HISTORY_FILE = "data/upload_history.json"
 WRONG_QUESTIONS_FILE = "data/wrong_questions.json"
 LEARNING_RECORDS_FILE = "data/learning_records.json"
 PPT_METADATA_FILE = "data/ppt_metadata.json"  # PPT课件元数据（持久化到挂载的data目录）
+HOMEWORK_FILE = "data/homework.json"  # 教师发布的作业
+HOMEWORK_SUBMISSIONS_FILE = "data/homework_submissions.json"  # 学生作业提交记录
+SELF_ASSESSMENT_FILE = "data/student_self_assessment.json"  # 学生自评画像
+INTERVIEW_CASES_FILE = "data/interview_cases.json"  # 面试案例知识库
+INTERVIEW_RECORDS_FILE = "data/interview_records.json"  # 模拟面试记录
 AVATAR_DIR = "data/avatars"  # 用户头像（持久化到挂载的data目录）
 ALLOWED_AVATAR_EXT = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
@@ -1942,6 +1947,63 @@ def save_notifications(notifications: List[Dict]):
         print(f"通知数据保存失败: {e}")
 
 
+def load_homework() -> List[Dict]:
+    """加载作业列表"""
+    try:
+        if os.path.exists(HOMEWORK_FILE):
+            with open(HOMEWORK_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+    except Exception as e:
+        print(f"作业数据加载失败: {e}")
+    return []
+
+
+def save_homework(homework_list: List[Dict]):
+    """保存作业列表"""
+    try:
+        atomic_save_json(HOMEWORK_FILE, homework_list)
+    except Exception as e:
+        print(f"作业数据保存失败: {e}")
+
+
+def load_homework_submissions() -> List[Dict]:
+    """加载作业提交记录"""
+    try:
+        if os.path.exists(HOMEWORK_SUBMISSIONS_FILE):
+            with open(HOMEWORK_SUBMISSIONS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+    except Exception as e:
+        print(f"作业提交数据加载失败: {e}")
+    return []
+
+
+def save_homework_submissions(submissions: List[Dict]):
+    """保存作业提交记录"""
+    try:
+        atomic_save_json(HOMEWORK_SUBMISSIONS_FILE, submissions)
+    except Exception as e:
+        print(f"作业提交数据保存失败: {e}")
+
+
+def load_self_assessment() -> Dict:
+    """加载学生自评画像"""
+    try:
+        if os.path.exists(SELF_ASSESSMENT_FILE):
+            with open(SELF_ASSESSMENT_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+    except Exception as e:
+        print(f"自评数据加载失败: {e}")
+    return {}
+
+
+def save_self_assessment(data: Dict):
+    """保存学生自评画像"""
+    try:
+        atomic_save_json(SELF_ASSESSMENT_FILE, data)
+    except Exception as e:
+        print(f"自评数据保存失败: {e}")
+
+
 def allowed_file(filename: str) -> bool:
     """检查文件扩展名是否允许"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -2355,7 +2417,8 @@ def analysis_sse_generator(system_content: str, prompt: str, max_tokens: int = 1
         ],
         "temperature": temperature,
         "max_tokens": max_tokens,
-        "stream": True
+        "stream": True,
+        "enable_thinking": False  # 关闭长思考链，避免先思考30秒+才输出
     }
     headers = {
         "Content-Type": "application/json",
@@ -2572,10 +2635,44 @@ def identify_intent(query: str) -> Dict:
     }
 
 # ====================== 动态提示词生成 ======================
+def _build_kb_context(query: str):
+    """构造知识库上下文：优先 RAG 召回最相关片段，索引不可用时退回全文注入。
+
+    返回 (context_text, meta)。meta 用于接口/日志展示召回来源与提示词压缩比，
+    让「用了 RAG」这件事可被观察和验证。
+    """
+    total_chars = len(knowledge_content or '')
+    if RAG_MODULE_AVAILABLE:
+        try:
+            chunks = rag_retriever.search(query, top_k=rag_retriever.TOP_K)
+            if chunks:
+                used = sum(len(c['text']) for c in chunks)
+                return rag_retriever.format_context(chunks), {
+                    'mode': 'rag',
+                    'chunks': len(chunks),
+                    'used_chars': used,
+                    'total_chars': total_chars,
+                    'compress_ratio': round(1 - used / total_chars, 3) if total_chars else 0,
+                    'degraded': bool(chunks[0].get('degraded')),
+                    'sources': [
+                        {'title': c['title'], 'source': c['source'], 'score': c['score'],
+                         'vector_score': c['vector_score'], 'keyword_score': c['keyword_score']}
+                        for c in chunks
+                    ],
+                }
+        except Exception as e:  # noqa: BLE001 - 召回异常绝不阻断问答
+            print(f"[RAG] 召回失败，退回全文注入: {e}")
+    return (knowledge_content or ""), {
+        'mode': 'full', 'chunks': 0, 'used_chars': total_chars, 'total_chars': total_chars,
+        'compress_ratio': 0, 'degraded': False, 'sources': [],
+    }
+
+
 def generate_system_prompt(query: str, mode: str = 'fast') -> str:
-    """根据用户查询动态生成系统提示词，集成知识图谱上下文和意图识别"""
+    """根据用户查询动态生成系统提示词，集成 RAG 召回、知识图谱上下文和意图识别"""
     kg_results = search_knowledge_graph(query)
     intent = identify_intent(query)
+    kb_context, _kb_meta = _build_kb_context(query)
     
     kg_context = ""
     if kg_results:
@@ -2609,11 +2706,11 @@ def generate_system_prompt(query: str, mode: str = 'fast') -> str:
 {intent_instructions.get(intent['intent'], intent_instructions['general_question'])}
 
 【知识库】
-{knowledge_content if knowledge_content else "（知识库为空）"}
+{kb_context if kb_context else "（知识库为空）"}
 {kg_context}
 
 要求：
-1. 优先使用知识库和相关知识点回答
+1. 严格依据知识库检索结果回答，引用时标注来源片段编号
 2. 如果涉及多个知识点，说明它们之间的关联关系
 3. 回答要专业、准确，符合通信工程领域规范
 """
@@ -2726,17 +2823,29 @@ def login():
     class_name = data.get('class_name', '')
     
     if role == 'teacher':
-        # 老师登录：需要验证账号密码
-        if TEACHER_ACCOUNTS.get(student_name) == password:
+        # 老师登录：校验哈希密码（历史明文已在启动时迁移为哈希，明文不再落盘）
+        if SECURITY_MODULE_AVAILABLE:
+            ok = security.verify_teacher(student_name, password)
+        else:
+            ok = TEACHER_ACCOUNTS.get(student_name) == password
+        if ok:
             session['authenticated'] = True
             session['role'] = 'teacher'
             session['student_name'] = student_name
+            if SECURITY_MODULE_AVAILABLE:
+                security.audit('login', target=f'teacher:{student_name}', detail='老师登录成功')
             return jsonify({'success': True})
         else:
+            if SECURITY_MODULE_AVAILABLE:
+                security.audit('login_failed', target=f'teacher:{student_name}', detail='老师账号或密码错误')
             return jsonify({'success': False, 'message': '老师账号或密码错误'})
     
-    # 学生登录：使用统一访问密码
-    if password == ACCESS_PASSWORD:
+    # 学生登录：使用统一访问密码（哈希校验）
+    if SECURITY_MODULE_AVAILABLE:
+        password_ok = security.verify_access_password(password)
+    else:
+        password_ok = password == ACCESS_PASSWORD
+    if password_ok:
         session['authenticated'] = True
         session['role'] = role
         is_new_user = False
@@ -2811,8 +2920,14 @@ def login():
 
             save_students(students)
 
+        if SECURITY_MODULE_AVAILABLE:
+            security.audit('login', target=f"student:{student_no or student_name}",
+                           detail=f"学生登录成功（{'新用户' if is_new_user else '老用户'}）")
         return jsonify({'success': True, 'is_new_user': is_new_user, 'student_name': student_name})
     else:
+        if SECURITY_MODULE_AVAILABLE:
+            security.audit('login_failed', target=f"student:{student_no or student_name}",
+                           detail='访问密码错误')
         return jsonify({'success': False, 'message': '密码错误'})
 
 
@@ -2840,6 +2955,7 @@ def get_current_user():
         return jsonify({'error': '请先登录'}), 401
     
     return jsonify({
+        'authenticated': True,
         'role': session.get('role', 'student'),
         'student_name': session.get('student_name', ''),
         'student_no': session.get('student_no', ''),
@@ -2949,6 +3065,9 @@ def create_class():
     classes.append(new_class)
     save_classes(classes)
     
+    if SECURITY_MODULE_AVAILABLE:
+        security.audit('class_create', target=class_name, detail=f'新建班级 id={new_class["id"]}',
+                       after={'name': class_name})
     return jsonify({'success': True, 'class': new_class})
 
 
@@ -2974,10 +3093,14 @@ def update_class(class_id):
     if class_name and any(c['name'] == class_name and c['id'] != class_id for c in classes):
         return jsonify({'error': '班级名称已存在'}), 400
     
+    old_name = class_obj.get('name', '')
     if class_name:
         class_obj['name'] = class_name
     
     save_classes(classes)
+    if SECURITY_MODULE_AVAILABLE and class_name and class_name != old_name:
+        security.audit('class_update', target=class_name, detail=f'班级 id={class_id} 更名',
+                       before={'name': old_name}, after={'name': class_name})
     return jsonify({'success': True, 'class': class_obj})
 
 
@@ -2991,18 +3114,27 @@ def delete_class(class_id):
         return jsonify({'error': '只有老师才能删除班级'}), 403
     
     classes = load_classes()
+    target = next((c for c in classes if c['id'] == class_id), None)
     classes = [c for c in classes if c['id'] != class_id]
     save_classes(classes)
     
+    if SECURITY_MODULE_AVAILABLE and target:
+        security.audit('class_delete', target=target.get('name', str(class_id)),
+                       detail=f'删除班级 id={class_id}',
+                       before={'name': target.get('name', ''), 'student_count': target.get('student_count', 0)})
     return jsonify({'success': True})
 
 
 @app.route('/api/classes/<int:class_id>/students', methods=['GET'])
 def get_class_students(class_id):
-    """获取班级成员列表"""
+    """获取班级成员列表（含姓名，仅限老师，避免学生枚举同学名单）"""
     if not session.get('authenticated'):
         return jsonify({'error': '请先登录'}), 401
-    
+    if SECURITY_MODULE_AVAILABLE and session.get('role') != 'teacher':
+        security.audit('login_failed', target=f"class_roster:{class_id}",
+                       detail='非教师尝试读取班级名册，已拒绝')
+        return jsonify({'error': '权限不足：该操作仅限老师'}), 403
+
     classes = load_classes()
     class_obj = next((c for c in classes if c['id'] == class_id), None)
     
@@ -3073,6 +3205,10 @@ def add_student_to_class(class_id):
     class_obj['student_count'] = len([s for s in students if s.get('class_name') == class_obj['name']])
     save_classes(classes)
     
+    if SECURITY_MODULE_AVAILABLE:
+        security.audit('class_add_student', target=student_name,
+                       detail=f'加入班级 {class_obj["name"]}（id={class_id}）',
+                       after={'class_name': class_obj['name']})
     return jsonify({'success': True, 'message': f'学生 {student_name} 已添加到班级'})
 
 
@@ -3105,6 +3241,10 @@ def remove_student_from_class(class_id, student_id):
     class_obj['student_count'] = len([s for s in students if s.get('class_name') == class_obj['name']])
     save_classes(classes)
     
+    if SECURITY_MODULE_AVAILABLE:
+        security.audit('class_remove_student', target=student.get('name', student_id),
+                       detail=f'移出班级 {class_obj["name"]}（id={class_id}）',
+                       before={'class_name': class_obj['name']}, after={'class_name': ''})
     return jsonify({'success': True, 'message': f'学生已从班级移除'})
 
 
@@ -3413,7 +3553,8 @@ def chat_endpoint():
                 "messages": messages,
                 "temperature": temperature,
                 "max_tokens": max_tokens,
-                "stream": False
+                "stream": False,
+                "enable_thinking": False  # 关闭长思考链
             }
             
             response = requests.post(API_URL, headers=headers, json=payload, timeout=60)
@@ -3590,7 +3731,8 @@ def stream_generator(headers, messages, temperature, max_tokens, search_query=No
         "messages": messages,
         "temperature": temperature,
         "max_tokens": max_tokens,
-        "stream": True
+        "stream": True,
+        "enable_thinking": False  # 关闭长思考链：否则模型先思考30秒+才输出，前端表现为卡住
     }
     
     full_response = ""
@@ -4226,6 +4368,13 @@ def update_system_prompt():
 4. 回答要详细、有深度，控制在500字以内
 """
 
+    # 知识库内容变化 → 后台重建 RAG 索引（不阻塞上传/审核等调用方）
+    if RAG_MODULE_AVAILABLE:
+        try:
+            rag_retriever.ensure_index(async_mode=True)
+        except Exception as e:  # noqa: BLE001
+            print(f"[RAG] 索引重建调度失败: {e}")
+
 
 @app.route('/api/knowledge/upload', methods=['POST'])
 def upload_knowledge_file():
@@ -4262,6 +4411,11 @@ def upload_knowledge_file():
     
     if success_count > 0:
         update_system_prompt()
+        if SECURITY_MODULE_AVAILABLE:
+            security.audit(
+                'knowledge_upload',
+                target='、'.join(r.get('filename', '') for r in results if r.get('success')),
+                detail=f"成功 {success_count} 个，重复 {duplicate_count} 个，失败 {failed_count} 个")
     
     if len(results) == 1:
         single = results[0]
@@ -4430,6 +4584,10 @@ def delete_knowledge_upload(entry_id):
 
     # 5. 刷新系统提示词中的知识库内容
     update_system_prompt()
+
+    if SECURITY_MODULE_AVAILABLE:
+        security.audit('knowledge_delete', target=filename,
+                       detail=f'删除上传记录 {entry_id}，同步清理知识库段落与原件')
 
     return jsonify({'success': True, 'message': f'已删除 "{filename}" 及其知识库内容'})
 
@@ -5263,7 +5421,7 @@ def knowledge_graph_page():
 def scenario_page():
     """场景模拟页面"""
     if not session.get('authenticated'):
-        return redirect('/login-page')
+        return redirect('/')
     return render_template('scenario.html')
 
 
@@ -5271,70 +5429,91 @@ def scenario_page():
 def scenario_demo():
     """剧情演绎演示页面"""
     if not session.get('authenticated'):
-        return redirect('/login-page')
+        return redirect('/')
     return render_template('scenario_demo.html')
 
 
 # ====================== AI 自动生成场景实训 ======================
 
-SCENARIO_GEN_PROMPT = """你是一个交互式实训课程设计专家。请根据用户提供的场景主题与要求，生成一套完整的交互式虚拟仿真实训流程。
+SCENARIO_GEN_PROMPT = """你是通信与电子信息工程领域的资深实训专家，擅长把真实工程项目设计成"沉浸式、强交互、有陷阱"的虚拟仿真训练剧本。请根据用户提供的场景主题与要求，生成一套【长流程、高保真】的交互式实训。
 
-【最重要】所有内容必须紧扣用户提供的场景主题！不要默认生成基站/5G相关内容。如果用户说的是"数据中心机房设计"，就生成数据中心的内容；如果用户说的是"光纤铺设"，就生成光纤铺设的内容。选项、问题、勘察表字段等都必须与用户主题直接相关。
+【最重要铁律】
+1. 所有内容必须紧扣用户主题！主题是数据中心就写数据中心，是光纤铺设就写光纤铺设，严禁默认套用5G基站内容。
+2. 只输出纯JSON（不要markdown代码块、不要解释文字），必须是合法JSON：双引号、无注释、无尾逗号。
+3. 输出格式固定：{"steps": [...], "scoreMax": 数字}
 
-你必须输出**纯JSON**（不要markdown代码块、不要解释文字），格式如下：
-{"steps": [...], "scoreMax": 数字}
+══════════ 一、总体结构（10-13步，工程全流程） ══════════
+参考真实工程"接报→研判→准备→现场→诊断→处置→验收→复盘"闭环，按主题裁剪：
+  text 接警/项目背景（含时间地点、工单或告警编号、影响范围、时限压力）
+  choice 角色分工/班组协同选择（1-2个）
+  quiz 第一轮研判：资料会审/告警关联分析（3-4小题）
+  text 出动准备：安全交底、工器具与仪表清单、行车/进场要点
+  siteselect 现场优先级选择（故障抢修类用"先修哪个点"，设计类用"点位/路由选择"；主题不适合可省略）
+  survey 第一轮现场勘察/实测（3-4个tab、9-12个字段，含3-6个仪表测量项）
+  quiz 第二轮深度诊断推理（3-5小题，基于上一步实测数据，含"表面恢复假象/误判根因"陷阱）
+  choice或text 处置决策点（资源受限下的方案权衡，如"带油机先抢通 vs 等备件彻底修"）
+  survey 第二轮可选（主题需要时）：处置后复测数据（1-2个tab即可）
+  design 处置/设计方案（4-5组决策题）
+  quiz 验收与拨测（2-3小题：验收门限、业务验证、规范红线）
+  text 复盘归档：故障根因树、处理经过、经验沉淀、预防措施
+要求：text 4-6个、choice 1-2个、quiz 2-3个、survey 1-2个、design 1个、siteselect 0-1个，总数10-12步。
 
-steps数组包含5-7个步骤，每个步骤的 type 只能是以下6种之一。严格遵守每种类型的字段格式：
+══════════ 二、高保真要求（决定真实感，务必做到） ══════════
+1. 专业细节真实：使用真实告警名称、KPI指标、门限值与仪表（如驻波比VSWR<1.5、RRU/BBU、光功率预算dBm、OTDR曲线事件、FEC误码BER、接地电阻<10Ω、红外测温温差、PDU/UPS、熔纤盘损耗等，按主题选取，不要堆砌）。
+2. 数据自洽：survey里plan的参考值、measure测量值、quiz题目引用的数据必须前后一致（比如测出VSWR 2.8，后面诊断题就要围绕2.8展开）。
+3. 诊断有层次：设置"表象原因"和"真正根因"，错误选项要有现场迷惑性（如"重启基站试试""直接换设备"），feedback必须讲清为什么错、正确思路是什么。
+4. 安全与规范：至少1道题考安全红线（断电验电、接地、登高、有限空间、雷雨作业、动火等按主题选）。
+5. 工程约束：体现时间压力、人手/备件/预算受限、多专业协同、客户沟通等真实约束。
+6. 文案有现场感：像真实工单和师傅带教，简洁有力；feedback每条1-2句，先判定再讲原理，避免长篇大论。
+7. 内容用<b>加粗</b>关键词、<br>换行；所有文本字段值内严禁出现英文双引号(")和反斜杠(\)，引用话语一律用中文引号「」，也不要写裸换行符（用<br>代替）；不要出现"AI/模型/本剧本"等穿帮词。
 
-══════ 1. text 类型（背景/说明） ══════
-{"type":"text", "title":"步骤标题", "label":"步骤标签", "content":"HTML格式的内容，可用<b>加粗</b>和<br>换行", "nextText":"下一步"}
+══════════ 三、六种步骤类型的JSON格式（严格遵守） ══════════
 
-══════ 2. choice 类型（单选岗位/角色） ══════
-{"type":"choice", "title":"步骤标题", "label":"步骤标签", "intro":"HTML引导语", "options":[{"name":"选项名","sub":"描述","good":true,"feedback":"✅ 选对的反馈"}, {"name":"选项名","sub":"描述","feedback":"❌ 选错的反馈"}]}
-注意：只有一个选项的 good 为 true。
+1. text 背景/说明
+{"type":"text","title":"步骤标题","label":"2-4字标签","content":"HTML内容，可用<b>和<br>","nextText":"按钮文案（贴合上下文，如'领取工单''出发上站'）"}
 
-══════ 3. quiz 类型（多步选择） ══════
-{"type":"quiz", "title":"步骤标题", "label":"步骤标签", "subSteps":[
-  {"q":"问题文本", "options":[{"name":"选项1","sub":"描述"},{"name":"选项2","sub":"描述"}], "correct": 正确索引(从0开始)},
-  {"q":"多选问题", "options":[{"name":"选项1","sub":"描述"},{"name":"选项2","sub":"描述"}], "multi":true, "required": 必选项索引}
-]}
-注意：subSteps有3-5个，correct是数字索引。每个选项的name和sub必须与用户主题相关。
+2. choice 单选决策（岗位/方案/协同）
+{"type":"choice","title":"步骤标题","label":"标签","intro":"HTML引导语","options":[
+ {"name":"选项名","sub":"说明","good":true,"feedback":"✅ 选对：详细原因"},
+ {"name":"选项名","sub":"说明","feedback":"❌ 选错：为什么不行"}]}
+仅一个 good:true。
 
-══════ 4. siteselect 类型（地图选址） ══════
-{"type":"siteselect", "title":"步骤标题", "label":"步骤标签", "intro":"HTML引导语", "spots":[
-  {"name":"位置1","ok":true,"x":46,"y":38,"feedback":"✅ 正确选址的详细分析"},
-  {"name":"位置2","ok":false,"x":78,"y":30,"feedback":"❌ 错误选址的原因分析"}
-], "correctIdx":0}
-注意：x在5-90之间，y在15-75之间，只有一个 ok 为 true，correctIdx是正确位置的索引。位置名称和分析内容必须与用户主题相关。
+3. quiz 连环选择题（研判/诊断/验收）
+{"type":"quiz","title":"步骤标题","label":"标签","heatmap":false,"subSteps":[
+ {"q":"题干（可含<b>）","options":[{"name":"选项","sub":"解析/现象"},{"name":"选项","sub":""}],"correct":1},
+ {"q":"多选题干","multi":true,"required":[0,2],"options":[...],"sub":""}]}
+- subSteps 2-5个；单选 correct 为数字索引；多选 multi:true 且 required 为必选索引数组。
+- heatmap 字段：仅当本步骤需要"信号/覆盖摸测地图"可视化时设 true（整套实训最多1个），其余一律 false 或省略。
 
-══════ 5. survey 类型（勘察表填写） ══════
-{"type":"survey", "title":"步骤标题", "label":"步骤标签", "intro":"HTML引导语", "tabs":["标签1","标签2","标签3"], "plan":[[["字段名","参考值"],["字段名","参考值"]],[["字段名","参考值"]],[["字段名","参考值"]]], "fields":[
-  {"tab":0,"key":"字段名","type":"input","ph":"占位提示"},
-  {"tab":0,"key":"字段名","type":"select","opts":["选项1","选项2"]},
-  {"tab":0,"key":"字段名","type":"input","ph":"点击测量","measure":{"device":"laser","icon":"🔴","name":"测量设备名","value":"测量值"}}
-]}
-注意：tabs有2-3个，plan是二维数组对应每个tab的参考数据，fields中tab索引对应tabs。所有字段名和参考值必须与用户主题相关。
+4. siteselect 地图选点
+{"type":"siteselect","title":"步骤标题","label":"标签","intro":"HTML引导语","spots":[
+ {"name":"点位名","ok":true,"x":46,"y":38,"feedback":"✅ 详细分析"},
+ {"name":"点位名","ok":false,"x":78,"y":30,"feedback":"❌ 原因分析"}],"correctIdx":0}
+x∈[5,90]，y∈[15,75]，仅一个 ok:true。
 
-══════ 6. design 类型（最终设计选择） ══════
-{"type":"design", "title":"步骤标题", "label":"步骤标签", "intro":"HTML引导语", "groups":[
-  {"q":"问题1","options":["选项A","选项B","选项C"],"correct": 正确索引},
-  {"q":"问题2","options":["选项A","选项B","选项C"],"correct": 正确索引}
-], "result":"最终方案的HTML总结"}
-注意：问题和选项必须与用户主题相关。
+5. survey 勘察/测量表
+{"type":"survey","title":"步骤标题","label":"标签","intro":"HTML引导语",
+ "tabs":["Tab1","Tab2","Tab3"],
+ "plan":[[["字段名","参考值"]],[["字段名","参考值"]],[["字段名","参考值"]]],
+ "fields":[
+  {"tab":0,"key":"字段名","type":"input","ph":"单位/提示"},
+  {"tab":0,"key":"字段名","type":"select","opts":["选项A","选项B","选项C"]},
+  {"tab":0,"key":"字段名","type":"input","ph":"点击测量","measure":{"device":"site_master","icon":"📟","name":"仪表名","value":"实测值含单位"}}]}
+- tabs 2-4个；plan 与 tabs 一一对应（参考资料弹窗用）；fields 的 tab 为索引。
+- device 可选：site_master(天馈仪)、otdr(光时域反射仪)、infrared(红外测温)、multimeter(万用表)、ground_tester(接地电阻仪)、opm(光功率计)、laser(激光测距)、spectrum(频谱仪)，按主题选，icon 用合适emoji。
+- measure 测量值必须与后续诊断题数据一致。
 
-══════ 评分规则 ══════
-scoreMax = quiz的subSteps数(每题1分) + siteselect的2分 + survey中有measure字段的数量(每项1分) + design的groups数(每项1分)
+6. design 最终方案决策
+{"type":"design","title":"步骤标题","label":"标签","intro":"HTML引导语（可先给现场结论）","groups":[
+ {"q":"决策题1","options":["A","B","C"],"correct":0},
+ {"q":"决策题2","options":["A","B","C","D"],"correct":2}],"result":"最终方案HTML总结（含验收门限与交付物）"}
+groups 4-5个，options 3-4个。
 
-══════ 步骤顺序建议 ══════
-text(背景) → choice(岗位选择) → quiz(测试/摸测) → text(参数查询) → siteselect(选址) → survey(勘察表) → design(最终设计)
+══════════ 四、评分 scoreMax 计算（务必精确） ══════════
+scoreMax = 所有quiz的subSteps总数（每题1分）+ siteselect个数×2 + 所有survey中measure字段总数（每项1分）+ design的groups数（每组1分）。choice和text不计分。
 
-══════ 重要约束 ══════
-1. 【最重要】所有内容必须与用户提供的场景主题紧密相关，严禁默认生成基站/5G内容
-2. 每个选项的feedback要详细、有教育意义
-3. 内容用<b>标签强调关键词，用<br>换行
-4. 输出必须是合法JSON，不要包含注释、不要用单引号
-5. 不要输出```json```代码块标记，直接输出JSON原文
-"""
+══════════ 五、输出前自检 ══════════
+步骤数10-12；题型与字段完整；x/y在范围内；correct/required索引不越界；plan与tabs数量一致；数据前后自洽；JSON可被json.loads直接解析。"""
 
 
 @app.route('/api/scenario/generate', methods=['POST'])
@@ -5367,34 +5546,114 @@ def api_generate_scenario():
             "model": MODEL_NAME,
             "messages": messages,
             "temperature": 0.7,
-            "max_tokens": 4000,
-            "stream": False
+            "max_tokens": 12000,
+            "stream": True,
+            "enable_thinking": False  # 关闭长思考链：生成时长由约8分钟降至1-3分钟
         }
 
-        print(f"[场景生成] 主题={topic}, 开始调用AI...")
-        resp = requests.post(API_URL, headers=headers, json=payload, timeout=180)
+        print(f"[场景生成] 主题={topic}, 开始流式调用AI（约需1-3分钟）...")
+        # 流式接收：90秒内有任意数据块到达即保活，墙钟总时长兜底480秒
+        resp = requests.post(API_URL, headers=headers, json=payload,
+                             stream=True, timeout=(30, 90))
 
         if resp.status_code != 200:
-            print(f"[场景生成] AI请求失败: {resp.status_code} - {resp.text[:300]}")
+            err_text = resp.text[:300]
+            print(f"[场景生成] AI请求失败: {resp.status_code} - {err_text}")
             return jsonify({'error': f'AI请求失败: {resp.status_code}'}), 500
 
-        answer = resp.json()["choices"][0]["message"]["content"].strip()
+        chunks = []
+        deadline = time.time() + 480
+        for line in resp.iter_lines():
+            if time.time() > deadline:
+                resp.close()
+                return jsonify({'error': 'AI创作超时（超过8分钟），请缩短要求或稍后重试'}), 504
+            if not line:
+                continue
+            data_line = line.decode("utf-8", errors="ignore").strip()
+            if not data_line.startswith("data:"):
+                continue
+            data_str = data_line[5:].strip()
+            if data_str == "[DONE]":
+                break
+            try:
+                obj = json.loads(data_str)
+                delta = obj.get("choices", [{}])[0].get("delta", {}).get("content")
+                if delta:
+                    chunks.append(delta)
+            except (ValueError, IndexError, KeyError):
+                continue
+
+        answer = "".join(chunks).strip()
+        if not answer:
+            return jsonify({'error': 'AI未返回有效内容，请重试'}), 502
+        print(f"[场景生成] 流式接收完成，正文 {len(answer)} 字符")
 
         # 去除可能的 ```json / ``` 包裹
         if answer.startswith('```'):
             answer = re.sub(r'^```(?:json)?\s*', '', answer)
             answer = re.sub(r'\s*```$', '', answer)
 
-        try:
-            result = json.loads(answer)
-        except json.JSONDecodeError:
-            # 尝试提取第一个 { 到最后一个 }
-            s = answer.find('{')
-            e = answer.rfind('}')
-            if s >= 0 and e > s:
-                result = json.loads(answer[s:e + 1])
-            else:
-                return jsonify({'error': 'AI返回的JSON格式无法解析', 'raw': answer[:500]}), 500
+        # 多级容错解析：原文 → 去尾逗号 → 截取首尾大括号 → 截取后去尾逗号 → 截断自动补全
+        def _loose_json_loads(txt):
+            s, e = txt.find('{'), txt.rfind('}')
+            core = txt[s:e + 1] if s >= 0 and e > s else txt
+            cands = [txt,
+                     re.sub(r',(\s*[}\]])', r'\1', txt),
+                     core,
+                     re.sub(r',(\s*[}\]])', r'\1', core)]
+
+            def _close_json(prefix):
+                """字符串感知的栈式补全：按未闭合括号的正确顺序补全（字符串值内的括号不参与计数）"""
+                stack, in_str, esc = [], False, False
+                for ch in prefix:
+                    if in_str:
+                        if esc:
+                            esc = False
+                        elif ch == '\\':
+                            esc = True
+                        elif ch == '"':
+                            in_str = False
+                    else:
+                        if ch == '"':
+                            in_str = True
+                        elif ch in '{[':
+                            stack.append(ch)
+                        elif ch == '}' and stack and stack[-1] == '{':
+                            stack.pop()
+                        elif ch == ']' and stack and stack[-1] == '[':
+                            stack.pop()
+                if in_str:
+                    prefix += '"'
+                return prefix + ''.join('}' if c == '{' else ']' for c in reversed(stack))
+
+            # 截断补全：输出达到 max_tokens 被截断时，从末尾逐个边界回退，补全未闭合括号
+            # 优先直接补全全文（截断点在字符串/数值中间时保住最多内容）
+            for closed in (_close_json(txt), _close_json(core)):
+                cands.append(closed)
+                cands.append(re.sub(r',(\s*[}\]])', r'\1', closed))
+            # 再从末尾的对象/键边界逐个回退补全（截断尾部残缺键值对时丢弃不完整部分）
+            # 注意：必须在原始 txt 上搜边界，core 的 rfind('}') 会丢弃截断尾部导致深层截断无法回退
+            bounds = sorted({m.start() for m in re.finditer(r',\s*\{', txt)} |
+                            {m.start() for m in re.finditer(r',\s*"', txt)})
+            for pos in reversed(bounds[-6:]):  # 最多回退6个边界
+                for closed in (_close_json(txt[:pos]), _close_json(txt[:pos + 1])):
+                    cands.append(closed)
+                    cands.append(re.sub(r',(\s*[}\]])', r'\1', closed))
+            for cand in cands:
+                try:
+                    return json.loads(cand)
+                except json.JSONDecodeError:
+                    continue
+            return None
+
+        result = _loose_json_loads(answer)
+        if result is None:
+            try:
+                json.loads(answer)
+            except json.JSONDecodeError as je:
+                print(f"[场景生成] JSON解析失败 pos={je.pos} 上下文: "
+                      f"{answer[max(0, je.pos-120):je.pos+120]}")
+            return jsonify({'error': 'AI返回的JSON格式有误，请重试一次'}), 502
 
         steps = result.get('steps', [])
         score_max = result.get('scoreMax', 0)
@@ -5402,16 +5661,51 @@ def api_generate_scenario():
         if not steps or not isinstance(steps, list):
             return jsonify({'error': 'AI生成的实训步骤为空或格式错误'}), 500
 
-        # 安全校验：确保每个step有type字段
-        for i, st in enumerate(steps):
-            if not isinstance(st, dict) or 'type' not in st:
-                return jsonify({'error': f'第{i + 1}步缺少type字段'}), 500
+        # 安全校验：截断补全可能产生残缺尾步（类型被截短、关键列表字段缺失），
+        # 残缺只可能出现在尾部，丢弃尾步保住前面完整步骤，避免整单失败
+        valid_types = {'text', 'choice', 'quiz', 'siteselect', 'survey', 'design'}
+        list_fields = {'choice': 'options', 'quiz': 'subSteps', 'siteselect': 'spots',
+                       'survey': 'fields', 'design': 'groups'}
+        clean_steps = []
+        for st in steps:
+            if not isinstance(st, dict) or st.get('type') not in valid_types:
+                break
+            lf = list_fields.get(st['type'])
+            if lf and not isinstance(st.get(lf), list):
+                break
+            clean_steps.append(st)
+        if len(clean_steps) < len(steps):
+            print(f"[场景生成] 丢弃 {len(steps) - len(clean_steps)} 个残缺尾步（截断挽救）")
+        steps = clean_steps
+        if not steps:
+            return jsonify({'error': 'AI生成的实训步骤为空或格式错误，请重试一次'}), 500
+
+        # scoreMax 以步骤结构重算为准，防止 AI 算错分导致得分显示异常
+        def _calc_score(s):
+            total = 0
+            for st in s:
+                t = st.get('type')
+                if t == 'quiz':
+                    total += len(st.get('subSteps', []))
+                elif t == 'siteselect':
+                    total += 2
+                elif t == 'survey':
+                    total += sum(1 for f in st.get('fields', [])
+                                 if isinstance(f, dict) and f.get('measure'))
+                elif t == 'design':
+                    total += len(st.get('groups', []))
+            return total
+
+        calc_score = _calc_score(steps)
+        if not isinstance(score_max, int) or score_max != calc_score:
+            print(f"[场景生成] AI给出scoreMax={score_max}，按结构重算为{calc_score}")
+            score_max = calc_score
 
         print(f"[场景生成] 成功！生成 {len(steps)} 步, 满分 {score_max}")
         return jsonify({'steps': steps, 'scoreMax': score_max})
 
     except requests.Timeout:
-        return jsonify({'error': 'AI请求超时，请重试'}), 504
+        return jsonify({'error': 'AI创作超时（数据中断过久），请稍后重试'}), 504
     except Exception as e:
         print(f"[场景生成] 异常: {e}")
         return jsonify({'error': f'生成失败: {str(e)}'}), 500
@@ -5421,7 +5715,7 @@ def api_generate_scenario():
 def exercise_page():
     """互动式练习页面"""
     if not session.get('authenticated'):
-        return redirect('/login-page')
+        return redirect('/')
     return render_template('exercise.html')
 
 
@@ -5604,6 +5898,1261 @@ def ai_student_analysis(student_id):
     return analysis_sse_generator(system_content, prompt, max_tokens=1200)
 
 
+@app.route('/api/teacher/lesson-plan', methods=['POST'])
+def teacher_lesson_plan():
+    """教师一键生成教案（SSE流式）：根据教师提供的主题/要求/资料文件生成结构化教案"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'teacher':
+        return jsonify({'error': '仅教师可使用教案生成'}), 403
+
+    topic = (request.form.get('topic') or '').strip()
+    requirements = (request.form.get('requirements') or '').strip()
+    if not topic:
+        return jsonify({'error': '请填写课程/章节主题'}), 400
+
+    # 可选：上传资料文件，提取文本作为参考资料
+    material_text = ''
+    uploaded = request.files.get('file')
+    tmp_path = None
+    if uploaded and uploaded.filename and '.' in uploaded.filename:
+        ext = uploaded.filename.rsplit('.', 1)[1].lower()
+        if ext in ('pptx', 'docx', 'txt'):
+            try:
+                tmp_path = os.path.join(UPLOAD_FOLDER, f"lp_{uuid.uuid4().hex}.{ext}")
+                uploaded.save(tmp_path)
+                material_text = extract_text_from_document(tmp_path) or ''
+            except Exception:
+                material_text = ''
+    if tmp_path and os.path.exists(tmp_path):
+        try:
+            os.remove(tmp_path)
+        except Exception:
+            pass
+
+    # 截断参考资料，避免 prompt 过长拖慢响应
+    if len(material_text) > 6000:
+        material_text = material_text[:6000] + '\n……（资料已截断）'
+
+    system_content = (
+        "你是一位资深通信工程教育专家与教案设计顾问。"
+        "请根据教师提供的教学主题、教学要求和参考资料，撰写一份结构完整、可直接用于备课的高质量教案。"
+        "要求：\n"
+        "1. 使用 Markdown 格式，包含以下固定模块：\n"
+        "   ## 一、教学目标（知识/能力/素养三维度）\n"
+        "   ## 二、教学重点与难点\n"
+        "   ## 三、教学过程（含时间分配，如导入5min/新授30min/练习10min）\n"
+        "   ## 四、教学方法与手段\n"
+        "   ## 五、课堂练习与互动设计\n"
+        "   ## 六、课后作业与拓展\n"
+        "   ## 七、教学反思（预设学生易错点与应对）\n"
+        "2. 内容贴合通信工程专业实际，结合工程案例，避免空泛。\n"
+        "3. 时间分配合计与课时一致。\n"
+        "4. 语言精炼、条理清晰。\n"
+        "5. 末尾另起一行输出标识：✨ 本教案由 AI 生成，仅供参考"
+    )
+
+    prompt = f"【教学主题】{topic}\n"
+    if requirements:
+        prompt += f"\n【教学要求/学生情况/课时/特殊说明】\n{requirements}\n"
+    if material_text:
+        prompt += f"\n【教师提供的参考资料（PPT/Word/TXT 提取文本）】\n{material_text}\n"
+    prompt += "\n请根据以上信息生成一份完整教案。"
+
+    return analysis_sse_generator(system_content, prompt, max_tokens=2000, temperature=0.7)
+
+
+# ====================== 教师发布作业 / AI 批改 ======================
+def _strip_homework_answers(hw: Dict) -> Dict:
+    """学生未提交时剥离答案/解析/参考答案，防止泄露"""
+    safe = {k: v for k, v in hw.items() if k != 'questions'}
+    safe_questions = []
+    for q in hw.get('questions', []):
+        qq = {'id': q.get('id'), 'type': q.get('type'), 'question': q.get('question'),
+              'score': q.get('score', 0)}
+        if q.get('type') == 'choice':
+            qq['options'] = q.get('options', {})
+        safe_questions.append(qq)
+    safe['questions'] = safe_questions
+    return safe
+
+
+def grade_text_answers_by_ai(items: List[Dict]) -> Dict[str, Dict]:
+    """AI 批改主观题（一次调用批改全部）
+    items: [{question_id, question, reference_answer, max_score, student_answer}]
+    返回 {question_id: {score, feedback}}；任何异常均保底，不阻塞提交"""
+    result: Dict[str, Dict] = {}
+    if not items:
+        return result
+    try:
+        sys_prompt = (
+            "你是通信工程课程助教，负责批改学生的主观题作答。"
+            "依据题目、参考答案和满分给学生答案打分（0到满分，答到要点即给分），"
+            "并给出简短、鼓励性的批改意见（指出正确点、不足与改进方向）。"
+            "严格只返回JSON数组，不要输出任何额外文字或markdown代码块，格式："
+            '[{"question_id":"q2","score":8,"feedback":"…"}]'
+        )
+        blocks = []
+        for it in items:
+            blocks.append(
+                f"【题号】{it['question_id']}\n【题目】{it['question']}\n"
+                f"【参考答案】{it.get('reference_answer') or '（无）'}\n"
+                f"【满分】{it.get('max_score', 10)}\n【学生答案】{it.get('student_answer') or '（未作答）'}"
+            )
+        resp = requests.post(
+            API_URL,
+            headers={"Content-Type": "application/json", "Authorization": f"Bearer {API_KEY}"},
+            json={
+                "model": MODEL_NAME,
+                "messages": [
+                    {"role": "system", "content": sys_prompt},
+                    {"role": "user", "content": "请批改以下主观题：\n\n" + "\n\n".join(blocks)},
+                ],
+                "temperature": 0.3,
+                "max_tokens": 2000,
+                "stream": False,
+                "enable_thinking": False,
+            },
+            timeout=120,
+        )
+        if resp.status_code != 200:
+            raise RuntimeError(f"AI HTTP {resp.status_code}")
+        content = resp.json()["choices"][0]["message"]["content"].strip()
+        m = re.search(r"\[.*\]", content, re.S)
+        parsed = json.loads(m.group(0) if m else content)
+        for row in parsed:
+            qid = str(row.get("question_id", ""))
+            try:
+                score = float(row.get("score", 0))
+            except (TypeError, ValueError):
+                score = 0
+            result[qid] = {"score": score, "feedback": str(row.get("feedback", "")).strip()}
+    except Exception as e:
+        print(f"[作业AI批改] 失败，转人工: {e}")
+    for it in items:  # 保底：AI未返回的题目
+        if it["question_id"] not in result:
+            result[it["question_id"]] = {"score": 0, "feedback": "AI 暂未批改，请等待老师人工批改"}
+    return result
+
+
+def _final_submission_score(sub: Dict):
+    """取教师覆盖分，否则取AI/自动总分"""
+    if sub.get('teacher_score_override') is not None:
+        return sub.get('teacher_score_override')
+    return sub.get('ai_score_total', 0)
+
+
+@app.route('/homework-page')
+def homework_page():
+    """作业管理/作答页（师生共用，前端按 role 区分）"""
+    if not session.get('authenticated'):
+        return render_template('login.html')
+    return render_template('homework.html')
+
+
+@app.route('/api/homework', methods=['GET'])
+def api_homework_list():
+    """作业列表：教师看全部+统计；学生只看本班（未提交剥离答案）"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+
+    all_hw = load_homework()
+    submissions = load_homework_submissions()
+
+    if session.get('role') == 'teacher':
+        students = load_students()
+        out = []
+        for hw in all_hw:
+            classes = hw.get('class_names', [])
+            subbed = [sub for sub in submissions if sub.get('homework_id') == hw['id']]
+            scores = [_final_submission_score(sub) for sub in subbed]
+            by_class = {}
+            total_students = 0
+            for cname in classes:
+                members = [s for s in students if s.get('class_name') == cname]
+                total_students += len(members)
+                member_nos = {s.get('student_no') for s in members}
+                submitted_nos = {sub.get('student_no') for sub in subbed if sub.get('student_no') in member_nos}
+                by_class[cname] = {
+                    'student_count': len(members),
+                    'submitted_count': len(submitted_nos),
+                    'unsubmitted': [s.get('name') for s in members if s.get('student_no') not in submitted_nos],
+                }
+            out.append({
+                **hw,
+                'total_students': total_students,
+                'submitted_count': len(subbed),
+                'avg_score': round(sum(scores) / len(scores), 1) if scores else None,
+                'by_class': by_class,
+            })
+        out.sort(key=lambda h: h.get('created_at', ''), reverse=True)
+        return jsonify({'success': True, 'homework': out})
+
+    # 学生视图
+    current_class = session.get('class_name', '')
+    student_no = session.get('student_no', '')
+    out = []
+    for hw in all_hw:
+        if current_class not in hw.get('class_names', []):
+            continue
+        my_sub = next((sub for sub in submissions
+                       if sub.get('homework_id') == hw['id'] and sub.get('student_no') == student_no), None)
+        item = hw if my_sub else _strip_homework_answers(hw)
+        item = dict(item)
+        item['my_submission'] = my_sub  # 已提交则带本人完整记录（含答案/批改），未提交为None
+        out.append(item)
+    out.sort(key=lambda h: h.get('created_at', ''), reverse=True)
+    return jsonify({'success': True, 'homework': out})
+
+
+@app.route('/api/homework', methods=['POST'])
+def api_homework_create():
+    """教师发布作业（multipart/form-data）"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'teacher':
+        return jsonify({'error': '仅教师可发布作业'}), 403
+
+    title = (request.form.get('title') or '').strip()
+    description = (request.form.get('description') or '').strip()
+    deadline = (request.form.get('deadline') or '').strip()
+    if not title:
+        return jsonify({'error': '作业标题不能为空'}), 400
+    try:
+        class_names = json.loads(request.form.get('class_names') or '[]')
+        questions = json.loads(request.form.get('questions') or '[]')
+    except json.JSONDecodeError:
+        return jsonify({'error': '表单数据格式错误'}), 400
+    class_names = [c for c in class_names if c]
+    if not class_names:
+        return jsonify({'error': '请至少选择一个班级'}), 400
+    if not questions:
+        return jsonify({'error': '请至少添加一道题目'}), 400
+
+    clean_questions = []
+    for i, q in enumerate(questions, 1):
+        qtype = q.get('type')
+        qtext = (q.get('question') or '').strip()
+        if not qtext:
+            return jsonify({'error': f'第{i}题题干为空'}), 400
+        try:
+            score = float(q.get('score') if q.get('score') not in (None, '') else 0)
+        except (TypeError, ValueError):
+            score = 0
+        qd = {'id': f'q{i}', 'type': qtype, 'question': qtext, 'score': score}
+        cdim = (q.get('competence_dim') or '').strip()
+        if cdim:
+            qd['competence_dim'] = cdim
+        if qtype == 'choice':
+            options = {k: str(v).strip() for k, v in (q.get('options') or {}).items() if str(v).strip()}
+            if len(options) < 2:
+                return jsonify({'error': f'第{i}题至少需要2个有效选项'}), 400
+            answer = (q.get('answer') or '').strip()
+            if answer not in options:
+                return jsonify({'error': f'第{i}题请选择正确答案'}), 400
+            qd['options'] = options
+            qd['answer'] = answer
+            qd['analysis'] = (q.get('analysis') or '').strip()
+        elif qtype == 'text':
+            qd['reference_answer'] = (q.get('reference_answer') or '').strip()
+        else:
+            return jsonify({'error': f'第{i}题题型无效'}), 400
+        clean_questions.append(qd)
+
+    attachment = None
+    f = request.files.get('file')
+    if f and f.filename:
+        saved = save_uploaded_file(f, 'document')
+        if saved:
+            attachment = {'filename': saved.get('filename'), 'stored_filename': saved.get('stored_filename')}
+
+    homework_list = load_homework()
+    new_id = max([h.get('id', 0) for h in homework_list] + [0]) + 1
+    hw = {
+        'id': new_id,
+        'title': title,
+        'description': description,
+        'class_names': class_names,
+        'deadline': deadline,
+        'attachment': attachment,
+        'questions': clean_questions,
+        'creator': session.get('student_name', 'teacher'),
+        'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+    }
+    homework_list.append(hw)
+    save_homework(homework_list)
+    return jsonify({'success': True, 'homework': hw})
+
+
+@app.route('/api/homework/<int:hw_id>/submit', methods=['POST'])
+def api_homework_submit(hw_id):
+    """学生提交作业：选择题自动判分 + 主观题AI批改（重交覆盖）"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'student':
+        return jsonify({'error': '仅学生可提交作业'}), 403
+
+    hw = next((h for h in load_homework() if h.get('id') == hw_id), None)
+    if not hw:
+        return jsonify({'error': '作业不存在'}), 404
+
+    student_no = session.get('student_no', '')
+    current_class = session.get('class_name', '')
+    if current_class not in hw.get('class_names', []):
+        return jsonify({'error': '该作业不属于你的班级'}), 403
+
+    raw_answers = (request.get_json() or {}).get('answers') or {}
+    graded_answers = {}
+    choice_score = 0.0
+    text_items = []
+
+    for q in hw.get('questions', []):
+        qid = q['id']
+        val = raw_answers.get(qid)
+        student_val = val.strip() if isinstance(val, str) else ''
+        if q.get('type') == 'choice':
+            is_correct = student_val == q.get('answer')
+            sc = q.get('score', 0) if is_correct else 0
+            choice_score += sc
+            graded_answers[qid] = {'answer': student_val, 'is_correct': is_correct, 'score': sc}
+        else:
+            text_items.append({
+                'question_id': qid,
+                'question': q.get('question', ''),
+                'reference_answer': q.get('reference_answer', ''),
+                'max_score': q.get('score', 10),
+                'student_answer': student_val,
+            })
+            graded_answers[qid] = {'answer': student_val, 'score': 0,
+                                   'ai_feedback': 'AI 暂未批改，请等待老师人工批改'}
+
+    # 是否迟交
+    late = False
+    if hw.get('deadline'):
+        try:
+            dl_str = hw['deadline'].replace('T', ' ')
+            dl = datetime.strptime(dl_str[:16], '%Y-%m-%d %H:%M')
+            late = datetime.now() > dl
+        except (ValueError, TypeError):
+            pass
+
+    ai_results = grade_text_answers_by_ai(text_items)
+    ai_score_total = choice_score
+    for it in text_items:
+        qid = it['question_id']
+        r = ai_results.get(qid, {'score': 0, 'feedback': 'AI 暂未批改，请等待老师人工批改'})
+        sc = max(r['score'], 0)
+        if it['max_score']:
+            sc = min(sc, it['max_score'])
+        graded_answers[qid] = {'answer': graded_answers[qid]['answer'],
+                               'score': round(sc, 1), 'ai_feedback': r['feedback']}
+        ai_score_total += sc
+
+    submissions = load_homework_submissions()
+    now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    existing = next((s for s in submissions
+                     if s.get('homework_id') == hw_id and s.get('student_no') == student_no), None)
+    record = {
+        'id': existing['id'] if existing else (max([s.get('id', 0) for s in submissions] + [0]) + 1),
+        'homework_id': hw_id,
+        'student_no': student_no,
+        'student_name': session.get('student_name', ''),
+        'class_name': current_class,
+        'submitted_at': now_str,
+        'late': late,
+        'answers': graded_answers,
+        'choice_score': round(choice_score, 1),
+        'ai_score_total': round(ai_score_total, 1),
+        'teacher_comment': '',
+        'teacher_score_override': None,
+    }
+    if existing:
+        submissions[submissions.index(existing)] = record
+    else:
+        submissions.append(record)
+    save_homework_submissions(submissions)
+    # 作业分数反哺能力画像
+    try:
+        _update_competence_from_homework(student_no, hw, record)
+    except Exception as e:
+        print(f"[作业反哺能力画像] 失败（不影响提交）: {e}")
+
+    return jsonify({'success': True, 'homework': hw, 'submission': record})
+
+
+@app.route('/api/homework/<int:hw_id>/submissions', methods=['GET'])
+def api_homework_submissions(hw_id):
+    """教师查看某作业的完成情况（已交/未交名单+分数）"""
+    if not session.get('authenticated') or session.get('role') != 'teacher':
+        return jsonify({'error': '仅教师可查看'}), 403
+    hw = next((h for h in load_homework() if h.get('id') == hw_id), None)
+    if not hw:
+        return jsonify({'error': '作业不存在'}), 404
+
+    subs = [s for s in load_homework_submissions() if s.get('homework_id') == hw_id]
+    students = load_students()
+    roster = []
+    seen_nos = set()
+    for cname in hw.get('class_names', []):
+        for s in students:
+            if s.get('class_name') != cname:
+                continue
+            no = s.get('student_no')
+            seen_nos.add(no)
+            sub = next((x for x in subs if x.get('student_no') == no), None)
+            roster.append({
+                'student_no': no,
+                'student_name': s.get('name'),
+                'class_name': cname,
+                'submitted': bool(sub),
+                'submitted_at': sub.get('submitted_at') if sub else None,
+                'late': sub.get('late', False) if sub else False,
+                'score': _final_submission_score(sub) if sub else None,
+                'has_teacher_comment': bool(sub.get('teacher_comment')) if sub else False,
+            })
+    # 兼容：已提交但档案不在该班名单中的学生（历史档案班级为空等），以提交记录补入
+    for sub in subs:
+        no = sub.get('student_no')
+        if no in seen_nos or sub.get('class_name') not in hw.get('class_names', []):
+            continue
+        seen_nos.add(no)
+        roster.append({
+            'student_no': no,
+            'student_name': sub.get('student_name'),
+            'class_name': sub.get('class_name'),
+            'submitted': True,
+            'submitted_at': sub.get('submitted_at'),
+            'late': sub.get('late', False),
+            'score': _final_submission_score(sub),
+            'has_teacher_comment': bool(sub.get('teacher_comment')),
+        })
+    return jsonify({'success': True, 'homework': hw, 'roster': roster})
+
+
+@app.route('/api/homework/<int:hw_id>/submission/<student_no>', methods=['GET'])
+def api_homework_one_submission(hw_id, student_no):
+    """教师查看单个学生作答详情"""
+    if not session.get('authenticated') or session.get('role') != 'teacher':
+        return jsonify({'error': '仅教师可查看'}), 403
+    hw = next((h for h in load_homework() if h.get('id') == hw_id), None)
+    if not hw:
+        return jsonify({'error': '作业不存在'}), 404
+    sub = next((s for s in load_homework_submissions()
+                if s.get('homework_id') == hw_id and s.get('student_no') == student_no), None)
+    if not sub:
+        return jsonify({'error': '该学生尚未提交'}), 404
+    return jsonify({'success': True, 'homework': hw, 'submission': sub})
+
+
+@app.route('/api/homework/submission/<int:sub_id>/comment', methods=['POST'])
+def api_homework_teacher_comment(sub_id):
+    """教师保存批改建议/覆盖总分"""
+    if not session.get('authenticated') or session.get('role') != 'teacher':
+        return jsonify({'error': '仅教师可操作'}), 403
+    data = request.get_json() or {}
+    comment = (data.get('teacher_comment') or '').strip()
+    override = data.get('teacher_score_override')
+    if override is not None and str(override).strip() != '':
+        try:
+            override = float(override)
+        except (TypeError, ValueError):
+            return jsonify({'error': '分数必须是数字'}), 400
+    else:
+        override = None
+    submissions = load_homework_submissions()
+    sub = next((s for s in submissions if s.get('id') == sub_id), None)
+    if not sub:
+        return jsonify({'error': '提交记录不存在'}), 404
+    sub['teacher_comment'] = comment
+    sub['teacher_score_override'] = override
+    sub['teacher_reviewed_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    save_homework_submissions(submissions)
+    return jsonify({'success': True, 'submission': sub})
+
+
+# ====================== 岗位匹配引擎模块 ======================
+
+def _update_competence_from_homework(student_no: str, hw: Dict, submission: Dict):
+    """作业提交后，将有competence_dim的题目得分反哺到学生能力画像"""
+    students = load_students()
+    student = next((s for s in students if s.get('student_no') == student_no), None)
+    if not student:
+        return
+    if 'competence_analysis' not in student:
+        student['competence_analysis'] = {a['id']: {'count': 0, 'score': 0.0} for a in COMPETENCE_AREAS}
+
+    answers = submission.get('answers', {})
+    questions = {q['id']: q for q in hw.get('questions', [])}
+    updated = False
+    for qid, ans in answers.items():
+        q = questions.get(qid)
+        if not q or not q.get('competence_dim'):
+            continue
+        dim = q['competence_dim']
+        if dim not in student['competence_analysis']:
+            continue
+        max_score = q.get('score', 10)
+        got_score = ans.get('score', 0)
+        rate = (got_score / max_score * 100) if max_score > 0 else 0
+        area_data = student['competence_analysis'][dim]
+        area_data['count'] += 1
+        current = area_data['score']
+        area_data['score'] = round((current * (area_data['count'] - 1) + rate) / area_data['count'], 2)
+        updated = True
+    if updated:
+        save_students(students)
+
+
+def _match_dimensions_by_text(text: str) -> List[str]:
+    """用关键词把文本匹配到能力维度，返回命中的维度ID列表"""
+    if not text:
+        return []
+    text = str(text).lower()
+    matched = []
+    for dim_id, keywords in COMPETENCE_KEYWORDS.items():
+        if any(kw.lower() in text for kw in keywords):
+            matched.append(dim_id)
+    return matched
+
+
+def _get_wrong_question_competence(student_no: str) -> Dict:
+    """错题本反哺：薄弱点扣分、已掌握回补，返回各维度错题掌握分(0-100)"""
+    students = load_students()
+    student = next((s for s in students if s.get('student_no') == student_no), None)
+    if not student:
+        return {'scores': {}, 'total_wrong': 0, 'mastered_rate': 0.0}
+    student_name = student.get('name', '')
+    wrong_list = load_wrong_questions()
+    # 按维度聚合：{dim_id: {'wrong_count': N, 'mastered_count': M}}
+    dim_stats = {}
+    for wq in wrong_list:
+        if wq.get('student_name') != student_name:
+            continue
+        text = f"{wq.get('knowledge_point', '')} {wq.get('question', '')}"
+        dims = _match_dimensions_by_text(text)
+        if not dims:
+            continue
+        count = wq.get('count', 1)
+        mastered = wq.get('mastered', False)
+        for dim_id in dims:
+            stat = dim_stats.setdefault(dim_id, {'wrong_count': 0, 'mastered_count': 0})
+            stat['wrong_count'] += count
+            if mastered:
+                stat['mastered_count'] += count
+    scores = {}
+    total_wrong = 0
+    total_mastered = 0
+    for dim_id, stat in dim_stats.items():
+        wrong = stat['wrong_count']
+        mastered = stat['mastered_count']
+        total_wrong += wrong
+        total_mastered += mastered
+        # 未掌握的错题扣分：每条扣15分，最多扣到0
+        unmastered = wrong - mastered
+        penalty = min(100, unmastered * 15)
+        scores[dim_id] = round(max(0, 100 - penalty), 1)
+    mastered_rate = round(total_mastered / total_wrong, 2) if total_wrong > 0 else 0.0
+    return {'scores': scores, 'total_wrong': total_wrong, 'mastered_rate': mastered_rate}
+
+
+def _get_interview_competence(student_no: str) -> Dict:
+    """AI模拟面试表现：competence_scores直接映射，总分映射到综合素质维度"""
+    records = load_interview_records()
+    completed = [r for r in records if r.get('student_no') == student_no and r.get('status') == 'completed']
+    if not completed:
+        return {'scores': {}, 'avg_score': 0, 'count': 0}
+    dim_scores_sum = {}
+    dim_scores_cnt = {}
+    total_score_sum = 0
+    valid_dims = {a['id'] for a in COMPETENCE_AREAS}
+    for r in completed:
+        comp_scores = r.get('competence_scores') or {}
+        for dim_id, s in comp_scores.items():
+            if dim_id in valid_dims:
+                dim_scores_sum[dim_id] = dim_scores_sum.get(dim_id, 0) + float(s)
+                dim_scores_cnt[dim_id] = dim_scores_cnt.get(dim_id, 0) + 1
+        score = r.get('score')
+        if score is not None:
+            total_score_sum += float(score)
+    scores = {}
+    for dim_id, total in dim_scores_sum.items():
+        scores[dim_id] = round(total / dim_scores_cnt[dim_id], 1)
+    avg_score = round(total_score_sum / len(completed), 1) if completed else 0
+    # 面试总分给综合素质维度兜底（表达能力、思维能力）
+    if avg_score > 0:
+        for dim_id in ['teamwork', 'innovation']:
+            if dim_id not in scores:
+                scores[dim_id] = avg_score
+    return {'scores': scores, 'avg_score': avg_score, 'count': len(completed)}
+
+
+def _get_learning_behavior_score(student_no: str) -> Dict:
+    """学习行为分析：基于错题本的知识点覆盖广度+已掌握率，反映学习投入度"""
+    students = load_students()
+    student = next((s for s in students if s.get('student_no') == student_no), None)
+    if not student:
+        return {'score': 0, 'coverage': 0, 'mastered_rate': 0.0}
+    student_name = student.get('name', '')
+    wrong_list = load_wrong_questions()
+    kp_set = set()
+    mastered_kp = set()
+    for wq in wrong_list:
+        if wq.get('student_name') != student_name:
+            continue
+        kp = wq.get('knowledge_point', '')
+        if kp:
+            kp_set.add(kp)
+            if wq.get('mastered', False):
+                mastered_kp.add(kp)
+    # 覆盖广度：覆盖的知识点数量（上限8个得满分）
+    coverage = min(100, len(kp_set) / 8 * 100)
+    mastered_rate = len(mastered_kp) / len(kp_set) if kp_set else 0.0
+    # 综合学习投入度 = 覆盖广度(60%) + 掌握率(40%)
+    score = round(coverage * 0.6 + mastered_rate * 100 * 0.4, 1)
+    return {'score': score, 'coverage': round(coverage, 1), 'mastered_rate': round(mastered_rate, 2)}
+
+
+def _parse_job_competence(job_dict: Dict) -> Dict:
+    """AI解析岗位JD为12维度能力权重（非流式调用）"""
+    title = job_dict.get('title', '')
+    desc = (job_dict.get('description') or '')[:500]
+    req = (job_dict.get('requirements') or '')[:500]
+    skills = ', '.join(job_dict.get('skills', [])[:10])
+    dim_list = '\n'.join(f'{i+1}. {a["id"]} - {a["name"]}' for i, a in enumerate(COMPETENCE_AREAS))
+    sys_prompt = (
+        "你是通信工程岗位分析师。根据岗位描述，分析该岗位对通信工程学生12个能力维度的要求权重（0到1之间，0=不需要，1=极高要求）。\n"
+        f"12个维度：\n{dim_list}\n\n"
+        "严格只返回JSON，不要输出额外文字或markdown代码块，格式：\n"
+        '{"competence_weights": {"signal_system": 0.8, "communication_principle": 0.9}, '
+        '"required_skills": ["5G", "射频"], "career_type": "研发", "difficulty": "中高级"}'
+    )
+    user_prompt = (
+        f"岗位标题：{title}\n岗位描述：{desc}\n任职要求：{req}\n技能标签：{skills}\n请分析并返回JSON。"
+    )
+    try:
+        resp = requests.post(
+            API_URL,
+            headers={"Content-Type": "application/json", "Authorization": f"Bearer {API_KEY}"},
+            json={
+                "model": MODEL_NAME,
+                "messages": [
+                    {"role": "system", "content": sys_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                "temperature": 0.3,
+                "max_tokens": 1000,
+                "stream": False,
+                "enable_thinking": False,
+            },
+            timeout=60,
+        )
+        if resp.status_code != 200:
+            raise RuntimeError(f"AI HTTP {resp.status_code}")
+        content = resp.json()["choices"][0]["message"]["content"].strip()
+        m = re.search(r"\{.*\}", content, re.S)
+        parsed = json.loads(m.group(0) if m else content)
+        weights = parsed.get('competence_weights', {})
+        for area in COMPETENCE_AREAS:
+            if area['id'] not in weights:
+                weights[area['id']] = 0.0
+            try:
+                weights[area['id']] = max(0.0, min(1.0, float(weights[area['id']])))
+            except (TypeError, ValueError):
+                weights[area['id']] = 0.0
+        return {
+            'competence_weights': weights,
+            'required_skills': parsed.get('required_skills', []),
+            'career_type': parsed.get('career_type', ''),
+            'difficulty': parsed.get('difficulty', ''),
+        }
+    except Exception as e:
+        print(f"[岗位能力解析] 失败: {e}")
+        return None
+
+
+def _get_student_competence_vector(student_no: str) -> Dict:
+    """获取学生融合能力向量：作业(35%) + 错题掌握(25%) + 面试(15%) + 学习行为(10%) + 自评(15%)"""
+    student = next((s for s in load_students() if s.get('student_no') == student_no), None)
+    if not student:
+        return {'vector': {}, 'has_self_assessment': False, 'data_dimensions': 0,
+                'projects': [], 'certifications': [], 'internship': None}
+    ca = student.get('competence_analysis', {})
+    sa = load_self_assessment().get(student_no, {})
+    self_rating = sa.get('self_rating', {})
+    # 多数据源
+    wq_result = _get_wrong_question_competence(student_no)
+    wq_scores = wq_result['scores']
+    interview_result = _get_interview_competence(student_no)
+    interview_scores = interview_result['scores']
+    behavior_result = _get_learning_behavior_score(student_no)
+    behavior_score = behavior_result['score']
+
+    vector = {}
+    for area in COMPETENCE_AREAS:
+        aid = area['id']
+        hw_score = ca.get(aid, {}).get('score', 0.0)
+        hw_count = ca.get(aid, {}).get('count', 0)
+        rating = self_rating.get(aid, 0)
+        self_score = (float(rating) / 5 * 100) if rating else 0
+        wq_score = wq_scores.get(aid, 0.0)
+        iv_score = interview_scores.get(aid, 0.0)
+        # 仅纳入有数据的数据源，权重按比例归一化
+        sources = []
+        if hw_count > 0:
+            sources.append((hw_score, 0.35))
+        if wq_score > 0 or aid in wq_scores:
+            sources.append((wq_score, 0.25))
+        if iv_score > 0:
+            sources.append((iv_score, 0.15))
+        if behavior_score > 0:
+            sources.append((behavior_score, 0.10))
+        if rating:
+            sources.append((self_score, 0.15))
+        if sources:
+            total_w = sum(w for _, w in sources)
+            vector[aid] = round(sum(s * w for s, w in sources) / total_w, 1)
+        else:
+            vector[aid] = 0.0
+    return {
+        'vector': vector,
+        'has_self_assessment': bool(sa),
+        'data_dimensions': sum(1 for v in vector.values() if v > 0),
+        'projects': sa.get('projects', []),
+        'certifications': sa.get('certifications', []),
+        'internship': sa.get('internship'),
+        'data_sources': {
+            'homework_dims': sum(1 for a in COMPETENCE_AREAS if ca.get(a['id'], {}).get('count', 0) > 0),
+            'wrong_questions': wq_result['total_wrong'],
+            'interview_count': interview_result['count'],
+            'learning_behavior': behavior_result['score'],
+            'self_assessment_dims': len(self_rating),
+        },
+    }
+
+
+def _calculate_match_score(student_vector: Dict, job_weights: Dict) -> tuple:
+    """算法匹配度计算（无AI调用，即时返回）"""
+    total_weight = sum(job_weights.values())
+    if total_weight == 0:
+        return 0, [], [], 0
+    weighted_score = sum(student_vector.get(d, 0) * w for d, w in job_weights.items())
+    match_pct = (weighted_score / (total_weight * 100)) * 100
+    # 差距维度
+    gaps = []
+    for d, w in job_weights.items():
+        if w > 0:
+            needed = w * 100
+            have = student_vector.get(d, 0)
+            gap = needed - have
+            if gap > 0:
+                gaps.append({'dim': d, 'gap': round(gap, 1), 'have': round(have, 1), 'needed': round(needed, 1)})
+    gaps.sort(key=lambda x: -x['gap'])
+    # 优势维度
+    strengths = []
+    for d, w in job_weights.items():
+        if w > 0:
+            needed = w * 100
+            have = student_vector.get(d, 0)
+            if have >= needed:
+                strengths.append({'dim': d, 'have': round(have, 1), 'needed': round(needed, 1)})
+    strengths.sort(key=lambda x: -x['have'])
+    # 置信度
+    job_dims = [d for d, w in job_weights.items() if w > 0]
+    student_dims = [d for d in job_dims if student_vector.get(d, 0) > 0]
+    confidence = (len(student_dims) / len(job_dims) * 100) if job_dims else 0
+    return round(match_pct, 1), gaps[:3], strengths[:3], round(confidence, 1)
+
+
+@app.route('/job-match-page')
+def job_match_page():
+    """岗位匹配页面"""
+    if not session.get('authenticated'):
+        return render_template('login.html')
+    return render_template('job_match.html')
+
+
+@app.route('/api/career-match', methods=['GET'])
+def api_career_match():
+    """获取岗位列表+算法匹配分"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if not JOB_MODULE_AVAILABLE:
+        return jsonify({'error': '招聘模块未加载', 'jobs': []}), 503
+
+    student_no = session.get('student_no', '')
+    comp = _get_student_competence_vector(student_no)
+    sv = comp['vector']
+    jobs = job_crawler.load_job_recruitments()
+    result = []
+    for job in jobs[:100]:
+        weights = job.get('competence_weights')
+        if not weights:
+            match_pct, gaps, strengths, confidence = 0, [], [], 0
+            parsed = False
+        else:
+            match_pct, gaps, strengths, confidence = _calculate_match_score(sv, weights)
+            parsed = True
+        result.append({
+            'id': job.get('id'),
+            'title': job.get('title'),
+            'company': job.get('company'),
+            'location': job.get('location'),
+            'salary': job.get('salary'),
+            'education': job.get('education'),
+            'experience': job.get('experience'),
+            'match_pct': match_pct,
+            'confidence': confidence,
+            'gaps': gaps,
+            'strengths': strengths,
+            'parsed': parsed,
+            'career_type': job.get('career_type', ''),
+            'difficulty': job.get('difficulty', ''),
+            'source': job.get('source', ''),
+        })
+    result.sort(key=lambda x: -x.get('match_pct', 0))
+    return jsonify({
+        'success': True,
+        'jobs': result,
+        'student_profile': comp,
+        'dim_names': {a['id']: a['name'] for a in COMPETENCE_AREAS},
+    })
+
+
+@app.route('/api/career-match/<job_id>/analysis', methods=['GET'])
+def api_career_match_analysis(job_id):
+    """AI流式深度分析单个岗位匹配"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if not JOB_MODULE_AVAILABLE:
+        return jsonify({'error': '招聘模块未加载'}), 503
+    if session.get('role') != 'student':
+        return jsonify({'error': '仅学生可使用匹配分析'}), 403
+
+    jobs = job_crawler.load_job_recruitments()
+    job = next((j for j in jobs if str(j.get('id')) == str(job_id)), None)
+    if not job:
+        return jsonify({'error': '岗位不存在'}), 404
+
+    student_no = session.get('student_no', '')
+    comp = _get_student_competence_vector(student_no)
+    sv = comp['vector']
+    weights = job.get('competence_weights', {})
+    match_pct, gaps, strengths, confidence = _calculate_match_score(sv, weights)
+
+    dim_names = {a['id']: a['name'] for a in COMPETENCE_AREAS}
+    student_dims = '\n'.join(f'{dim_names[d]}: {sv.get(d, 0):.1f}/100' for d in dim_names)
+    job_dims = '\n'.join(f'{dim_names[d]}: 权重{weights.get(d, 0):.1f}' for d in dim_names if weights.get(d, 0) > 0)
+    gap_desc = '\n'.join(f'{dim_names[g["dim"]]}: 学生{g["have"]}/岗位需{g["needed"]}' for g in gaps)
+    strength_desc = '\n'.join(f'{dim_names[s["dim"]]}: 学生{s["have"]}/岗位需{s["needed"]}' for s in strengths)
+
+    system_content = (
+        "你是通信工程职业顾问。根据学生能力画像和岗位要求，给出深度匹配分析报告。\n"
+        "报告包含四个部分：\n"
+        "1. 整体匹配度评估（高/中/低 + 一句话理由，算法匹配度已给出供参考）\n"
+        "2. 三大优势（学生强于岗位要求的维度，解释为什么是优势）\n"
+        "3. 三大差距（学生弱于岗位要求的维度 + 具体补足建议）\n"
+        "4. 职业发展路径建议（这个岗位的发展方向 + 需要准备什么）\n\n"
+        "用Markdown格式输出，## 用于标题，### 用于子标题。语言简洁有力。"
+    )
+    prompt = (
+        f"## 学生能力画像\n{student_dims}\n\n"
+        f"## 岗位信息\n标题：{job.get('title')}\n公司：{job.get('company')}\n"
+        f"地点：{job.get('location')}\n薪资：{job.get('salary')}\n"
+        f"学历要求：{job.get('education')}\n经验要求：{job.get('experience')}\n\n"
+        f"## 岗位能力权重\n{job_dims}\n\n"
+        f"## 算法匹配结果\n匹配度：{match_pct}%\n置信度：{confidence}%\n"
+        f"优势维度：{strength_desc or '无明显优势'}\n差距维度：{gap_desc or '无明显差距'}\n\n"
+        f"## 学生补充信息\n"
+        f"项目经验：{json.dumps(comp.get('projects', []), ensure_ascii=False) if comp.get('projects') else '无'}\n"
+        f"证书：{json.dumps(comp.get('certifications', []), ensure_ascii=False) if comp.get('certifications') else '无'}\n"
+        f"实习：{json.dumps(comp.get('internship'), ensure_ascii=False) if comp.get('internship') else '无'}\n\n"
+        "请给出深度匹配分析报告。"
+    )
+    return Response(analysis_sse_generator(system_content, prompt, max_tokens=2000, temperature=0.7),
+                    content_type='text/event-stream')
+
+
+@app.route('/api/career-match/parse-competence', methods=['POST'])
+def api_career_match_parse_competence():
+    """教师批量解析岗位能力权重（分批+即时保存，避免超时丢失进度）"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'teacher':
+        return jsonify({'error': '仅教师可操作'}), 403
+    if not JOB_MODULE_AVAILABLE:
+        return jsonify({'error': '招聘模块未加载'}), 503
+
+    body = request.get_json(silent=True) or {}
+    batch_size = body.get('batch_size', 5)
+
+    jobs = job_crawler.load_job_recruitments()
+    parsed_count = 0
+    failed_count = 0
+    for job in jobs:
+        if parsed_count >= batch_size:
+            break
+        if job.get('competence_weights'):
+            continue
+        result = _parse_job_competence(job)
+        if result:
+            job['competence_weights'] = result['competence_weights']
+            job['required_skills'] = result.get('required_skills', [])
+            job['career_type'] = result.get('career_type', '')
+            job['difficulty'] = result.get('difficulty', '')
+            parsed_count += 1
+        else:
+            failed_count += 1
+        # 每解析一个立即保存，防止超时丢失进度
+        job_crawler.save_job_recruitments(jobs)
+    remaining = sum(1 for j in jobs if not j.get('competence_weights'))
+    return jsonify({
+        'success': True,
+        'parsed': parsed_count,
+        'failed': failed_count,
+        'remaining': remaining,
+        'total': len(jobs),
+    })
+
+
+@app.route('/api/student/self-assessment', methods=['GET'])
+def api_get_self_assessment():
+    """学生查看自评画像"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'student':
+        return jsonify({'error': '仅学生可查看自评'}), 403
+    student_no = session.get('student_no', '')
+    data = load_self_assessment()
+    sa = data.get(student_no, {})
+    return jsonify({
+        'success': True,
+        'assessment': sa,
+        'dimensions': [{'id': a['id'], 'name': a['name'], 'category': a['category']} for a in COMPETENCE_AREAS],
+    })
+
+
+@app.route('/api/student/self-assessment', methods=['POST'])
+def api_save_self_assessment():
+    """学生提交自评画像"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'student':
+        return jsonify({'error': '仅学生可提交自评'}), 403
+    student_no = session.get('student_no', '')
+    body = request.get_json() or {}
+    data = load_self_assessment()
+    data[student_no] = {
+        'projects': body.get('projects', []),
+        'certifications': body.get('certifications', []),
+        'internship': body.get('internship'),
+        'self_rating': body.get('self_rating', {}),
+        'updated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+    }
+    save_self_assessment(data)
+    return jsonify({'success': True, 'assessment': data[student_no]})
+
+
+# ====================== AI模拟面试 + 面试案例知识库模块 ======================
+
+def load_interview_cases() -> List[Dict]:
+    """加载面试案例列表"""
+    try:
+        if os.path.exists(INTERVIEW_CASES_FILE):
+            with open(INTERVIEW_CASES_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return data.get("cases", []) if isinstance(data, dict) else data
+    except Exception as e:
+        print(f"面试案例加载失败: {e}")
+    return []
+
+
+def save_interview_cases(cases: List[Dict]):
+    """保存面试案例"""
+    try:
+        atomic_save_json(INTERVIEW_CASES_FILE, {"cases": cases})
+    except Exception as e:
+        print(f"面试案例保存失败: {e}")
+
+
+def load_interview_records() -> List[Dict]:
+    """加载面试记录"""
+    try:
+        if os.path.exists(INTERVIEW_RECORDS_FILE):
+            with open(INTERVIEW_RECORDS_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return data.get("records", []) if isinstance(data, dict) else data
+    except Exception as e:
+        print(f"面试记录加载失败: {e}")
+    return []
+
+
+def save_interview_records(records: List[Dict]):
+    """保存面试记录"""
+    try:
+        atomic_save_json(INTERVIEW_RECORDS_FILE, {"records": records})
+    except Exception as e:
+        print(f"面试记录保存失败: {e}")
+
+
+def _get_cases_for_interview(company: str, position: str, interview_type: str) -> List[Dict]:
+    """按企业+岗位+面试类型检索相关案例"""
+    cases = load_interview_cases()
+    exact = [c for c in cases if c.get('company') == company and c.get('position') == position and c.get('interview_type') == interview_type]
+    if exact:
+        return exact[:3]
+    company_type = [c for c in cases if c.get('company') == company and c.get('interview_type') == interview_type]
+    if company_type:
+        return company_type[:3]
+    type_only = [c for c in cases if c.get('interview_type') == interview_type]
+    if type_only:
+        return type_only[:3]
+    return cases[:3]
+
+
+def _build_interviewer_system_prompt(student_name, company, position, interview_type, difficulty, competence_vector, student_extras, case_questions):
+    """构建面试官system prompt"""
+    dim_lines = []
+    for area in COMPETENCE_AREAS:
+        aid = area['id']
+        score = competence_vector.get(aid, 0)
+        if score > 0:
+            dim_lines.append(f"- {area['name']}：{score}/100")
+    comp_text = '\n'.join(dim_lines) if dim_lines else "（暂无能力数据）"
+
+    extras_lines = []
+    projects = student_extras.get('projects', [])
+    if projects:
+        extras_lines.append(f"项目经历：{json.dumps(projects, ensure_ascii=False)[:300]}")
+    certs = student_extras.get('certifications', [])
+    if certs:
+        extras_lines.append(f"证书：{json.dumps(certs, ensure_ascii=False)[:200]}")
+    internship = student_extras.get('internship')
+    if internship:
+        extras_lines.append(f"实习经历：{json.dumps(internship, ensure_ascii=False)[:200]}")
+    extras_text = '\n'.join(extras_lines) if extras_lines else "（无额外信息）"
+
+    case_text = ""
+    if case_questions:
+        for i, cq in enumerate(case_questions[:10], 1):
+            q = cq.get('question', '')
+            kp = cq.get('key_points', [])
+            case_text += f"\n{i}. {q}\n   考察要点：{', '.join(kp) if kp else '无'}"
+
+    if interview_type == 'HR面':
+        focus = "请侧重考察综合素质：团队协作、沟通表达、职业规划、抗压能力、责任心等，不涉及具体技术细节。"
+    elif interview_type == '综合面':
+        focus = "请综合考察技术能力和综合素质，既问技术问题也关注职业素养。"
+    else:
+        focus = "请侧重考察通信工程专业知识和工程实践能力。"
+
+    return f"""你是【{company}】的【{position}】岗位面试官，正在进行一场【{interview_type}】模拟面试。
+
+【面试规则】
+1. 你是面试官，对方是通信工程专业学生【{student_name}】，请以面试官口吻对话。
+2. 每次只提一个问题，等待对方回答后再追问或换题。
+3. 根据对方回答质量决定：回答良好→追问更深层次问题；回答不足→换一个方向的新题。
+4. 面试难度等级：【{difficulty}】。简单=基础概念；中等=原理+应用；困难=综合分析+工程实践。
+5. 保持专业、友好的语气，适当给予鼓励但不要透露参考答案。
+6. 当对话达到约8轮（学生回答8次）时，总结面试并告知结束。
+7. {focus}
+
+【候选人能力画像】
+{comp_text}
+
+【候选人附加信息】
+{extras_text}
+
+【参考题库】（从知识库检索，可灵活使用但不要照搬）
+{case_text if case_text else "（无参考题库，请根据岗位要求自行出题）"}
+
+【面试方向引导】
+请根据候选人能力画像，优先考察其薄弱维度相关的知识点，同时验证其优势维度是否名副其实。
+面试开始时，请先做一个简短的开场介绍（不超过100字），然后提出第一个问题。"""
+
+
+def _build_scoring_prompt(interview_messages, company, position, interview_type, case_questions, competence_vector):
+    """构建评分system+user prompt"""
+    dialog_lines = []
+    for msg in interview_messages:
+        role = msg.get('role', '')
+        content = msg.get('content', '')
+        if role == 'interviewer':
+            dialog_lines.append(f"面试官：{content}")
+        elif role == 'student':
+            dialog_lines.append(f"学生：{content}")
+    dialog_text = '\n'.join(dialog_lines)
+
+    ref_text = ""
+    if case_questions:
+        for i, cq in enumerate(case_questions[:5], 1):
+            q = cq.get('question', '')
+            a = cq.get('reference_answer', '')[:150]
+            kp = cq.get('key_points', [])
+            ref_text += f"\n题目{i}：{q}\n参考答案要点：{', '.join(kp) if kp else '无'}\n参考答案：{a}\n"
+
+    dim_text = '\n'.join(f"- {a['id']}({a['name']})" for a in COMPETENCE_AREAS)
+
+    system_prompt = f"""你是通信工程专业面试评审专家。请根据以下模拟面试对话记录，给出结构化评分。
+
+【评分维度】
+请对以下能力维度各打0-100分（仅对面试中实际考察到的维度打分，未考察的维度填0）：
+{dim_text}
+
+【输出格式要求】
+严格只返回JSON（不要markdown代码块，不要多余文字）：
+{{"score": 78, "competence_scores": {{"communication_principle": 80}}, "strengths": ["优势1"], "weaknesses": ["不足1"], "suggestions": ["建议1", "建议2"], "report": "200-300字综合评语"}}
+
+【评分标准】
+- 90-100：回答准确深入，有工程实践经验
+- 75-89：回答正确但深度不足
+- 60-74：基本概念掌握但有明显错误
+- 60以下：核心概念未掌握
+
+【参考答案要点】
+{ref_text if ref_text else "（无参考答案）"}"""
+
+    user_prompt = f"""岗位：{company} - {position}（{interview_type}）
+
+【面试对话记录】
+{dialog_text}
+
+请给出评分结果。"""
+
+    return system_prompt, user_prompt
+
+
+SEED_INTERVIEW_CASES = [
+    {"id": "case_huawei_001", "company": "华为", "position": "无线网络优化工程师", "interview_type": "技术面", "difficulty": "中等",
+     "description": "华为无线网络优化工程师技术面试，考察5G/LTE网络优化能力",
+     "questions": [
+         {"question": "请解释5G NR与LTE在空口技术上的主要区别", "reference_answer": "5G NR采用灵活numerology设计，子载波间隔可变(15/30/60/120kHz)，支持mini-slot；LTE固定15kHz。NR使用LDPC编码数据信道、Polar编码控制信道，LTE用Turbo码。NR支持 Massive MIMO和波束赋形。", "key_points": ["numerology", "子载波间隔", "LDPC/Polar编码", "Massive MIMO", "波束赋形"], "competence_areas": ["communication_principle", "modulation"]},
+         {"question": "在5G网络优化中，如何定位和解决覆盖空洞问题？", "reference_answer": "通过MR数据采集分析RSRP/RS-SINR分布，结合路测和数字地图识别弱覆盖区域。解决方案：调整天线方位角/下倾角、增加扇区功率、新增小微基站或室分系统、优化PCI规划减少模3干扰。", "key_points": ["MR数据", "RSRP", "RS-SINR", "PCI规划", "功率调整"], "competence_areas": ["troubleshooting", "rf_engineering"]},
+         {"question": "请简述LTE中ICIC技术的作用和原理", "reference_answer": "ICIC（小区间干扰协调）通过小区间交互频域资源使用信息，协调各小区的频谱资源分配，边缘用户使用正交频段减少同频干扰。分为静态/半静态/动态ICIC。", "key_points": ["频域协调", "边缘用户", "同频干扰", "X2接口", "RNTP"], "competence_areas": ["communication_principle"]}
+     ], "tags": ["5G", "LTE", "网络优化"], "created_at": "2026-10-10 10:00:00", "created_by": "system"},
+
+    {"id": "case_huawei_002", "company": "华为", "position": "射频工程师", "interview_type": "技术面", "difficulty": "困难",
+     "description": "华为射频工程师技术面试，考察射频电路设计和调试能力",
+     "questions": [
+         {"question": "请详细解释功率放大器的非线性失真及其改善方法", "reference_answer": "PA非线性导致AM-AM和AM-PM失真，产生谐波和交调产物(ACLR恶化)。改善方法：DPD数字预失真、Doherty架构提升效率、包络跟踪(ET)技术、回退功率。需要权衡线性化与效率的trade-off。", "key_points": ["AM-AM失真", "ACLR", "DPD预失真", "Doherty架构", "包络跟踪"], "competence_areas": ["rf_engineering", "modulation"]},
+         {"question": "射频阻抗匹配有哪些方法？Smith圆图如何辅助匹配设计？", "reference_answer": "匹配方法：L型/π型/T型匹配网络、单短截线/双短截线匹配、变压器匹配。Smith圆图可直观显示阻抗归一化值，通过在圆图上移动找到匹配元件参数值，导纳圆图辅助并联匹配设计。", "key_points": ["阻抗匹配", "Smith圆图", "L型网络", "短截线匹配", "归一化阻抗"], "competence_areas": ["rf_engineering"]},
+         {"question": "请解释低噪声放大器(LNA)的设计要点和噪声系数优化", "reference_answer": "LNA设计要点：低噪声系数(首级决定系统NF)、足够增益(抑制后级噪声)、高线性度(避免交调)、良好50Ω匹配。NF优化：选择低噪声器件(HEMT/pHEMT)、最佳偏置点、输入匹配在噪声圆与增益圆之间折中、PCB布局减少寄生。", "key_points": ["噪声系数", "低噪声器件", "偏置优化", "输入匹配", "寄生参数"], "competence_areas": ["rf_engineering"]}
+     ], "tags": ["射频", "功率放大器", "LNA", "阻抗匹配"], "created_at": "2026-10-10 10:00:00", "created_by": "system"},
+
+    {"id": "case_huawei_003", "company": "华为", "position": "通信协议开发工程师", "interview_type": "技术面", "difficulty": "困难",
+     "description": "华为通信协议开发工程师技术面试，考察3GPP协议栈和开发能力",
+     "questions": [
+         {"question": "请描述5G NAS层和RRC层的功能区别", "reference_answer": "NAS层负责核心网相关功能：注册管理、连接管理、会话管理、移动性管理(AMF)。RRC层负责接入网控制：广播、寻呼、RRC连接建立/释放、无线承载配置、移动性(切换)。NAS消息通过RRC透传。", "key_points": ["NAS层", "RRC层", "AMF", "无线承载", "切换"], "competence_areas": ["network_protocol"]},
+         {"question": "3GPP协议中MAC层HARQ机制如何工作？", "reference_answer": "HARQ在MAC层实现，结合FEC和ARQ。下行异步HARQ：基站通过PDCCH调度重传，UE反馈ACK/NACK。上行同步HARQ：固定时序关系。HARQ进程支持多个并行(下行最大16进程)，采用CC( Chase Combining)或IR(Incremental Redundancy)合并。", "key_points": ["HARQ", "异步/同步", "CC/IR合并", "ACK/NACK", "多进程"], "competence_areas": ["network_protocol", "communication_principle"]}
+     ], "tags": ["3GPP", "协议栈", "RRC", "HARQ"], "created_at": "2026-10-10 10:00:00", "created_by": "system"},
+
+    {"id": "case_huawei_004", "company": "华为", "position": "无线网络优化工程师", "interview_type": "HR面", "difficulty": "中等",
+     "description": "华为无线网络优化工程师HR面试，考察综合素质",
+     "questions": [
+         {"question": "请做一个简短的自我介绍，包括你的专业背景和职业规划", "reference_answer": "结构化表达：姓名+学校+专业方向+核心项目/实习经历+求职动机+职业规划。控制在2-3分钟，突出与岗位匹配的优势。", "key_points": ["结构化表达", "时间控制", "突出匹配", "职业规划"], "competence_areas": ["teamwork"]},
+         {"question": "如果你和同事在技术方案上产生分歧，你会如何处理？", "reference_answer": "先倾听对方观点，找到分歧点；用数据和实验验证而非主观判断；寻求第三方专家意见；若无法达成一致则按上级决策执行并保留建议。体现沟通能力和团队协作意识。", "key_points": ["倾听", "数据驱动", "寻求共识", "尊重决策"], "competence_areas": ["teamwork", "innovation"]}
+     ], "tags": ["HR面", "自我介绍", "团队协作"], "created_at": "2026-10-10 10:00:00", "created_by": "system"},
+
+    {"id": "case_zte_001", "company": "中兴", "position": "基站研发工程师", "interview_type": "技术面", "difficulty": "中等",
+     "description": "中兴基站研发工程师技术面试",
+     "questions": [
+         {"question": "请简述5G基站的BBU和AAU/RRU架构演进", "reference_answer": "传统D-RAN：BBU+RRU通过CPRI光纤连接。5G C-RAN：CU-DU分离架构，CU集中部署，DU分布式。AAU集成天线+射频，前传接口从CPRI演进到eCPRI，支持功能灵活分割。", "key_points": ["BBU/RRU", "CU-DU分离", "AAU", "eCPRI", "前传接口"], "competence_areas": ["equipment_operation", "communication_principle"]},
+         {"question": " Massive MIMO的预编码技术有哪些？各自优缺点？", "reference_answer": "数字预编码：精度高但复杂度大、成本高；模拟预编码：低成本但只支持单流；混合预编码：折中方案，基带数字+RF模拟两阶段预编码，兼顾性能和复杂度。", "key_points": ["数字预编码", "模拟预编码", "混合预编码", "复杂度"], "competence_areas": ["modulation", "antenna_design"]},
+         {"question": "基站天线端口功率如何分配和管理？", "reference_answer": "通过BBU配置参考信号功率(CRS/DMRS)，按端口分配功率(2port/4port/8port)。使用功率平衡：确保各端口输出功率一致，通过VSWR监测和ALC自动功率控制保护功放。", "key_points": ["参考信号功率", "端口配置", "VSWR", "ALC"], "competence_areas": ["rf_engineering", "equipment_operation"]}
+     ], "tags": ["基站", "BBU", "MIMO", "天线"], "created_at": "2026-10-10 10:00:00", "created_by": "system"},
+
+    {"id": "case_zte_002", "company": "中兴", "position": "传输网工程师", "interview_type": "技术面", "difficulty": "中等",
+     "description": "中兴传输网工程师技术面试",
+     "questions": [
+         {"question": "请比较OTN和PTN技术的应用场景和区别", "reference_answer": "OTN(光传送网)：面向大颗粒业务，DWDM波分复用，适合骨干/城域核心。PTN(分组传送网)：面向IP化小颗粒业务，MPLS-TP，适合城域接入/回传。OTN强在带宽和可靠性，PTN强在灵活统计复用。", "key_points": ["OTN", "PTN", "波分复用", "MPLS-TP", "应用场景"], "competence_areas": ["network_protocol", "equipment_operation"]},
+         {"question": "SDH的STM-N帧结构是怎样的？段开销有什么作用？", "reference_answer": "STM-N帧：9行×270N列，含段开销(SOH)、管理单元指针(AU-PTR)、信息净荷(Payload)。SOH含RSOH(再生段开销)和MSOH(复用段开销)，用于OAM功能：性能监测、故障定位、保护倒换。", "key_points": ["STM-N帧", "段开销", "AU指针", "净荷", "OAM"], "competence_areas": ["network_protocol"]}
+     ], "tags": ["OTN", "PTN", "SDH", "传输网"], "created_at": "2026-10-10 10:00:00", "created_by": "system"},
+
+    {"id": "case_zte_003", "company": "中兴", "position": "核心网工程师", "interview_type": "技术面", "difficulty": "困难",
+     "description": "中兴核心网工程师技术面试",
+     "questions": [
+         {"question": "请描述5G核心网(5GC)的服务化架构和主要网元功能", "reference_answer": "5GC采用SBA服务化架构，主要网元：AMF(接入和移动性管理)、SMF(会话管理)、UPF(用户面)、PCF(策略控制)、UDM(统一数据管理)、AUSF(认证)、NRF(网络存储库)、NSSF(切片选择)。接口以HTTP/2 API实现服务化通信。", "key_points": ["SBA架构", "AMF/SMF/UPF", "服务化接口", "NRF", "网络切片"], "competence_areas": ["network_protocol"]},
+         {"question": "5G网络切片如何实现？端到端切片包含哪些维度？", "reference_answer": "切片通过NSSAI标识，包含：RAN切片(无线资源隔离)、TN切片(传输网VPN隔离)、CN切片(核心网NF实例隔离)。按eMBB/URLLC/mMTC三大场景定制。通过NSSF选择切片，PCF下发策略，端到端QoS保障。", "key_points": ["NSSAI", "RAN/TN/CN切片", "NSSF", "eMBB/URLLC/mMTC", "QoS"], "competence_areas": ["network_protocol", "innovation"]}
+     ], "tags": ["5GC", "核心网", "SBA", "网络切片"], "created_at": "2026-10-10 10:00:00", "created_by": "system"},
+
+    {"id": "case_zte_004", "company": "中兴", "position": "基站研发工程师", "interview_type": "HR面", "difficulty": "简单",
+     "description": "中兴基站研发工程师HR面试",
+     "questions": [
+         {"question": "你为什么选择中兴？对我们公司有什么了解？", "reference_answer": "展示对公司业务(通信设备、5G)、企业文化(狼性文化)、行业地位的了解。结合个人发展需求说明匹配度。避免泛泛而谈，体现做过调研。", "key_points": ["公司调研", "业务了解", "文化匹配", "职业发展"], "competence_areas": ["teamwork"]},
+         {"question": "描述一个你在项目中遇到的最大困难和解决过程", "reference_answer": "STAR法则：Situation(背景)、Task(任务)、Action(行动)、Result(结果)。选择有挑战性的技术问题，展示分析问题和解决问题的能力。", "key_points": ["STAR法则", "技术挑战", "解决过程", "结果量化"], "competence_areas": ["troubleshooting", "teamwork"]}
+     ], "tags": ["HR面", "中兴", "STAR法则"], "created_at": "2026-10-10 10:00:00", "created_by": "system"},
+
+    {"id": "case_datang_001", "company": "大唐移动", "position": "无线接入工程师", "interview_type": "技术面", "difficulty": "中等",
+     "description": "大唐移动无线接入工程师技术面试",
+     "questions": [
+         {"question": "请解释OFDM正交性的原理和循环前缀(CP)的作用", "reference_answer": "OFDM正交性：子载波间隔Δf=1/T(符号时长)，保证频谱零点对齐，子载波间无干扰。CP作用：复制符号尾部到头部，消除ISI(符号间干扰)和ICI(子载波间干扰)，条件是CP长度大于信道最大时延扩展。", "key_points": ["正交性", "子载波间隔", "循环前缀", "ISI", "ICI"], "competence_areas": ["communication_principle", "modulation"]},
+         {"question": "QPSK和QAM调制的星座图有什么区别？如何选择？", "reference_answer": "QPSK：4个星座点，每符号2比特，抗干扰强但频谱效率低。16QAM：16点4比特，64QAM：6比特，频谱效率高但要求高SNR。选择依据：信道条件好用高阶QAM，差用低阶。自适应编码调制(AMC)根据CQI动态切换。", "key_points": ["星座图", "频谱效率", "SNR要求", "AMC", "CQI"], "competence_areas": ["modulation"]}
+     ], "tags": ["OFDM", "QAM", "调制", "循环前缀"], "created_at": "2026-10-10 10:00:00", "created_by": "system"},
+
+    {"id": "case_datang_002", "company": "大唐移动", "position": "测试工程师", "interview_type": "技术面", "difficulty": "简单",
+     "description": "大唐移动测试工程师技术面试",
+     "questions": [
+         {"question": "频谱分析仪的使用方法和常见测量项有哪些？", "reference_answer": "设置中心频率、RBW/VBW、参考电平、检波方式。常见测量：功率谱密度、占用带宽、ACLR、杂散辐射、谐波。注意RBW影响噪声底和分辨率，VBW影响视频平滑。", "key_points": ["RBW", "VBW", "ACLR", "占用带宽", "杂散辐射"], "competence_areas": ["equipment_operation", "troubleshooting"]},
+         {"question": "基站现场开通测试流程包含哪些步骤？", "reference_answer": "1.安装检查(馈线/光纤/电源)；2.上电自检；3.本地维护终端(LMT)配置参数；4.小区激活；5.覆盖测试(路测)；6.业务验证(语音/数据)；7.邻区关系配置；8.入网验收。", "key_points": ["安装检查", "LMT配置", "小区激活", "路测", "入网验收"], "competence_areas": ["equipment_operation", "safety_awareness"]}
+     ], "tags": ["测试", "频谱仪", "基站开通"], "created_at": "2026-10-10 10:00:00", "created_by": "system"},
+
+    {"id": "case_cmcc_001", "company": "中国移动", "position": "网络运维工程师", "interview_type": "技术面", "difficulty": "中等",
+     "description": "中国移动网络运维工程师技术面试",
+     "questions": [
+         {"question": "如何通过网络KPI指标发现和定位网络问题？", "reference_answer": "关键KPI：接入成功率、掉线率、切换成功率、吞吐量、时延。通过网管系统(如华为U2020)监控指标变化，设定阈值告警。问题定位：从小区级→站点级→区域级逐层分析，结合MR数据、信令跟踪、路测定位根因。", "key_points": ["KPI指标", "接入成功率", "掉线率", "切换成功率", "网管系统"], "competence_areas": ["troubleshooting", "equipment_operation"]},
+         {"question": "请描述一个你处理过的网络故障案例或你理解的故障处理流程", "reference_answer": "故障处理流程：1.告警接收与初步判断；2.影响范围评估；3.故障定位(从核心到接入、从硬件到软件)；4.应急处置(倒换/重启/隔离)；5.根因分析；6.修复验证；7.复盘总结。体现系统性思维。", "key_points": ["告警处理", "影响评估", "故障定位", "应急处置", "复盘总结"], "competence_areas": ["troubleshooting"]}
+     ], "tags": ["KPI", "网络运维", "故障处理"], "created_at": "2026-10-10 10:00:00", "created_by": "system"},
+
+    {"id": "case_cmcc_002", "company": "中国移动", "position": "网络运维工程师", "interview_type": "HR面", "difficulty": "简单",
+     "description": "中国移动网络运维工程师HR面试",
+     "questions": [
+         {"question": "网络运维岗位需要7×24值班，你如何看待这个问题？", "reference_answer": "表达理解岗位性质(网络运维的特殊性)、适应倒班安排、身体健康管理计划、家庭沟通安排。体现责任心和适应能力。", "key_points": ["值班认知", "责任心", "适应性", "健康管理"], "competence_areas": ["safety_awareness", "teamwork"]},
+         {"question": "你觉得自己最大的优点和需要改进的地方是什么？", "reference_answer": "优点：与岗位相关的(学习能力/抗压能力/团队协作)。缺点：真实但非致命(如经验不足正在弥补/追求细节有时耗时)，给出改进措施。", "key_points": ["自我认知", "岗位匹配", "改进措施", "真诚"], "competence_areas": ["teamwork"]}
+     ], "tags": ["HR面", "中国移动", "值班", "自我评价"], "created_at": "2026-10-10 10:00:00", "created_by": "system"},
+
+    {"id": "case_ct_001", "company": "中国电信", "position": "宽带接入工程师", "interview_type": "技术面", "difficulty": "中等",
+     "description": "中国电信宽带接入工程师技术面试",
+     "questions": [
+         {"question": "PON技术的EPON和GPON有什么区别？目前FTTH常用哪种？", "reference_answer": "EPON：上下行1.25Gbps，线路编码8B/10B，效率低。GPON：下行2.5G/上行1.25G，使用GEM封装，效率高QoS好。目前FTTH主用GPON及演进(10G GPON/XGSPON)。中国电信此前主推EPON，现全面转向GPON/10GPON。", "key_points": ["EPON", "GPON", "GEM封装", "10G PON", "FTTH"], "competence_areas": ["network_protocol", "equipment_operation"]},
+         {"question": "用户报障宽带不能上网，排查思路是什么？", "reference_answer": "1.确认故障范围(单用户/多用户)；2.检查ONU注册状态和光功率(收发)；3.查看VLAN/IP分配；4.Ping测试到BRAS；5.检查认证(RADIUS)；6.测速和网页测试。从物理层到应用层逐层排查。", "key_points": ["ONU状态", "光功率", "VLAN", "BRAS", "RADIUS认证"], "competence_areas": ["troubleshooting"]}
+     ], "tags": ["PON", "GPON", "FTTH", "宽带接入"], "created_at": "2026-10-10 10:00:00", "created_by": "system"},
+
+    {"id": "case_cucc_001", "company": "中国联通", "position": "数据通信工程师", "interview_type": "技术面", "difficulty": "中等",
+     "description": "中国联通数据通信工程师技术面试",
+     "questions": [
+         {"question": "请解释OSPF协议的工作原理和LSA类型", "reference_answer": "OSPF链路状态协议：通过Hello发现邻居→建立邻接→交换DD→LSR/LSU同步LSDB→SPF计算最短路径。LSA类型：Type1 Router-LSA、Type2 Network-LSA、Type3 Summary-LSA(ABR)、Type4 ASBR Summary、Type5 External、Type7 NSSA。", "key_points": ["链路状态", "邻接关系", "LSDB", "SPF算法", "LSA类型"], "competence_areas": ["network_protocol"]},
+         {"question": "VPN技术在运营商网络中如何实现？MPLS L3VPN的工作流程？", "reference_answer": "MPLS L3VPN：CE通过PE接入，PE为每个VPN维护VRF路由表。CE→PE走eBGP/OSPF；PE间通过MP-BGP交换VPNv4路由(带RD/RT)；MPLS标签转发。入口PE压入两层标签(VPN标签+LSP标签)，PHP弹出外层。", "key_points": ["VRF", "MP-BGP", "RD/RT", "VPNv4", "标签栈"], "competence_areas": ["network_protocol"]}
+     ], "tags": ["OSPF", "MPLS VPN", "数据通信", "路由协议"], "created_at": "2026-10-10 10:00:00", "created_by": "system"},
+
+    {"id": "case_eric_001", "company": "爱立信", "position": "RF Optimization Engineer", "interview_type": "技术面", "difficulty": "困难",
+     "description": "爱立信RF Optimization Engineer技术面试(英文)",
+     "questions": [
+         {"question": "How do you approach RF interference analysis in a dense urban 5G network?", "reference_answer": "Approach: 1. Collect MR/scanner data to identify interference patterns; 2. Analyze PCI collision/confusion (Mod3/Mod6); 3. Check neighbor cell list completeness; 4. Evaluate cross-border interference (TDD special subframe config); 5. Use IRC receiver algorithms; 6. Optimize antenna tilt/azimuth and power; 7. Implement inter-frequency load balancing.", "key_points": ["PCI planning", "Mod3 interference", "IRC receiver", "antenna tilt", "cross-border"], "competence_areas": ["rf_engineering", "troubleshooting"]},
+         {"question": "Explain the concept of beam management in 5G NR and how it impacts coverage optimization", "reference_answer": "5G NR beam management: SSB beam sweeping for initial access, CSI-RS beams for fine measurement, PDSCH/PUSCH beam pairing for data. Beam-level coverage optimization: adjust digital beam weights, switch between wide/narrow beams per traffic, monitor beam failure and trigger beam failure recovery (BFR). Impact: precise coverage shaping, higher antenna gain, but more complex optimization vs LTE.", "key_points": ["SSB beam", "CSI-RS beam", "beam pairing", "BFR", "digital weights"], "competence_areas": ["antenna_design", "rf_engineering"]}
+     ], "tags": ["5G NR", "RF optimization", "beam management", "interference"], "created_at": "2026-10-10 10:00:00", "created_by": "system"},
+
+    {"id": "case_nokia_001", "company": "诺基亚", "position": "基带工程师", "interview_type": "技术面", "difficulty": "中等",
+     "description": "诺基亚基带工程师技术面试",
+     "questions": [
+         {"question": "FPGA和DSP在通信基带处理中各自的优势和应用场景？", "reference_answer": "FPGA：并行处理能力强，适合高速实时信号处理(FFT/滤波/CRC)、接口处理(前传)。DSP：灵活可编程，适合复杂算法(MIMO检测/信道编译码)。实际系统两者配合：FPGA做前端高速预处理，DSP做后端算法。", "key_points": ["FPGA并行", "DSP可编程", "FFT", "MIMO检测", "分工配合"], "competence_areas": ["digital_signal", "equipment_operation"]},
+         {"question": "数字下变频(DDC)的原理和实现步骤？", "reference_answer": "DDC将高频数字信号变到基带：1.数字混频(乘NCO产生的正余弦)；2.CIC抽取滤波(大比例降采样)；3.HB半带滤波(2倍抽取)；4.FIR整形滤波。在FPGA中常用多级抽取降低资源占用。", "key_points": ["数字混频", "NCO", "CIC滤波", "HB滤波", "多级抽取"], "competence_areas": ["digital_signal"]}
+     ], "tags": ["FPGA", "DSP", "DDC", "基带处理"], "created_at": "2026-10-10 10:00:00", "created_by": "system"},
+
+    {"id": "case_huawei_005", "company": "华为", "position": "通信协议开发工程师", "interview_type": "HR面", "difficulty": "中等",
+     "description": "华为通信协议开发工程师HR面试",
+     "questions": [
+         {"question": "华为的工作节奏比较快，压力较大，你如何应对工作压力？", "reference_answer": "展示具体方法：时间管理(优先级排序)、情绪调节(运动/倾诉)、技术提升(减少不确定性)、寻求团队支持。避免说'我没压力'这种不真实回答。", "key_points": ["压力管理", "时间管理", "情绪调节", "团队支持"], "competence_areas": ["teamwork"]},
+         {"question": "如果分配给你的工作任务不是你感兴趣的，你会怎么办？", "reference_answer": "表达态度：先做好本职工作、从中发现学习价值、主动了解业务背景寻找兴趣点、通过业绩争取更多机会。体现职业素养和积极心态。", "key_points": ["职业素养", "积极心态", "学习价值", "主动争取"], "competence_areas": ["teamwork", "innovation"]}
+     ], "tags": ["HR面", "华为", "压力管理", "职业素养"], "created_at": "2026-10-10 10:00:00", "created_by": "system"},
+
+    {"id": "case_cmcc_003", "company": "中国移动", "position": "网络规划工程师", "interview_type": "综合面", "difficulty": "困难",
+     "description": "中国移动网络规划工程师综合面试",
+     "questions": [
+         {"question": "如果你负责一个新城区的5G网络规划，你会从哪些方面入手？", "reference_answer": "1.需求分析(人口密度/业务类型/流量预测)；2.覆盖规划(链路预算/站间距/天线选型)；3.容量规划(小区吞吐量/PRB利用率)；4.频率规划(N3/N78/n41频段/SA/NSA)；5.邻区规划(ANR自动邻区)；6.PCI规划；7.传输规划(IPRAN前传带宽)；8.机房/电源/配套。", "key_points": ["链路预算", "站间距", "容量规划", "频率规划", "PCI规划", "传输规划"], "competence_areas": ["communication_principle", "rf_engineering", "equipment_operation"]},
+         {"question": "如何平衡5G网络建设的覆盖和容量？在投资有限的情况下如何取舍？", "reference_answer": "分层覆盖策略：宏站解决连续覆盖(低频段广覆盖)，微站/室分补充热点容量。投资优先级：1.核心商圈/交通枢纽(高价值区域先建)；2.覆盖盲区消除(保障基础服务)；3.容量扩容(按需扩容)。用ROI评估投资效益，结合分期建设策略。", "key_points": ["分层覆盖", "宏微结合", "投资优先级", "ROI", "分期建设"], "competence_areas": ["innovation", "safety_awareness"]}
+     ], "tags": ["网络规划", "5G规划", "综合面", "覆盖容量"], "created_at": "2026-10-10 10:00:00", "created_by": "system"}
+]
+
+
 @app.route('/students/<string:student_id>/update-conversation', methods=['POST'])
 def update_student_conversation(student_id):
     """更新学生对话记录（用于分析）"""
@@ -5748,6 +7297,203 @@ try:
 except ImportError as e:
     JOB_MODULE_AVAILABLE = False
     print(f"招聘信息模块加载失败: {e}")
+
+
+# ====================== 前沿知识更新模块（教学方案模块4） ======================
+try:
+    import frontier_crawler
+    import frontier_scheduler
+    FRONTIER_MODULE_AVAILABLE = True
+    print("前沿知识更新模块加载成功")
+except ImportError as e:
+    FRONTIER_MODULE_AVAILABLE = False
+    print(f"前沿知识更新模块加载失败: {e}")
+
+# ====================== 哈希链可信成长档案（模块6 能力评价与证书） ======================
+try:
+    import credential_chain
+    CREDENTIAL_MODULE_AVAILABLE = True
+    print("哈希链可信成长档案模块加载成功")
+except ImportError as e:
+    credential_chain = None
+    CREDENTIAL_MODULE_AVAILABLE = False
+    print(f"哈希链可信成长档案模块加载失败: {e}")
+
+# ====================== 知识库 RAG 向量检索 ======================
+try:
+    import rag_retriever
+    RAG_MODULE_AVAILABLE = True
+    print("知识库 RAG 向量检索模块加载成功")
+except ImportError as e:
+    rag_retriever = None
+    RAG_MODULE_AVAILABLE = False
+    print(f"知识库 RAG 向量检索模块加载失败: {e}")
+
+# ====================== 安全与隐私合规模块 ======================
+try:
+    import security
+    SECURITY_MODULE_AVAILABLE = True
+    print("安全与隐私合规模块加载成功")
+except ImportError as e:
+    security = None
+    SECURITY_MODULE_AVAILABLE = False
+    print(f"安全与隐私合规模块加载失败: {e}")
+
+# ====================== 因果故障链 + 难度自适应 ======================
+try:
+    import fault_chain
+    FAULT_CHAIN_AVAILABLE = True
+    print("因果故障链模块加载成功")
+except ImportError as e:
+    fault_chain = None
+    FAULT_CHAIN_AVAILABLE = False
+    print(f"因果故障链模块加载失败: {e}")
+
+# ====================== 多故障并发优先级决策 ======================
+try:
+    import multi_fault
+    MULTI_FAULT_AVAILABLE = True
+    print("多故障并发决策模块加载成功")
+except ImportError as e:
+    multi_fault = None
+    MULTI_FAULT_AVAILABLE = False
+    print(f"多故障并发决策模块加载失败: {e}")
+
+
+# ====================== RAG 检索控制台 ======================
+@app.route('/rag-console')
+def rag_console_page():
+    """RAG 检索控制台：查看索引状态、对比向量召回与关键词召回效果"""
+    if not session.get('authenticated'):
+        return render_template('login.html')
+    return render_template('rag_console.html')
+
+
+@app.route('/api/rag/status', methods=['GET'])
+def api_rag_status():
+    """索引状态"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if not RAG_MODULE_AVAILABLE:
+        return jsonify({'success': False, 'error': 'RAG 模块未加载'}), 503
+    status = rag_retriever.index_status()
+    status['success'] = True
+    status['full_kb_chars'] = len(knowledge_content or '')
+    return jsonify(status)
+
+
+@app.route('/api/rag/rebuild', methods=['POST'])
+def api_rag_rebuild():
+    """重建知识库向量索引（教师）"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'teacher':
+        return jsonify({'error': '只有老师可以重建索引'}), 403
+    if not RAG_MODULE_AVAILABLE:
+        return jsonify({'success': False, 'error': 'RAG 模块未加载'}), 503
+    try:
+        result = rag_retriever.build_index(force=True)
+    except Exception as e:  # noqa: BLE001
+        return jsonify({'success': False, 'error': f'索引重建失败: {e}'}), 500
+    result.update(rag_retriever.index_status())
+    if SECURITY_MODULE_AVAILABLE:
+        security.audit('rag_rebuild', target='data/rag_index.json',
+                       detail=f"重建索引：{result.get('chunks', 0)} 个切片 / {result.get('dim', 0)} 维")
+    return jsonify(result)
+
+
+@app.route('/api/rag/search', methods=['GET', 'POST'])
+def api_rag_search():
+    """RAG 检索：同时返回向量混合召回与纯关键词召回结果，便于对比验证"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if not RAG_MODULE_AVAILABLE:
+        return jsonify({'success': False, 'error': 'RAG 模块未加载'}), 503
+
+    if request.method == 'POST':
+        data = request.get_json(silent=True) or {}
+        query = (data.get('query') or '').strip()
+        top_k = int(data.get('top_k') or rag_retriever.TOP_K)
+    else:
+        query = (request.args.get('query') or request.args.get('q') or '').strip()
+        top_k = int(request.args.get('top_k') or rag_retriever.TOP_K)
+    if not query:
+        return jsonify({'success': False, 'error': '请输入检索内容'}), 400
+    top_k = max(1, min(top_k, 20))
+
+    if not rag_retriever.load_index():
+        return jsonify({'success': False, 'error': '索引尚未建立，请先重建索引'}), 409
+
+    try:
+        rag_hits = rag_retriever.search(query, top_k=top_k)
+    except Exception as e:  # noqa: BLE001
+        return jsonify({'success': False, 'error': f'检索失败: {e}'}), 500
+    keyword_hits = rag_retriever.keyword_baseline(query, top_k=top_k)
+
+    used = sum(len(c['text']) for c in rag_hits)
+    total = len(knowledge_content or '')
+    return jsonify({
+        'success': True,
+        'query': query,
+        'top_k': top_k,
+        'rag_hits': rag_hits,
+        'keyword_hits': keyword_hits,
+        'meta': {
+            'rag_count': len(rag_hits),
+            'keyword_count': len(keyword_hits),
+            'used_chars': used,
+            'total_chars': total,
+            'compress_ratio': round(1 - used / total, 3) if total else 0,
+            'degraded': bool(rag_hits and rag_hits[0].get('degraded')),
+        },
+    })
+
+
+# ====================== 安全与审计 ======================
+@app.route('/audit-log-page')
+def audit_log_page():
+    """操作审计看板（教师）：查高危操作的执行人、时间、来源 IP 与改动前后"""
+    if not session.get('authenticated'):
+        return render_template('login.html')
+    if session.get('role') != 'teacher':
+        return redirect('/')
+    return render_template('audit_log.html')
+
+
+@app.route('/api/security/summary', methods=['GET'])
+def api_security_summary():
+    """合规概览：凭据哈希状态 + 审计统计"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'teacher':
+        return jsonify({'error': '权限不足：该操作仅限老师'}), 403
+    if not SECURITY_MODULE_AVAILABLE:
+        return jsonify({'success': False, 'error': '安全模块未加载'}), 503
+    return jsonify({
+        'success': True,
+        'credential': security.credential_status(),
+        'audit': security.audit_stats(),
+        'actions': [{'action': k, 'label': v} for k, v in security.AUDIT_ACTIONS.items()],
+    })
+
+
+@app.route('/api/security/audit', methods=['GET'])
+def api_security_audit():
+    """查询审计记录（教师）"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'teacher':
+        return jsonify({'error': '权限不足：该操作仅限老师'}), 403
+    if not SECURITY_MODULE_AVAILABLE:
+        return jsonify({'success': False, 'error': '安全模块未加载'}), 503
+    try:
+        limit = max(1, min(int(request.args.get('limit') or 100), 500))
+    except ValueError:
+        limit = 100
+    records = security.read_audit(limit=limit,
+                                  action=(request.args.get('action') or '').strip(),
+                                  keyword=(request.args.get('keyword') or '').strip())
+    return jsonify({'success': True, 'total': len(records), 'records': records})
 
 
 @app.route('/job-recruitment-page')
@@ -7760,7 +9506,8 @@ def api_troubleshoot(task_id):
         "messages": messages,
         "temperature": 0.6,
         "max_tokens": 1500,
-        "stream": False
+        "stream": False,
+        "enable_thinking": False
     }
 
     try:
@@ -7969,7 +9716,8 @@ def api_task_evaluation(task_id):
             "messages": messages,
             "temperature": 0.5,
             "max_tokens": 1000,
-            "stream": False
+            "stream": False,
+            "enable_thinking": False
         }
 
         try:
@@ -8120,5 +9868,1518 @@ import time as _time
 init_job_scheduler_async()
 
 
+# ====================== AI模拟面试 + 面试案例知识库路由 ======================
+
+@app.route('/mock-interview-page')
+def mock_interview_page():
+    """AI模拟面试页面"""
+    if not session.get('authenticated'):
+        return render_template('login.html')
+    return render_template('mock_interview.html')
+
+
+@app.route('/interview-cases-page')
+def interview_cases_page():
+    """面试案例知识库页面"""
+    if not session.get('authenticated'):
+        return render_template('login.html')
+    return render_template('interview_cases.html')
+
+
+# ---------- 面试案例知识库 API ----------
+
+@app.route('/api/interview-cases')
+def api_interview_cases_list():
+    """案例列表（支持筛选）"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    cases = load_interview_cases()
+    company = request.args.get('company', '')
+    position = request.args.get('position', '')
+    itype = request.args.get('interview_type', '')
+    keyword = request.args.get('keyword', '').strip()
+    if company:
+        cases = [c for c in cases if c.get('company') == company]
+    if position:
+        cases = [c for c in cases if c.get('position') == position]
+    if itype:
+        cases = [c for c in cases if c.get('interview_type') == itype]
+    if keyword:
+        cases = [c for c in cases if keyword in c.get('description', '') or keyword in c.get('position', '') or
+                 keyword in c.get('company', '') or any(keyword in t for t in c.get('tags', []))]
+    result = []
+    for c in cases:
+        result.append({
+            'id': c.get('id'), 'company': c.get('company'), 'position': c.get('position'),
+            'interview_type': c.get('interview_type'), 'difficulty': c.get('difficulty'),
+            'description': c.get('description'), 'tags': c.get('tags', []),
+            'question_count': len(c.get('questions', [])), 'created_at': c.get('created_at', '')
+        })
+    return jsonify({'success': True, 'cases': result, 'total': len(result)})
+
+
+@app.route('/api/interview-cases/seed', methods=['POST'])
+def api_interview_cases_seed():
+    """教师初始化/重置预置案例"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'teacher':
+        return jsonify({'error': '仅教师可操作'}), 403
+    save_interview_cases(SEED_INTERVIEW_CASES)
+    return jsonify({'success': True, 'message': f'已初始化 {len(SEED_INTERVIEW_CASES)} 个预置案例'})
+
+
+@app.route('/api/interview-cases/<case_id>')
+def api_interview_case_detail(case_id):
+    """案例详情"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    case = next((c for c in load_interview_cases() if c.get('id') == case_id), None)
+    if not case:
+        return jsonify({'error': '案例不存在'}), 404
+    return jsonify({'success': True, 'case': case})
+
+
+@app.route('/api/interview-cases', methods=['POST'])
+def api_interview_case_create():
+    """教师新增案例"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'teacher':
+        return jsonify({'error': '仅教师可操作'}), 403
+    body = request.get_json() or {}
+    cases = load_interview_cases()
+    new_case = {
+        'id': f"case_{uuid.uuid4().hex[:8]}",
+        'company': body.get('company', '').strip(),
+        'position': body.get('position', '').strip(),
+        'interview_type': body.get('interview_type', '技术面'),
+        'difficulty': body.get('difficulty', '中等'),
+        'description': body.get('description', ''),
+        'questions': body.get('questions', []),
+        'tags': body.get('tags', []),
+        'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'updated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'created_by': session.get('username', 'teacher'),
+    }
+    cases.append(new_case)
+    save_interview_cases(cases)
+    return jsonify({'success': True, 'case': new_case})
+
+
+@app.route('/api/interview-cases/<case_id>', methods=['PUT'])
+def api_interview_case_update(case_id):
+    """教师修改案例"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'teacher':
+        return jsonify({'error': '仅教师可操作'}), 403
+    body = request.get_json() or {}
+    cases = load_interview_cases()
+    case = next((c for c in cases if c.get('id') == case_id), None)
+    if not case:
+        return jsonify({'error': '案例不存在'}), 404
+    for k in ['company', 'position', 'interview_type', 'difficulty', 'description', 'questions', 'tags']:
+        if k in body:
+            case[k] = body[k]
+    case['updated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    save_interview_cases(cases)
+    return jsonify({'success': True, 'case': case})
+
+
+@app.route('/api/interview-cases/<case_id>', methods=['DELETE'])
+def api_interview_case_delete(case_id):
+    """教师删除案例"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'teacher':
+        return jsonify({'error': '仅教师可操作'}), 403
+    cases = load_interview_cases()
+    new_cases = [c for c in cases if c.get('id') != case_id]
+    if len(new_cases) == len(cases):
+        return jsonify({'error': '案例不存在'}), 404
+    save_interview_cases(new_cases)
+    return jsonify({'success': True})
+
+
+# ---------- 模拟面试 API ----------
+
+@app.route('/api/mock-interview/start', methods=['POST'])
+def api_mock_interview_start():
+    """开始面试（SSE流式返回面试官开场白）"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'student':
+        return jsonify({'error': '仅学生可参加模拟面试'}), 403
+    student_no = session.get('student_no', '')
+    student_name = session.get('student_name', '')
+    body = request.get_json() or {}
+    company = body.get('company', '自定义企业')
+    position = body.get('position', '通信工程师')
+    interview_type = body.get('interview_type', '技术面')
+    difficulty = body.get('difficulty', '中等')
+    comp = _get_student_competence_vector(student_no)
+    case_list = _get_cases_for_interview(company, position, interview_type)
+    case_questions = []
+    for c in case_list:
+        case_questions.extend(c.get('questions', []))
+    system_prompt = _build_interviewer_system_prompt(
+        student_name, company, position, interview_type, difficulty,
+        comp.get('vector', {}), {
+            'projects': comp.get('projects', []),
+            'certifications': comp.get('certifications', []),
+            'internship': comp.get('internship')
+        }, case_questions)
+    interview_id = f"int_{uuid.uuid4().hex[:8]}"
+    records = load_interview_records()
+    record = {
+        'id': interview_id, 'student_no': student_no, 'student_name': student_name,
+        'target_company': company, 'target_position': position,
+        'interview_type': interview_type, 'difficulty': difficulty,
+        'status': 'in_progress', 'messages': [],
+        'system_prompt': system_prompt, 'case_questions': case_questions,
+        'started_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+    }
+    records.append(record)
+    save_interview_records(records)
+    messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": "请开始面试。"}]
+    payload = {"model": MODEL_NAME, "messages": messages, "temperature": 0.7, "max_tokens": 800, "stream": True, "enable_thinking": False}
+    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {API_KEY}"}
+
+    def generate(interview_id=interview_id):
+        yield f"data: {json.dumps({'interview_id': interview_id}, ensure_ascii=False)}\n\n"
+        full_response = ""
+        try:
+            resp = requests.post(API_URL, headers=headers, json=payload, stream=True, timeout=120)
+            if resp.status_code != 200:
+                yield f"data: {json.dumps({'error': f'AI请求失败: {resp.status_code}'}, ensure_ascii=False)}\n\n"
+                return
+            for line in resp.iter_lines():
+                if not line:
+                    continue
+                line = line.decode('utf-8')
+                if not line.startswith('data: '):
+                    continue
+                data = line[6:]
+                if data == '[DONE]':
+                    break
+                try:
+                    chunk_json = json.loads(data)
+                    choices = chunk_json.get('choices') or []
+                    if choices:
+                        chunk = choices[0].get('delta', {}).get('content', '')
+                        if chunk:
+                            full_response += chunk
+                            yield f"data: {json.dumps({'content': chunk}, ensure_ascii=False)}\n\n"
+                except Exception:
+                    continue
+        except requests.exceptions.Timeout:
+            yield f"data: {json.dumps({'error': 'AI请求超时，请稍后重试'}, ensure_ascii=False)}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'error': f'AI请求出错: {str(e)}'}, ensure_ascii=False)}\n\n"
+        finally:
+            if full_response:
+                recs = load_interview_records()
+                for r in recs:
+                    if r['id'] == interview_id:
+                        r['messages'].append({'role': 'interviewer', 'content': full_response,
+                                              'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')})
+                        break
+                save_interview_records(recs)
+            yield "data: [DONE]\n\n"
+
+    return Response(generate(), content_type='text/event-stream',
+                    headers={'Cache-Control': 'no-cache, no-transform', 'X-Accel-Buffering': 'no'})
+
+
+@app.route('/api/mock-interview/chat', methods=['POST'])
+def api_mock_interview_chat():
+    """面试对话（SSE流式返回面试官回复）"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'student':
+        return jsonify({'error': '仅学生可参加模拟面试'}), 403
+    body = request.get_json() or {}
+    interview_id = body.get('interview_id', '')
+    student_message = body.get('message', '').strip()
+    if not student_message:
+        return jsonify({'error': '消息不能为空'}), 400
+    records = load_interview_records()
+    record = next((r for r in records if r['id'] == interview_id), None)
+    if not record:
+        return jsonify({'error': '面试记录不存在'}), 404
+    if record['student_no'] != session.get('student_no'):
+        return jsonify({'error': '无权操作'}), 403
+    if record['status'] != 'in_progress':
+        return jsonify({'error': '面试已结束'}), 400
+    record['messages'].append({'role': 'student', 'content': student_message,
+                               'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')})
+    save_interview_records(records)
+    system_prompt = record.get('system_prompt', '')
+    messages = [{"role": "system", "content": system_prompt}]
+    for msg in record['messages']:
+        if msg['role'] == 'interviewer':
+            messages.append({"role": "assistant", "content": msg['content']})
+        elif msg['role'] == 'student':
+            messages.append({"role": "user", "content": msg['content']})
+    payload = {"model": MODEL_NAME, "messages": messages, "temperature": 0.7, "max_tokens": 800, "stream": True, "enable_thinking": False}
+    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {API_KEY}"}
+
+    def generate(interview_id=interview_id):
+        full_response = ""
+        try:
+            resp = requests.post(API_URL, headers=headers, json=payload, stream=True, timeout=120)
+            if resp.status_code != 200:
+                yield f"data: {json.dumps({'error': f'AI请求失败: {resp.status_code}'}, ensure_ascii=False)}\n\n"
+                return
+            for line in resp.iter_lines():
+                if not line:
+                    continue
+                line = line.decode('utf-8')
+                if not line.startswith('data: '):
+                    continue
+                data = line[6:]
+                if data == '[DONE]':
+                    break
+                try:
+                    chunk_json = json.loads(data)
+                    choices = chunk_json.get('choices') or []
+                    if choices:
+                        chunk = choices[0].get('delta', {}).get('content', '')
+                        if chunk:
+                            full_response += chunk
+                            yield f"data: {json.dumps({'content': chunk}, ensure_ascii=False)}\n\n"
+                except Exception:
+                    continue
+        except requests.exceptions.Timeout:
+            yield f"data: {json.dumps({'error': 'AI请求超时，请稍后重试'}, ensure_ascii=False)}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'error': f'AI请求出错: {str(e)}'}, ensure_ascii=False)}\n\n"
+        finally:
+            if full_response:
+                recs = load_interview_records()
+                for r in recs:
+                    if r['id'] == interview_id:
+                        r['messages'].append({'role': 'interviewer', 'content': full_response,
+                                              'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')})
+                        break
+                save_interview_records(recs)
+            yield "data: [DONE]\n\n"
+
+    return Response(generate(), content_type='text/event-stream',
+                    headers={'Cache-Control': 'no-cache, no-transform', 'X-Accel-Buffering': 'no'})
+
+
+@app.route('/api/mock-interview/end', methods=['POST'])
+def api_mock_interview_end():
+    """结束面试（SSE流式生成评分报告）"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'student':
+        return jsonify({'error': '仅学生可参加模拟面试'}), 403
+    body = request.get_json() or {}
+    interview_id = body.get('interview_id', '')
+    records = load_interview_records()
+    record = next((r for r in records if r['id'] == interview_id), None)
+    if not record:
+        return jsonify({'error': '面试记录不存在'}), 404
+    if record['status'] != 'in_progress':
+        return jsonify({'error': '面试已结束'}), 400
+    record['status'] = 'scoring'
+    save_interview_records(records)
+    system_prompt, user_prompt = _build_scoring_prompt(
+        record['messages'], record['target_company'], record['target_position'],
+        record['interview_type'], record.get('case_questions', []),
+        _get_student_competence_vector(record['student_no']).get('vector', {}))
+    payload = {"model": MODEL_NAME,
+               "messages": [{"role": "system", "content": system_prompt}, {"role": "user", "content": user_prompt}],
+               "temperature": 0.3, "max_tokens": 1500, "stream": True, "enable_thinking": False}
+    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {API_KEY}"}
+
+    def generate(interview_id=interview_id):
+        full_response = ""
+        try:
+            resp = requests.post(API_URL, headers=headers, json=payload, stream=True, timeout=120)
+            if resp.status_code != 200:
+                yield f"data: {json.dumps({'error': f'AI评分请求失败: {resp.status_code}'}, ensure_ascii=False)}\n\n"
+                return
+            for line in resp.iter_lines():
+                if not line:
+                    continue
+                line = line.decode('utf-8')
+                if not line.startswith('data: '):
+                    continue
+                data = line[6:]
+                if data == '[DONE]':
+                    break
+                try:
+                    chunk_json = json.loads(data)
+                    choices = chunk_json.get('choices') or []
+                    if choices:
+                        chunk = choices[0].get('delta', {}).get('content', '')
+                        if chunk:
+                            full_response += chunk
+                            yield f"data: {json.dumps({'content': chunk}, ensure_ascii=False)}\n\n"
+                except Exception:
+                    continue
+        except requests.exceptions.Timeout:
+            yield f"data: {json.dumps({'error': 'AI评分超时，请稍后重试'}, ensure_ascii=False)}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'error': f'AI评分出错: {str(e)}'}, ensure_ascii=False)}\n\n"
+        finally:
+            if full_response:
+                recs = load_interview_records()
+                for r in recs:
+                    if r['id'] == interview_id:
+                        r['status'] = 'completed'
+                        r['completed_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                        r['score_report'] = full_response
+                        try:
+                            json_match = re.search(r'\{.*\}', full_response, re.S)
+                            if json_match:
+                                result = json.loads(json_match.group())
+                                r['score'] = result.get('score')
+                                r['strengths'] = result.get('strengths', [])
+                                r['weaknesses'] = result.get('weaknesses', [])
+                                r['suggestions'] = result.get('suggestions', [])
+                                r['competence_scores'] = result.get('competence_scores', {})
+                        except Exception as e:
+                            print(f"评分解析失败: {e}")
+                        break
+                save_interview_records(recs)
+            yield "data: [DONE]\n\n"
+
+    return Response(generate(), content_type='text/event-stream',
+                    headers={'Cache-Control': 'no-cache, no-transform', 'X-Accel-Buffering': 'no'})
+
+
+@app.route('/api/mock-interview/records')
+def api_mock_interview_records():
+    """面试记录列表"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    role = session.get('role', '')
+    records = load_interview_records()
+    if role == 'student':
+        student_no = session.get('student_no', '')
+        records = [r for r in records if r.get('student_no') == student_no]
+    result = []
+    for r in records:
+        result.append({
+            'id': r.get('id'), 'student_name': r.get('student_name'),
+            'target_company': r.get('target_company'), 'target_position': r.get('target_position'),
+            'interview_type': r.get('interview_type'), 'difficulty': r.get('difficulty'),
+            'status': r.get('status'), 'score': r.get('score'),
+            'rounds': len([m for m in r.get('messages', []) if m.get('role') == 'student']),
+            'started_at': r.get('started_at', ''), 'completed_at': r.get('completed_at', '')
+        })
+    result.reverse()
+    return jsonify({'success': True, 'records': result, 'total': len(result)})
+
+
+@app.route('/api/mock-interview/records/<record_id>')
+def api_mock_interview_record_detail(record_id):
+    """面试记录详情"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    record = next((r for r in load_interview_records() if r.get('id') == record_id), None)
+    if not record:
+        return jsonify({'error': '记录不存在'}), 404
+    if session.get('role') == 'student' and record.get('student_no') != session.get('student_no'):
+        return jsonify({'error': '无权查看'}), 403
+    return jsonify({'success': True, 'record': record})
+
+
+@app.route('/api/mock-interview/records/<record_id>', methods=['DELETE'])
+def api_mock_interview_record_delete(record_id):
+    """删除面试记录"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    records = load_interview_records()
+    record = next((r for r in records if r.get('id') == record_id), None)
+    if not record:
+        return jsonify({'error': '记录不存在'}), 404
+    if session.get('role') == 'student' and record.get('student_no') != session.get('student_no'):
+        return jsonify({'error': '无权删除'}), 403
+    records = [r for r in records if r.get('id') != record_id]
+    save_interview_records(records)
+    return jsonify({'success': True})
+
+
+# 初始化预置面试案例
+def _init_interview_data():
+    if not os.path.exists(INTERVIEW_CASES_FILE):
+        save_interview_cases(SEED_INTERVIEW_CASES)
+        print(f"[面试案例] 初始化预置 {len(SEED_INTERVIEW_CASES)} 个案例")
+    if not os.path.exists(INTERVIEW_RECORDS_FILE):
+        save_interview_records([])
+
+_init_interview_data()
+
+
+# ====================== 前沿知识实时更新模块（教学方案模块4） ======================
+# 功能：权威信源抓取 → AI教学难度分级 → 前沿争议标注 → 教师审核入库 → 动态老化淘汰
+def _frontier_guard():
+    """统一入口校验：未登录返回 None，其余返回 role"""
+    if not session.get('authenticated'):
+        return None
+    return session.get('role', 'student')
+
+
+def _frontier_append_to_knowledge(item: Dict) -> bool:
+    """把审核通过的前沿内容写入知识库（复用既有知识库链路与提示词刷新）"""
+    try:
+        versions = item.get('difficulty_versions') or {}
+        tags = '、'.join(item.get('tags') or [])
+        entry = (
+            f"\n\n{'='*50}\n"
+            f"【前沿知识·模块4】{item.get('title', '')}\n"
+            f"来源：{item.get('source_name', '')} {item.get('published_at', '')}　标签：{tags}\n"
+            f"{'='*50}\n"
+            f"【本科通识版】{versions.get('undergrad', '')}\n"
+            f"【工程师实战版】{versions.get('engineer', '')}\n"
+        )
+        if item.get('is_frontier_dispute') and item.get('discussion_question'):
+            entry += (f"【前沿争议】{item.get('dispute_reason', '')}\n"
+                      f"【开放讨论题】{item.get('discussion_question')}\n")
+        with open(KNOWLEDGE_FILE, "a", encoding="utf-8") as f:
+            f.write(entry)
+        update_system_prompt()   # 重新加载知识库并刷新系统提示词
+        return True
+    except Exception as e:
+        print(f"[前沿知识] 写入知识库失败: {e}")
+        return False
+
+
+@app.route('/frontier-update-page')
+def frontier_update_page():
+    """前沿知识更新看板（教师审核 / 学生浏览已发布内容）"""
+    if not session.get('authenticated'):
+        return render_template('login.html')
+    if FRONTIER_MODULE_AVAILABLE:
+        frontier_scheduler.autostart()   # 首次访问时懒启动定时抓取
+    return render_template('frontier_update.html')
+
+
+@app.route('/api/frontier/list', methods=['GET'])
+def api_frontier_list():
+    """前沿知识列表（学生仅可见已发布内容）"""
+    if not _frontier_guard():
+        return jsonify({'error': '请先登录'}), 401
+    if not FRONTIER_MODULE_AVAILABLE:
+        return jsonify({'success': False, 'error': '前沿知识模块未加载', 'items': []}), 503
+
+    role = session.get('role', 'student')
+    status = request.args.get('status', '')
+    source_id = request.args.get('source_id', '')
+    tag = request.args.get('tag', '')
+    keyword = (request.args.get('keyword') or '').strip()
+    only_dispute = request.args.get('dispute') == '1'
+
+    items = frontier_crawler.load_frontier_items()
+    if role != 'teacher':
+        items = [i for i in items if i.get('status') == 'approved']
+    elif status:
+        items = [i for i in items if i.get('status') == status]
+    if source_id:
+        items = [i for i in items if i.get('source_id') == source_id]
+    if tag:
+        items = [i for i in items if tag in (i.get('tags') or [])]
+    if only_dispute:
+        items = [i for i in items if i.get('is_frontier_dispute')]
+    if keyword:
+        kw = keyword.lower()
+        items = [i for i in items
+                 if kw in (i.get('title') or '').lower()
+                 or kw in (i.get('summary_raw') or '').lower()
+                 or any(kw in t.lower() for t in (i.get('tags') or []))]
+
+    # 排序：未过期内容在前；同组内按发布时间倒序
+    items = sorted(items, key=lambda x: x.get('published_at', ''), reverse=True)
+    items = sorted(items, key=lambda x: bool(x.get('expired')))
+    return jsonify({'success': True, 'items': items, 'total': len(items)})
+
+
+@app.route('/api/frontier/stats', methods=['GET'])
+def api_frontier_stats():
+    """前沿知识看板统计"""
+    if not _frontier_guard():
+        return jsonify({'error': '请先登录'}), 401
+    if not FRONTIER_MODULE_AVAILABLE:
+        return jsonify({'success': False, 'error': '前沿知识模块未加载'}), 503
+    items = frontier_crawler.load_frontier_items()
+    role = session.get('role', 'student')
+    stats = frontier_crawler.get_stats(items)
+    if role != 'teacher':
+        approved = [i for i in items if i.get('status') == 'approved']
+        stats = frontier_crawler.get_stats(approved)
+    return jsonify({'success': True, 'stats': stats,
+                    'sources': [{'id': s['id'], 'name': s['name'], 'category': s['category']}
+                                for s in frontier_crawler.FRONTIER_SOURCES]})
+
+
+@app.route('/api/frontier/<item_id>', methods=['GET'])
+def api_frontier_detail(item_id):
+    """前沿知识详情"""
+    if not _frontier_guard():
+        return jsonify({'error': '请先登录'}), 401
+    if not FRONTIER_MODULE_AVAILABLE:
+        return jsonify({'success': False, 'error': '前沿知识模块未加载'}), 503
+    item = next((i for i in frontier_crawler.load_frontier_items() if i.get('id') == item_id), None)
+    if not item:
+        return jsonify({'error': '内容不存在'}), 404
+    if session.get('role') != 'teacher' and item.get('status') != 'approved':
+        return jsonify({'error': '无权查看'}), 403
+    return jsonify({'success': True, 'item': item})
+
+
+@app.route('/api/frontier/<item_id>/review', methods=['POST'])
+def api_frontier_review(item_id):
+    """教师审核：批准（自动入知识库）/ 驳回"""
+    if not _frontier_guard():
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'teacher':
+        return jsonify({'error': '仅教师可审核'}), 403
+    if not FRONTIER_MODULE_AVAILABLE:
+        return jsonify({'success': False, 'error': '前沿知识模块未加载'}), 503
+
+    data = request.get_json() or {}
+    action = data.get('action', '')
+    note = data.get('note', '')
+    if action not in ('approve', 'reject'):
+        return jsonify({'error': 'action 仅支持 approve / reject'}), 400
+
+    items = frontier_crawler.load_frontier_items()
+    item = next((i for i in items if i.get('id') == item_id), None)
+    if not item:
+        return jsonify({'error': '内容不存在'}), 404
+
+    item['review_note'] = note
+    item['reviewed_by'] = session.get('student_name') or 'teacher'
+    item['reviewed_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    added_to_kb = False
+    if action == 'approve':
+        item['status'] = 'approved'
+        added_to_kb = _frontier_append_to_knowledge(item)
+        item['added_to_kb'] = added_to_kb
+    else:
+        item['status'] = 'rejected'
+        item['expired'] = False
+        item['weight'] = 0.0
+
+    frontier_crawler.save_frontier_items(items)
+    return jsonify({
+        'success': True, 'status': item['status'], 'added_to_kb': added_to_kb,
+        'message': ('已批准并同步至知识库' if added_to_kb else
+                    ('已批准（知识库写入失败，请重试）' if action == 'approve' else '已驳回'))
+    })
+
+
+@app.route('/api/frontier/<item_id>/revise', methods=['POST'])
+def api_frontier_revise(item_id):
+    """教师在线修订内容与分级讲稿"""
+    if not _frontier_guard():
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'teacher':
+        return jsonify({'error': '仅教师可修订'}), 403
+    if not FRONTIER_MODULE_AVAILABLE:
+        return jsonify({'success': False, 'error': '前沿知识模块未加载'}), 503
+
+    data = request.get_json() or {}
+    items = frontier_crawler.load_frontier_items()
+    item = next((i for i in items if i.get('id') == item_id), None)
+    if not item:
+        return jsonify({'error': '内容不存在'}), 404
+
+    if 'title' in data and data['title'].strip():
+        item['title'] = data['title'].strip()
+    versions = item.setdefault('difficulty_versions', {})
+    if data.get('undergrad'):
+        versions['undergrad'] = data['undergrad']
+    if data.get('engineer'):
+        versions['engineer'] = data['engineer']
+    if data.get('content'):
+        item['content'] = data['content']
+    if data.get('tags'):
+        item['tags'] = [t.strip() for t in data['tags'] if t.strip()]
+    if data.get('is_frontier_dispute') is not None:
+        item['is_frontier_dispute'] = bool(data['is_frontier_dispute'])
+    if data.get('dispute_reason') is not None:
+        item['dispute_reason'] = data['dispute_reason']
+    if data.get('discussion_question') is not None:
+        item['discussion_question'] = data['discussion_question']
+
+    item['graded_by'] = 'teacher'
+    item['reviewed_by'] = session.get('student_name') or 'teacher'
+    item['reviewed_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    # 已入库内容修订后重新同步知识库
+    sync_note = ''
+    if item.get('status') == 'approved' and item.get('added_to_kb'):
+        _frontier_append_to_knowledge(item)
+        sync_note = '，已同步修订内容到知识库'
+
+    frontier_crawler.save_frontier_items(items)
+    return jsonify({'success': True, 'item': item, 'message': f'修订已保存{sync_note}'})
+
+
+@app.route('/api/frontier/<item_id>/regrade', methods=['POST'])
+def api_frontier_regrade(item_id):
+    """重新做 AI 教学难度分级"""
+    if not _frontier_guard():
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'teacher':
+        return jsonify({'error': '仅教师可操作'}), 403
+    if not FRONTIER_MODULE_AVAILABLE:
+        return jsonify({'success': False, 'error': '前沿知识模块未加载'}), 503
+
+    items = frontier_crawler.load_frontier_items()
+    item = next((i for i in items if i.get('id') == item_id), None)
+    if not item:
+        return jsonify({'error': '内容不存在'}), 404
+
+    grade = frontier_crawler.grade_item(item.get('title', ''), item.get('summary_raw', ''), use_ai=True)
+    item['difficulty_versions'] = {
+        'undergrad': grade.get('undergrad', ''),
+        'engineer': grade.get('engineer', ''),
+    }
+    item['tags'] = grade.get('tags', item.get('tags', []))
+    item['key_points'] = grade.get('key_points', item.get('key_points', []))
+    item['is_frontier_dispute'] = bool(grade.get('is_frontier_dispute'))
+    item['dispute_reason'] = grade.get('dispute_reason', '')
+    item['discussion_question'] = grade.get('discussion_question', '')
+    item['content'] = grade.get('undergrad', item.get('content', ''))
+    item['graded_by'] = grade.get('graded_by', 'rule')
+    frontier_crawler.save_frontier_items(items)
+    return jsonify({'success': True, 'item': item, 'graded_by': item['graded_by']})
+
+
+@app.route('/api/frontier/<item_id>/discard', methods=['POST'])
+def api_frontier_discard(item_id):
+    """老化淘汰：把过期/失效内容从教学链路中剔除"""
+    if not _frontier_guard():
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'teacher':
+        return jsonify({'error': '仅教师可操作'}), 403
+    if not FRONTIER_MODULE_AVAILABLE:
+        return jsonify({'success': False, 'error': '前沿知识模块未加载'}), 503
+
+    data = request.get_json() or {}
+    items = frontier_crawler.load_frontier_items()
+    item = next((i for i in items if i.get('id') == item_id), None)
+    if not item:
+        return jsonify({'error': '内容不存在'}), 404
+
+    item['status'] = 'discarded'
+    item['discard_reason'] = data.get('reason', '内容老化淘汰')
+    item['weight'] = 0.0
+    item['reviewed_by'] = session.get('student_name') or 'teacher'
+    item['reviewed_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    frontier_crawler.save_frontier_items(items)
+    return jsonify({'success': True, 'message': '已淘汰，不再参与教学推送'})
+
+
+@app.route('/api/frontier/discussions', methods=['GET'])
+def api_frontier_discussions():
+    """前沿争议开放讨论题（学生可见，用于辩证思考训练）"""
+    if not _frontier_guard():
+        return jsonify({'error': '请先登录'}), 401
+    if not FRONTIER_MODULE_AVAILABLE:
+        return jsonify({'success': False, 'error': '前沿知识模块未加载', 'discussions': []}), 503
+
+    items = frontier_crawler.load_frontier_items()
+    role = session.get('role', 'student')
+    if role != 'teacher':
+        items = [i for i in items if i.get('status') == 'approved']
+    discussions = [{
+        'id': i.get('id'),
+        'title': i.get('title'),
+        'source_name': i.get('source_name'),
+        'published_at': i.get('published_at'),
+        'tags': i.get('tags', []),
+        'dispute_reason': i.get('dispute_reason', ''),
+        'discussion_question': i.get('discussion_question', ''),
+        'undergrad': (i.get('difficulty_versions') or {}).get('undergrad', ''),
+        'engineer': (i.get('difficulty_versions') or {}).get('engineer', ''),
+    } for i in items if i.get('is_frontier_dispute') and i.get('discussion_question')]
+    discussions.sort(key=lambda x: x.get('published_at', ''), reverse=True)
+    return jsonify({'success': True, 'discussions': discussions, 'total': len(discussions)})
+
+
+@app.route('/api/frontier/fetch-now', methods=['POST'])
+def api_frontier_fetch_now():
+    """立即抓取一次（教师触发）"""
+    if not _frontier_guard():
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'teacher':
+        return jsonify({'error': '仅教师可触发抓取'}), 403
+    if not FRONTIER_MODULE_AVAILABLE:
+        return jsonify({'success': False, 'error': '前沿知识模块未加载'}), 503
+    try:
+        stats = frontier_scheduler.frontier_scheduler.fetch_now()
+        return jsonify({'success': True, 'stats': stats, 'message': f"抓取完成：新增 {stats.get('added', 0)} 条"})
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'抓取失败: {e}'}), 500
+
+
+@app.route('/api/frontier/refresh-status', methods=['POST'])
+def api_frontier_refresh_status():
+    """内容生命周期扫描：标记过期并降权"""
+    if not _frontier_guard():
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'teacher':
+        return jsonify({'error': '仅教师可操作'}), 403
+    if not FRONTIER_MODULE_AVAILABLE:
+        return jsonify({'success': False, 'error': '前沿知识模块未加载'}), 503
+    config = frontier_crawler.load_frontier_config()
+    items = frontier_crawler.load_frontier_items()
+    changed = frontier_crawler.refresh_freshness(items, int(config.get('freshness_days', 180)))
+    frontier_crawler.save_frontier_items(items)
+    aging = [i for i in items if i.get('expired') and i.get('status') not in ('discarded', 'rejected')]
+    return jsonify({'success': True, 'changed': changed, 'aging_count': len(aging),
+                    'message': f'生命周期扫描完成，{len(aging)} 条内容已进入待淘汰队列'})
+
+
+@app.route('/api/frontier/scheduler/status', methods=['GET'])
+def api_frontier_scheduler_status():
+    """定时抓取状态"""
+    if not _frontier_guard():
+        return jsonify({'error': '请先登录'}), 401
+    if not FRONTIER_MODULE_AVAILABLE:
+        return jsonify({'success': False, 'error': '前沿知识模块未加载'}), 503
+    frontier_scheduler.autostart()
+    return jsonify({'success': True, 'status': frontier_scheduler.frontier_scheduler.get_status()})
+
+
+@app.route('/api/frontier/config', methods=['GET'])
+def api_frontier_get_config():
+    """读取抓取配置"""
+    if not _frontier_guard():
+        return jsonify({'error': '请先登录'}), 401
+    if not FRONTIER_MODULE_AVAILABLE:
+        return jsonify({'success': False, 'error': '前沿知识模块未加载'}), 503
+    return jsonify({'success': True, 'config': frontier_crawler.load_frontier_config(),
+                    'sources': [{'id': s['id'], 'name': s['name'], 'category': s['category'],
+                                 'url': s['url']} for s in frontier_crawler.FRONTIER_SOURCES]})
+
+
+@app.route('/api/frontier/config', methods=['POST'])
+def api_frontier_update_config():
+    """教师更新抓取配置与老化阈值"""
+    if not _frontier_guard():
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'teacher':
+        return jsonify({'error': '仅教师可修改配置'}), 403
+    if not FRONTIER_MODULE_AVAILABLE:
+        return jsonify({'success': False, 'error': '前沿知识模块未加载'}), 503
+
+    data = request.get_json() or {}
+    config = frontier_crawler.load_frontier_config()
+    if 'auto_fetch_enabled' in data:
+        config['auto_fetch_enabled'] = bool(data['auto_fetch_enabled'])
+    if 'ai_grading_enabled' in data:
+        config['ai_grading_enabled'] = bool(data['ai_grading_enabled'])
+    if 'freshness_days' in data:
+        try:
+            config['freshness_days'] = max(7, int(data['freshness_days']))
+        except (TypeError, ValueError):
+            pass
+    if 'max_items_per_source' in data:
+        try:
+            config['max_items_per_source'] = max(1, int(data['max_items_per_source']))
+        except (TypeError, ValueError):
+            pass
+    if data.get('sources'):
+        valid_ids = [s['id'] for s in frontier_crawler.FRONTIER_SOURCES]
+        config['sources'] = [s for s in data['sources'] if s in valid_ids]
+    if 'fetch_interval_hours' in data:
+        try:
+            hours = max(1, int(data['fetch_interval_hours']))
+            config['fetch_interval_hours'] = hours
+            frontier_scheduler.frontier_scheduler.update_interval(hours)
+        except (TypeError, ValueError):
+            pass
+
+    frontier_crawler.save_frontier_config(config)
+    frontier_scheduler.frontier_scheduler.set_auto_fetch(config.get('auto_fetch_enabled', True))
+    return jsonify({'success': True, 'config': config, 'message': '配置已保存'})
+
+
+# 初始化前沿知识数据文件（首次运行含预置内容，无网络也能演示）
+if FRONTIER_MODULE_AVAILABLE:
+    frontier_crawler.init_frontier_data()
+
+
+# ====================== 语音播报（多模态学习交互） ======================
+TTS_API_URL = "https://api.siliconflow.cn/v1/audio/speech"
+TTS_MODEL = "FunAudioLLM/CosyVoice2-0.5B"
+TTS_DEFAULT_VOICE = "FunAudioLLM/CosyVoice2-0.5B:alex"
+
+
+def _clean_for_speech(text: str, limit: int = 1200) -> str:
+    """清理 Markdown 与链接标记，避免朗读出符号"""
+    text = re.sub(r'!\[[^\]]*\]\([^)]*\)', '', text)        # 图片
+    text = re.sub(r'\[([^\]]*)\]\([^)]*\)', r'\1', text)     # 链接只保留文字
+    text = re.sub(r'```[\s\S]*?```', ' 代码片段 ', text)      # 代码块
+    text = re.sub(r'[#*`>|~_]+', ' ', text)
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text[:limit]
+
+
+@app.route('/api/tts/speak', methods=['POST'])
+def api_tts_speak():
+    """把 AI 回答合成语音（SiliconFlow 语音合成，返回 mp3 音频流）"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+
+    data = request.get_json() or {}
+    text = _clean_for_speech(data.get('text') or '')
+    if not text:
+        return jsonify({'error': '文本为空或无法朗读'}), 400
+
+    try:
+        payload = {
+            "model": TTS_MODEL,
+            "input": text,
+            "voice": data.get('voice') or TTS_DEFAULT_VOICE,
+            "response_format": "mp3",
+            "stream": False,
+        }
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {API_KEY}",
+        }
+        resp = requests.post(TTS_API_URL, headers=headers, json=payload, timeout=90)
+        if resp.status_code != 200:
+            print(f"[语音播报] 合成失败: {resp.status_code} {resp.text[:200]}")
+            return jsonify({'error': f'语音合成失败（{resp.status_code}）'}), 502
+        if not resp.content:
+            return jsonify({'error': '语音合成返回空音频'}), 502
+        return Response(resp.content, mimetype='audio/mpeg', headers={
+            'Cache-Control': 'no-store',
+            'Content-Length': str(len(resp.content)),
+        })
+    except Exception as e:
+        print(f"[语音播报] 合成异常: {e}")
+        return jsonify({'error': f'语音合成异常: {e}'}), 500
+
+
+# ====================== 哈希链可信成长档案接口 ======================
+
+def _credential_lookup_profile(student_no, fallback_name=''):
+    """从学生库读取姓名/班级/专业/胜任力摘要
+
+    优先按学号匹配；对历史数据（学生记录未存学号）退化为按姓名匹配。
+    """
+    info = {'name': '', 'class_name': '', 'major': '', 'ability_summary': ''}
+    try:
+        with open(STUDENTS_FILE, 'r', encoding='utf-8') as f:
+            students = json.load(f)
+        if not isinstance(students, list):
+            students = []
+        matched = None
+        for s in students:
+            if isinstance(s, dict) and str(s.get('student_no') or '') == str(student_no):
+                matched = s
+                break
+        if matched is None and fallback_name:
+            for s in students:
+                if not isinstance(s, dict) or s.get('student_no'):
+                    continue
+                if (s.get('name') or s.get('student_name')) == fallback_name:
+                    matched = s
+                    break
+        if matched is not None:
+            info['name'] = matched.get('name') or matched.get('student_name') or ''
+            info['class_name'] = matched.get('class_name') or matched.get('class') or ''
+            info['major'] = matched.get('major') or matched.get('professional') or ''
+            ca = matched.get('competence_analysis')
+            if isinstance(ca, dict) and ca:
+                top = sorted(ca.items(), key=lambda x: -float(x[1] or 0))[:3]
+                info['ability_summary'] = "、".join(f"{k}({v})" for k, v in top)
+    except Exception as e:
+        print(f"[成长档案] 读取学生信息失败: {e}")
+    return info
+
+
+def _credential_resolve_target():
+    """解析本次操作的目标学生，返回 (student_no, profile, error)"""
+    body = request.get_json(silent=True) or {}
+    if session.get('role') == 'teacher':
+        student_no = (str(request.args.get('student_no') or '')
+                      or str(body.get('student_no') or '')).strip()
+        if not student_no:
+            return '', {}, '教师操作需指定 student_no'
+        fallback_name = str(request.args.get('student_name') or body.get('student_name') or '').strip()
+        profile = _credential_lookup_profile(student_no, fallback_name)
+        if not profile['name']:
+            profile['name'] = fallback_name
+        return student_no, profile, None
+    student_no = str(session.get('student_no') or '').strip()
+    if not student_no:
+        return '', {}, '当前账号未绑定学号，无法使用成长档案'
+    profile = _credential_lookup_profile(student_no, session.get('student_name', ''))
+    if not profile['name']:
+        profile['name'] = session.get('student_name', '')
+    return student_no, profile, None
+
+
+@app.route('/credential-chain')
+def credential_chain_page():
+    """成长档案与可信证书页面（学生 / 教师）"""
+    if not session.get('authenticated'):
+        return redirect('/')
+    if not CREDENTIAL_MODULE_AVAILABLE:
+        return "成长档案模块未加载", 503
+    return render_template('credential_chain.html',
+                           record_types=credential_chain.RECORD_TYPES)
+
+
+@app.route('/api/credential/list')
+def api_credential_list():
+    """成长档案记录列表 + 链概览"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if not CREDENTIAL_MODULE_AVAILABLE:
+        return jsonify({'error': '成长档案模块未加载'}), 503
+    student_no, profile, error = _credential_resolve_target()
+    if error:
+        return jsonify({'error': error}), 400
+    rec_type = (request.args.get('type') or '').strip()
+    return jsonify({
+        'success': True,
+        'student_no': student_no,
+        'profile': {
+            'name': profile.get('name', ''),
+            'class_name': profile.get('class_name', ''),
+            'major': profile.get('major', ''),
+        },
+        'records': credential_chain.get_records(student_no, rec_type),
+        'summary': credential_chain.get_chain_summary(student_no),
+        'record_types': credential_chain.RECORD_TYPES,
+    })
+
+
+@app.route('/api/credential/append', methods=['POST'])
+def api_credential_append():
+    """追加成长记录并上链（教师录入 / 学生提交）"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if not CREDENTIAL_MODULE_AVAILABLE:
+        return jsonify({'error': '成长档案模块未加载'}), 503
+    student_no, profile, error = _credential_resolve_target()
+    if error:
+        return jsonify({'error': error}), 400
+
+    data = request.get_json() or {}
+    is_teacher = session.get('role') == 'teacher'
+    source = 'teacher_manual' if is_teacher else 'student_self'
+    ret = credential_chain.append_record(
+        student_no,
+        profile.get('name') or session.get('student_name', ''),
+        str(data.get('type') or '').strip(),
+        str(data.get('title') or '').strip(),
+        str(data.get('detail') or '').strip(),
+        value=data.get('value'),
+        source=source,
+        created_at=str(data.get('created_at') or '').strip(),
+        student_class=profile.get('class_name', ''),
+    )
+    if not ret.get('ok'):
+        return jsonify({'error': ret.get('error', '追加失败')}), 400
+    if SECURITY_MODULE_AVAILABLE:
+        security.audit('credential_append', target=f"student:{student_no}",
+                       detail=f"上链「{data.get('title', '')}」（类型 {ret.get('record', {}).get('type', '')}，"
+                              f"序号 {ret.get('seq')}，来源 {source}）",
+                       after={'title': data.get('title', ''), 'seq': ret.get('seq')})
+    return jsonify({'success': True, 'message': f"已上链（链内第 {ret.get('seq')} 条）",
+                    'record': ret.get('record')})
+
+
+@app.route('/api/credential/sync', methods=['POST'])
+def api_credential_sync():
+    """把已有业务数据（学习行为/错题/作业/面试/自评/能力测评）同步上链"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if not CREDENTIAL_MODULE_AVAILABLE:
+        return jsonify({'error': '成长档案模块未加载'}), 503
+    student_no, profile, error = _credential_resolve_target()
+    if error:
+        return jsonify({'error': error}), 400
+    ret = credential_chain.sync_from_sources(
+        student_no, profile.get('name') or session.get('student_name', ''),
+        student_class=profile.get('class_name', ''))
+    ret['success'] = True
+    ret['summary'] = credential_chain.get_chain_summary(student_no)
+    return jsonify(ret)
+
+
+@app.route('/api/credential/verify')
+def api_credential_verify():
+    """重新校验成长档案哈希链完整性"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if not CREDENTIAL_MODULE_AVAILABLE:
+        return jsonify({'error': '成长档案模块未加载'}), 503
+    student_no, _profile, error = _credential_resolve_target()
+    if error:
+        return jsonify({'error': error}), 400
+    result = credential_chain.verify_chain(student_no)
+    result['success'] = True
+    return jsonify(result)
+
+
+@app.route('/api/credential/certificate', methods=['POST'])
+def api_credential_certificate():
+    """签发可信成长证书（同一链头复用已有证书）"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if not CREDENTIAL_MODULE_AVAILABLE:
+        return jsonify({'error': '成长档案模块未加载'}), 503
+    student_no, profile, error = _credential_resolve_target()
+    if error:
+        return jsonify({'error': error}), 400
+    ret = credential_chain.make_certificate(
+        student_no,
+        extra_snapshot={
+            'major': profile.get('major', ''),
+            'ability_summary': profile.get('ability_summary', ''),
+        })
+    if not ret.get('ok'):
+        return jsonify({'error': ret.get('error', '签发失败')}), 400
+    ret['success'] = True
+    if SECURITY_MODULE_AVAILABLE:
+        cert = ret.get('certificate') or {}
+        security.audit('credential_certificate', target=f"cert:{cert.get('certificate_id', '')}",
+                       detail=f"为学生 {student_no} 签发可信成长证书"
+                              f"（{'复用已有' if ret.get('reused') else '新签发'}，"
+                              f"上链 {cert.get('record_count', 0)} 条）",
+                       after={'certificate_id': cert.get('certificate_id', ''), 'student_no': student_no})
+    return jsonify(ret)
+
+
+@app.route('/api/credential/certificates')
+def api_credential_certificates():
+    """证书列表"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if not CREDENTIAL_MODULE_AVAILABLE:
+        return jsonify({'error': '成长档案模块未加载'}), 503
+    student_no, _profile, error = _credential_resolve_target()
+    if error:
+        return jsonify({'error': error}), 400
+    certs = credential_chain.get_student_certificates(student_no)
+    return jsonify({'success': True, 'certificates': certs, 'count': len(certs)})
+
+
+@app.route('/api/credential/overview')
+def api_credential_overview():
+    """教师端总览：所有学生链情况"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'teacher':
+        return jsonify({'error': '仅教师可查看全局概览'}), 403
+    if not CREDENTIAL_MODULE_AVAILABLE:
+        return jsonify({'error': '成长档案模块未加载'}), 503
+    return jsonify({
+        'success': True,
+        'overview': credential_chain.stats_overview(),
+        'chains': credential_chain.list_chains(),
+    })
+
+
+@app.route('/verify/<certificate_id>')
+def credential_public_verify_page(certificate_id):
+    """证书公开验真页（企业/第三方，无需登录）"""
+    if not CREDENTIAL_MODULE_AVAILABLE:
+        return "成长档案模块未加载", 503
+    return render_template('certificate_verify.html', certificate_id=certificate_id)
+
+
+@app.route('/api/credential/public-verify/<certificate_id>')
+def api_credential_public_verify(certificate_id):
+    """证书公开验真接口（脱敏数据 + 实时链校验）"""
+    if not CREDENTIAL_MODULE_AVAILABLE:
+        return jsonify({'error': '成长档案模块未加载'}), 503
+    return jsonify(credential_chain.verify_certificate(certificate_id))
+
+
+# 初始化成长档案数据文件
+if CREDENTIAL_MODULE_AVAILABLE:
+    credential_chain.init_credential_data()
+
+# 初始化 RAG 向量索引（缺失/过期时后台重建，不阻塞启动）
+if RAG_MODULE_AVAILABLE:
+    try:
+        _rag_init = rag_retriever.ensure_index(async_mode=True)
+        print(f"[RAG] 启动检查：{_rag_init.get('message', '')}")
+    except Exception as e:  # noqa: BLE001
+        print(f"[RAG] 启动初始化失败: {e}")
+
+# 初始化凭据库：把历史明文密码迁移为哈希（幂等）
+if SECURITY_MODULE_AVAILABLE:
+    try:
+        _cred = security.init_credentials(TEACHER_ACCOUNTS, ACCESS_PASSWORD)
+        print(f"[Security] 凭据库就绪：教师账号 {_cred['teachers']} 个，明文已全部哈希化")
+        security.audit('password_migrate', target='data/credentials.json',
+                       detail=f"启动校验凭据库，本次迁移 {_cred['migrated']} 条明文凭据",
+                       actor='system', role='system', ip='localhost')
+    except Exception as e:  # noqa: BLE001
+        print(f"[Security] 凭据初始化失败: {e}")
+
+
+# ====================== 因果故障链 + 难度自适应 ======================
+
+@app.route('/fault-chain')
+def fault_chain_page():
+    """因果故障链排查实训页"""
+    if not session.get('authenticated'):
+        return render_template('login.html')
+    if not FAULT_CHAIN_AVAILABLE:
+        return "因果故障链模块未加载", 503
+    return render_template('fault_chain.html',
+                           role=session.get('role', 'student'),
+                           levels=fault_chain.LEVEL_RULES)
+
+
+@app.route('/api/fault-chain/domains', methods=['GET'])
+def api_fault_chain_domains():
+    """故障域列表 + 当前学生在各域的难度等级"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if not FAULT_CHAIN_AVAILABLE:
+        return jsonify({'success': False, 'error': '模块未加载'}), 503
+    student_no = session.get('student_no', '')
+    levels = fault_chain.get_student_levels(student_no) if student_no else {}
+    domains = []
+    for d, chain in fault_chain.CAUSAL_CHAINS.items():
+        lv = levels.get(d, {}).get('level', 1)
+        domains.append({
+            'domain': d, 'label': chain['domain_label'], 'title': chain['title'],
+            'symptom_brief': chain['symptom']['alarm'],
+            'level': lv, 'level_label': fault_chain.LEVELS[lv],
+            'level_rules': fault_chain.LEVEL_RULES[lv],
+        })
+    return jsonify({'success': True, 'domains': domains,
+                    'levels': fault_chain.LEVELS, 'level_rules': fault_chain.LEVEL_RULES})
+
+
+@app.route('/api/fault-chain/start', methods=['POST'])
+def api_fault_chain_start():
+    """开局：注入故障表象（学生）"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'student':
+        return jsonify({'error': '仅学生可参与故障排查实训'}), 403
+    if not FAULT_CHAIN_AVAILABLE:
+        return jsonify({'success': False, 'error': '模块未加载'}), 503
+    body = request.get_json() or {}
+    domain = body.get('domain', '')
+    level = int(body.get('level') or 0)
+    ret = fault_chain.start_session(session.get('student_no', ''),
+                                    session.get('student_name', ''), domain, level)
+    if not ret.get('ok'):
+        return jsonify({'success': False, 'error': ret.get('error')}), 400
+    if SECURITY_MODULE_AVAILABLE and not ret.get('resumed'):
+        security.audit('fault_chain_start', target=domain,
+                       detail=f"开局「{ret['session']['title']}」，难度 {ret['session']['level_label']}")
+    return jsonify({'success': True, 'resumed': ret.get('resumed', False),
+                    'session': ret['session']})
+
+
+@app.route('/api/fault-chain/test', methods=['POST'])
+def api_fault_chain_test():
+    """执行测试动作：确认分支展开 / 剪除分支"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if not FAULT_CHAIN_AVAILABLE:
+        return jsonify({'success': False, 'error': '模块未加载'}), 503
+    body = request.get_json() or {}
+    ret = fault_chain.perform_test(session.get('student_no', ''),
+                                   body.get('session_id', ''), body.get('test_id', ''))
+    if not ret.get('ok'):
+        return jsonify({'success': False, 'error': ret.get('error')}), 400
+    return jsonify({'success': True, 'result': ret['result'], 'text': ret['text'],
+                    'newly_revealed': ret.get('newly_revealed', []),
+                    'session': ret['session']})
+
+
+@app.route('/api/fault-chain/hint', methods=['POST'])
+def api_fault_chain_hint():
+    """获取提示（入门免费；工程师扣分；专家禁用）"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if not FAULT_CHAIN_AVAILABLE:
+        return jsonify({'success': False, 'error': '模块未加载'}), 503
+    body = request.get_json() or {}
+    ret = fault_chain.use_hint(session.get('student_no', ''), body.get('session_id', ''))
+    if not ret.get('ok'):
+        return jsonify({'success': False, 'error': ret.get('error')}), 400
+    return jsonify({'success': True, 'hints': ret['hints'],
+                    'hints_used': ret['hints_used'], 'penalty_each': ret['penalty_each'],
+                    'session': ret['session']})
+
+
+@app.route('/api/fault-chain/diagnose', methods=['POST'])
+def api_fault_chain_diagnose():
+    """提交根因诊断 + 处置方案 → 评分 + 难度变形"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if not FAULT_CHAIN_AVAILABLE:
+        return jsonify({'success': False, 'error': '模块未加载'}), 503
+    body = request.get_json() or {}
+    root_ids = body.get('root_ids') or []
+    fix_ids = body.get('fix_ids') or []
+    ret = fault_chain.diagnose(session.get('student_no', ''),
+                               body.get('session_id', ''), root_ids, fix_ids)
+    if not ret.get('ok'):
+        return jsonify({'success': False, 'error': ret.get('error')}), 400
+    sess = ret['session']
+    if SECURITY_MODULE_AVAILABLE:
+        security.audit('fault_chain_diagnose', target=sess['domain'],
+                       detail=f"诊断得分 {ret['score']}（{ret['grade']}），"
+                              f"误诊 {sess['misdiagnoses']} 次，测试 {len(sess['tests_done'])} 次")
+        # 难度变形（升/降级）单独审计
+        sug = sess.get('suggestion')
+        if sug:
+            security.audit('fault_chain_morph', target=sess['domain'],
+                           detail=sug['text'], before={'level': sug['before']},
+                           after={'level': sug['after']})
+    return jsonify({'success': True, 'score': ret['score'], 'grade': ret['grade'],
+                    'verdict': ret['verdict'], 'session': sess})
+
+
+@app.route('/api/fault-chain/state', methods=['GET'])
+def api_fault_chain_state():
+    """会话状态查询"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if not FAULT_CHAIN_AVAILABLE:
+        return jsonify({'success': False, 'error': '模块未加载'}), 503
+    ret = fault_chain.get_session(session.get('student_no', ''),
+                                  request.args.get('session_id', ''))
+    if not ret.get('ok'):
+        return jsonify({'success': False, 'error': ret.get('error')}), 404
+    return jsonify({'success': True, 'session': ret['session']})
+
+
+@app.route('/api/fault-chain/abandon', methods=['POST'])
+def api_fault_chain_abandon():
+    """放弃当前会话"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if not FAULT_CHAIN_AVAILABLE:
+        return jsonify({'success': False, 'error': '模块未加载'}), 503
+    body = request.get_json() or {}
+    ret = fault_chain.abandon_session(session.get('student_no', ''), body.get('session_id', ''))
+    if not ret.get('ok'):
+        return jsonify({'success': False, 'error': ret.get('error')}), 400
+    return jsonify({'success': True})
+
+
+@app.route('/api/fault-chain/history', methods=['GET'])
+def api_fault_chain_history():
+    """成绩历史：学生看自己，教师看全部 + 概览"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if not FAULT_CHAIN_AVAILABLE:
+        return jsonify({'success': False, 'error': '模块未加载'}), 503
+    if session.get('role') == 'teacher':
+        return jsonify({'success': True, 'history': fault_chain.get_history(),
+                        'overview': fault_chain.stats_overview()})
+    return jsonify({'success': True,
+                    'history': fault_chain.get_history(session.get('student_no', ''))})
+
+
+@app.route('/api/fault-chain/chat', methods=['POST'])
+def api_fault_chain_chat():
+    """AI 带教导师（SSE 流式，ground 在当前故障链状态，不泄露答案）"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if not FAULT_CHAIN_AVAILABLE:
+        return jsonify({'success': False, 'error': '模块未加载'}), 503
+    body = request.get_json() or {}
+    session_id = body.get('session_id', '')
+    user_msg = (body.get('message') or '').strip()
+    if not user_msg:
+        return jsonify({'error': '消息不能为空'}), 400
+    sess = fault_chain.get_session_raw(session_id)
+    if not sess or sess.get('student_no') != session.get('student_no'):
+        return jsonify({'error': '会话不存在或无权操作'}), 403
+
+    tutor_ctx = fault_chain.build_tutor_context(sess)
+    system_prompt = ("你是通信工程现场带教导师，正在带一名学生排查真实故障。\n"
+                     "当前故障链状态：\n" + tutor_ctx +
+                     "\n\n✨ 本回答由 AI 生成，仅供参考。")
+    messages = [{"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_msg}]
+    payload = {"model": MODEL_NAME, "messages": messages,
+               "temperature": 0.6, "max_tokens": 600, "stream": True, "enable_thinking": False}
+    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {API_KEY}"}
+
+    def generate():
+        try:
+            resp = requests.post(API_URL, headers=headers, json=payload, stream=True, timeout=120)
+            if resp.status_code != 200:
+                yield f"data: {json.dumps({'error': f'AI请求失败: {resp.status_code}'}, ensure_ascii=False)}\n\n"
+                return
+            for line in resp.iter_lines():
+                if not line:
+                    continue
+                line = line.decode('utf-8')
+                if not line.startswith('data: '):
+                    continue
+                data = line[6:]
+                if data == '[DONE]':
+                    break
+                try:
+                    chunk_json = json.loads(data)
+                    choices = chunk_json.get('choices') or []
+                    if choices:
+                        chunk = choices[0].get('delta', {}).get('content', '')
+                        if chunk:
+                            yield f"data: {json.dumps({'content': chunk}, ensure_ascii=False)}\n\n"
+                except Exception:
+                    continue
+        except requests.exceptions.Timeout:
+            yield f"data: {json.dumps({'error': 'AI请求超时，请稍后重试'}, ensure_ascii=False)}\n\n"
+        except Exception as e:  # noqa: BLE001
+            yield f"data: {json.dumps({'error': f'AI请求出错: {str(e)}'}, ensure_ascii=False)}\n\n"
+        finally:
+            yield "data: [DONE]\n\n"
+
+    return Response(generate(), content_type='text/event-stream',
+                    headers={'Cache-Control': 'no-cache, no-transform', 'X-Accel-Buffering': 'no'})
+
+
+# 初始化故障链状态文件
+if FAULT_CHAIN_AVAILABLE:
+    fault_chain.init_fault_chain_data()
+
+
+# ====================== 多故障并发优先级决策 ======================
+
+@app.route('/multi-fault-page')
+def multi_fault_page():
+    """多故障并发优先级决策演练页"""
+    if not session.get('authenticated'):
+        return render_template('login.html')
+    if not MULTI_FAULT_AVAILABLE:
+        return "多故障并发决策模块未加载", 503
+    return render_template('multi_fault.html',
+                           role=session.get('role', 'student'),
+                           level_rules=multi_fault.LEVEL_RULES)
+
+
+@app.route('/api/multi-fault/info', methods=['GET'])
+def api_multi_fault_info():
+    """当前学生难度等级 + 规则说明"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if not MULTI_FAULT_AVAILABLE:
+        return jsonify({'success': False, 'error': '模块未加载'}), 503
+    student_no = session.get('student_no', '')
+    lv = multi_fault.get_student_level(student_no) if student_no else 1
+    return jsonify({'success': True, 'level': lv, 'level_label': multi_fault.LEVELS[lv],
+                    'levels': multi_fault.LEVELS, 'level_rules': multi_fault.LEVEL_RULES})
+
+
+@app.route('/api/multi-fault/start', methods=['POST'])
+def api_multi_fault_start():
+    """开局：动态生成并发故障工单"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'student':
+        return jsonify({'error': '仅学生可参与多故障演练'}), 403
+    if not MULTI_FAULT_AVAILABLE:
+        return jsonify({'success': False, 'error': '模块未加载'}), 503
+    body = request.get_json() or {}
+    level = int(body.get('level') or 0)
+    ret = multi_fault.start_session(session.get('student_no', ''),
+                                    session.get('student_name', ''), level)
+    if not ret.get('ok'):
+        return jsonify({'success': False, 'error': ret.get('error')}), 400
+    if SECURITY_MODULE_AVAILABLE and not ret.get('resumed'):
+        security.audit('multi_fault_start', target='multi_fault',
+                       detail=f"开局多故障并发演练，难度 {ret['session']['level_label']}")
+    return jsonify({'success': True, 'resumed': ret.get('resumed', False),
+                    'session': ret['session']})
+
+
+@app.route('/api/multi-fault/state', methods=['GET'])
+def api_multi_fault_state():
+    """轮询会话状态（专家级突发事件在开局75秒后通过此接口揭示）"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if not MULTI_FAULT_AVAILABLE:
+        return jsonify({'success': False, 'error': '模块未加载'}), 503
+    ret = multi_fault.get_session(session.get('student_no', ''),
+                                  request.args.get('session_id', ''))
+    if not ret.get('ok'):
+        return jsonify({'success': False, 'error': ret.get('error')}), 400
+    return jsonify({'success': True, 'session': ret['session']})
+
+
+@app.route('/api/multi-fault/submit', methods=['POST'])
+def api_multi_fault_submit():
+    """提交排障顺序 + 资源分配，仿真评分"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if not MULTI_FAULT_AVAILABLE:
+        return jsonify({'success': False, 'error': '模块未加载'}), 503
+    body = request.get_json() or {}
+    session_id = body.get('session_id', '')
+    ret = multi_fault.submit(session.get('student_no', ''), session_id,
+                             body.get('order') or [], body.get('assignments') or {},
+                             body.get('event_action', ''),
+                             int(body.get('event_position', -1)))
+    if not ret.get('ok'):
+        return jsonify({'success': False, 'error': ret.get('error')}), 400
+    if SECURITY_MODULE_AVAILABLE:
+        security.audit('multi_fault_submit', target=session_id,
+                       detail=f"得分 {ret['score']}（{ret['grade']}），"
+                              f"业务损失 {ret['verdict']['student_loss']} / 最优 {ret['verdict']['optimal_loss']}")
+        sug = ret.get('suggestion')
+        if sug:
+            security.audit('multi_fault_morph', target=session.get('student_no', ''),
+                           detail=f"难度 {sug['before']}→{sug['after']}（{sug['type']}）")
+    return jsonify({'success': True, 'score': ret['score'], 'grade': ret['grade'],
+                    'verdict': ret['verdict'], 'suggestion': ret.get('suggestion')})
+
+
+@app.route('/api/multi-fault/abandon', methods=['POST'])
+def api_multi_fault_abandon():
+    """放弃当前会话"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if not MULTI_FAULT_AVAILABLE:
+        return jsonify({'success': False, 'error': '模块未加载'}), 503
+    body = request.get_json() or {}
+    ret = multi_fault.abandon_session(session.get('student_no', ''), body.get('session_id', ''))
+    if not ret.get('ok'):
+        return jsonify({'success': False, 'error': ret.get('error')}), 400
+    return jsonify({'success': True})
+
+
+@app.route('/api/multi-fault/history', methods=['GET'])
+def api_multi_fault_history():
+    """成绩历史：学生看自己，教师看全部 + 概览"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if not MULTI_FAULT_AVAILABLE:
+        return jsonify({'success': False, 'error': '模块未加载'}), 503
+    if session.get('role') == 'teacher':
+        return jsonify({'success': True, 'history': multi_fault.get_history(),
+                        'overview': multi_fault.stats_overview()})
+    return jsonify({'success': True,
+                    'history': multi_fault.get_history(session.get('student_no', ''))})
+
+
+# 初始化多故障状态文件
+if MULTI_FAULT_AVAILABLE:
+    multi_fault.init_multi_fault_data()
+
+
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000, use_reloader=False, threaded=True)
