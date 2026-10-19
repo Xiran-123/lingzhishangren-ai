@@ -5508,6 +5508,22 @@ def scenario_demo():
     return render_template('scenario_demo.html')
 
 
+@app.route('/scenario-cluster')
+def scenario_cluster():
+    """剧情演练副本二：5G 簇优化（簇2）十步实训"""
+    if not session.get('authenticated'):
+        return redirect('/')
+    return render_template('scenario_cluster.html')
+
+
+@app.route('/scenario-grid')
+def scenario_grid():
+    """剧情演练副本三：5G 网格优化（网格1）十步实训"""
+    if not session.get('authenticated'):
+        return redirect('/')
+    return render_template('scenario_grid.html')
+
+
 # ====================== AI 自动生成场景实训 ======================
 
 SCENARIO_GEN_PROMPT = """你是通信与电子信息工程领域的资深实训专家，擅长把真实工程项目设计成"沉浸式、强交互、有陷阱"的虚拟仿真训练剧本。请根据用户提供的场景主题与要求，生成一套【长流程、高保真】的交互式实训。

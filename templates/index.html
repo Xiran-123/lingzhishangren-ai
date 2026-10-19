@@ -598,6 +598,44 @@
             color: #666;
         }
 
+        /* 剧情演练副本选择 */
+        .sc-pick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+
+        .sc-pick {
+            display: block;
+            padding: 18px;
+            border: 1px solid #e3e9f2;
+            border-radius: 14px;
+            background: #fafcff;
+            text-decoration: none;
+            color: #333;
+            transition: all .2s;
+        }
+
+        .sc-pick:hover {
+            border-color: #3d7bff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 22px rgba(61, 123, 255, .14);
+        }
+
+        .sc-pick-ic {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .sc-pick h3 { font-size: 15px; margin-bottom: 8px; color: #1a2233; }
+        .sc-pick p { font-size: 12px; line-height: 1.8; color: #66788f; }
+        .sc-pick-go { display: inline-block; margin-top: 12px; font-size: 12px; color: #3d7bff; font-weight: 600; }
+
+        @media (max-width: 900px) {
+            .sc-pick-grid { grid-template-columns: 1fr; }
+        }
+
         .upload-area {
             border: 2px dashed #e0e0e8;
             border-radius: 10px;
@@ -1371,8 +1409,11 @@
     .hx-dot{width:6px;height:6px;border-radius:50%;background:var(--hx-cyan);box-shadow:0 0 8px var(--hx-cyan);flex-shrink:0}
     .hx-dirgroup{padding:0 10px 14px}
     .hx-glabel{font-size:11px;color:var(--hx-txt3);padding:9px 8px 5px;letter-spacing:1px}
-    .hx-navitem{display:flex;align-items:center;gap:9px;width:100%;padding:8px 10px;border-radius:10px;font-size:13px;color:var(--hx-txt2);transition:.18s;position:relative;border:none;background:none;text-align:left;font-family:inherit;cursor:pointer}
+    .hx-navitem{display:flex;align-items:center;gap:9px;width:100%;padding:8px 10px;border-radius:10px;font-size:13px;color:var(--hx-txt);transition:.18s;position:relative;border:none;background:none;text-align:left;font-family:inherit;cursor:pointer}
     .hx-navitem:hover{background:rgba(255,255,255,.06);color:#fff;transform:translateX(2px)}
+    /* #hxHome a{color:inherit} 权重高于 .hx-navitem，链接型导航项需显式对齐，按钮型才与之一致 */
+    #hxHome a.hx-navitem{color:var(--hx-txt)}
+    #hxHome a.hx-navitem:hover{color:#fff}
     .hx-navitem .ic{width:17px;text-align:center;font-size:13.5px}
     .hx-navitem .hx-new{margin-left:auto;font-size:10px;padding:1px 6px;border-radius:8px;background:var(--hx-gradhot);color:#fff}
     .hx-gitems .nav-btn{background:rgba(255,255,255,.06)!important;border:1px solid rgba(255,255,255,.1)!important;color:var(--hx-txt)!important;width:100%;justify-content:flex-start;font-size:13px;margin:3px 0}
@@ -1591,7 +1632,7 @@
               <span class="hx-mchip">🧠 Massive MIMO · 选址 · 参数规划</span>
             </div>
             <div class="hx-actions">
-              <a class="hx-btnp" href="/scenario-demo">▶ 继续实训</a>
+              <a class="hx-btnp" href="javascript:void(0)" onclick="openScenarioPicker(event)">▶ 继续实训</a>
               <button class="hx-btng" onclick="hxTab(document.querySelector('.hx-tab[data-view=chat]'))">🤖 问 AI 助教</button>
             </div>
 
@@ -1642,7 +1683,7 @@
                 <div class="hx-prow"><span>预计用时</span><b>25 分钟</b></div>
                 <div class="hx-prow"><span>任务满分</span><b>13 分</b></div>
                 <div class="hx-prow"><span>角色</span><b>无线网络规划工程师</b></div>
-                <a class="hx-startbtn" href="/scenario-demo">开始仿真</a>
+                <a class="hx-startbtn" href="javascript:void(0)" onclick="openScenarioPicker(event)">开始仿真</a>
               </div>
             </div>
           </section>
@@ -1662,7 +1703,7 @@
             <div class="hx-qtitle"><span class="hx-dot" style="background:#6E4BFF;box-shadow:0 0 7px #6E4BFF"></span>全部功能</div>
             <div class="hx-qgrid" id="hxQuickGrid">
               <a class="hx-qitem hx-glass" data-cat="all" href="/scenario-page"><div class="hx-qic" style="background:rgba(0,200,255,.13)">🎬</div><span>剧情演绎</span></a>
-              <a class="hx-qitem hx-glass" data-cat="all" href="/scenario-demo"><div class="hx-qic" style="background:rgba(0,128,255,.16)">🎞</div><span>沉浸式剧情</span></a>
+              <a class="hx-qitem hx-glass" data-cat="all" href="javascript:void(0)" onclick="openScenarioPicker(event)"><div class="hx-qic" style="background:rgba(0,128,255,.16)">🎞</div><span>沉浸式剧情</span></a>
               <a class="hx-qitem hx-glass" data-cat="all" href="/multi-fault-page"><div class="hx-qic" style="background:rgba(255,81,47,.13)">🚨</div><span>多故障应急</span></a>
               <a class="hx-qitem hx-glass" data-cat="all" href="/fault-chain"><div class="hx-qic" style="background:rgba(235,51,73,.13)">🧬</div><span>因果故障链</span></a>
               <a class="hx-qitem hx-glass" data-cat="study" href="/exercise-page"><div class="hx-qic" style="background:rgba(42,223,180,.13)">✏️</div><span>互动练习</span></a>
@@ -1915,7 +1956,7 @@
                 // 学生端导航
                 html += G('实 训',
                     A('/scenario-page', '🎬', '剧情演绎') +
-                    A('/scenario-demo', '🎞', '沉浸式剧情', '新') +
+                    B('openScenarioPicker(event)', '🎞', '沉浸式剧情', '新') +
                     A('/multi-fault-page', '🚨', '多故障应急') +
                     A('/fault-chain', '🧬', '因果故障链'));
                 html += G('学 习',
@@ -1939,7 +1980,7 @@
                 // 教师端导航
                 html += G('实训 · 通用',
                     A('/scenario-page', '🎬', '剧情演绎') +
-                    A('/scenario-demo', '🎞', '沉浸式剧情', '新') +
+                    B('openScenarioPicker(event)', '🎞', '沉浸式剧情', '新') +
                     A('/multi-fault-page', '🚨', '多故障应急') +
                     A('/fault-chain', '🧬', '因果故障链') +
                     A('/exercise-page', '✏️', '互动练习') +
@@ -4566,6 +4607,65 @@
     </script>
 
     <!-- 上传知识库文件模态框 -->
+    <div class="modal-overlay" id="scenarioPicker">
+        <div class="modal" style="max-width:920px">
+            <div class="modal-title">
+                🎞 选择剧情演练副本
+                <span class="modal-close" onclick="closeScenarioPicker()">×</span>
+            </div>
+            <p style="font-size:13px;color:#666;margin-bottom:16px;line-height:1.8">
+                三个副本的流程与进度相互独立，分别保存在本地，可任选其一进入。
+            </p>
+            <div class="sc-pick-grid">
+                <a class="sc-pick" href="/scenario-demo" onclick="pickScenario(event,'/scenario-demo','副本一 · 5G 单站验证')">
+                    <div class="sc-pick-ic" style="background:rgba(0,128,255,.12)">📡</div>
+                    <h3>副本一 · 5G 单站验证</h3>
+                    <p>8 步任务 · 满分 100<br>工单核对 → 设备检查 → 工具选型 → 覆盖测试 → 业务测试 → 邻区验证 → 报告</p>
+                    <span class="sc-pick-go">进入实训 →</span>
+                </a>
+                <a class="sc-pick" href="/scenario-cluster" onclick="pickScenario(event,'/scenario-cluster','副本二 · 5G 簇优化')">
+                    <div class="sc-pick-ic" style="background:rgba(255,81,47,.12)">🗺</div>
+                    <h3>副本二 · 5G 簇优化（簇2）</h3>
+                    <p>10 步任务 · 满分 100<br>工单接收 → 模块解读 → 设备清单 → 上电自检 → 资料准备 → 路线规划 → 安全评估 → DT 路测 → 收尾 → 报告</p>
+                    <span class="sc-pick-go">进入实训 →</span>
+                </a>
+                <a class="sc-pick" href="/scenario-grid" onclick="pickScenario(event,'/scenario-grid','副本三 · 5G 网格优化')">
+                    <div class="sc-pick-ic" style="background:rgba(16,185,129,.14)">🛰</div>
+                    <h3>副本三 · 5G 网格优化（网格1）</h3>
+                    <p>10 步任务 · 满分 100<br>通知接收 → 验证项解读 → 终端清点 → 上电预调试 → 资料准备 → 轨迹规划 → 现场评估 → 网格路测 → 收尾 → 报告</p>
+                    <span class="sc-pick-go">进入实训 →</span>
+                </a>
+            </div>
+        </div>
+    </div>
+    <script>
+        function openScenarioPicker(e) {
+            if (e) {
+                e.preventDefault();
+                // 阻止冒泡，避免首页统一链接代理再打开一次页面
+                e.stopPropagation();
+            }
+            // 从侧边栏/移动端抽屉触发时，先把抽屉收起
+            if (typeof hxCloseDrawer === 'function') hxCloseDrawer();
+            document.getElementById('scenarioPicker').classList.add('active');
+        }
+        function closeScenarioPicker() {
+            document.getElementById('scenarioPicker').classList.remove('active');
+        }
+        function pickScenario(e, url, title) {
+            if (e) e.preventDefault();
+            closeScenarioPicker();
+            if (typeof hxOpenPage === 'function') {
+                hxOpenPage(url, title || '沉浸式剧情');
+            } else {
+                window.location.href = url;
+            }
+        }
+        document.getElementById('scenarioPicker').addEventListener('click', function (ev) {
+            if (ev.target === this) closeScenarioPicker();
+        });
+    </script>
+
     <div class="modal-overlay" id="uploadModal">
         <div class="modal">
             <div class="modal-title">
