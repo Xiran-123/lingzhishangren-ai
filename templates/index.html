@@ -2082,8 +2082,10 @@
         function hxSetMode(mode) {
             const home = document.getElementById('hxHome');
             if (!home) return;
-            home.querySelectorAll(':scope > .hx-notice, :scope > .hx-layout').forEach(el => {
-                el.style.display = (mode === 'home') ? '' : 'none';
+            const showHomeParts = (mode === 'home');
+            // 首页专属元素：只有 home 模式才显示，page/center 模式全部隐藏
+            home.querySelectorAll(':scope > .hx-aurora, :scope > header.hx-topbar, :scope > .hx-notice, :scope > .hx-layout').forEach(el => {
+                el.style.display = showHomeParts ? '' : 'none';
             });
             const cv = document.getElementById('hxCenterView');
             if (cv) cv.style.display = (mode === 'center') ? 'block' : 'none';
