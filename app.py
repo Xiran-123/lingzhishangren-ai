@@ -62,7 +62,9 @@ def _load_siliconflow_key():
 
 API_KEY = _load_siliconflow_key()
 API_URL = "https://api.siliconflow.cn/v1/chat/completions"
-MODEL_NAME = "Pro/moonshotai/Kimi-K2.6"
+MODEL_KIMI  = "Pro/moonshotai/Kimi-K2.6"
+MODEL_FLASH = "deepseek-ai/DeepSeek-V4.1-Flash"
+MODEL_NAME  = MODEL_FLASH  # 默认走 Flash，只有剧情 AI 对话 (is_scenario=True) 保留 Kimi
 
 # ====================== 访问密码配置 ======================
 ACCESS_PASSWORD = "tongxin2024"  # 可以改成你想要的密码
@@ -2410,7 +2412,7 @@ def build_student_analysis_prompt(student: Dict):
 def analysis_sse_generator(system_content: str, prompt: str, max_tokens: int = 1200, temperature: float = 0.7):
     """通用AI分析流式生成器（SSE）：data: {"content": "..."}，结束发送 [DONE]"""
     payload = {
-        "model": MODEL_NAME,
+        "model": MODEL_FLASH,
         "messages": [
             {"role": "system", "content": system_content},
             {"role": "user", "content": prompt}
@@ -3575,10 +3577,14 @@ def chat_endpoint():
         if current_role == 'student' and (current_student_no or current_student_name) and persona != 'pet':
             update_student_profile(current_student_no or current_student_name, user_message, True)
         
+        # 选择模型：剧情 AI (is_scenario=True) 保留 Kimi 质量，其余全部走 Flash 提速省费
+        model_choice = MODEL_KIMI if (is_scenario and not persona) else MODEL_FLASH
+
         if stream:
             # 流式输出 - 记录所有对话到日志
             return Response(
-                stream_generator(headers, messages, temperature, max_tokens, user_message),
+                stream_generator(headers, messages, temperature, max_tokens, user_message,
+                                 model_name=model_choice),
                 content_type='text/event-stream',
                 headers={
                     'Cache-Control': 'no-cache, no-transform',
@@ -3588,7 +3594,7 @@ def chat_endpoint():
         else:
             # 非流式输出
             payload = {
-                "model": MODEL_NAME,
+                "model": model_choice,
                 "messages": messages,
                 "temperature": temperature,
                 "max_tokens": max_tokens,
@@ -3764,9 +3770,9 @@ def api_add_conv_message(cid):
     return jsonify({'ok': True, 'summary': conv_summary(conv)})
 
 
-def stream_generator(headers, messages, temperature, max_tokens, search_query=None):
+def stream_generator(headers, messages, temperature, max_tokens, search_query=None, model_name=None):
     payload = {
-        "model": MODEL_NAME,
+        "model": model_name or MODEL_FLASH,
         "messages": messages,
         "temperature": temperature,
         "max_tokens": max_tokens,
@@ -5612,7 +5618,7 @@ def api_generate_scenario():
             {"role": "user", "content": user_prompt}
         ]
         payload = {
-            "model": MODEL_NAME,
+            "model": MODEL_FLASH,
             "messages": messages,
             "temperature": 0.7,
             "max_tokens": 12000,
@@ -6072,7 +6078,7 @@ def grade_text_answers_by_ai(items: List[Dict]) -> Dict[str, Dict]:
             API_URL,
             headers={"Content-Type": "application/json", "Authorization": f"Bearer {API_KEY}"},
             json={
-                "model": MODEL_NAME,
+                "model": MODEL_FLASH,
                 "messages": [
                     {"role": "system", "content": sys_prompt},
                     {"role": "user", "content": "请批改以下主观题：\n\n" + "\n\n".join(blocks)},
@@ -6603,7 +6609,7 @@ def _parse_job_competence(job_dict: Dict) -> Dict:
             API_URL,
             headers={"Content-Type": "application/json", "Authorization": f"Bearer {API_KEY}"},
             json={
-                "model": MODEL_NAME,
+                "model": MODEL_FLASH,
                 "messages": [
                     {"role": "system", "content": sys_prompt},
                     {"role": "user", "content": user_prompt},
@@ -9571,7 +9577,7 @@ def api_troubleshoot(task_id):
     }
 
     payload = {
-        "model": MODEL_NAME,
+        "model": MODEL_FLASH,
         "messages": messages,
         "temperature": 0.6,
         "max_tokens": 1500,
@@ -9781,7 +9787,7 @@ def api_task_evaluation(task_id):
             "Authorization": f"Bearer {API_KEY}"
         }
         payload = {
-            "model": MODEL_NAME,
+            "model": MODEL_FLASH,
             "messages": messages,
             "temperature": 0.5,
             "max_tokens": 1000,
@@ -10112,7 +10118,7 @@ def api_mock_interview_start():
     records.append(record)
     save_interview_records(records)
     messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": "请开始面试。"}]
-    payload = {"model": MODEL_NAME, "messages": messages, "temperature": 0.7, "max_tokens": 800, "stream": True, "enable_thinking": False}
+    payload = {"model": MODEL_FLASH, "messages": messages, "temperature": 0.7, "max_tokens": 800, "stream": True, "enable_thinking": False}
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {API_KEY}"}
 
     def generate(interview_id=interview_id):
@@ -10191,7 +10197,7 @@ def api_mock_interview_chat():
             messages.append({"role": "assistant", "content": msg['content']})
         elif msg['role'] == 'student':
             messages.append({"role": "user", "content": msg['content']})
-    payload = {"model": MODEL_NAME, "messages": messages, "temperature": 0.7, "max_tokens": 800, "stream": True, "enable_thinking": False}
+    payload = {"model": MODEL_FLASH, "messages": messages, "temperature": 0.7, "max_tokens": 800, "stream": True, "enable_thinking": False}
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {API_KEY}"}
 
     def generate(interview_id=interview_id):
@@ -10260,7 +10266,7 @@ def api_mock_interview_end():
         record['messages'], record['target_company'], record['target_position'],
         record['interview_type'], record.get('case_questions', []),
         _get_student_competence_vector(record['student_no']).get('vector', {}))
-    payload = {"model": MODEL_NAME,
+    payload = {"model": MODEL_FLASH,
                "messages": [{"role": "system", "content": system_prompt}, {"role": "user", "content": user_prompt}],
                "temperature": 0.3, "max_tokens": 1500, "stream": True, "enable_thinking": False}
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {API_KEY}"}
@@ -11283,7 +11289,7 @@ def api_fault_chain_chat():
                      "\n\n✨ 本回答由 AI 生成，仅供参考。")
     messages = [{"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_msg}]
-    payload = {"model": MODEL_NAME, "messages": messages,
+    payload = {"model": MODEL_FLASH, "messages": messages,
                "temperature": 0.6, "max_tokens": 600, "stream": True, "enable_thinking": False}
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {API_KEY}"}
 
