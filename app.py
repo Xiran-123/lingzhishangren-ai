@@ -5259,6 +5259,36 @@ def get_learning_curve():
     })
 
 
+@app.route('/api/today-progress', methods=['GET'])
+def api_today_progress():
+    """今日学习进度（日期口径与学习记录写入保持一致）"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+
+    student_name = session.get('student_name', '')
+    today = datetime.now().strftime('%Y-%m-%d')
+    records = load_learning_records().get(student_name, [])
+    todays = [r for r in records if r.get('date') == today]
+
+    done = len(todays)
+    wrong = sum(1 for r in todays if r.get('activity_type') == 'wrong_question')
+    scores = [r.get('score') for r in todays if r.get('score') is not None]
+    goal = 10
+    percent = min(100, int(round(done * 100.0 / goal))) if goal else 0
+    accuracy = round((1 - wrong / float(done)) * 100, 1) if done else 0.0
+
+    return jsonify({
+        'success': True,
+        'date': today,
+        'done': done,
+        'goal': goal,
+        'percent': percent,
+        'wrong': wrong,
+        'accuracy': accuracy,
+        'avg_score': round(sum(scores) / len(scores), 1) if scores else 0
+    })
+
+
 @app.route('/api/job-match', methods=['GET'])
 def get_job_match():
     """获取岗位匹配度"""

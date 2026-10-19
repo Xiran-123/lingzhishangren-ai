@@ -1314,8 +1314,35 @@
     #hxHome .notification-bell{all:unset;cursor:pointer;position:relative;width:34px;height:34px;border-radius:50%;background:var(--hx-card);border:1px solid var(--hx-cardb);display:grid;place-items:center;font-size:15px;transition:.2s}
     #hxHome .notification-bell:hover{background:rgba(255,255,255,.1)}
     #hxHome .notification-bell .notification-badge{position:absolute;top:-3px;right:-3px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--hx-gradhot);color:#fff;border-radius:9px;font-size:10px;font-weight:700;display:none;align-items:center;justify-content:center}
-    .hx-chip{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 6px;border-radius:22px;background:var(--hx-card);border:1px solid var(--hx-cardb);font-size:13px;cursor:pointer;transition:.2s}
-    .hx-chip:hover{background:rgba(255,255,255,.1)}
+    .hx-prog-wrap{position:relative;display:flex;align-items:center;gap:9px;padding:5px 13px 5px 6px;border-radius:999px;background:var(--hx-card);border:1px solid var(--hx-cardb);cursor:pointer;transition:.22s}
+    .hx-prog-wrap:hover{background:rgba(255,255,255,.1);border-color:rgba(93,140,255,.55);box-shadow:0 6px 20px rgba(61,123,255,.28)}
+    .hx-prog{position:relative;width:34px;height:34px;flex:0 0 auto}
+    .hx-prog svg{display:block;width:34px;height:34px;transform:rotate(-90deg)}
+    .hx-prog circle{fill:none;stroke-width:4;stroke-linecap:round}
+    .hx-prog .hx-pbg{stroke:rgba(255,255,255,.16)}
+    .hx-prog .hx-pfg{stroke:url(#hxProgGrad);stroke-dasharray:113.1;stroke-dashoffset:113.1;filter:drop-shadow(0 0 5px rgba(61,123,255,.6));transition:stroke-dashoffset .7s ease}
+    .hx-ptxt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:800;color:#fff}
+    .hx-prog-meta{display:flex;flex-direction:column;line-height:1.18;white-space:nowrap}
+    .hx-prog-meta b{font-size:12.5px;font-weight:700;color:var(--hx-txt)}
+    .hx-prog-meta span{font-size:10.5px;color:var(--hx-txt2)}
+    .hx-prog-pop{position:absolute;top:calc(100% + 12px);right:0;width:268px;padding:14px 15px 13px;border-radius:16px;
+      background:rgba(16,30,70,.95);backdrop-filter:blur(18px);border:1px solid rgba(93,140,255,.32);
+      box-shadow:0 20px 50px rgba(0,0,0,.5);z-index:200;
+      opacity:0;visibility:hidden;transform:translateY(-8px) scale(.97);transform-origin:top right;
+      transition:opacity .22s ease,transform .22s ease,visibility .22s}
+    .hx-prog-wrap:hover .hx-prog-pop,.hx-prog-pop.show{opacity:1;visibility:visible;transform:translateY(0) scale(1)}
+    .hx-pp-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+    .hx-pp-t{font-size:13px;font-weight:700;color:#fff}
+    .hx-pp-d{font-size:11px;color:var(--hx-txt2)}
+    .hx-pp-bar{height:7px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden;margin-bottom:12px}
+    .hx-pp-bar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#2ADFB4,#3D7BFF);transition:width .6s ease}
+    .hx-pp-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .hx-pp-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07)}
+    .hx-pp-ic{font-size:14px;flex:0 0 auto}
+    .hx-pp-item>div{display:flex;flex-direction:column;line-height:1.2;min-width:0}
+    .hx-pp-item b{font-size:14px;font-weight:800;color:#fff}
+    .hx-pp-k{font-size:10.5px;color:var(--hx-txt2)}
+    .hx-pp-foot{margin-top:11px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08);font-size:11.5px;color:var(--hx-txt2);line-height:1.5}
     .hx-avatar{width:26px;height:26px;border-radius:50%;background:var(--hx-grad);display:grid;place-items:center;font-size:12px;overflow:hidden}
     .hx-roletag{font-size:11px;color:var(--hx-cyan)}
 
@@ -1455,9 +1482,10 @@
       .hx-herobody{grid-template-columns:1fr}.hx-params{flex-direction:row;flex-wrap:wrap}
       .hx-params .hx-startbtn{margin-top:4px;flex:1 1 100%}
       .hx-frow{grid-template-columns:repeat(2,1fr)}.hx-qgrid{grid-template-columns:repeat(3,1fr)}
-      .hx-hero{padding:20px 18px}.hx-hero h1{font-size:19px}.hx-chip #hxUserName,.hx-chip .hx-roletag{display:none}
+      .hx-hero{padding:20px 18px}.hx-hero h1{font-size:19px}.hx-prog-wrap{padding:4px 10px 4px 5px;gap:7px}.hx-prog{width:30px;height:30px}.hx-prog svg{width:30px;height:30px}.hx-prog-pop{width:236px}
       .hx-backbtn{top:66px}
     }
+    @media(max-width:560px){.hx-prog-meta{display:none}.hx-prog-wrap{padding:4px 8px 4px 5px;gap:0}}
     </style>
 
     <div id="hxHome">
@@ -1466,10 +1494,11 @@
       <header class="hx-topbar">
         <div class="hx-logo"><div class="hx-logomark">🧠</div>灵智尚人</div>
         <nav class="hx-tabs">
-          <button class="hx-tab on" data-view="home" data-cat="all" onclick="hxTab(this)">🧪 实训中心</button>
-          <button class="hx-tab" data-view="home" data-cat="study" onclick="hxTab(this)">📖 学习中心</button>
-          <button class="hx-tab" data-view="home" data-cat="res" onclick="hxTab(this)">🗂 资源中心</button>
-          <button class="hx-tab" data-view="home" data-cat="grow" onclick="hxTab(this)">🌱 成长中心</button>
+          <button class="hx-tab on" id="hxTabHome" data-view="home" data-center="" onclick="hxTab(this)">🏠 首页</button>
+          <button class="hx-tab" data-view="home" data-center="train" onclick="hxTab(this)">🧪 实训中心</button>
+          <button class="hx-tab" data-view="home" data-center="study" onclick="hxTab(this)">📖 学习中心</button>
+          <button class="hx-tab" data-view="home" data-center="res" onclick="hxTab(this)">🗂 资源中心</button>
+          <button class="hx-tab" data-view="home" data-center="grow" onclick="hxTab(this)">🌱 成长中心</button>
           <button class="hx-tab" data-view="chat" onclick="hxTab(this)">🤖 AI 助手</button>
         </nav>
         <div class="hx-topright">
@@ -1477,9 +1506,35 @@
           <button class="notification-bell" id="notificationBell" onclick="showNotificationModal()">🔔
             <span id="notificationBadge" class="notification-badge">0</span>
           </button>
-          <div class="hx-chip" onclick="closeSettings();showPersonalCenter();">
-            <div class="hx-avatar" id="hxAvatar">学</div>
-            <span id="hxUserName">同学</span><span class="hx-roletag" id="hxRoleTag">学生端</span>
+          <div class="hx-prog-wrap" id="hxTodayProg" title="今日学习进度" onmouseenter="hxProgPop(true)" onmouseleave="hxProgPop(false)" onclick="hxProgPop('toggle')">
+            <div class="hx-prog">
+              <svg viewBox="0 0 44 44" aria-hidden="true">
+                <defs>
+                  <linearGradient id="hxProgGrad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#2ADFB4"></stop>
+                    <stop offset="100%" stop-color="#3D7BFF"></stop>
+                  </linearGradient>
+                </defs>
+                <circle class="hx-pbg" cx="22" cy="22" r="18"></circle>
+                <circle class="hx-pfg" id="hxProgArc" cx="22" cy="22" r="18"></circle>
+              </svg>
+              <span class="hx-ptxt" id="hxProgPct">0%</span>
+            </div>
+            <div class="hx-prog-meta"><b id="hxProgMini">0/10</b><span>今日完成</span></div>
+            <div class="hx-prog-pop" id="hxProgPop">
+              <div class="hx-pp-head">
+                <span class="hx-pp-t">📈 今日学习进度</span>
+                <span class="hx-pp-d" id="hxProgDate"></span>
+              </div>
+              <div class="hx-pp-bar"><i id="hxProgBar"></i></div>
+              <div class="hx-pp-grid">
+                <div class="hx-pp-item"><span class="hx-pp-ic">✅</span><div><b id="hxProgDone">0/10</b><span class="hx-pp-k">已完成 / 目标</span></div></div>
+                <div class="hx-pp-item"><span class="hx-pp-ic">🎯</span><div><b id="hxProgAcc">0%</b><span class="hx-pp-k">正确率</span></div></div>
+                <div class="hx-pp-item"><span class="hx-pp-ic">📕</span><div><b id="hxProgWrong">0</b><span class="hx-pp-k">今日错题</span></div></div>
+                <div class="hx-pp-item"><span class="hx-pp-ic">⭐</span><div><b id="hxProgAvg">0</b><span class="hx-pp-k">平均分</span></div></div>
+              </div>
+              <div class="hx-pp-foot" id="hxProgFoot">今天还没有学习记录，去「互动练习」开始吧 →</div>
+            </div>
           </div>
         </div>
       </header>
@@ -1629,11 +1684,20 @@
       <!-- 内嵌功能页面承载层：点击侧边导航/宫格时主区域原地切换为对应页面 -->
       <div class="hx-pageview" id="hxPageView" style="display:none">
         <div class="hx-pagebar hx-glass">
-          <button class="hx-pageback" onclick="hxClosePage()">← 返回首页</button>
+          <button class="hx-pageback" id="hxPageBack" onclick="hxClosePage()">← 返回首页</button>
           <span class="hx-pagetitle" id="hxPageTitle">功能页面</span>
           <a class="hx-pagepop" id="hxPagePop" href="#" target="_blank" title="在新窗口打开">↗ 新窗口</a>
         </div>
         <iframe id="hxPageIframe" src="about:blank" title="功能页面"></iframe>
+      </div>
+
+      <!-- 中心二级页面承载层：首页为一层，各中心为其下一级页面，原生渲染（非 iframe） -->
+      <div class="hx-pageview" id="hxCenterView" style="display:none">
+        <div class="hx-pagebar hx-glass">
+          <button class="hx-pageback" onclick="hxCloseCenter()">← 返回首页</button>
+          <span class="hx-pagetitle" id="hxCenterTitle">中心</span>
+        </div>
+        <div id="hxCenterBody"></div>
       </div>
     </div>
 
@@ -1646,7 +1710,7 @@
 
     <!-- ==================== AI 助手聊天视图 ==================== -->
     <div id="hxChatView" style="display:none">
-      <button class="hx-backbtn" onclick="hxTab(document.querySelector('.hx-tab[data-cat=all]'))">← 返回主页</button>
+      <button class="hx-backbtn" onclick="hxTab(document.getElementById('hxTabHome'))">← 返回主页</button>
       <div class="chat-container" style="margin: 0 auto;">
 
         <div class="mode-selector">
@@ -1907,63 +1971,258 @@
             if (ua && ua.firstChild) ua.firstChild.textContent = name[0] || '学';
 
             hxLoadNotices();
+            hxLoadTodayProgress();
         }
 
         // ===== 新版主页：视图切换 / 抽屉 / 迷你聊天 / 通知 =====
+        // 首页为第一层，四个「中心」为其下一级页面，各中心突出一个主要功能
+        let hxFromCenter = null;
+        const HX_CENTERS = {
+            train: {
+                short: '实训中心', title: '🧪 实训中心', label: '实训中心',
+                hero: {
+                    badge: '🚀 旗舰实训', icon: '🛰',
+                    h1: '5G 基站工程勘察设计虚拟仿真',
+                    sub: '化身无线网络规划工程师，走进智慧校园 5G 建设项目，完成从工具认知、站址筛选、现场勘察到方案设计的完整工程闭环。',
+                    meta: ['🎬 8 个剧情步骤', '⏱ 约 25 分钟', '🎯 无线网络规划工程师'],
+                    rows: [['实训形态', '沉浸式剧情'], ['剧情步骤', '8 步'], ['任务满分', '13 分']],
+                    href: '/scenario-demo', cta: '开始仿真'
+                },
+                items: [
+                    ['/scenario-page', '🎬', '剧情演绎', '多场景剧本自由切换'],
+                    ['/scenario-demo', '🎞', '沉浸式剧情', '5G 基站勘察全流程演练'],
+                    ['/multi-fault-page', '🚨', '多故障应急', '并发故障排序与人力调度'],
+                    ['/fault-chain', '🧬', '因果故障链', '从告警逐层定位根因'],
+                    ['/mock-interview-page', '🎤', 'AI 模拟面试', '岗位面试实战与即时点评'],
+                    ['/interview-cases-page', '📚', '面试案例', '真实题例与答题思路']
+                ]
+            },
+            study: {
+                short: '学习中心', title: '📖 学习中心', label: '学习中心',
+                hero: {
+                    badge: '✏️ 旗舰功能', icon: '✏️',
+                    h1: '互动练习',
+                    sub: '按知识点自动生成练习，边做边批改，实时追踪薄弱环节并推送变式重练。',
+                    meta: ['📝 多题型支持', '⚡ 即时批改', '📈 薄弱点追踪'],
+                    rows: [['练习形式', '知识点智能出题'], ['批改方式', '即时反馈'], ['错题处理', '自动归集重练']],
+                    href: '/exercise-page', cta: '开始练习'
+                },
+                items: [
+                    ['/exercise-page', '✏️', '互动练习', '智能出题 · 即时批改'],
+                    ['/wrong-questions-page', '📝', '错题本', '自动归集 · 变式重练'],
+                    ['/knowledge-graph-page', '🕸', '知识图谱', '知识关联 · 缺口定位'],
+                    ['/weekly-tasks-page', '📋', '每周任务', '本周学习计划与进度'],
+                    ['/homework-page', '📒', '我的作业', '提交作业 · 查看批改']
+                ]
+            },
+            res: {
+                short: '资源中心', title: '🗂 资源中心', label: '资源中心',
+                hero: {
+                    badge: '📚 旗舰资源', icon: '📚',
+                    h1: '课件中心',
+                    sub: '课程 PPT / Word 资料在线预览，支持关键词检索与分类浏览，随取随用。',
+                    meta: ['📚 在线预览', '🔍 关键词检索', '🗂 分类浏览'],
+                    rows: [['资源类型', '课件 / 文档'], ['预览方式', '在线高清预览'], ['检索方式', '关键词 + 分类']],
+                    href: '/ppt-resources-page', cta: '进入课件中心'
+                },
+                items: [
+                    ['/ppt-resources-page', '📚', '课件中心', '课件在线预览与检索'],
+                    ['/frontier-update-page', '🚀', '前沿动态', '3GPP / 厂商前沿资讯'],
+                    ['/rag-console', '🔎', '知识检索', 'RAG 问答 · 教材溯源']
+                ]
+            },
+            grow: {
+                short: '成长中心', title: '🌱 成长中心', label: '成长中心',
+                hero: {
+                    badge: '🎯 旗舰功能', icon: '🎯',
+                    h1: '能力画像',
+                    sub: '基于作业、错题、面试与学习行为多维数据，生成 12 维能力雷达与个性化提升建议。',
+                    meta: ['📊 12 维能力雷达', '🤖 AI 深度分析', '💡 提升建议'],
+                    rows: [['数据来源', '作业 / 错题 / 面试'], ['能力维度', '12 维'], ['输出形式', '雷达图 + 报告']],
+                    href: '/student-portrait-page', cta: '查看能力画像'
+                },
+                items: [
+                    ['/student-portrait-page', '🎯', '能力画像', '12 维能力雷达与 AI 分析'],
+                    ['/credential-chain', '🎖', '成长档案', '可信哈希链成长记录'],
+                    ['/job-recruitment-page', '💼', '岗位招聘', '实时招聘岗位浏览'],
+                    ['/job-match-page', '🤝', '岗位匹配', '岗位胜任力匹配度分析']
+                ]
+            }
+        };
+
+        function hxCenterHTML(key) {
+            const c = HX_CENTERS[key];
+            if (!c) return '';
+            const chips = c.hero.meta.map(m => `<span class="hx-mchip">${m}</span>`).join('');
+            const rows = c.hero.rows.map(r => `<div class="hx-prow"><span>${r[0]}</span><b>${r[1]}</b></div>`).join('');
+            const cards = c.items.map(it =>
+                `<a class="hx-fcard hx-glass" href="${it[0]}"><span class="hx-farr">→</span>
+                   <div class="hx-fic" style="background:rgba(61,123,255,.14)">${it[1]}</div>
+                   <h3>${it[2]}</h3><p>${it[3]}</p></a>`).join('');
+            return `
+              <section class="hx-hero">
+                <span class="hx-badge">${c.hero.badge}</span>
+                <h1>${c.hero.h1}</h1>
+                <p class="hx-sub">${c.hero.sub}</p>
+                <div class="hx-meta">${chips}</div>
+                <div class="hx-herobody">
+                  <div class="hx-art" style="display:flex;align-items:center;justify-content:center">
+                    <div style="font-size:76px;filter:drop-shadow(0 8px 22px rgba(61,123,255,.45))">${c.hero.icon}</div>
+                  </div>
+                  <div class="hx-params">${rows}
+                    <a class="hx-startbtn" href="${c.hero.href}">${c.hero.cta}</a>
+                  </div>
+                </div>
+              </section>
+              <div class="hx-qtitle" style="margin-top:20px"><span class="hx-dot" style="background:#6E4BFF;box-shadow:0 0 7px #6E4BFF"></span>${c.label} · 全部功能</div>
+              <div class="hx-frow">${cards}</div>`;
+        }
+
+        // 主区域内三种模式：home（首页三栏）/ center（中心二级页）/ page（功能页 iframe）
+        function hxSetMode(mode) {
+            const home = document.getElementById('hxHome');
+            if (!home) return;
+            home.querySelectorAll(':scope > .hx-notice, :scope > .hx-layout').forEach(el => {
+                el.style.display = (mode === 'home') ? '' : 'none';
+            });
+            const cv = document.getElementById('hxCenterView');
+            if (cv) cv.style.display = (mode === 'center') ? 'block' : 'none';
+            const pv = document.getElementById('hxPageView');
+            if (pv) pv.style.display = (mode === 'page') ? 'block' : 'none';
+            if (mode !== 'page') {
+                const f = document.getElementById('hxPageIframe');
+                if (f) f.src = 'about:blank';
+            }
+        }
+        function hxSyncTab(key) {
+            document.querySelectorAll('.hx-tab').forEach(t => {
+                t.classList.toggle('on', t.dataset.view !== 'chat' && (t.dataset.center || '') === (key || ''));
+            });
+        }
+        function hxRenderCenter(key) {
+            const c = HX_CENTERS[key];
+            const cv = document.getElementById('hxCenterView');
+            if (!c || !cv) return;
+            cv.dataset.key = key;
+            const t = document.getElementById('hxCenterTitle');
+            if (t) t.textContent = c.title;
+            const b = document.getElementById('hxCenterBody');
+            if (b) b.innerHTML = hxCenterHTML(key);
+        }
+        function hxOpenCenter(key) {
+            if (!HX_CENTERS[key]) return;
+            hxRenderCenter(key);
+            hxFromCenter = null;
+            hxSetMode('center');
+            hxSyncTab(key);
+            document.body.style.overflow = 'auto';
+            window.scrollTo({ top: 0 });
+        }
+        function hxCloseCenter() {
+            hxFromCenter = null;
+            hxSetMode('home');
+            hxSyncTab('');
+            document.body.style.overflow = 'auto';
+            window.scrollTo({ top: 0 });
+        }
+
+        // ===== 右上角：今日学习进度 =====
+        const HX_PROG_C = 2 * Math.PI * 18;
+        async function hxLoadTodayProgress() {
+            const arc = document.getElementById('hxProgArc');
+            const pctEl = document.getElementById('hxProgPct');
+            if (!arc || !pctEl) return;
+            let d = null;
+            try {
+                const r = await fetch('/api/today-progress');
+                if (r.ok) d = await r.json();
+            } catch (e) {}
+            const ok = !!(d && d.success);
+            const pct = ok ? (d.percent || 0) : 0;
+            const done = ok ? (d.done || 0) : 0;
+            const goal = ok ? (d.goal || 10) : 10;
+            const acc = ok ? (d.accuracy || 0) : 0;
+            const wrong = ok ? (d.wrong || 0) : 0;
+            const avg = ok ? (d.avg_score || 0) : 0;
+            pctEl.textContent = pct + '%';
+            arc.style.strokeDashoffset = HX_PROG_C * (1 - pct / 100);
+            const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+            setTxt('hxProgMini', done + '/' + goal);
+            setTxt('hxProgDone', done + '/' + goal);
+            setTxt('hxProgAcc', acc + '%');
+            setTxt('hxProgWrong', wrong);
+            setTxt('hxProgAvg', avg);
+            setTxt('hxProgDate', ok ? d.date : '');
+            const bar = document.getElementById('hxProgBar');
+            if (bar) bar.style.width = pct + '%';
+            const foot = document.getElementById('hxProgFoot');
+            if (foot) foot.textContent = done > 0
+                ? '今日已完成 ' + done + ' 项，继续冲刺 ' + goal + ' 项目标 💪'
+                : '今天还没有学习记录，去「互动练习」开始吧 →';
+        }
+        function hxProgPop(mode) {
+            const el = document.getElementById('hxProgPop');
+            if (!el) return;
+            if (mode === true) el.classList.add('show');
+            else if (mode === false) el.classList.remove('show');
+            else el.classList.toggle('show');
+        }
+
         function hxTab(tabEl) {
             if (!tabEl) return;
             const view = tabEl.dataset.view;
-            document.querySelectorAll('.hx-tab').forEach(t => t.classList.remove('on'));
-            tabEl.classList.add('on');
             const home = document.getElementById('hxHome');
             const chat = document.getElementById('hxChatView');
+            hxFromCenter = null;
             if (view === 'chat') {
+                document.querySelectorAll('.hx-tab').forEach(t => t.classList.remove('on'));
+                tabEl.classList.add('on');
                 if (home) home.style.display = 'none';
                 if (chat) chat.style.display = 'block';
                 document.body.style.overflow = 'hidden';
                 hxCloseDrawer();
-            } else {
-                if (chat) chat.style.display = 'none';
-                hxClosePage();
-                if (home) home.style.display = 'block';
-                document.body.style.overflow = 'auto';
-                hxFilter(tabEl.dataset.cat || 'all');
-                hxCloseDrawer();
-                window.scrollTo({ top: 0 });
+                return;
             }
-        }
-        function hxFilter(cat) {
-            document.querySelectorAll('#hxQuickGrid .hx-qitem').forEach(it => {
-                it.classList.toggle('hx-hide', cat !== 'all' && it.dataset.cat !== cat);
-            });
+            if (chat) chat.style.display = 'none';
+            if (home) home.style.display = 'block';
+            const ck = tabEl.dataset.center || '';
+            if (ck) hxRenderCenter(ck);
+            hxSetMode(ck ? 'center' : 'home');
+            hxSyncTab(ck);
+            document.body.style.overflow = 'auto';
+            hxCloseDrawer();
+            window.scrollTo({ top: 0 });
         }
         // ===== 主区域内嵌页面切换：点导航不跳转，主区域原地变页面 =====
         function hxOpenPage(url, title) {
-            const home = document.getElementById('hxHome');
-            const pv = document.getElementById('hxPageView');
             const frame = document.getElementById('hxPageIframe');
-            if (!pv || !frame) { window.location.href = url; return; }
-            // 隐藏首页内容区（公告条+三栏布局），保留顶部 Tab 栏
-            home.querySelectorAll(':scope > .hx-notice, :scope > .hx-layout').forEach(el => el.style.display = 'none');
-            pv.style.display = 'block';
-            document.getElementById('hxPageTitle').textContent = title || '功能页面';
+            if (!frame) { window.location.href = url; return; }
+            const cv = document.getElementById('hxCenterView');
+            hxFromCenter = (cv && cv.style.display !== 'none' && cv.dataset.key) ? cv.dataset.key : null;
+            hxSetMode('page');
+            const tt = document.getElementById('hxPageTitle');
+            if (tt) tt.textContent = title || '功能页面';
             const pop = document.getElementById('hxPagePop');
             if (pop) pop.href = url;
+            const bb = document.getElementById('hxPageBack');
+            if (bb) bb.textContent = hxFromCenter ? ('← 返回' + (HX_CENTERS[hxFromCenter].short || '中心')) : '← 返回首页';
             frame.src = url;
             document.body.style.overflow = 'hidden';
             hxCloseDrawer();
             window.scrollTo({ top: 0 });
         }
         function hxClosePage() {
-            const pv = document.getElementById('hxPageView');
-            const frame = document.getElementById('hxPageIframe');
-            const home = document.getElementById('hxHome');
-            if (pv) pv.style.display = 'none';
-            if (frame) frame.src = 'about:blank';
-            if (home) home.querySelectorAll(':scope > .hx-notice, :scope > .hx-layout').forEach(el => el.style.display = '');
+            if (hxFromCenter) {
+                const k = hxFromCenter;
+                hxFromCenter = null;
+                hxOpenCenter(k);
+                return;
+            }
+            hxSetMode('home');
+            hxSyncTab('');
             document.body.style.overflow = 'auto';
         }
-        // 首页内所有内部链接（宫格卡片/快捷卡/开始仿真）统一原地内嵌打开
+        // 首页内所有内部链接（宫格卡片/快捷卡/开始仿真/中心卡片）统一原地内嵌打开
         document.getElementById('hxHome').addEventListener('click', function(e) {
             const a = e.target.closest('a[href^="/"]');
             if (!a || a.target === '_blank') return;
