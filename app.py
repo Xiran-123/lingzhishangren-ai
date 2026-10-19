@@ -5295,6 +5295,38 @@ def api_today_progress():
     })
 
 
+@app.route('/api/teacher-files', methods=['GET'])
+def api_teacher_files():
+    """老师共享文件：上传历史里非学生身份上传的文件（老师登录时 uploader 存老师名）"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+
+    try:
+        student_names = {s.get('name') for s in load_students() if s.get('name')}
+    except Exception:
+        student_names = set()
+
+    files = []
+    for h in load_upload_history():
+        if not h.get('download_name'):
+            continue  # 源文件已删除的孤儿记录不展示
+        uploader = h.get('uploader') or ''
+        if uploader in student_names:
+            continue  # 学生上传的不算老师共享
+        files.append({
+            'filename': h.get('filename'),
+            'download_name': h.get('download_name'),
+            'file_ext': (h.get('file_ext') or '').lower(),
+            'upload_time': h.get('upload_time'),
+            'uploader': uploader,
+            'preview_ready': bool(h.get('preview_ready')),
+            'page_count': h.get('page_count', 0),
+            'preview_dir': h.get('preview_dir', '')
+        })
+    files.sort(key=lambda x: x.get('upload_time') or '', reverse=True)
+    return jsonify({'success': True, 'files': files[:20]})
+
+
 @app.route('/api/job-match', methods=['GET'])
 def get_job_match():
     """获取岗位匹配度"""
