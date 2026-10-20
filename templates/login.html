@@ -143,18 +143,19 @@
         }
 
         /* ===== 应用场景预览轮播舞台（桌面端品牌面板） ===== */
+        /* 外壳完全透明融入面板背景，仅保留嵌入式屏幕本体 */
         .scene-stage {
             position: relative;
             margin-bottom: 26px;
-            border-radius: 16px;
-            background: linear-gradient(165deg, #132450 0%, #0a1738 100%);
-            border: 1px solid rgba(0, 200, 255, 0.28);
-            box-shadow: 0 16px 44px rgba(0, 0, 0, 0.45), 0 0 30px rgba(0, 130, 255, 0.1) inset;
-            overflow: hidden;
+            background: transparent;
+            border: none;
+            overflow: visible;
         }
         .scene-screen {
             position: relative;
             height: 288px;
+            border-radius: 14px;
+            border: 1px solid rgba(0, 229, 255, 0.16);
             background:
                 radial-gradient(circle 210px at 85% 110%, rgba(0, 200, 255, 0.12), transparent 70%),
                 radial-gradient(circle 190px at 8% -10%, rgba(91, 61, 255, 0.12), transparent 70%),
@@ -506,12 +507,11 @@
             50% { color: #00e5ff; border-color: rgba(0, 229, 255, 0.5); }
         }
 
-        /* ── 舞台底部：指示点 + 标题描述 ── */
+        /* ── 舞台底部：指示点 + 标题描述（透明融入面板） ── */
         .scene-meta {
             position: relative;
-            padding: 12px 18px 14px;
-            border-top: 1px solid rgba(0, 200, 255, 0.16);
-            background: #0a1633;
+            padding: 14px 4px 0;
+            background: transparent;
         }
         .scene-dots {
             position: absolute; top: -11px; left: 16px;
