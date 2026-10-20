@@ -142,8 +142,8 @@
             color: rgba(255,255,255,0.45); font-size: 12px; line-height: 1.5;
         }
 
-        /* ===== 应用场景预览轮播舞台（桌面端品牌面板） ===== */
-        /* 外壳完全透明融入面板背景，仅保留嵌入式屏幕本体 */
+        /* ===== 应用场景预览轮播（桌面端品牌面板） ===== */
+        /* 无屏幕外壳：动画直接浮在面板深蓝背景上 */
         .scene-stage {
             position: relative;
             margin-bottom: 26px;
@@ -154,42 +154,9 @@
         .scene-screen {
             position: relative;
             height: 288px;
-            border-radius: 14px;
-            border: 1px solid rgba(0, 229, 255, 0.16);
-            background:
-                radial-gradient(circle 210px at 85% 110%, rgba(0, 200, 255, 0.12), transparent 70%),
-                radial-gradient(circle 190px at 8% -10%, rgba(91, 61, 255, 0.12), transparent 70%),
-                linear-gradient(rgba(0, 200, 255, 0.045) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 200, 255, 0.045) 1px, transparent 1px),
-                #071230;
-            background-size: auto, auto, 34px 34px, 34px 34px, auto;
+            background: transparent;
             overflow: hidden;
         }
-        .scene-chrome {
-            position: absolute; top: 0; left: 0; right: 0; z-index: 6;
-            display: flex; align-items: center; gap: 5px;
-            padding: 10px 14px;
-            background: linear-gradient(180deg, #0a1633 0%, rgba(10, 22, 51, 0) 100%);
-        }
-        .scene-chrome span {
-            width: 9px; height: 9px; border-radius: 50%;
-            background: rgba(255, 255, 255, 0.18);
-        }
-        .scene-chrome span:first-child { background: #ff5f57; }
-        .scene-chrome span:nth-child(2) { background: #febc2e; }
-        .scene-chrome span:nth-child(3) { background: #28c840; }
-        .scene-chrome em {
-            margin-left: auto; font-style: normal;
-            font-size: 9px; letter-spacing: 2px;
-            color: rgba(0, 229, 255, 0.75);
-            font-family: 'Consolas', monospace;
-        }
-        .scene-chrome em::before {
-            content: '●';
-            margin-right: 5px;
-            animation: ledBlink 1.4s ease-in-out infinite;
-        }
-
         .scene {
             position: absolute; inset: 0;
             opacity: 0; visibility: hidden;
@@ -197,17 +164,6 @@
             transition: opacity 0.55s ease, transform 0.55s ease, visibility 0.55s;
         }
         .scene.active { opacity: 1; visibility: visible; transform: none; }
-
-        .scene-tag {
-            position: absolute; left: 14px; bottom: 12px; z-index: 5;
-            font-size: 11px; letter-spacing: 1.5px;
-            color: #00e5ff;
-            background: #0b1730;
-            border: 1px solid rgba(0, 229, 255, 0.35);
-            border-radius: 12px;
-            padding: 4px 12px;
-            font-family: 'Consolas', monospace;
-        }
 
         /* ── 场景1：5G 单站验证（基站信号脉冲 + 手机信号条） ── */
         .tower { position: absolute; left: 40px; bottom: 10px; width: 72px; height: 168px; }
@@ -514,8 +470,8 @@
             background: transparent;
         }
         .scene-dots {
-            position: absolute; top: -11px; left: 16px;
             display: flex; gap: 6px;
+            margin-bottom: 10px;
         }
         .scene-dots span {
             width: 7px; height: 7px; border-radius: 50%;
@@ -1516,8 +1472,6 @@
                 <!-- 应用场景预览轮播（纯 CSS 动画 + JS 轮播，仅桌面端显示） -->
                 <div class="scene-stage" id="sceneStage">
                     <div class="scene-screen">
-                        <div class="scene-chrome"><span></span><span></span><span></span><em>LIVE DEMO</em></div>
-
                         <div class="scene sc-1 active">
                             <div class="tower">
                                 <div class="tower-mast"></div>
@@ -1528,7 +1482,6 @@
                                 <div class="bars"><i></i><i></i><i></i><i></i></div>
                                 <b>RSRP -87dBm</b>
                             </div>
-                            <span class="scene-tag">5G 单站验证</span>
                         </div>
 
                         <div class="scene sc-2">
@@ -1545,7 +1498,6 @@
                                 </circle>
                             </svg>
                             <b class="map-kpi"><i>●</i>GRID-1 路测中</b>
-                            <span class="scene-tag">网格优化 · 路测轨迹</span>
                         </div>
 
                         <div class="scene sc-3">
@@ -1555,7 +1507,6 @@
                                 <i>▍✓ 已植入 2 处工程陷阱 · 报告就绪</i>
                             </div>
                             <div class="ai-cursor"></div>
-                            <span class="scene-tag">AI 自动生成剧情</span>
                         </div>
 
                         <div class="scene sc-4">
@@ -1565,7 +1516,6 @@
                                 <b>24.6℃<small>环境温度</small></b>
                                 <div class="temp-bar"><span></span></div>
                             </div>
-                            <span class="scene-tag">机房动环监控</span>
                         </div>
 
                         <div class="scene sc-5">
@@ -1578,7 +1528,6 @@
                                 <circle class="otdr-bp" cx="206" cy="80" r="5"/>
                             </svg>
                             <b class="otdr-kpi"><i>●</i>断点 2.37km</b>
-                            <span class="scene-tag">光缆抢修 · OTDR</span>
                         </div>
 
                         <div class="scene sc-6">
@@ -1594,7 +1543,6 @@
                                 </svg>
                                 <b>VSWR 1.42</b>
                             </div>
-                            <span class="scene-tag">天馈调测 · 驻波比</span>
                         </div>
                     </div>
                     <div class="scene-meta">
