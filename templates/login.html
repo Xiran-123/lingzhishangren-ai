@@ -154,16 +154,20 @@
         .scene-screen {
             position: relative;
             height: 288px;
-            background: transparent;
-            overflow: hidden;
         }
+        /* 非活跃场景直接不渲染（display:none），避免多层合成引发的浏览器灰底渲染异常 */
         .scene {
-            position: absolute; inset: 0;
-            opacity: 0; visibility: hidden;
-            transform: translateX(14px);
-            transition: opacity 0.55s ease, transform 0.55s ease, visibility 0.55s;
+            display: none;
+            background: none;
         }
-        .scene.active { opacity: 1; visibility: visible; transform: none; }
+        .scene.active {
+            display: block;
+            animation: sceneIn 0.5s ease;
+        }
+        @keyframes sceneIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
 
         /* ── 场景1：5G 单站验证（基站信号脉冲 + 手机信号条） ── */
         .tower { position: absolute; left: 40px; bottom: 10px; width: 72px; height: 168px; }
