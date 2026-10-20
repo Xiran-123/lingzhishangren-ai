@@ -1418,7 +1418,7 @@
     .hx-pagetitle{flex:1;font-size:15px;font-weight:700;color:#e8eeff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .hx-pagepop{color:#8ea6e8;font-size:12.5px;text-decoration:none;border:1px solid rgba(142,166,232,.3);padding:6px 12px;border-radius:8px;white-space:nowrap}
     .hx-pagepop:hover{background:rgba(142,166,232,.15);color:#c7d6ff}
-    .hx-pageview iframe{width:100%;height:calc(100vh - 170px);min-height:540px;border:0;border-radius:14px;background:#fff;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+    .hx-pageview iframe{width:100%;height:calc(100vh - 98px);min-height:540px;border:0;border-radius:14px;background:#fff;box-shadow:0 8px 30px rgba(0,0,0,.25)}
 
     .hx-right{display:flex;flex-direction:column;gap:14px;min-width:0}
     .hx-more{margin-left:auto;font-size:11px;color:var(--hx-txt3);cursor:pointer}
@@ -1449,7 +1449,7 @@
     @media(max-width:900px){
       .hx-layout{grid-template-columns:1fr}.hx-left{display:none}.hx-burger{display:grid;place-items:center}
       .hx-topbar{gap:10px;padding:0 14px}.hx-tabs{overflow-x:auto;scrollbar-width:none;margin-left:0}
-      .hx-pageview iframe{height:calc(100vh - 200px);min-height:480px}
+      .hx-pageview iframe{height:calc(100vh - 98px);min-height:480px}
       .hx-pagebar{padding:9px 12px;gap:8px}.hx-pageback{padding:7px 12px;font-size:12.5px}.hx-pagetitle{font-size:13.5px}.hx-pagepop{display:none}
       .hx-tabs::-webkit-scrollbar{display:none}.hx-tab{padding:6px 12px;font-size:12.5px}
       .hx-herobody{grid-template-columns:1fr}.hx-params{flex-direction:row;flex-wrap:wrap}
@@ -1628,11 +1628,6 @@
 
       <!-- 内嵌功能页面承载层：点击侧边导航/宫格时主区域原地切换为对应页面 -->
       <div class="hx-pageview" id="hxPageView" style="display:none">
-        <div class="hx-pagebar hx-glass">
-          <button class="hx-pageback" onclick="hxClosePage()">← 返回首页</button>
-          <span class="hx-pagetitle" id="hxPageTitle">功能页面</span>
-          <a class="hx-pagepop" id="hxPagePop" href="#" target="_blank" title="在新窗口打开">↗ 新窗口</a>
-        </div>
         <iframe id="hxPageIframe" src="about:blank" title="功能页面"></iframe>
       </div>
     </div>
@@ -1946,7 +1941,8 @@
             // 隐藏首页内容区（公告条+三栏布局），保留顶部 Tab 栏
             home.querySelectorAll(':scope > .hx-notice, :scope > .hx-layout').forEach(el => el.style.display = 'none');
             pv.style.display = 'block';
-            document.getElementById('hxPageTitle').textContent = title || '功能页面';
+            const titleEl = document.getElementById('hxPageTitle');
+            if (titleEl) titleEl.textContent = title || '功能页面';
             const pop = document.getElementById('hxPagePop');
             if (pop) pop.href = url;
             frame.src = url;

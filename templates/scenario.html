@@ -5,697 +5,231 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>剧情演绎 - 灵智尚人</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-1: #0a1838; --bg-2: #0d1f45; --bg-3: #1a2d6a;
+            --accent: #667eea; --accent-2: #764ba2; --cyan: #00c8ff;
+            --glass: rgba(255,255,255,0.06); --glass-border: rgba(255,255,255,0.12);
+            --text: #e0ecff; --text-dim: #8fa3c7;
         }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+            background: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 50%, var(--bg-3) 100%);
+            min-height: 100vh; color: var(--text); overflow: hidden;
         }
+        /* 粒子背景 */
+        .bg-particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+        .bg-particles span { position: absolute; display: block; border-radius: 50%; background: rgba(0,200,255,0.7); box-shadow: 0 0 6px rgba(0,200,255,0.8); animation: bgFloat linear infinite; }
+        @keyframes bgFloat { 0%{transform:translateY(0) translateX(0);opacity:0;} 10%{opacity:0.9;} 90%{opacity:0.7;} 100%{transform:translateY(-120vh) translateX(30px);opacity:0;} }
+        .bg-particles span:nth-child(1){left:10%;top:80%;width:3px;height:3px;animation-duration:14s;}
+        .bg-particles span:nth-child(2){left:30%;top:25%;width:4px;height:4px;animation-duration:16s;animation-delay:-5s;}
+        .bg-particles span:nth-child(3){left:60%;top:60%;width:3px;height:3px;animation-duration:17s;animation-delay:-6s;}
+        .bg-particles span:nth-child(4){left:85%;top:40%;width:2px;height:2px;animation-duration:13s;animation-delay:-3s;}
 
-        .container {
-            width: 100%;
-            max-width: 1200px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
+        .app { display: grid; grid-template-rows: auto 1fr; height: 100vh; position: relative; z-index: 1; }
+
+        /* 顶部导航 */
+        .top-nav {
+            background: linear-gradient(135deg, #0a1a4a 0%, #0e2a60 100%);
+            color: white; padding: 12px 20px; display: flex; align-items: center; gap: 12px;
+            border-bottom: 1px solid rgba(0,200,255,0.2); position: relative;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
         }
+        .top-nav::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(0,200,255,0.6), transparent); }
+        .nav-logo { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .nav-logo span { background: linear-gradient(135deg, var(--cyan), #4d94ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .nav-tag { padding: 4px 10px; background: rgba(255,255,255,0.1); border-radius: 6px; font-size: 12px; }
+        .nav-spacer { flex: 1; }
+        .nav-btn { padding: 6px 14px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #e0ecff; font-size: 13px; cursor: pointer; transition: all 0.25s; text-decoration: none; display: inline-block; }
+        .nav-btn:hover { background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 2px 8px rgba(102,126,234,0.4); }
 
-        .scenarios-panel {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-            padding: 25px;
-            height: 80vh;
-            overflow-y: auto;
+        .main { display: grid; grid-template-columns: 300px 1fr; overflow: hidden; }
+
+        /* 左侧场景栏 */
+        .sidebar {
+            background: var(--glass); backdrop-filter: blur(16px);
+            border-right: 1px solid var(--glass-border);
+            display: flex; flex-direction: column; overflow: hidden;
         }
+        .sidebar-head { padding: 14px 16px; border-bottom: 1px solid var(--glass-border); }
+        .sidebar-title { font-size: 15px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+        .sidebar-actions { display: flex; gap: 6px; }
+        .mini-btn { flex: 1; padding: 6px; background: rgba(255,255,255,0.06); border: 1px solid var(--glass-border); border-radius: 6px; color: var(--text); font-size: 11px; cursor: pointer; transition: all 0.2s; text-align: center; text-decoration: none; }
+        .mini-btn:hover { border-color: var(--cyan); color: var(--cyan); }
 
-        .chat-panel {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-            height: 80vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+        .sidebar-body { flex: 1; overflow-y: auto; padding: 12px; }
+        .sidebar-body::-webkit-scrollbar { width: 4px; }
+        .sidebar-body::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 2px; }
+
+        /* 沉浸式入口 */
+        .immersive-entry {
+            background: linear-gradient(135deg, rgba(0,128,255,0.15) 0%, rgba(0,200,255,0.1) 100%);
+            border: 1px solid rgba(0,150,255,0.4); border-radius: 10px; padding: 10px 12px; margin-bottom: 14px;
         }
+        .immersive-entry .title { font-size: 12px; font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
+        .immersive-entry .badge { background: linear-gradient(135deg,#0080ff,#00c8ff); color:#fff; padding:1px 6px; border-radius:3px; font-size:10px; }
+        .immersive-entry .desc { font-size: 11px; color: var(--text-dim); line-height: 1.4; margin-bottom: 6px; }
+        .immersive-entry .go { display: block; text-align: center; padding: 6px; background: linear-gradient(135deg, #0080ff, #00c8ff); color: #fff; border-radius: 16px; font-size: 11px; font-weight: 600; text-decoration: none; }
 
-        .back-btn {
-            padding: 10px 20px;
-            background: white;
-            border: 2px solid #667eea;
-            border-radius: 10px;
-            color: #667eea;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-decoration: none;
-            display: inline-block;
-            margin-bottom: 20px;
+        /* 自定义场景折叠区 */
+        .custom-section {
+            background: linear-gradient(135deg, rgba(102,126,234,0.12) 0%, rgba(118,75,162,0.12) 100%);
+            border: 1.5px dashed rgba(102,126,234,0.5); border-radius: 10px; padding: 12px; margin-bottom: 14px;
         }
+        .custom-title { font-size: 13px; font-weight: 600; color: var(--cyan); margin-bottom: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .custom-body { display: none; }
+        .custom-section.open .custom-body { display: block; }
+        .input-group { margin-bottom: 8px; }
+        .input-group label { display: block; font-size: 11px; color: var(--text-dim); margin-bottom: 4px; }
+        .input-group input, .input-group textarea { width: 100%; padding: 7px 10px; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); border-radius: 6px; color: var(--text); font-size: 12px; font-family: inherit; }
+        .input-group input:focus, .input-group textarea:focus { outline: none; border-color: var(--cyan); }
+        .input-group textarea { resize: vertical; min-height: 50px; }
+        .start-custom-btn { width: 100%; padding: 8px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: white; border: none; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .start-custom-btn:hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(102,126,234,0.4); }
+        .start-custom-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-        .back-btn:hover {
-            background: #667eea;
-            color: white;
-        }
-
-        .panel-title {
-            font-size: 24px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .custom-scenario-section {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
-            border: 2px dashed #667eea;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .custom-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #667eea;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .input-group {
-            margin-bottom: 12px;
-        }
-
-        .input-group label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: #555;
-            margin-bottom: 6px;
-        }
-
-        .input-group input, .input-group textarea {
-            width: 100%;
-            padding: 10px 14px;
-            border: 2px solid #e0e0e8;
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: inherit;
-            transition: border-color 0.3s;
-        }
-
-        .input-group input:focus, .input-group textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .input-group textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        .start-custom-btn {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-top: 10px;
-        }
-
-        .start-custom-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        }
-
-        .start-custom-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .divider {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin: 25px 0;
-            color: #999;
-            font-size: 13px;
-        }
-
-        .divider::before, .divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: #e0e0e8;
-        }
-
+        /* 场景卡片 */
         .scenario-card {
-            border: 2px solid #e8e8f0;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 15px;
-            cursor: pointer;
-            transition: all 0.3s;
+            background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); border-radius: 10px;
+            padding: 12px; margin-bottom: 10px; cursor: pointer; transition: all 0.25s;
         }
+        .scenario-card:hover { border-color: var(--cyan); transform: translateX(3px); background: rgba(0,200,255,0.05); }
+        .scenario-card.active { border-color: var(--accent); background: linear-gradient(135deg, rgba(102,126,234,0.18) 0%, rgba(118,75,162,0.18) 100%); box-shadow: 0 2px 12px rgba(102,126,234,0.3); }
+        .scenario-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .scenario-title { font-size: 13px; font-weight: 600; }
+        .difficulty-badge { padding: 2px 8px; border-radius: 8px; font-size: 10px; font-weight: 600; }
+        .difficulty-badge.simple { background: rgba(46,125,50,0.25); color: #66bb6a; }
+        .difficulty-badge.medium { background: rgba(239,108,0,0.25); color: #ffa726; }
+        .difficulty-badge.hard { background: rgba(198,40,40,0.25); color: #ef5350; }
+        .scenario-description { font-size: 11px; color: var(--text-dim); line-height: 1.4; margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .scenario-tasks { background: rgba(0,0,0,0.15); padding: 6px 8px; border-radius: 6px; }
+        .task-item { font-size: 11px; color: var(--text-dim); padding: 2px 0; display: flex; align-items: center; gap: 5px; }
+        .task-item::before { content: '▸'; color: var(--cyan); }
 
-        .scenario-card:hover {
-            border-color: #667eea;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
-        }
+        /* 右侧聊天区 */
+        .chat-panel { display: flex; flex-direction: column; overflow: hidden; margin: 12px; border-radius: 16px; background: var(--glass); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); box-shadow: 0 8px 40px rgba(0,0,0,0.3); }
 
-        .scenario-card.active {
-            border-color: #667eea;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
-        }
+        /* 场景信息条 */
+        .scenario-info-bar { background: rgba(0,0,0,0.2); padding: 10px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--glass-border); }
+        .scenario-info-bar .label { font-size: 11px; color: var(--text-dim); }
+        .scenario-info-bar .name { font-size: 14px; font-weight: 600; color: var(--cyan); }
+        .scenario-info-bar .tasks { font-size: 11px; color: var(--text-dim); margin-left: auto; }
 
-        .scenario-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
+        .chat-header { background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%); color: white; padding: 14px 20px; display: flex; align-items: center; gap: 12px; }
+        .chat-icon { font-size: 26px; }
+        .chat-title { font-size: 16px; font-weight: 600; }
+        .chat-subtitle { font-size: 11px; opacity: 0.85; }
 
-        .scenario-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #333;
-        }
+        .messages-area { flex: 1; overflow-y: auto; padding: 20px; background: rgba(0,0,0,0.15); }
+        .message { margin-bottom: 18px; display: flex; gap: 10px; animation: fadeInUp 0.3s ease; }
+        @keyframes fadeInUp { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
+        .message.user { flex-direction: row-reverse; }
+        .avatar { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+        .message.user .avatar { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: white; }
+        .message.assistant .avatar { background: rgba(255,255,255,0.1); color: var(--cyan); }
+        .message-content { max-width: 70%; padding: 12px 16px; border-radius: 14px; line-height: 1.6; word-wrap: break-word; }
+        .message.user .message-content { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: white; border-top-right-radius: 4px; }
+        .message.assistant .message-content { background: rgba(255,255,255,0.08); color: var(--text); border-top-left-radius: 4px; border: 1px solid var(--glass-border); }
+        .message-content pre { background: #0a0e1a; color: #e8e8e8; padding: 12px; border-radius: 8px; overflow-x: auto; margin: 10px 0; font-family: 'SF Mono', Consolas, Monaco, 'Courier New', monospace; font-size: 13px; }
+        .message-content code { font-family: 'SF Mono', Consolas, Monaco, 'Courier New', monospace; }
 
-        .difficulty-badge {
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-        }
+        .typing-dots { display: flex; gap: 5px; }
+        .typing-dots span { width: 7px; height: 7px; background: var(--cyan); border-radius: 50%; animation: bounce 1.4s infinite; }
+        .typing-dots span:nth-child(2){animation-delay:.2s;} .typing-dots span:nth-child(3){animation-delay:.4s;}
+        @keyframes bounce { 0%,60%,100%{transform:translateY(0);} 30%{transform:translateY(-6px);} }
 
-        .difficulty-badge.simple {
-            background: #e8f5e9;
-            color: #2e7d32;
-        }
+        .input-area { padding: 14px 20px; background: rgba(0,0,0,0.2); border-top: 1px solid var(--glass-border); display: flex; gap: 10px; align-items: flex-end; }
+        .image-preview { max-width: 60px; max-height: 60px; border-radius: 10px; object-fit: cover; border: 2px solid var(--accent); display: none; }
+        .image-preview.show { display: block; cursor: pointer; }
+        .upload-btn { padding: 10px 12px; background: rgba(255,255,255,0.08); border: none; border-radius: 10px; font-size: 16px; cursor: pointer; color: var(--text); transition: all 0.2s; }
+        .upload-btn:hover { background: rgba(255,255,255,0.15); }
+        .input-box { flex: 1; display: flex; flex-direction: column; background: rgba(255,255,255,0.06); border-radius: 10px; }
+        .input-box textarea { width: 100%; padding: 12px 14px; border: none; background: transparent; color: var(--text); font-size: 14px; resize: none; max-height: 120px; outline: none; font-family: inherit; border-radius: 10px; }
+        .input-box textarea::placeholder { color: var(--text-dim); }
+        .send-btn { padding: 12px 24px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .send-btn:hover:not(:disabled) { box-shadow: 0 4px 12px rgba(102,126,234,0.4); transform: translateY(-1px); }
+        .send-btn:active { transform: translateY(0); }
+        .send-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-        .difficulty-badge.medium {
-            background: #fff3e0;
-            color: #ef6c00;
-        }
+        .empty-chat { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-dim); text-align: center; }
+        .empty-chat-icon { font-size: 56px; margin-bottom: 16px; opacity: 0.6; }
+        .empty-chat-text { font-size: 16px; }
 
-        .difficulty-badge.hard {
-            background: #ffebee;
-            color: #c62828;
-        }
-
-        .scenario-description {
-            font-size: 14px;
-            color: #666;
-            line-height: 1.6;
-            margin-bottom: 15px;
-        }
-
-        .scenario-tasks {
-            background: #f8f9fc;
-            padding: 12px;
-            border-radius: 8px;
-        }
-
-        .task-item {
-            font-size: 13px;
-            color: #555;
-            padding: 5px 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .task-item::before {
-            content: "📋";
-        }
-
-        .start-btn {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-top: 20px;
-        }
-
-        .start-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        }
-
-        .start-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .chat-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .chat-icon {
-            font-size: 32px;
-        }
-
-        .chat-title {
-            font-size: 20px;
-            font-weight: 600;
-        }
-
-        .chat-subtitle {
-            font-size: 13px;
-            opacity: 0.9;
-            margin-top: 2px;
-        }
-
-        .messages-area {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            background: #f8f9fc;
-        }
-
-        .message {
-            margin-bottom: 20px;
-            display: flex;
-            gap: 12px;
-            animation: fadeInUp 0.3s ease;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .message.user {
-            flex-direction: row-reverse;
-        }
-
-        .avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            flex-shrink: 0;
-        }
-
-        .message.user .avatar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .message.assistant .avatar {
-            background: #e9eff6;
-            color: #667eea;
-        }
-
-        .message-content {
-            max-width: 72%;
-            padding: 14px 18px;
-            border-radius: 16px;
-            line-height: 1.6;
-            word-wrap: break-word;
-        }
-
-        .message.user .message-content {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-top-right-radius: 4px;
-        }
-
-        .message.assistant .message-content {
-            background: white;
-            color: #333;
-            border-top-left-radius: 4px;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-        }
-
-        .message-content pre {
-            background: #1a1a2e;
-            color: #e8e8e8;
-            padding: 14px 16px;
-            border-radius: 10px;
-            overflow-x: auto;
-            margin: 12px 0;
-            font-family: 'SF Mono', Consolas, Monaco, 'Courier New', monospace;
-            font-size: 14px;
-        }
-
-        .message-content code {
-            font-family: 'SF Mono', Consolas, Monaco, 'Courier New', monospace;
-        }
-
-        .typing-indicator .message-content {
-            padding: 18px 20px;
-        }
-
-        .typing-dots {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-        }
-
-        .typing-dots span {
-            width: 8px;
-            height: 8px;
-            background: #667eea;
-            border-radius: 50%;
-            animation: bounce 1.4s infinite;
-        }
-
-        .typing-dots span:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        .typing-dots span:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-
-        @keyframes bounce {
-            0%, 60%, 100% {
-                transform: translateY(0);
-            }
-            30% {
-                transform: translateY(-8px);
-            }
-        }
-
-        .input-area {
-            padding: 16px 20px;
-            background: white;
-            border-top: 1px solid #e8e8f0;
-            display: flex;
-            gap: 10px;
-            align-items: flex-end;
-        }
-
-        .image-preview {
-            max-width: 60px;
-            max-height: 60px;
-            border-radius: 10px;
-            object-fit: cover;
-            border: 2px solid #667eea;
-            display: none;
-        }
-
-        .image-preview.show {
-            display: block;
-        }
-
-        .image-preview.remove {
-            cursor: pointer;
-            opacity: 0.7;
-        }
-
-        .image-preview.remove:hover {
-            opacity: 1;
-        }
-
-        .upload-btn {
-            padding: 10px 14px;
-            background: #f0f2f5;
-            border: none;
-            border-radius: 10px;
-            font-size: 18px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .upload-btn:hover {
-            background: #e8e8f0;
-        }
-
-        .input-box {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: #f0f2f5;
-            border-radius: 12px;
-        }
-
-        .input-box textarea {
-            width: 100%;
-            padding: 14px 16px;
-            border: none;
-            background: transparent;
-            font-size: 16px;
-            resize: none;
-            max-height: 120px;
-            outline: none;
-            font-family: inherit;
-            border-radius: 12px;
-        }
-
-        .send-btn {
-            padding: 14px 24px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .send-btn:hover:not(:disabled) {
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-            transform: translateY(-1px);
-        }
-
-        .send-btn:active {
-            transform: translateY(0);
-        }
-
-        .send-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .empty-chat {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            color: #999;
-            text-align: center;
-        }
-
-        .empty-chat-icon {
-            font-size: 64px;
-            margin-bottom: 20px;
-        }
-
-        .empty-chat-text {
-            font-size: 18px;
-        }
-
-        @media (max-width: 900px) {
-            .container {
-                grid-template-columns: 1fr;
-            }
-
-            .scenarios-panel, .chat-panel {
-                height: auto;
-                min-height: 400px;
-            }
-        }
-        /* ============ 移动端补充适配 ============ */
-        @media (max-width: 768px) {
-            body { padding: 12px !important; }
-            .container { gap: 14px; }
-            .scenarios-panel { padding: 18px; min-height: auto; }
-            .chat-panel { min-height: 360px; }
-            .panel-title { font-size: 20px; }
-            .custom-scenario-section { padding: 16px; }
-            .custom-title { font-size: 15px; }
-            .scenario-card { padding: 16px; }
-            .scenario-title { font-size: 16px; }
-            .scenario-description { font-size: 13px; }
-            .chat-header { padding: 14px 16px; gap: 10px; }
-            .chat-icon { font-size: 26px; }
-            .chat-title { font-size: 17px; }
-            .chat-subtitle { font-size: 12px; }
-            .messages-area { padding: 14px; }
-            .message { gap: 8px; margin-bottom: 14px; }
-            .avatar { width: 34px; height: 34px; font-size: 18px; }
-            .message-content { max-width: 82%; padding: 10px 12px; font-size: 14px; }
-            .input-area { padding: 10px 12px; gap: 8px; flex-wrap: nowrap; }
-            .upload-btn { padding: 8px 10px; font-size: 16px; }
-            .input-box textarea { font-size: 15px; padding: 10px 12px; }
-            .send-btn { padding: 10px 14px; font-size: 14px; }
-            .image-preview { max-width: 48px; max-height: 48px; }
-            .empty-chat-icon { font-size: 48px; }
-            .empty-chat-text { font-size: 15px; }
-            .start-btn { padding: 12px; font-size: 15px; }
-        }
-        @media (max-width: 480px) {
-            body { padding: 8px !important; }
-            .scenarios-panel { padding: 14px; }
-            .scenarios-panel > div:first-child { flex-wrap: wrap; }
-            .scenarios-panel > div:first-child > a,
-            .scenarios-panel > div:first-child > button { flex: 1 1 auto; min-width: 0; }
-            .panel-title { font-size: 18px; gap: 6px; margin-bottom: 14px; }
-            .scenario-card { padding: 14px; }
-            .scenario-header { flex-direction: column; align-items: flex-start; gap: 6px; }
-            .scenario-title { font-size: 15px; }
-            .custom-scenario-section { padding: 12px; }
-            .divider { margin: 18px 0; font-size: 12px; }
-            .input-group input,
-            .input-group textarea { padding: 9px 12px; font-size: 14px; }
-            .chat-header { padding: 12px 14px; }
-            .chat-icon { font-size: 22px; }
-            .chat-title { font-size: 15px; }
-            .message-content { max-width: 86%; padding: 9px 10px; font-size: 13.5px; }
-            .input-area { padding: 8px 10px; }
-            .send-btn { padding: 9px 12px; font-size: 13px; }
-        }
+        @media (max-width: 900px) { .main { grid-template-columns: 1fr; } .sidebar { display: none; } }
     </style>
-    <!-- 全局按钮美化 -->
     <link rel="stylesheet" href="/static/global_buttons.css">
-<link rel="stylesheet" href="/static/global_pages.css">
+    <link rel="stylesheet" href="/static/global_pages.css">
 </head>
 <body>
-    <div class="container" style="max-width: 1250px;">
-        <!-- 场景选择面板 -->
-        <div class="scenarios-panel">
-            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 20px;">
-                <a href="/" class="back-btn">← 返回</a>
-                <button class="nav-btn" onclick="clearChatHistory()" style="margin: 0; padding: 8px 16px; font-size: 14px;">🗑️ 清除记录</button>
-                <button class="nav-btn logout-btn" onclick="doLogout()" style="margin: 0; padding: 8px 16px; font-size: 14px;">🔓 退出登录</button>
-            </div>
+    <div class="bg-particles"><span></span><span></span><span></span><span></span></div>
 
-            <!-- 沉浸式剧情体验入口 -->
-            <div style="background: linear-gradient(135deg, rgba(0, 128, 255, 0.1) 0%, rgba(0, 200, 255, 0.08) 100%);
-                        border: 1.5px solid rgba(0, 150, 255, 0.4);
-                        border-radius: 14px;
-                        padding: 18px 20px;
-                        margin-bottom: 20px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: space-between;
-                        gap: 15px;">
-                <div style="flex: 1;">
-                    <div style="font-size: 16px; font-weight: 600; color: #0a1a3a; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-                        <span style="display:inline-block; background: linear-gradient(135deg,#0080ff,#00c8ff); color:#fff; padding:2px 8px; border-radius:4px; font-size:12px;">NEW</span>
-                        🎞️ 沉浸式剧情演绎
-                    </div>
-                    <div style="font-size: 13px; color: #555; line-height: 1.6;">
-                        推荐切换到「沉浸式剧情」模式：全屏场景 + 步骤引导 + 毛玻璃剧情面板，效果更逼真。
+    <div class="app">
+        <nav class="top-nav">
+            <div class="nav-logo"><span>灵智尚人</span></div>
+            <span class="nav-tag">剧情演绎</span>
+            <div class="nav-spacer"></div>
+            <button class="nav-btn" onclick="clearChatHistory()">🗑️ 清除记录</button>
+            <button class="nav-btn" onclick="doLogout()">🔓 退出登录</button>
+            <a href="/" target="_top" class="nav-btn">← 返回首页</a>
+        </nav>
+
+        <div class="main">
+            <!-- 左侧场景栏 -->
+            <aside class="sidebar">
+                <div class="sidebar-head">
+                    <div class="sidebar-title">🎬 场景列表</div>
+                    <div class="sidebar-actions">
+                        <button class="mini-btn" onclick="document.getElementById('customSection').classList.toggle('open')">+ 自定义</button>
+                        <a class="mini-btn" href="/scenario-demo">沉浸版</a>
                     </div>
                 </div>
-                <a href="/scenario-demo" style="padding: 10px 22px;
-                    background: linear-gradient(135deg, #0080ff, #00c8ff);
-                    color: #fff;
-                    border: none;
-                    border-radius: 22px;
-                    font-size: 14px;
-                    font-weight: 600;
-                    cursor: pointer;
-                    text-decoration: none;
-                    box-shadow: 0 4px 14px rgba(0, 130, 255, 0.35);
-                    white-space: nowrap;">立即体验 →</a>
-            </div>
+                <div class="sidebar-body">
+                    <!-- 沉浸式剧情入口 -->
+                    <div class="immersive-entry">
+                        <div class="title"><span class="badge">NEW</span> 沉浸式剧情演绎</div>
+                        <div class="desc">全屏场景 + 步骤引导 + 毛玻璃剧情面板，效果更逼真。</div>
+                        <a href="/scenario-demo" class="go">立即体验 →</a>
+                    </div>
 
-            <h2 class="panel-title">🎬 剧情演绎（经典模式）</h2>
-            
-            <!-- 自定义场景 -->
-            <div class="custom-scenario-section">
-                <div class="custom-title">✏️ 创建自定义场景</div>
-                <div class="input-group">
-                    <label>场景标题</label>
-                    <input type="text" id="customTitle" placeholder="例如：数据中心网络运维工程师">
-                </div>
-                <div class="input-group">
-                    <label>场景描述</label>
-                    <textarea id="customDescription" placeholder="描述你想体验的工作场景，例如：你是一名数据中心的网络运维工程师，今天负责排查服务器连接中断的问题..."></textarea>
-                </div>
-                <div class="input-group">
-                    <label>预期任务（每行一个，可选）</label>
-                    <textarea id="customTasks" placeholder="1. 检查网络设备状态&#10;2. 分析网络拓扑&#10;3. 提出解决方案"></textarea>
-                </div>
-                <button class="start-custom-btn" onclick="startCustomScenario()">🚀 开始自定义场景</button>
-            </div>
-            
-            <div class="divider">或选择预设场景</div>
-            
-            <div id="scenariosList">
-                <div class="empty-chat">
-                    <div class="empty-chat-icon">📖</div>
-                    <div class="empty-chat-text">加载中...</div>
-                </div>
-            </div>
-        </div>
+                    <!-- 自定义场景 -->
+                    <div class="custom-section" id="customSection">
+                        <div class="custom-title" onclick="document.getElementById('customSection').classList.toggle('open')">✏️ 创建自定义场景 <span>▼</span></div>
+                        <div class="custom-body">
+                            <div class="input-group"><label>场景标题</label><input type="text" id="customTitle" placeholder="例如：数据中心网络运维工程师"></div>
+                            <div class="input-group"><label>场景描述</label><textarea id="customDescription" placeholder="描述你想体验的工作场景，例如：你是一名数据中心的网络运维工程师，今天负责排查服务器连接中断的问题..."></textarea></div>
+                            <div class="input-group"><label>预期任务（每行一个，可选）</label><textarea id="customTasks" placeholder="1. 检查网络设备状态&#10;2. 分析网络拓扑&#10;3. 提出解决方案"></textarea></div>
+                            <button class="start-custom-btn" onclick="startCustomScenario()">🚀 开始自定义场景</button>
+                        </div>
+                    </div>
 
-        <!-- 聊天面板 -->
-        <div class="chat-panel">
-            <div class="chat-header">
-                <div class="chat-icon">🤖</div>
-                <div>
-                    <div class="chat-title">灵智尚人</div>
-                    <div class="chat-subtitle">职业导师</div>
+                    <div id="scenariosList">
+                        <div class="empty-chat"><div class="empty-chat-icon">📖</div><div class="empty-chat-text">加载中...</div></div>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="messages-area" id="messagesArea">
-                <div class="empty-chat" id="emptyState">
-                    <div class="empty-chat-icon">🎯</div>
-                    <div class="empty-chat-text">选择一个剧情开始吧！</div>
-                </div>
-            </div>
+            </aside>
 
-            <div class="input-area" id="inputArea" style="display: none;">
-                <img id="imagePreview" class="image-preview" src="" alt="预览">
-                <input type="file" id="imageUpload" style="display: none;" accept="image/*">
-                <button class="upload-btn" onclick="document.getElementById('imageUpload').click()">
-                    📷
-                </button>
-                <div class="input-box">
-                    <textarea id="userInput" placeholder="请输入...（按Enter发送，Shift+Enter换行）" rows="1" onkeydown="handleKeyDown(event)" oninput="autoResize()"></textarea>
+            <!-- 右侧聊天 -->
+            <section class="chat-panel">
+                <div class="scenario-info-bar">
+                    <span class="label">当前场景：</span>
+                    <span class="name" id="currentScenarioName">未选择</span>
+                    <span class="tasks" id="currentTasks"></span>
                 </div>
-                <button class="send-btn" id="sendBtn" onclick="sendMessage()">发送</button>
-            </div>
+                <div class="chat-header">
+                    <div class="chat-icon">🤖</div>
+                    <div><div class="chat-title">灵智尚人</div><div class="chat-subtitle">职业导师</div></div>
+                </div>
+                <div class="messages-area" id="messagesArea">
+                    <div class="empty-chat" id="emptyState"><div class="empty-chat-icon">🎯</div><div class="empty-chat-text">从左侧选择一个剧情开始吧！</div></div>
+                </div>
+                <div class="input-area" id="inputArea" style="display: none;">
+                    <img id="imagePreview" class="image-preview" src="" alt="预览">
+                    <input type="file" id="imageUpload" style="display: none;" accept="image/*">
+                    <button class="upload-btn" onclick="document.getElementById('imageUpload').click()">📷</button>
+                    <div class="input-box"><textarea id="userInput" placeholder="请输入...（按Enter发送，Shift+Enter换行）" rows="1" onkeydown="handleKeyDown(event)" oninput="autoResize()"></textarea></div>
+                    <button class="send-btn" id="sendBtn" onclick="sendMessage()">发送</button>
+                </div>
+            </section>
         </div>
     </div>
 
@@ -706,10 +240,10 @@
         let selectedImage = null;
         let imageUpload = document.getElementById('imageUpload');
         let imagePreview = document.getElementById('imagePreview');
-        
+
         // 本地存储键名
         const STORAGE_KEY = 'lingzhi_scenario_history';
-        
+
         // 图片上传处理
         imageUpload.addEventListener('change', function(e) {
             const file = e.target.files[0];
@@ -718,17 +252,17 @@
                     alert('请选择图片文件！');
                     return;
                 }
-                
                 const reader = new FileReader();
                 reader.onload = function(event) {
                     selectedImage = event.target.result;
                     imagePreview.src = selectedImage;
                     imagePreview.style.display = 'block';
+                    imagePreview.classList.add('show');
                 };
                 reader.readAsDataURL(file);
             }
         });
-        
+
         // 删除已选图片
         imagePreview.addEventListener('click', function() {
             if (selectedImage) {
@@ -737,10 +271,11 @@
                     imageUpload.value = '';
                     imagePreview.src = '';
                     imagePreview.style.display = 'none';
+                    imagePreview.classList.remove('show');
                 }
             }
         });
-        
+
         // 保存聊天记录
         function saveChatHistory() {
             try {
@@ -749,7 +284,7 @@
                 console.error('保存聊天记录失败:', e);
             }
         }
-        
+
         // 加载聊天记录
         function loadChatHistory() {
             try {
@@ -762,27 +297,41 @@
                 console.error('加载聊天记录失败:', e);
             }
         }
-        
+
         // 渲染聊天记录
         function renderChatHistory() {
             if (chatHistory.length === 0) return;
-            
-            // 显示聊天输入区
             document.getElementById('emptyState').style.display = 'none';
             document.getElementById('inputArea').style.display = 'flex';
-            
-            // 渲染保存的消息
             chatHistory.forEach(msg => {
                 addMessage(msg.content, msg.isUser);
             });
         }
-        
+
         // 清除聊天记录
         function clearChatHistory() {
             if (confirm('确定要清除所有聊天记录吗？')) {
                 chatHistory = [];
                 saveChatHistory();
                 location.reload();
+            }
+        }
+
+        // 退出登录
+        function doLogout() {
+            if (confirm('确定要退出登录吗？')) {
+                fetch('/logout', { method: 'POST' })
+                    .then(() => { window.location.href = '/'; })
+                    .catch(() => { window.location.href = '/'; });
+            }
+        }
+
+        // 更新场景信息条
+        function updateInfoBar() {
+            if (selectedScenario) {
+                document.getElementById('currentScenarioName').textContent = selectedScenario.title;
+                const tasks = selectedScenario.tasks || [];
+                document.getElementById('currentTasks').textContent = tasks.length + ' 个目标';
             }
         }
 
@@ -806,7 +355,6 @@
         // 渲染场景列表
         function renderScenarios(scenarios) {
             const container = document.getElementById('scenariosList');
-            
             if (scenarios.length === 0) {
                 container.innerHTML = `
                     <div class="empty-chat">
@@ -816,7 +364,6 @@
                 `;
                 return;
             }
-
             container.innerHTML = scenarios.map(scenario => `
                 <div class="scenario-card" data-id="${scenario.id}" onclick="selectScenario(${scenario.id})">
                     <div class="scenario-header">
@@ -843,21 +390,9 @@
             const title = document.getElementById('customTitle').value.trim();
             const description = document.getElementById('customDescription').value.trim();
             const tasksText = document.getElementById('customTasks').value.trim();
-            
-            if (!title) {
-                alert('请输入场景标题！');
-                return;
-            }
-            
-            if (!description) {
-                alert('请输入场景描述！');
-                return;
-            }
-            
-            // 解析任务
+            if (!title) { alert('请输入场景标题！'); return; }
+            if (!description) { alert('请输入场景描述！'); return; }
             const tasks = tasksText.split('\n').filter(task => task.trim()).map(task => task.trim());
-            
-            // 创建自定义场景对象
             const customScenario = {
                 id: 'custom',
                 title: title,
@@ -865,36 +400,23 @@
                 tasks: tasks.length > 0 ? tasks : ['探索这个场景', '提出你的想法'],
                 is_custom: true
             };
-            
-            // 清除所有预设场景的选中状态
-            document.querySelectorAll('.scenario-card').forEach(card => {
-                card.classList.remove('active');
-            });
-            
-            // 开始自定义场景
+            document.querySelectorAll('.scenario-card').forEach(card => { card.classList.remove('active'); });
             selectedScenario = customScenario;
             document.getElementById('emptyState').style.display = 'none';
             document.getElementById('inputArea').style.display = 'flex';
-            
-            // 构建欢迎消息
+            updateInfoBar();
             let welcomeMessage = `欢迎来到【${selectedScenario.title}】！\n\n${selectedScenario.description}`;
             if (selectedScenario.tasks.length > 0) {
                 welcomeMessage += `\n\n你的目标：\n${selectedScenario.tasks.map((task, i) => `${i + 1}. ${task}`).join('\n')}`;
             }
             welcomeMessage += '\n\n让我们开始吧！你可以先告诉我你的想法。';
-            
             addMessage(welcomeMessage, false);
         }
 
         // 选择场景
         async function selectScenario(scenarioId) {
-            // 更新UI
-            document.querySelectorAll('.scenario-card').forEach(card => {
-                card.classList.remove('active');
-            });
+            document.querySelectorAll('.scenario-card').forEach(card => { card.classList.remove('active'); });
             document.querySelector(`.scenario-card[data-id="${scenarioId}"]`).classList.add('active');
-            
-            // 开始场景
             try {
                 const response = await fetch('/start-scenario', {
                     method: 'POST',
@@ -902,19 +424,16 @@
                     body: JSON.stringify({ scenario_id: scenarioId })
                 });
                 const data = await response.json();
-                
                 if (data.success) {
                     selectedScenario = data.scenario;
                     document.getElementById('emptyState').style.display = 'none';
                     document.getElementById('inputArea').style.display = 'flex';
-                    
-                    // 添加欢迎消息
+                    updateInfoBar();
                     let welcomeMessage = `欢迎来到【${selectedScenario.title}】！\n\n${selectedScenario.description}`;
                     if (selectedScenario.tasks && selectedScenario.tasks.length > 0) {
                         welcomeMessage += `\n\n你的目标：\n${selectedScenario.tasks.map((task, i) => `${i + 1}. ${task}`).join('\n')}`;
                     }
                     welcomeMessage += '\n\n让我们开始吧！你可以先告诉我你的想法。';
-                    
                     addMessage(welcomeMessage, false);
                 }
             } catch (error) {
@@ -924,7 +443,6 @@
 
         // 添加消息
         function addMessage(content, isUser, imageBase64 = null) {
-            // 保存到聊天历史
             chatHistory.push({
                 content: content,
                 isUser: isUser,
@@ -932,27 +450,22 @@
                 timestamp: Date.now()
             });
             saveChatHistory();
-            
             const messagesArea = document.getElementById('messagesArea');
             const messageDiv = document.createElement('div');
             messageDiv.className = 'message ' + (isUser ? 'user' : 'assistant');
-            
             const avatar = document.createElement('div');
             avatar.className = 'avatar';
             avatar.textContent = isUser ? '👤' : '🤖';
-            
             const contentDiv = document.createElement('div');
             contentDiv.className = 'message-content';
-            
             let htmlContent = formatMessage(content);
             if (imageBase64) {
                 htmlContent = `<img src="data:image/png;base64,${imageBase64}" alt="图片" style="max-width: 100%; border-radius: 8px; margin-bottom: 10px;">` + htmlContent;
             }
-            // AI回复添加生成标识
-            const aiGenTag = isUser ? '' : '<div class="ai-gen-tag" style="font-size:11px;color:#999;margin-bottom:4px;">✨ AI 生成内容</div>';
+            const aiGenTag = isUser ? '' : '<div class="ai-gen-tag" style="font-size:11px;color:#8fa3c7;margin-bottom:4px;">✨ AI 生成内容</div>';
             contentDiv.innerHTML = aiGenTag + htmlContent;
-            
-            // 为AI消息添加操作按钮（追问）
+
+            // AI消息操作按钮（追问/复制）
             if (!isUser && content) {
                 const actionsDiv = document.createElement('div');
                 actionsDiv.style.display = 'flex';
@@ -960,19 +473,15 @@
                 actionsDiv.style.marginTop = '12px';
                 actionsDiv.style.opacity = '0';
                 actionsDiv.style.transition = 'opacity 0.2s';
-                
                 const followBtn = document.createElement('button');
                 followBtn.style.padding = '6px 14px';
-                followBtn.style.background = '#f0f2f5';
-                followBtn.style.border = 'none';
+                followBtn.style.background = 'rgba(255,255,255,0.1)';
+                followBtn.style.border = '1px solid rgba(255,255,255,0.15)';
                 followBtn.style.borderRadius = '16px';
                 followBtn.style.fontSize = '13px';
                 followBtn.style.cursor = 'pointer';
+                followBtn.style.color = '#8fa3c7';
                 followBtn.style.transition = 'all 0.2s';
-                followBtn.style.display = 'flex';
-                followBtn.style.alignItems = 'center';
-                followBtn.style.gap = '6px';
-                followBtn.style.color = '#666';
                 followBtn.innerHTML = '🔄 追问';
                 followBtn.onclick = function() {
                     const userInput = document.getElementById('userInput');
@@ -982,78 +491,43 @@
                     userInput.focus();
                     userInput.scrollTop = userInput.scrollHeight;
                 };
-                
-                followBtn.addEventListener('mouseenter', () => {
-                    followBtn.style.background = '#667eea';
-                    followBtn.style.color = 'white';
-                });
-                followBtn.addEventListener('mouseleave', () => {
-                    followBtn.style.background = '#f0f2f5';
-                    followBtn.style.color = '#666';
-                });
-                
+                followBtn.addEventListener('mouseenter', () => { followBtn.style.background = 'linear-gradient(135deg, #667eea, #764ba2)'; followBtn.style.color = 'white'; followBtn.style.border = 'none'; });
+                followBtn.addEventListener('mouseleave', () => { followBtn.style.background = 'rgba(255,255,255,0.1)'; followBtn.style.color = '#8fa3c7'; followBtn.style.border = '1px solid rgba(255,255,255,0.15)'; });
+
                 const copyBtn = document.createElement('button');
                 copyBtn.style.padding = '6px 14px';
-                copyBtn.style.background = '#f0f2f5';
-                copyBtn.style.border = 'none';
+                copyBtn.style.background = 'rgba(255,255,255,0.1)';
+                copyBtn.style.border = '1px solid rgba(255,255,255,0.15)';
                 copyBtn.style.borderRadius = '16px';
                 copyBtn.style.fontSize = '13px';
                 copyBtn.style.cursor = 'pointer';
+                copyBtn.style.color = '#8fa3c7';
                 copyBtn.style.transition = 'all 0.2s';
-                copyBtn.style.display = 'flex';
-                copyBtn.style.alignItems = 'center';
-                copyBtn.style.gap = '6px';
-                copyBtn.style.color = '#666';
                 copyBtn.innerHTML = '📋 复制';
                 copyBtn.onclick = function() {
-                    const done = () => {
-                        copyBtn.innerHTML = '✓ 已复制';
-                        setTimeout(() => {
-                            copyBtn.innerHTML = '📋 复制';
-                        }, 2000);
-                    };
+                    const done = () => { copyBtn.innerHTML = '✓ 已复制'; setTimeout(() => { copyBtn.innerHTML = '📋 复制'; }, 2000); };
                     if (navigator.clipboard && window.isSecureContext) {
                         navigator.clipboard.writeText(content).then(done);
                     } else {
-                        // 非安全上下文（http）下 clipboard API 不可用，回退 execCommand
                         const ta = document.createElement('textarea');
-                        ta.value = content;
-                        ta.style.position = 'fixed';
-                        ta.style.opacity = '0';
-                        document.body.appendChild(ta);
-                        ta.select();
+                        ta.value = content; ta.style.position = 'fixed'; ta.style.opacity = '0';
+                        document.body.appendChild(ta); ta.select();
                         try { document.execCommand('copy'); } catch (e) {}
-                        document.body.removeChild(ta);
-                        done(); // 无论复制是否被浏览器拦截都给出反馈
+                        document.body.removeChild(ta); done();
                     }
                 };
-                
-                copyBtn.addEventListener('mouseenter', () => {
-                    copyBtn.style.background = '#667eea';
-                    copyBtn.style.color = 'white';
-                });
-                copyBtn.addEventListener('mouseleave', () => {
-                    copyBtn.style.background = '#f0f2f5';
-                    copyBtn.style.color = '#666';
-                });
-                
+                copyBtn.addEventListener('mouseenter', () => { copyBtn.style.background = 'linear-gradient(135deg, #667eea, #764ba2)'; copyBtn.style.color = 'white'; copyBtn.style.border = 'none'; });
+                copyBtn.addEventListener('mouseleave', () => { copyBtn.style.background = 'rgba(255,255,255,0.1)'; copyBtn.style.color = '#8fa3c7'; copyBtn.style.border = '1px solid rgba(255,255,255,0.15)'; });
+
                 actionsDiv.appendChild(followBtn);
                 actionsDiv.appendChild(copyBtn);
                 contentDiv.appendChild(actionsDiv);
-                
-                // 悬停显示按钮
-                messageDiv.addEventListener('mouseenter', () => {
-                    actionsDiv.style.opacity = '1';
-                });
-                messageDiv.addEventListener('mouseleave', () => {
-                    actionsDiv.style.opacity = '0';
-                });
+                messageDiv.addEventListener('mouseenter', () => { actionsDiv.style.opacity = '1'; });
+                messageDiv.addEventListener('mouseleave', () => { actionsDiv.style.opacity = '0'; });
             }
-            
             messageDiv.appendChild(avatar);
             messageDiv.appendChild(contentDiv);
             messagesArea.appendChild(messageDiv);
-            
             scrollToBottom();
             return contentDiv;
         }
@@ -1071,19 +545,15 @@
             const messageDiv = document.createElement('div');
             messageDiv.className = 'message assistant';
             messageDiv.id = 'typingIndicator';
-            
             const avatar = document.createElement('div');
             avatar.className = 'avatar';
             avatar.textContent = '🤖';
-            
             const contentDiv = document.createElement('div');
             contentDiv.className = 'message-content typing-indicator';
             contentDiv.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
-            
             messageDiv.appendChild(avatar);
             messageDiv.appendChild(contentDiv);
             messagesArea.appendChild(messageDiv);
-            
             scrollToBottom();
             return messageDiv;
         }
@@ -1091,9 +561,7 @@
         // 移除打字指示器
         function removeTypingIndicator() {
             const indicator = document.getElementById('typingIndicator');
-            if (indicator) {
-                indicator.remove();
-            }
+            if (indicator) indicator.remove();
         }
 
         // 滚动到底部
@@ -1105,10 +573,8 @@
         // 发送消息
         async function sendMessage() {
             if (isGenerating) return;
-            
             const input = document.getElementById('userInput');
             const message = input.value.trim();
-            
             if (!message && !selectedImage) {
                 addMessage('请描述这张图片', true, selectedImage);
             } else if (!message) {
@@ -1116,27 +582,23 @@
             } else {
                 addMessage(message, true, selectedImage);
             }
-            
             input.value = '';
             input.style.height = 'auto';
             selectedImage = null;
             imagePreview.src = '';
             imagePreview.style.display = 'none';
+            imagePreview.classList.remove('show');
             imageUpload.value = '';
-            
             setInputDisabled(true);
             addTypingIndicator();
             isGenerating = true;
-            
             try {
-                const requestBody = { 
+                const requestBody = {
                     message: message,
                     image: selectedImage,
                     is_scenario: true,
                     stream: true
                 };
-                
-                // 如果有选中的场景，传递场景信息
                 if (selectedScenario) {
                     requestBody.scenario_info = {
                         title: selectedScenario.title,
@@ -1144,44 +606,34 @@
                         tasks: selectedScenario.tasks || []
                     };
                 }
-                
                 const response = await fetch('/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(requestBody)
                 });
-                
-                if (!response.ok) {
-                    throw new Error('请求失败');
-                }
-                
+                if (!response.ok) throw new Error('请求失败');
                 removeTypingIndicator();
                 const messageContentDiv = addMessage('', false);
                 let _streamRaw = '';
-                
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
-                
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) break;
-                    
                     const chunk = decoder.decode(value);
                     const lines = chunk.split('\n\n');
-                    
                     for (const line of lines) {
                         if (line.startsWith('data: ')) {
                             try {
                                 const data = JSON.parse(line.slice(6));
                                 if (data.content) {
                                     _streamRaw += data.content;
-                                    messageContentDiv.innerHTML = '<div class="ai-gen-tag" style="font-size:11px;color:#999;margin-bottom:4px;">✨ AI 生成内容</div>' + formatMessage(_streamRaw);
+                                    messageContentDiv.innerHTML = '<div class="ai-gen-tag" style="font-size:11px;color:#8fa3c7;margin-bottom:4px;">✨ AI 生成内容</div>' + formatMessage(_streamRaw);
                                     scrollToBottom();
                                 } else if (data.error) {
-                                    messageContentDiv.innerHTML = '<div class="ai-gen-tag" style="font-size:11px;color:#999;margin-bottom:4px;">✨ AI 生成内容</div>' + data.error;
+                                    messageContentDiv.innerHTML = '<div class="ai-gen-tag" style="font-size:11px;color:#8fa3c7;margin-bottom:4px;">✨ AI 生成内容</div>' + data.error;
                                 }
-                            } catch (e) {
-                            }
+                            } catch (e) {}
                         }
                     }
                 }

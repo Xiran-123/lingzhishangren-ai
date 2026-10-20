@@ -5438,6 +5438,30 @@ def scenario_demo():
     return render_template('scenario_demo.html')
 
 
+@app.route('/scenario-template-a')
+def scenario_template_a():
+    """剧情演绎模板A：经典双栏毛玻璃"""
+    if not session.get('authenticated'):
+        return redirect('/')
+    return render_template('scenario_template_a.html')
+
+
+@app.route('/scenario-template-b')
+def scenario_template_b():
+    """剧情演绎模板B：侧边栏聚焦"""
+    if not session.get('authenticated'):
+        return redirect('/')
+    return render_template('scenario_template_b.html')
+
+
+@app.route('/scenario-template-c')
+def scenario_template_c():
+    """剧情演绎模板C：顶部卡片流"""
+    if not session.get('authenticated'):
+        return redirect('/')
+    return render_template('scenario_template_c.html')
+
+
 # ====================== AI 自动生成场景实训 ======================
 
 SCENARIO_GEN_PROMPT = """你是通信与电子信息工程领域的资深实训专家，擅长把真实工程项目设计成"沉浸式、强交互、有陷阱"的虚拟仿真训练剧本。请根据用户提供的场景主题与要求，生成一套【长流程、高保真】的交互式实训。
