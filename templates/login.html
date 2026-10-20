@@ -71,7 +71,7 @@
 
         .brand-content {
             position: relative; z-index: 2;
-            max-width: 545px;
+            max-width: 578px;
             width: 100%;
         }
 
@@ -158,7 +158,7 @@
         }
         .scene-screen {
             position: relative;
-            height: 288px;
+            height: 318px;
         }
         /* 非活跃场景直接不渲染（display:none），避免多层合成引发的浏览器灰底渲染异常 */
         .scene {
@@ -2104,7 +2104,7 @@
                 titleEl.textContent = t;
                 descEl.textContent = ds;
             }
-            function play() { stop(); timer = setInterval(() => show(cur + 1), 5000); }
+            function play() { stop(); timer = setInterval(() => show(cur + 1), 3800); }
             function stop() { if (timer) { clearInterval(timer); timer = null; } }
 
             dots.forEach(d => d.addEventListener('click', () => { show(+d.dataset.i); play(); }));
