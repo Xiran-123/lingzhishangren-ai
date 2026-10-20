@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -441,6 +441,50 @@
 
         .error.show {
             display: block;
+            animation: shake 0.35s;
+        }
+
+        /* 输入错误高亮 + 抖动 */
+        .input-group input.input-error {
+            border-color: #ff4d4f !important;
+            animation: shake 0.35s;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* 密码显隐切换 + 大写锁定提醒 */
+        .pwd-wrap { position: relative; }
+        .pwd-wrap input { padding-right: 48px; }
+        .pwd-eye {
+            position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+            width: 36px; height: 36px;
+            border: none; background: transparent; border-radius: 8px;
+            cursor: pointer; font-size: 16px; opacity: 0.55; transition: all 0.2s;
+        }
+        .pwd-eye:hover { opacity: 1; background: #f0f2f8; }
+        .caps-hint {
+            display: none; text-align: left;
+            color: #fa8c16; font-size: 12px; margin-top: 6px;
+        }
+        .caps-hint.show { display: block; }
+
+        /* 登录按钮加载态 */
+        .btn-spin {
+            display: inline-block; width: 14px; height: 14px;
+            border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff;
+            border-radius: 50%; vertical-align: -2px; margin-right: 6px;
+            animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* 角色表单切换动画 */
+        .student-info.show, .teacher-info.show { animation: fadeSlide 0.25s ease; }
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(-4px); }
+            to   { opacity: 1; transform: none; }
         }
 
         .footer {
@@ -1026,15 +1070,15 @@
         <div class="student-info" id="studentInfo">
             <div class="input-group">
                 <label for="studentNo">学号</label>
-                <input type="text" id="studentNo" value="2024001001001" placeholder="请输入您的学号">
+                <input type="text" id="studentNo" value="2024001001001" placeholder="请输入您的学号" maxlength="13" onkeypress="handleKeyPress(event)" autocomplete="username">
             </div>
             <div class="input-group">
                 <label for="studentName">学生姓名</label>
-                <input type="text" id="studentName" value="张三" placeholder="请输入您的姓名">
+                <input type="text" id="studentName" value="张三" placeholder="请输入您的姓名" onkeypress="handleKeyPress(event)">
             </div>
             <div class="input-group">
                 <label for="className">班级（可选）</label>
-                <input type="text" id="className" placeholder="请输入班级">
+                <input type="text" id="className" placeholder="请输入班级" onkeypress="handleKeyPress(event)">
             </div>
         </div>
         
@@ -1042,14 +1086,18 @@
         <div class="teacher-info" id="teacherInfo">
             <div class="input-group">
                 <label for="teacherName">老师账号</label>
-                <input type="text" id="teacherName" value="teacher1" placeholder="请输入老师账号" >
+                <input type="text" id="teacherName" value="teacher1" placeholder="请输入老师账号" onkeypress="handleKeyPress(event)" autocomplete="username">
             </div>
         </div>
         
         <!-- 密码 -->
         <div class="input-group">
             <label for="password" id="passwordLabel">访问密码</label>
-            <input type="password" id="password" value="tongxin2024" placeholder="请输入密码" onkeypress="handleKeyPress(event)">
+            <div class="pwd-wrap">
+                <input type="password" id="password" value="tongxin2024" placeholder="请输入密码" onkeypress="handleKeyPress(event)" autocomplete="current-password">
+                <button type="button" class="pwd-eye" id="pwdEye" onclick="togglePwd()" title="显示/隐藏密码" tabindex="-1">👁</button>
+            </div>
+            <div class="caps-hint" id="capsHint">⚠ 大写锁定（Caps Lock）已开启</div>
         </div>
         
         <button class="login-btn" id="loginBtn" onclick="doLogin()">
@@ -1116,9 +1164,24 @@
         const teacherNameInput = document.getElementById('teacherName');
         
         let selectedRole = 'student';
+        const capsHint = document.getElementById('capsHint');
 
         // 页面加载完成后默认显示学生登录表单
         document.addEventListener('DOMContentLoaded', () => selectRole('student'));
+
+        // ===== 密码显示/隐藏 =====
+        function togglePwd() {
+            const show = passwordInput.type === 'password';
+            passwordInput.type = show ? 'text' : 'password';
+            document.getElementById('pwdEye').textContent = show ? '🙈' : '👁';
+        }
+
+        // ===== 大写锁定提醒 =====
+        passwordInput.addEventListener('keydown', function (e) {
+            if (e.getModifierState && e.getModifierState('CapsLock')) capsHint.classList.add('show');
+            else capsHint.classList.remove('show');
+        });
+        passwordInput.addEventListener('blur', () => capsHint.classList.remove('show'));
 
         function selectRole(role) {
             selectedRole = role;
@@ -1151,33 +1214,35 @@
             const teacherName = teacherNameInput.value.trim();
             
             if (!password) {
-                showError('请输入密码');
+                showError('请输入密码', passwordInput);
                 return;
             }
-            
+
             if (selectedRole === 'student') {
                 if (!studentNo) {
-                    showError('学生请输入学号');
+                    showError('学生请输入学号', studentNoInput);
                     return;
                 }
                 // 验证学号必须是13位数字
                 if (!/^\d{13}$/.test(studentNo)) {
-                    showError('学号必须是13位数字');
+                    showError('学号必须是13位数字', studentNoInput);
                     return;
                 }
                 if (!studentName) {
-                    showError('学生请输入姓名');
+                    showError('学生请输入姓名', studentNameInput);
                     return;
                 }
             } else {
                 if (!teacherName) {
-                    showError('老师请输入账号');
+                    showError('老师请输入账号', teacherNameInput);
                     return;
                 }
             }
-            
+
             loginBtn.disabled = true;
-            
+            const origBtnHtml = loginBtn.innerHTML;
+            loginBtn.innerHTML = '<span class="btn-spin"></span>登录中…';
+
             try {
                 const response = await fetch('/login', {
                     method: 'POST',
@@ -1192,15 +1257,16 @@
                         class_name: className
                     })
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (data.success) {
                     if (data.is_new_user) {
                         showWelcome(data.student_name);
                     } else {
                         window.location.href = '/';
                     }
+                    return; // 登录成功不再恢复按钮（页面即将跳转）
                 } else {
                     showError(data.message || '登录失败');
                 }
@@ -1208,6 +1274,7 @@
                 showError('网络错误，请重试');
             } finally {
                 loginBtn.disabled = false;
+                loginBtn.innerHTML = origBtnHtml;
             }
         }
         
@@ -1217,12 +1284,15 @@
             }
         }
         
-        function showError(message) {
+        function showError(message, input) {
             errorMsg.textContent = message;
+            errorMsg.classList.remove('show');
+            void errorMsg.offsetWidth; // 强制重排以重启动画
             errorMsg.classList.add('show');
-            setTimeout(() => {
-                errorMsg.classList.remove('show');
-            }, 3000);
+            document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+            if (input) { input.classList.add('input-error'); input.focus(); }
+            clearTimeout(showError._t);
+            showError._t = setTimeout(() => errorMsg.classList.remove('show'), 3000);
         }
         
         function showWelcome(name) {

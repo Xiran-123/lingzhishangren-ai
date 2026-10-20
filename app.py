@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, Response, session, send_from_directory, redirect
+from flask import Flask, render_template, request, jsonify, Response, session, send_from_directory, redirect, url_for
 import requests
 import base64
 import re
@@ -5295,6 +5295,108 @@ def api_today_progress():
     })
 
 
+# ====================== 剧情实训成绩回传（接入学生能力画像） ======================
+
+# 固定副本未携带题型明细时的默认能力维度映射
+SCENE_DEFAULT_DIMS = {
+    'ssv': ['equipment_operation', 'rf_engineering', 'troubleshooting'],
+    'cluster': ['equipment_operation', 'rf_engineering', 'safety_awareness', 'troubleshooting'],
+    'grid': ['equipment_operation', 'rf_engineering', 'safety_awareness', 'troubleshooting'],
+}
+VALID_DIM_IDS = {a['id'] for a in COMPETENCE_AREAS}
+
+
+def _aggregate_scenario_dims(details, scene_id, rate):
+    """按能力维度聚合得分率：优先用前端上报的题型明细，缺省回退到副本默认映射"""
+    dim_rates = {}
+    for d in details[:20]:
+        if not isinstance(d, dict):
+            continue
+        dim, got, mx = d.get('dim'), d.get('got', 0), d.get('max', 0)
+        if dim not in VALID_DIM_IDS:
+            continue
+        if not isinstance(got, (int, float)) or isinstance(got, bool) or \
+           not isinstance(mx, (int, float)) or isinstance(mx, bool) or mx <= 0:
+            continue
+        dim_rates.setdefault(dim, []).append(min(100.0, max(0.0, got / mx * 100)))
+
+    if dim_rates:
+        return {dim: sum(rs) / len(rs) for dim, rs in dim_rates.items()}
+    # 无明细：整体得分率平均计入该副本的默认维度
+    return {dim: rate for dim in SCENE_DEFAULT_DIMS.get(scene_id, [])}
+
+
+@app.route('/api/scenario-result', methods=['POST'])
+def api_scenario_result():
+    """剧情实训成绩回传：反哺能力画像 + 学习活动 + 成绩历史存档"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'student':
+        return jsonify({'error': '仅记录学生成绩'}), 403
+
+    data = request.get_json(silent=True) or {}
+    scene_id = str(data.get('scene_id', ''))[:40]
+    scene_name = str(data.get('scene_name', ''))[:60]
+    score, score_max = data.get('score'), data.get('score_max')
+    details = data.get('details') if isinstance(data.get('details'), list) else []
+
+    if not scene_id or not scene_name:
+        return jsonify({'error': '缺少副本标识'}), 400
+    if not isinstance(score, (int, float)) or isinstance(score, bool) or \
+       not isinstance(score_max, (int, float)) or isinstance(score_max, bool) or score_max <= 0:
+        return jsonify({'error': '分数格式错误'}), 400
+    score = max(0.0, min(float(score), float(score_max)))
+    rate = round(score / float(score_max) * 100, 1)
+
+    students = load_students()
+    student = next((s for s in students if s.get('student_no') == session.get('student_no')), None)
+    if not student:
+        return jsonify({'error': '学生档案不存在'}), 404
+
+    # 1) 反哺能力画像（与作业反哺同口径：得分率加权平均）
+    dim_scores = _aggregate_scenario_dims(details, scene_id, rate)
+    if dim_scores:
+        # 兼容老档案：字段缺失或为空字典时补全全部维度键
+        if not isinstance(student.get('competence_analysis'), dict) or not student['competence_analysis']:
+            student['competence_analysis'] = {a['id']: {'count': 0, 'score': 0.0} for a in COMPETENCE_AREAS}
+        for dim, dscore in dim_scores.items():
+            if dim not in student['competence_analysis']:
+                student['competence_analysis'][dim] = {'count': 0, 'score': 0.0}
+            area = student['competence_analysis'][dim]
+            area['count'] += 1
+            area['score'] = round((area['score'] * (area['count'] - 1) + dscore) / area['count'], 2)
+
+    # 2) 记录学习活动（驱动学习曲线与今日进度环）
+    record_learning_activity(student.get('name', ''), 'scenario',
+                             knowledge_point=scene_name, score=rate)
+
+    # 3) 存档成绩历史（每人保留最近 50 次）
+    history = student.setdefault('scenario_results', [])
+    history.append({
+        'scene_id': scene_id,
+        'scene_name': scene_name,
+        'score': round(score, 1),
+        'score_max': round(float(score_max), 1),
+        'rate': rate,
+        'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    })
+    if len(history) > 50:
+        student['scenario_results'] = history[-50:]
+
+    save_students(students)
+    return jsonify({'success': True, 'rate': rate, 'dims': sorted(dim_scores.keys())})
+
+
+@app.route('/api/scenario-results', methods=['GET'])
+def api_scenario_results():
+    """查询本人剧情实训成绩历史"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    students = load_students()
+    student = next((s for s in students if s.get('student_no') == session.get('student_no')), None)
+    return jsonify({'success': True, 'results': (student or {}).get('scenario_results', [])})
+
+
 @app.route('/api/teacher-files', methods=['GET'])
 def api_teacher_files():
     """老师共享文件：上传历史里非学生身份上传的文件（老师登录时 uploader 存老师名）"""
@@ -5556,6 +5658,14 @@ def scenario_grid():
     return render_template('scenario_grid.html')
 
 
+@app.route('/scenario-ai')
+def scenario_ai():
+    """AI 自定义剧情：任意主题自动生成实训剧本"""
+    if not session.get('authenticated'):
+        return redirect('/')
+    return render_template('scenario_ai.html')
+
+
 # ====================== AI 自动生成场景实训 ======================
 
 SCENARIO_GEN_PROMPT = """你是通信与电子信息工程领域的资深实训专家，擅长把真实工程项目设计成"沉浸式、强交互、有陷阱"的虚拟仿真训练剧本。请根据用户提供的场景主题与要求，生成一套【长流程、高保真】的交互式实训。
@@ -5589,6 +5699,8 @@ SCENARIO_GEN_PROMPT = """你是通信与电子信息工程领域的资深实训�
 5. 工程约束：体现时间压力、人手/备件/预算受限、多专业协同、客户沟通等真实约束。
 6. 文案有现场感：像真实工单和师傅带教，简洁有力；feedback每条1-2句，先判定再讲原理，避免长篇大论。
 7. 内容用<b>加粗</b>关键词、<br>换行；所有文本字段值内严禁出现英文双引号(")和反斜杠(\)，引用话语一律用中文引号「」，也不要写裸换行符（用<br>代替）；不要出现"AI/模型/本剧本"等穿帮词。
+8. 仪表-物理量必须匹配（硬性铁律）：measure的device只能测对应物理量——laser=长度/高度/距离/挂高，infrared=温度/温差，multimeter=低压(≤1000V)电压/小电流(≤1000A)/通断，ground_tester=接地电阻/土壤电阻率，otdr=光缆长度/衰耗/断点位置，opm=光功率dBm，spectrum=频谱/干扰/场强(dBm)，site_master=天馈电气参数（方位角/下倾角/驻波比/馈损）。严禁错配：功率/负荷/容量/面积/荷载/带宽等无法仪表直读的量不配measure（改select或input）；高压(≥1kV)电压严禁万用表直读（改"查PT柜表计"类input）；移动网络覆盖指标（RSRP/SINR/下载速率）必须用路测终端而非频谱仪/天馈仪，此类字段不配measure、用input（ph提示"路测终端读数"）。
+9. 时间约束符合行业实际：设计周期、建设工期、验收周期要符合真实工程节奏（如数据中心建设以月/年计），不得出现明显失真的"超级工期"；时限压力用"阶段性节点"表达而非整体失真。
 
 ══════════ 三、六种步骤类型的JSON格式（严格遵守） ══════════
 
@@ -5623,7 +5735,7 @@ x∈[5,90]，y∈[15,75]，仅一个 ok:true。
   {"tab":0,"key":"字段名","type":"select","opts":["选项A","选项B","选项C"]},
   {"tab":0,"key":"字段名","type":"input","ph":"点击测量","measure":{"device":"site_master","icon":"📟","name":"仪表名","value":"实测值含单位"}}]}
 - tabs 2-4个；plan 与 tabs 一一对应（参考资料弹窗用）；fields 的 tab 为索引。
-- device 可选：site_master(天馈仪)、otdr(光时域反射仪)、infrared(红外测温)、multimeter(万用表)、ground_tester(接地电阻仪)、opm(光功率计)、laser(激光测距)、spectrum(频谱仪)，按主题选，icon 用合适emoji。
+- device 可选：site_master(天馈仪)、otdr(光时域反射仪)、infrared(红外测温)、multimeter(万用表)、ground_tester(接地电阻仪)、opm(光功率计)、laser(激光测距)、spectrum(频谱仪)，按主题选，icon 用合适emoji；device与物理量的匹配必须遵守高保真要求第8条。
 - measure 测量值必须与后续诊断题数据一致。
 
 6. design 最终方案决策
@@ -5637,6 +5749,86 @@ scoreMax = 所有quiz的subSteps总数（每题1分）+ siteselect个数×2 + �
 
 ══════════ 五、输出前自检 ══════════
 步骤数10-12；题型与字段完整；x/y在范围内；correct/required索引不越界；plan与tabs数量一致；数据前后自洽；JSON可被json.loads直接解析。"""
+
+
+def _sanitize_scenario_steps(steps):
+    """逐题校验 AI 生成的步骤，修复/剔除不可作答的题目：
+    - quiz 小题：单选 correct 必须是合法索引；多选 required 必须是非空合法索引数组，
+      多选 required 非法但 correct 合法时降级为单选，仍非法则剔除该小题
+    - choice：必须存在 good 选项，多个 good 只保留第一个
+    - siteselect：只允许一个 ok:true，无 ok 则剔除整个步骤
+    - design：correct 非法索引的决策组剔除
+    - survey：measure 字段残缺的降级为普通手填项
+    """
+    valid_types = {'text', 'choice', 'quiz', 'siteselect', 'survey', 'design'}
+    list_fields = {'choice': 'options', 'quiz': 'subSteps', 'siteselect': 'spots',
+                   'survey': 'fields', 'design': 'groups'}
+
+    def _valid_idx(v, n):
+        return isinstance(v, int) and not isinstance(v, bool) and 0 <= v < n
+
+    cleaned = []
+    for st in steps:
+        if not isinstance(st, dict) or st.get('type') not in valid_types:
+            break
+        lf = list_fields.get(st['type'])
+        if lf and not isinstance(st.get(lf), list):
+            break
+        t = st['type']
+        if t == 'quiz':
+            subs = []
+            for sub in st.get('subSteps', []):
+                if not isinstance(sub, dict) or not isinstance(sub.get('options'), list) or len(sub['options']) < 2:
+                    continue
+                n = len(sub['options'])
+                if sub.get('multi'):
+                    req = sub.get('required')
+                    if isinstance(req, list) and req and all(_valid_idx(v, n) for v in req):
+                        subs.append(sub)
+                    elif _valid_idx(sub.get('correct'), n):
+                        sub.pop('multi', None); sub.pop('required', None)
+                        subs.append(sub)
+                    # 两个都非法：剔除该小题
+                elif _valid_idx(sub.get('correct'), n):
+                    subs.append(sub)
+            if not subs:
+                break  # 连环题全部小题非法，丢弃该步及后续（视为截断）
+            st['subSteps'] = subs
+        elif t == 'choice':
+            opts = st.get('options', [])
+            goods = [o for o in opts if isinstance(o, dict) and o.get('good')]
+            if not goods:
+                break
+            seen = False
+            for o in opts:
+                if isinstance(o, dict) and o.get('good'):
+                    if seen:
+                        o.pop('good', None)
+                    seen = True
+        elif t == 'siteselect':
+            spots = st.get('spots', [])
+            has_ok = False
+            for sp in spots:
+                if isinstance(sp, dict) and sp.get('ok'):
+                    if has_ok:
+                        sp.pop('ok', None)
+                    has_ok = True
+            if not has_ok:
+                break
+        elif t == 'design':
+            groups = [g for g in st.get('groups', [])
+                      if isinstance(g, dict) and isinstance(g.get('options'), list) and _valid_idx(g.get('correct'), len(g['options']))]
+            if not groups:
+                break
+            st['groups'] = groups
+        elif t == 'survey':
+            for f in st.get('fields', []):
+                if isinstance(f, dict) and f.get('measure'):
+                    m = f['measure']
+                    if not isinstance(m, dict) or not m.get('value') or not m.get('device'):
+                        f.pop('measure', None)
+        cleaned.append(st)
+    return cleaned
 
 
 @app.route('/api/scenario/generate', methods=['POST'])
@@ -5784,22 +5976,12 @@ def api_generate_scenario():
         if not steps or not isinstance(steps, list):
             return jsonify({'error': 'AI生成的实训步骤为空或格式错误'}), 500
 
-        # 安全校验：截断补全可能产生残缺尾步（类型被截短、关键列表字段缺失），
-        # 残缺只可能出现在尾部，丢弃尾步保住前面完整步骤，避免整单失败
-        valid_types = {'text', 'choice', 'quiz', 'siteselect', 'survey', 'design'}
-        list_fields = {'choice': 'options', 'quiz': 'subSteps', 'siteselect': 'spots',
-                       'survey': 'fields', 'design': 'groups'}
-        clean_steps = []
-        for st in steps:
-            if not isinstance(st, dict) or st.get('type') not in valid_types:
-                break
-            lf = list_fields.get(st['type'])
-            if lf and not isinstance(st.get(lf), list):
-                break
-            clean_steps.append(st)
-        if len(clean_steps) < len(steps):
-            print(f"[场景生成] 丢弃 {len(steps) - len(clean_steps)} 个残缺尾步（截断挽救）")
-        steps = clean_steps
+        # 逐题校验 + 截断挽救：剔除残缺尾步与不可作答的题目（correct 非法等），
+        # 保证返回给前端的每一道题都有正确答案且可正常计分
+        before = len(steps)
+        steps = _sanitize_scenario_steps(steps)
+        if len(steps) < before:
+            print(f"[场景生成] 校验修复：丢弃 {before - len(steps)} 个残缺/不可作答步骤")
         if not steps:
             return jsonify({'error': 'AI生成的实训步骤为空或格式错误，请重试一次'}), 500
 

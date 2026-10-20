@@ -1,0 +1,1584 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 自定义剧情 - 灵智尚人</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #071521;
+            --bg2: #0b2233;
+            --panel: rgba(13, 33, 52, .92);
+            --panel2: rgba(18, 43, 66, .96);
+            --line: rgba(77, 216, 255, .16);
+            --line2: rgba(77, 216, 255, .34);
+            --cyan: #4dd8ff;
+            --cyan2: #00c8ff;
+            --text: #e6f3ff;
+            --muted: #7ea6c6;
+            --green: #4ade80;
+            --gold: #ffd66b;
+            --red: #ff6b6b;
+            --radius: 12px;
+        }
+
+        html, body {
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+        }
+
+        .app {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            height: 100vh;
+            background:
+                radial-gradient(1100px 620px at 78% -12%, rgba(0, 160, 255, .16), transparent 62%),
+                radial-gradient(760px 520px at 4% 104%, rgba(168, 85, 247, .08), transparent 60%),
+                var(--bg);
+        }
+
+        /* ============ 左侧任务清单 ============ */
+        .side {
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--line);
+            background: rgba(8, 24, 38, .72);
+            backdrop-filter: blur(10px);
+            min-height: 0;
+        }
+
+        .brand { padding: 20px 20px 16px; border-bottom: 1px solid var(--line); }
+
+        .brand a {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 12px;
+            margin-bottom: 12px;
+            transition: color .2s;
+        }
+
+        .brand a:hover { color: var(--cyan); }
+
+        .brand h1 { font-size: 17px; font-weight: 600; letter-spacing: .5px; line-height: 1.45; }
+        .brand h1 span {
+            display: block;
+            font-size: 11px;
+            font-weight: 400;
+            color: var(--muted);
+            letter-spacing: 2px;
+            margin-top: 4px;
+        }
+
+        .stat-row { display: flex; gap: 10px; padding: 14px 20px; border-bottom: 1px solid var(--line); }
+
+        .stat {
+            flex: 1;
+            background: rgba(0, 200, 255, .05);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 9px 10px;
+            text-align: center;
+        }
+
+        .stat b {
+            display: block;
+            font-size: 18px;
+            color: var(--cyan);
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .stat span { font-size: 11px; color: var(--muted); }
+
+        .task-list { flex: 1; overflow-y: auto; padding: 12px 12px 8px; min-height: 0; }
+        .task-list::-webkit-scrollbar { width: 5px; }
+        .task-list::-webkit-scrollbar-thumb { background: rgba(77, 216, 255, .22); border-radius: 3px; }
+
+        .titem {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 11px 12px;
+            border-radius: 10px;
+            border: 1px solid transparent;
+            margin-bottom: 4px;
+            cursor: pointer;
+            transition: background .18s, border-color .18s;
+        }
+
+        .titem:hover:not(.locked) { background: rgba(77, 216, 255, .06); }
+        .titem.active { background: rgba(77, 216, 255, .1); border-color: var(--line2); }
+        .titem.locked { cursor: not-allowed; opacity: .42; }
+
+        .tnum {
+            flex: 0 0 24px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-size: 11px;
+            font-weight: 600;
+            background: rgba(126, 166, 198, .16);
+            color: var(--muted);
+            margin-top: 1px;
+        }
+
+        .titem.active .tnum { background: var(--cyan); color: #062032; }
+        .titem.done .tnum { background: rgba(74, 222, 128, .18); color: var(--green); }
+
+        .tinfo { min-width: 0; flex: 1; }
+        .tinfo b {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            line-height: 1.4;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .tinfo i { display: block; font-style: normal; font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+        .side-foot { padding: 12px 16px 16px; border-top: 1px solid var(--line); }
+
+        /* ============ 右侧主区 ============ */
+        .main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+
+        .top {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 28px;
+            border-bottom: 1px solid var(--line);
+            background: rgba(8, 24, 38, .55);
+        }
+
+        .top-title { font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .top-title small { display: block; font-size: 11px; color: var(--muted); font-weight: 400; margin-top: 3px; }
+        .top-title .tt-main { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 34vw; }
+
+        .ai-badge {
+            flex: 0 0 auto;
+            font-size: 10.5px;
+            padding: 3px 9px;
+            border-radius: 99px;
+            background: rgba(168, 85, 247, .16);
+            border: 1px solid rgba(192, 132, 252, .4);
+            color: #d8b4fe;
+            white-space: nowrap;
+        }
+
+        .bar {
+            flex: 1;
+            height: 6px;
+            background: rgba(126, 166, 198, .16);
+            border-radius: 99px;
+            overflow: hidden;
+            min-width: 80px;
+        }
+
+        .bar i {
+            display: block;
+            height: 100%;
+            width: 0;
+            border-radius: 99px;
+            background: linear-gradient(90deg, var(--cyan2), var(--green));
+            transition: width .45s cubic-bezier(.2, .8, .2, 1);
+        }
+
+        .clock { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+        .body { flex: 1; overflow-y: auto; padding: 24px 28px 12px; min-height: 0; }
+        .body::-webkit-scrollbar { width: 7px; }
+        .body::-webkit-scrollbar-thumb { background: rgba(77, 216, 255, .2); border-radius: 4px; }
+
+        .foot {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 28px;
+            border-top: 1px solid var(--line);
+            background: rgba(8, 24, 38, .72);
+        }
+
+        .foot-tip { font-size: 12px; color: var(--muted); flex: 1; }
+        .foot-tip.warn { color: var(--gold); }
+
+        /* ============ 通用组件 ============ */
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 18px 20px;
+            margin-bottom: 16px;
+            max-width: 960px;
+        }
+
+        .step-tag {
+            display: inline-block;
+            font-size: 11px;
+            color: var(--cyan);
+            border: 1px solid var(--line2);
+            border-radius: 99px;
+            padding: 3px 11px;
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+        }
+
+        .task-desc {
+            background: rgba(0, 200, 255, .045);
+            border: 1px solid var(--line);
+            border-left: 3px solid var(--cyan);
+            border-radius: 8px;
+            padding: 14px 16px;
+            font-size: 13px;
+            line-height: 1.95;
+        }
+
+        .task-desc b { color: var(--cyan); font-weight: 500; }
+
+        .muted { color: var(--muted); }
+        .small { font-size: 12px; }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 9px 20px;
+            border-radius: 8px;
+            border: 1px solid var(--line2);
+            background: rgba(77, 216, 255, .08);
+            color: var(--cyan);
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all .18s;
+            white-space: nowrap;
+        }
+
+        .btn:hover:not(:disabled) { background: rgba(77, 216, 255, .16); border-color: var(--cyan); }
+        .btn:disabled { opacity: .38; cursor: not-allowed; }
+
+        .btn.primary {
+            background: linear-gradient(135deg, #00a8e8, #00c8ff);
+            border-color: transparent;
+            color: #03202f;
+            font-weight: 600;
+            box-shadow: 0 6px 18px rgba(0, 180, 255, .22);
+        }
+
+        .btn.primary:hover:not(:disabled) { filter: brightness(1.08); }
+        .btn.ghost { background: transparent; border-color: var(--line); color: var(--muted); }
+        .btn.ghost:hover:not(:disabled) { color: var(--cyan); border-color: var(--line2); background: rgba(77, 216, 255, .06); }
+        .btn.sm { padding: 6px 12px; font-size: 12px; }
+
+        input[type="text"], input[type="number"], select, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(4, 16, 26, .8);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color .18s;
+            font-variant-numeric: tabular-nums;
+        }
+
+        textarea { resize: vertical; min-height: 74px; line-height: 1.7; }
+        input:focus, select:focus, textarea:focus { border-color: var(--cyan); }
+        input::placeholder, textarea::placeholder { color: rgba(126, 166, 198, .5); }
+        select option { background: #0b2233; }
+
+        /* ============ 选项卡 ============ */
+        .opt-intro { font-size: 13px; line-height: 1.9; margin-bottom: 16px; }
+        .opt-intro b { color: var(--cyan); font-weight: 500; }
+
+        .opt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        .opt-card {
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 13px 14px;
+            background: rgba(255, 255, 255, .02);
+            cursor: pointer;
+            transition: all .16s;
+        }
+
+        .opt-card:hover { border-color: var(--line2); background: rgba(77, 216, 255, .05); }
+        .opt-card.selected { border-color: var(--cyan); background: rgba(77, 216, 255, .09); }
+        .opt-card.revealed { cursor: default; }
+        .opt-card.right { border-color: rgba(74, 222, 128, .5); background: rgba(74, 222, 128, .08); }
+        .opt-card.wrong { border-color: rgba(255, 107, 107, .5); background: rgba(255, 107, 107, .08); }
+
+        .opt-name { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+        .opt-sub { font-size: 11.5px; color: var(--muted); line-height: 1.65; }
+
+        .opt-card.multi .opt-name::before { content: '◻ '; color: var(--muted); }
+        .opt-card.multi.selected .opt-name::before { content: '☑ '; color: var(--cyan); }
+
+        .quiz-no { font-size: 11px; color: var(--muted); margin-bottom: 8px; letter-spacing: 1px; }
+
+        .feedback-bar { display: none; margin-top: 14px; padding: 12px 14px; border-radius: 8px; font-size: 12.5px; line-height: 1.85; }
+        .feedback-bar.show { display: block; }
+        .feedback-bar.good { background: rgba(74, 222, 128, .08); border: 1px solid rgba(74, 222, 128, .35); color: #c6f8d8; }
+        .feedback-bar.bad { background: rgba(255, 107, 107, .08); border: 1px solid rgba(255, 107, 107, .35); color: #ffc9c9; }
+        .feedback-bar b { font-weight: 600; }
+
+        /* ============ 地图（选址） ============ */
+        .map-wrap {
+            position: relative;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            overflow: hidden;
+            background:
+                linear-gradient(rgba(77, 216, 255, .05) 1px, transparent 1px) 0 0 / 100% 34px,
+                linear-gradient(90deg, rgba(77, 216, 255, .05) 1px, transparent 1px) 0 0 / 34px 100%,
+                #061320;
+            height: 300px;
+        }
+
+        .map-wrap svg { width: 100%; height: 100%; display: block; }
+
+        .map-pin {
+            position: absolute;
+            transform: translate(-50%, -100%);
+            font-size: 24px;
+            filter: drop-shadow(0 3px 5px rgba(0, 0, 0, .55));
+            pointer-events: none;
+        }
+
+        .site-wrap { display: grid; grid-template-columns: 1.55fr 1fr; gap: 14px; align-items: start; }
+        .site-side { display: flex; flex-direction: column; gap: 10px; }
+        .site-side .side-label { font-size: 11px; color: var(--muted); letter-spacing: 1px; }
+
+        .spot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+        .spot-btn {
+            padding: 10px 8px;
+            text-align: center;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, .02);
+            font-size: 12.5px;
+            cursor: pointer;
+            transition: all .16s;
+            font-family: inherit;
+            color: var(--text);
+        }
+
+        .spot-btn:hover { border-color: var(--line2); }
+        .spot-btn.active { border-color: var(--cyan); background: rgba(77, 216, 255, .1); color: var(--cyan); }
+        .spot-btn.confirm { border-color: rgba(74, 222, 128, .45); color: var(--green); background: rgba(74, 222, 128, .07); }
+        .spot-btn.ok-done { background: rgba(74, 222, 128, .16); }
+
+        /* ============ 勘察表 ============ */
+        .survey-tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+
+        .survey-tab {
+            padding: 7px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+            font-size: 12.5px;
+            color: var(--muted);
+            cursor: pointer;
+            transition: all .16s;
+            background: rgba(255, 255, 255, .02);
+        }
+
+        .survey-tab.active { background: rgba(77, 216, 255, .1); border-color: var(--line2); color: var(--cyan); }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .form-item label { display: block; font-size: 11.5px; color: var(--muted); margin-bottom: 5px; }
+        .form-row { display: flex; gap: 8px; }
+        .form-row input { flex: 1; min-width: 0; }
+        .form-row .btn { flex: 0 0 auto; }
+
+        input.filled-auto { border-color: rgba(74, 222, 128, .45); }
+
+        .survey-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+
+        /* 测量设备弹窗 */
+        .device-pop {
+            position: fixed;
+            left: 50%;
+            top: 42%;
+            transform: translate(-50%, -50%);
+            width: 240px;
+            background: var(--panel2);
+            border: 1px solid var(--line2);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            z-index: 80;
+            box-shadow: 0 22px 60px rgba(0, 0, 0, .55);
+        }
+
+        .device-pop .dev-icon { font-size: 34px; margin-bottom: 8px; }
+        .device-pop .dev-name { font-size: 12.5px; color: var(--cyan); margin-bottom: 12px; }
+        .device-pop .dev-val { font-size: 13px; font-weight: 600; margin-top: 10px; min-height: 18px; }
+
+        .scan-bar {
+            height: 5px;
+            border-radius: 99px;
+            background: rgba(126, 166, 198, .16);
+            overflow: hidden;
+        }
+
+        .scan-bar i {
+            display: block;
+            height: 100%;
+            width: 40%;
+            border-radius: 99px;
+            background: linear-gradient(90deg, var(--cyan2), var(--green));
+            animation: scanMove 1.1s linear infinite;
+        }
+
+        @keyframes scanMove {
+            0% { margin-left: -40%; }
+            100% { margin-left: 100%; }
+        }
+
+        /* 工程规划参考 */
+        .plan-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(3, 10, 18, .72);
+            backdrop-filter: blur(5px);
+            display: grid;
+            place-items: center;
+            z-index: 90;
+        }
+
+        .plan-card {
+            width: min(430px, 92vw);
+            max-height: 76vh;
+            overflow-y: auto;
+            background: var(--panel2);
+            border: 1px solid var(--line2);
+            border-radius: 14px;
+            padding: 20px 22px;
+        }
+
+        .plan-card h4 { font-size: 14px; margin-bottom: 10px; color: var(--cyan); }
+        .plan-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            font-size: 12.5px;
+            padding: 7px 0;
+            border-bottom: 1px dashed rgba(77, 216, 255, .13);
+        }
+        .plan-row .k { color: var(--muted); white-space: nowrap; }
+        .plan-row .v { text-align: right; }
+        .plan-close { text-align: center; margin-top: 16px; }
+
+        /* ============ 方案设计 ============ */
+        .design-result {
+            display: none;
+            margin-top: 16px;
+            padding: 13px 15px;
+            border-radius: 8px;
+            background: rgba(74, 222, 128, .07);
+            border: 1px solid rgba(74, 222, 128, .3);
+            font-size: 12.5px;
+            line-height: 1.9;
+        }
+
+        .design-result.show { display: block; }
+        .design-result b { color: var(--cyan); }
+
+        /* ============ AI 生成面板 ============ */
+        .gen-mask {
+            position: fixed;
+            inset: 0;
+            background: rgba(3, 10, 18, .78);
+            backdrop-filter: blur(6px);
+            display: none;
+            place-items: center;
+            z-index: 60;
+        }
+
+        .gen-mask.show { display: grid; }
+
+        .gen-card {
+            width: min(560px, 92vw);
+            background: var(--panel2);
+            border: 1px solid var(--line2);
+            border-radius: 14px;
+            padding: 26px 28px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, .55);
+        }
+
+        .gen-card h3 { font-size: 16px; margin-bottom: 6px; }
+        .gen-card h3 em { font-style: normal; color: var(--cyan); }
+        .gen-sub { font-size: 12px; color: var(--muted); margin-bottom: 18px; line-height: 1.75; }
+
+        .gen-field { margin-bottom: 14px; }
+        .gen-field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+
+        .gen-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+
+        .gen-tags span {
+            font-size: 11.5px;
+            padding: 5px 12px;
+            border-radius: 99px;
+            border: 1px solid var(--line);
+            color: var(--muted);
+            cursor: pointer;
+            transition: all .16s;
+        }
+
+        .gen-tags span:hover { color: var(--cyan); border-color: var(--line2); background: rgba(77, 216, 255, .06); }
+
+        .gen-btn { width: 100%; margin-top: 4px; }
+
+        .gen-loading { display: none; text-align: center; padding: 28px 0 18px; }
+        .gen-loading.show { display: block; }
+        .gen-load-ic { font-size: 38px; animation: genFloat 2s ease-in-out infinite; }
+
+        @keyframes genFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .gen-load-sub { font-size: 12.5px; color: var(--muted); margin-top: 14px; min-height: 18px; }
+        .gen-load-time { font-size: 12px; color: var(--muted); margin-top: 8px; }
+        .gen-load-time b { color: var(--cyan); }
+
+        /* ============ 报告 ============ */
+        .rep-head { text-align: center; padding: 22px 0 16px; border-bottom: 1px solid var(--line); margin-bottom: 18px; }
+        .rep-head h2 { font-size: 19px; font-weight: 600; letter-spacing: 1px; }
+        .rep-head p { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+        .rep-score { display: flex; align-items: baseline; justify-content: center; gap: 6px; margin-top: 14px; }
+        .rep-score b { font-size: 42px; font-weight: 600; color: var(--cyan); font-variant-numeric: tabular-nums; }
+        .rep-score span { font-size: 13px; color: var(--muted); }
+
+        .rep-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 9px 2px;
+            border-bottom: 1px dashed rgba(77, 216, 255, .12);
+            font-size: 12.5px;
+        }
+
+        .rep-row .rn { flex: 0 0 26px; color: var(--muted); font-variant-numeric: tabular-nums; }
+        .rep-row .rt { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .rep-row .rs { color: var(--cyan); font-variant-numeric: tabular-nums; }
+
+        /* ============ 提示条 ============ */
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 88px;
+            transform: translate(-50%, 14px);
+            background: rgba(8, 26, 40, .97);
+            border: 1px solid var(--line2);
+            border-radius: 9px;
+            padding: 11px 20px;
+            font-size: 13px;
+            color: var(--text);
+            opacity: 0;
+            pointer-events: none;
+            transition: all .25s;
+            z-index: 99;
+            max-width: 80vw;
+            text-align: center;
+        }
+
+        .toast.show { opacity: 1; transform: translate(-50%, 0); }
+        .toast.err { border-color: rgba(255, 107, 107, .5); color: #ffc9c9; }
+        .toast.ok { border-color: rgba(74, 222, 128, .5); color: #c6f8d8; }
+
+        @media (max-width: 980px) {
+            .app { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+            .side { flex-direction: row; align-items: center; border-right: none; border-bottom: 1px solid var(--line); overflow-x: auto; }
+            .brand, .stat-row, .side-foot { border: none; padding: 12px 16px; display: flex; gap: 8px; align-items: center; }
+            .brand h1 span { display: none; }
+            .brand h1 { font-size: 14px; }
+            .task-list { display: flex; gap: 6px; padding: 8px 12px; overflow-x: auto; }
+            .titem { margin-bottom: 0; white-space: nowrap; flex: 0 0 auto; }
+            .tinfo i { display: none; }
+            .site-wrap { grid-template-columns: 1fr; }
+            .form-grid, .opt-grid { grid-template-columns: 1fr; }
+            .body { padding: 16px; }
+            .top, .foot { padding: 12px 16px; }
+            .top-title .tt-main { max-width: 40vw; }
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <aside class="side">
+        <div class="brand">
+            <a href="/">&#8592; 返回首页</a>
+            <h1>AI 自定义剧情<span>AI SCENARIO CREATOR</span></h1>
+        </div>
+        <div class="stat-row">
+            <div class="stat"><b id="statDone">0/0</b><span>任务完成</span></div>
+            <div class="stat"><b id="statScore">0</b><span>实训得分</span></div>
+        </div>
+        <div class="task-list" id="taskList"></div>
+        <div class="side-foot">
+            <button class="btn sm" style="width:100%" onclick="showGenPanel()">✨ AI 生成新剧情</button>
+            <button class="btn ghost sm" style="width:100%;margin-top:8px" onclick="resetAll()">重新开始实训</button>
+        </div>
+    </aside>
+
+    <main class="main">
+        <div class="top">
+            <div class="top-title">
+                <div>
+                    <span class="tt-main" id="topTitle">加载中…</span>
+                    <small id="topSub">任务清单</small>
+                </div>
+                <span class="ai-badge" id="aiBadge" style="display:none">✨ AI 生成</span>
+            </div>
+            <div class="bar"><i id="barFill"></i></div>
+            <div class="clock" id="clock"></div>
+        </div>
+        <div class="body" id="body"></div>
+        <div class="foot">
+            <div class="foot-tip" id="footTip"></div>
+            <button class="btn ghost" id="btnPrev" onclick="prevStep()">上一任务</button>
+            <button class="btn primary" id="btnNext" onclick="submitTask()">继续</button>
+        </div>
+    </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- AI 生成面板 -->
+<div class="gen-mask" id="genMask">
+    <div class="gen-card">
+        <div id="genForm">
+            <h3><em>✨</em> AI 自动生成实训剧本</h3>
+            <p class="gen-sub">输入任意通信工程主题，AI 将自动创作一套完整交互式实训：背景研判 → 岗位决策 → 现场勘察 → 诊断处置 → 方案设计 → 验收复盘，预计 1~3 分钟。</p>
+            <div class="gen-field">
+                <label>场景主题（必填）</label>
+                <input type="text" id="genTopic" placeholder="如：光纤铺设工程勘察、数据中心机房设计、通信线路故障排查…">
+            </div>
+            <div class="gen-field">
+                <label>具体要求（选填）</label>
+                <textarea id="genQuestion" placeholder="如：包含线路路由选择、材料核算、施工验收等环节"></textarea>
+            </div>
+            <div class="gen-tags">
+                <span onclick="document.getElementById('genTopic').value='光纤铺设工程勘察'">光纤铺设勘察</span>
+                <span onclick="document.getElementById('genTopic').value='数据中心机房设计'">数据中心设计</span>
+                <span onclick="document.getElementById('genTopic').value='通信线路故障排查'">线路故障排查</span>
+                <span onclick="document.getElementById('genTopic').value='5G基站勘察设计'">5G基站勘察</span>
+            </div>
+            <button class="btn primary gen-btn" id="genBtn" onclick="generateScenario()">生成实训剧本</button>
+        </div>
+        <div class="gen-loading" id="genLoading">
+            <div class="gen-load-ic">✨</div>
+            <p class="gen-load-sub" id="genLoadSub"></p>
+            <p class="gen-load-time">已等待 <b id="genLoadSec">0</b> 秒 · 预计 1~3 分钟，请勿关闭窗口</p>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="/static/desktop_pet.css">
+<script src="/static/desktop_pet.js" defer></script>
+
+<script>
+/* =========================================================
+   AI 自定义剧情 —— 通用题型引擎（与剧情副本同款外壳）
+   ========================================================= */
+
+const TYPE_META = {
+    text:       { tag: '背景说明' },
+    choice:     { tag: '决策选择' },
+    quiz:       { tag: '连环研判' },
+    siteselect: { tag: '选址决策' },
+    survey:     { tag: '现场勘察' },
+    design:     { tag: '方案设计' }
+};
+
+const KEY = 'lsr_ai_scene_v2';
+
+/* ---------------- 默认示例剧本（可被 AI 生成替换） ---------------- */
+function defaultSteps() {
+    return [
+        {
+            type: 'text', title: "项目背景", label: "项目背景",
+            content: `某高校启动<b>智慧校园 5G 网络建设项目</b>，校园占地约 <b>1200 亩</b>，涵盖教学楼、实验楼、图书馆、学生宿舍区及大型体育场，在校师生约 <b>2.3 万人</b>。现有 4G 网络在宿舍晚间高峰与体育场馆大型活动期间已出现明显拥塞，无法满足超高清直播教学、AR/VR 实验实训及海量物联网终端接入需求。<br><br>运营商承接该校 <b>5G 基站新建工程</b>，采用 <b>Sub-6GHz（n78 频段）宏站组网</b>，要求实现校园室外连续覆盖与重点楼宇深度覆盖。<br><br>当前处于<b>站点勘察设计阶段</b>，需对候选站址进行现场勘测，采集关键参数并完成基站建设方案设计。<br><br><span style="color:#4dd8ff">请代入无线网络规划工程师的角色，依次完成本次实训的各项任务。</span>`,
+            nextText: "开始实训"
+        },
+        {
+            type: 'choice', title: "岗位选择", label: "岗位选择",
+            intro: `<b>任务描述：</b>校园 5G 基站新建工程，需完成候选站址勘测、覆盖评估、天线参数规划及基站建设方案设计。<br><b>请从以下角色中选择最适合主导本次勘察设计任务的人员：</b>`,
+            options: [
+                { name: "无线网络规划工程师", sub: "负责站点选址、覆盖规划与参数设计", good: true, feedback: "✅ 选择正确！无线网络规划工程师正是本次 5G 站点勘察设计的核心岗位——负责覆盖需求分析、站址评估筛选与天线参数规划，本次任务将由此岗位主导完成。" },
+                { name: "基站硬件安装工程师", sub: "负责 BBU/AAU 现场安装与线缆布放", feedback: "❌ 硬件安装工程师负责<b>工程实施阶段</b>的设备安装与线缆布放，当前处于勘察设计阶段。" },
+                { name: "核心网维护工程师", sub: "负责核心网元数据配置与维护", feedback: "❌ 核心网维护工程师负责<b>网元运维阶段</b>的数据配置，不主导无线站点勘察设计。" },
+                { name: "通信工程监理员", sub: "负责施工现场质量监督", feedback: "❌ 监理员负责<b>施工阶段</b>的质量监督，当前处于规划勘察阶段。" }
+            ]
+        },
+        {
+            type: 'quiz', title: "勘察工具准备", label: "工具准备",
+            subSteps: [
+                {
+                    q: "第一步：选择测试 5G 网络覆盖信号的核心工具",
+                    options: [
+                        { name: "5G 路测手机+测试软件", sub: "采集RSRP/SINR等覆盖指标" },
+                        { name: "OTDR 光时域反射仪", sub: "测光缆损耗/断点" },
+                        { name: "光功率计", sub: "测光信号功率" },
+                        { name: "驻波比测试仪", sub: "测天馈系统匹配" }
+                    ],
+                    correct: 0
+                },
+                {
+                    q: "第二步：5G 测试终端需要支持的频段制式",
+                    options: [
+                        { name: "仅支持 4G LTE", sub: "无法测试5G信号" },
+                        { name: "支持 SA 组网的 5G 终端", sub: "可测5G独立组网" },
+                        { name: "仅支持 NSA 的终端", sub: "依赖4G锚点" },
+                        { name: "3G WCDMA 终端", sub: "与5G无关" }
+                    ],
+                    correct: 1
+                },
+                {
+                    q: "第三步：勘察站址天面空间与挂高需要携带",
+                    options: [
+                        { name: "激光测距仪", sub: "测楼高/天面尺寸" },
+                        { name: "万用表", sub: "测电气参数" },
+                        { name: "光纤熔接机", sub: "熔接光纤" }
+                    ],
+                    correct: 0
+                },
+                {
+                    q: "第四步：登站勘察必须携带的安全装备（多选）",
+                    options: [
+                        { name: "安全帽", sub: "防坠落物" },
+                        { name: "防滑鞋", sub: "登高防滑" },
+                        { name: "安全带", sub: "高空防坠" },
+                        { name: "绝缘手套", sub: "近电作业防护" }
+                    ],
+                    multi: true, required: [0, 1, 2, 3]
+                }
+            ]
+        },
+        {
+            type: 'text', title: "5G 参数查询", label: "参数查询",
+            content: `通过查阅 3GPP 协议与设备手册，你了解到：<br><br>· 本工程采用 <b>n78 频段（3300-3600MHz）</b>，单载波带宽 <b>100MHz</b>；<br>· AAU 采用 <b>64T64R Massive MIMO</b>，最大发射功率 <b>200W（53dBm）</b>；<br>· 宏站单小区典型覆盖半径 <b>300-500m</b>（密集城区）；<br>· 参考信号接收功率（RSRP）良好覆盖门限 ≥ <b>-95dBm</b>；<br>· 天线方位角按覆盖目标方向规划，下倾角需结合挂高与覆盖距离核算（机械+电子下倾）；<br>· 共建共享场景需避开与邻频系统的干扰隔离要求。<br><br><span style="color:#4dd8ff">以上参数将作为站址筛选与天线规划的核心依据。</span>`,
+            nextText: "开始选址"
+        },
+        {
+            type: 'siteselect', title: "基站选址", label: "基站选址",
+            intro: `请结合<b>区域平面图</b>与覆盖需求，为本次 5G 宏站选择建设位置。点击候选位置查看分析，找到<b>最合理</b>的站址后点击「确认选址」。`,
+            spots: [
+                { name: "位置1 · 中心教学楼顶", ok: true, x: 48, y: 42, feedback: `✅ <b>选址分析（中心教学楼顶）：</b>位于区域几何中心，楼宇高度约 35m，可均衡覆盖教学区、宿舍区与图书馆；机房条件现成、传输电源配套齐全，天面无遮挡。是本次 5G 宏站的<b>理想站址</b>！` },
+                { name: "位置2 · 东北角水塔", ok: false, x: 80, y: 25, feedback: `❌ <b>选址分析（东北角水塔）：</b>1. 偏于一隅，西南片区覆盖距离过远，RSRP 难以达标。2. 水塔承重与天面空间有限，无法安装 64T64R AAU。3. 无现成机房与市电引入，配套改造成本高。` },
+                { name: "位置3 · 西校门旁", ok: false, x: 22, y: 70, feedback: `❌ <b>选址分析（西校门门卫室旁）：</b>1. 距宿舍区、图书馆等覆盖热点过远，链路预算不足。2. 门卫室建筑高度低（约6m），挂高受限，越区遮挡严重。3. 临街施工存在安全与协调风险。` },
+                { name: "位置4 · 体育场灯塔", ok: false, x: 66, y: 62, feedback: `❌ <b>选址分析（体育场灯塔）：</b>1. 灯塔位于体育场正中，日常覆盖目标偏离教学/宿舍核心区。2. 钢结构灯塔振动大，不满足 AAU 安装稳定性要求。3. 比赛期间强光与电磁环境复杂，运维不便。` },
+                { name: "位置5 · 配电室旁", ok: false, x: 30, y: 30, feedback: `❌ <b>选址分析（实验楼配电室旁）：</b>1. 紧邻强电配电室，电磁环境复杂，存在干扰风险。2. 实验楼天面密布通风管道与实验设备，天面资源不足。3. 楼顶承重经评估不满足新增抱杆荷载要求。` }
+            ],
+            correctIdx: 0
+        },
+        {
+            type: 'survey', title: "站点勘察表填写", label: "勘察填写",
+            intro: `请根据现场勘测与工程规划资料，填写<b>5G 基站勘察表</b>。带 🔍 的字段可通过<b>专业测量设备</b>现场测量获得，其余信息可点击「工程规划」参考资料核对。`,
+            tabs: ["基础信息", "机房配套", "天面参数"],
+            plan: [
+                [["站点名称", "中心教学楼站"], ["楼宇高度", "约35m"], ["覆盖目标", "教学/宿舍/图书馆"], ["电源引入", "市电380V"], ["传输资源", "SPN光纤到位"], ["经纬度", "东经118.79632，北纬32.06148"]],
+                [["机房位置", "教学楼附楼1F"], ["BBU型号", "BBU5900"], ["AAU型号", "AAU5613"], ["蓄电池备电", "4小时"], ["接地电阻", "≤5Ω"]],
+                [["天线挂高", "32m"], ["方位角", "0°/120°/240°"], ["机械下倾角", "6°"], ["电子下倾角", "3°"], ["覆盖半径", "约450m"]]
+            ],
+            fields: [
+                { tab: 0, key: "站点名称", type: "input", ph: "如：中心教学楼站" },
+                { tab: 0, key: "楼宇高度", type: "input", ph: "如：约35m" },
+                { tab: 0, key: "覆盖目标", type: "input", ph: "如：教学/宿舍/图书馆" },
+                { tab: 0, key: "电源引入", type: "select", opts: ["市电380V", "市电220V", "太阳能", "暂无电源"] },
+                { tab: 0, key: "传输资源", type: "select", opts: ["SPN光纤到位", "微波回传", "需新建光缆", "无传输资源"] },
+                { tab: 0, key: "经纬度", type: "input", ph: "点击测量获取", measure: { device: "gps", icon: "📡", name: "GPS定位仪", value: "东经118.79632，北纬32.06148" } },
+                { tab: 1, key: "机房位置", type: "input", ph: "如：教学楼附楼1F" },
+                { tab: 1, key: "BBU型号", type: "select", opts: ["BBU5900", "BBU3910", "V9200", "DBS3900"] },
+                { tab: 1, key: "AAU型号", type: "select", opts: ["AAU5613", "AAU5336", "TDAU5164", "RRU5150"] },
+                { tab: 1, key: "蓄电池备电", type: "select", opts: ["2小时", "4小时", "8小时", "不配置"] },
+                { tab: 1, key: "接地电阻", type: "input", ph: "如：≤5Ω" },
+                { tab: 2, key: "天线挂高", type: "input", ph: "点击测量获取", measure: { device: "laser", icon: "📏", name: "激光测距仪", value: "32m" } },
+                { tab: 2, key: "方位角", type: "select", opts: ["0°/120°/240°", "30°/150°/270°", "60°/180°/300°", "全向"] },
+                { tab: 2, key: "机械下倾角", type: "select", opts: ["0°", "3°", "6°", "9°"] },
+                { tab: 2, key: "电子下倾角", type: "select", opts: ["0°", "3°", "6°", "9°"] },
+                { tab: 2, key: "覆盖半径", type: "input", ph: "点击测量获取", measure: { device: "testphone", icon: "📱", name: "5G路测手机", value: "约450m" } }
+            ]
+        },
+        {
+            type: 'design', title: "工程设计", label: "工程设计",
+            intro: `综合勘测数据与协议手册，完成<b>5G 基站最终建设方案</b>。请结合前面的参数知识做出选择：`,
+            groups: [
+                { q: "最终站址选择", options: ["中心教学楼顶", "体育场灯塔", "西校门门卫室旁"], correct: 0 },
+                { q: "天线挂高设计", options: ["12m", "32m", "58m"], correct: 1 },
+                { q: "AAU 选型与通道配置", options: ["8T8R RRU+无源天线", "64T64R Massive MIMO AAU", "4T4R 微站"], correct: 1 },
+                { q: "下倾角规划（机械+电子）", options: ["0°+0°", "6°+3°", "12°+6°"], correct: 1 }
+            ],
+            result: `最终方案：在中心教学楼顶新建三扇区宏站，AAU5613（64T64R）挂高 32m，方位角 0°/120°/240°，机械下倾 6°+电子下倾 3°，n78 频段 100MHz 带宽，可均衡覆盖教学区、宿舍区与图书馆；机房配置 BBU5900、市电 380V 引入、4 小时备电，传输采用 SPN 光纤。经覆盖仿真预估，校园核心区 RSRP ≥ -95dBm 达标率 98.2%，方案已提交审核！`
+        },
+        {
+            type: 'text', title: "工程复盘", label: "工程复盘",
+            content: `<b>📋 项目回顾：</b><br>本次 5G 基站勘察设计围绕智慧校园建设项目展开，从项目背景理解、岗位角色定位、勘察工具选型、5G 参数查询、站址筛选、勘察表填写到最终方案设计，完整覆盖了<b>无线网络规划工程师</b>的核心工作流。<br><br><b>🔑 关键知识点：</b><br>· <b>频段与带宽</b>：n78（3300-3600MHz）是当前国内 5G 主力频段，100MHz 大带宽保障高速率；<br>· <b>Massive MIMO</b>：64T64R AAU 通过波束赋形提升容量与覆盖，是宏站主流形态；<br>· <b>选址原则</b>：贴近覆盖热点、挂高适中、机房传输电源配套齐全；<br>· <b>下倾角规划</b>：需结合挂高与目标覆盖距离综合核算，过大会造成覆盖空洞、过小则越区干扰。<br><br><b>⚠️ 常见误区：</b>选址偏于一隅导致远端覆盖不达标、忽视天面承重与电磁环境、下倾角凭感觉设置而非按覆盖目标核算。<br><br><span style="color:#4dd8ff">恭喜完成本次 5G 基站勘察设计实训！</span>`,
+            nextText: "完成实训"
+        }
+    ];
+}
+
+/* ---------------- 状态与持久化 ---------------- */
+let steps = [];
+let S = null;          // { step, done:[], score:[] }
+let topic = '';
+let aiGenerated = false;
+
+function normalizeSteps(arr) {
+    arr.forEach(s => {
+        if (s.type === 'quiz') {
+            if (!Array.isArray(s.subSteps)) s.subSteps = [];
+            s.heatmap = false;             // 通用引擎不做专属测试图可视化
+            if (typeof s._qidx !== 'number') s._qidx = 0;
+            if (!s._qlock) s._qlock = {};
+            if (!s._scored) s._scored = {};
+        }
+        if (s.type === 'survey') {
+            if (!Array.isArray(s.tabs) || !s.tabs.length) s.tabs = ['现场记录'];
+            if (!Array.isArray(s.plan) || s.plan.length !== s.tabs.length) s.plan = s.tabs.map(() => []);
+            (s.fields || []).forEach(f => {
+                if (typeof f._val !== 'string') f._val = '';
+                if (f._measured !== true) f._measured = false;
+            });
+        }
+        if (s.type === 'siteselect') {
+            (s.spots || []).forEach(sp => {
+                if (typeof sp.x !== 'number') sp.x = 50;
+                if (typeof sp.y !== 'number') sp.y = 50;
+            });
+        }
+    });
+    return arr;
+}
+
+function initState(n) { return { step: 0, done: new Array(n).fill(false), score: new Array(n).fill(0) }; }
+
+function persist() {
+    try { localStorage.setItem(KEY, JSON.stringify({ topic, aiGenerated, steps, S })); } catch (e) {}
+}
+
+function restore() {
+    try {
+        const raw = localStorage.getItem(KEY);
+        if (!raw) return false;
+        const o = JSON.parse(raw);
+        if (o && Array.isArray(o.steps) && o.steps.length) {
+            topic = o.topic || '';
+            aiGenerated = !!o.aiGenerated;
+            steps = o.steps;
+            S = o.S;
+            if (!S || !Array.isArray(S.done) || S.done.length !== steps.length) S = initState(steps.length);
+            return true;
+        }
+    } catch (e) {}
+    return false;
+}
+
+function resetState(keepSteps) {
+    if (!keepSteps) {
+        topic = '';
+        aiGenerated = false;
+        steps = normalizeSteps(defaultSteps());
+    }
+    steps.forEach(s => {
+        if (s.type === 'quiz') { s._qidx = 0; s._qlock = {}; s._scored = {}; }
+        if (s.type === 'survey') (s.fields || []).forEach(f => { f._val = ''; f._measured = false; });
+    });
+    S = initState(steps.length);
+    persist();
+}
+
+/* ---------------- 通用工具 ---------------- */
+function esc(v) {
+    return String(v == null ? '' : v).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+
+function toast(msg, type) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast show' + (type ? ' ' + type : '');
+    clearTimeout(el._t);
+    el._t = setTimeout(() => { el.className = 'toast'; }, 2400);
+}
+
+function unlocked(i) { return i === 0 || S.done[i - 1]; }
+function allDone() { return S.done.length > 0 && S.done.every(Boolean); }
+
+function calcTaskMax(step) {
+    switch (step.type) {
+        case 'quiz': return (step.subSteps || []).length;
+        case 'siteselect': return 2;
+        case 'survey': return (step.fields || []).filter(f => f.measure).length;
+        case 'design': return (step.groups || []).length;
+        default: return 0;
+    }
+}
+
+function addScore(n) {
+    if (!n) return;
+    S.score[S.step] += n;
+    document.getElementById('statScore').textContent = S.score.reduce((a, b) => a + b, 0);
+    persist();
+}
+
+function go(i) {
+    if (i < 0 || i >= steps.length) return;
+    if (!unlocked(i)) { toast('请先完成上一个任务', 'err'); return; }
+    S.step = i;
+    persist();
+    render();
+    document.getElementById('body').scrollTop = 0;
+}
+
+function prevStep() { go(S.step - 1); }
+
+function resetAll() {
+    if (!confirm('确定要清空本剧本的实训记录并重新开始吗？（剧本内容保留）')) return;
+    resetState(true);
+    render();
+    toast('已重置实训进度', 'ok');
+}
+
+/* ---------------- 成绩回传（接入能力画像） ---------------- */
+const DIM_BY_TYPE = { quiz: 'troubleshooting', survey: 'equipment_operation',
+                      siteselect: 'innovation', design: 'innovation', choice: 'teamwork' };
+function submitScenarioResult() {
+    if (S._reported) return;
+    S._reported = true;
+    persist();
+    try {
+        const details = steps.map((st, i) => {
+            const mx = calcTaskMax(st);
+            return { t: st.title || (TYPE_META[st.type] || {}).tag || st.type,
+                     dim: DIM_BY_TYPE[st.type] || '', got: S.score[i] || 0, max: mx };
+        }).filter(d => d.dim && d.max > 0);
+        fetch('/api/scenario-result', { method: 'POST', credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ scene_id: 'ai_custom',
+                scene_name: ((topic || 'AI 自定义剧情') + '（AI剧本）').slice(0, 60),
+                score: S.score.reduce((a, b) => a + b, 0),
+                score_max: steps.reduce((a, st) => a + calcTaskMax(st), 0), details }) }).catch(() => {});
+    } catch (e) {}
+}
+
+/* ---------------- 渲染骨架 ---------------- */
+function render() {
+    renderList();
+    renderBar();
+    const body = document.getElementById('body');
+    if (allDone()) {
+        body.innerHTML = reportHtml();
+        renderFoot();
+        submitScenarioResult();
+        return;
+    }
+    const step = steps[S.step];
+    body.innerHTML = taskCardHtml(step);
+    bindTask(step, body);
+    renderFoot();
+}
+
+function renderList() {
+    const box = document.getElementById('taskList');
+    box.innerHTML = steps.map((st, i) => {
+        const cls = ['titem'];
+        if (i === S.step && !allDone()) cls.push('active');
+        if (S.done[i]) cls.push('done');
+        if (!unlocked(i)) cls.push('locked');
+        const num = S.done[i] ? '&#10003;' : (i + 1);
+        return `<div class="${cls.join(' ')}" onclick="go(${i})">
+            <div class="tnum">${num}</div>
+            <div class="tinfo"><b>${esc(st.title || TYPE_META[st.type].tag)}</b><i>${TYPE_META[st.type].tag}</i></div>
+        </div>`;
+    }).join('');
+    document.getElementById('statDone').textContent = S.done.filter(Boolean).length + '/' + steps.length;
+    document.getElementById('statScore').textContent = S.score.reduce((a, b) => a + b, 0);
+}
+
+function renderBar() {
+    const doneCount = S.done.filter(Boolean).length;
+    document.getElementById('barFill').style.width = Math.round(doneCount / steps.length * 100) + '%';
+    document.getElementById('topTitle').textContent = topic || 'AI 自定义剧情';
+    document.getElementById('aiBadge').style.display = aiGenerated ? '' : 'none';
+    document.getElementById('topSub').textContent =
+        allDone() ? '实训已完成，查看实训报告' : '第 ' + (S.step + 1) + ' / ' + steps.length + ' 项任务 · ' + TYPE_META[steps[S.step].type].tag;
+}
+
+function footBtnText(step) {
+    switch (step.type) {
+        case 'text': return step.nextText || '下一步';
+        case 'quiz': {
+            const last = step._qidx >= step.subSteps.length - 1;
+            if (!step._qlock[step._qidx]) return step.subSteps[step._qidx].multi ? '提交本题' : '请先作答';
+            return last ? '完成任务' : '下一题';
+        }
+        case 'design': return (step._designDone ? '完成任务' : '提交方案');
+        case 'survey': return '提交勘察表';
+        case 'siteselect': return '完成任务';
+        case 'choice': return '提交选择';
+        default: return '下一步';
+    }
+}
+
+function renderFoot() {
+    const tip = document.getElementById('footTip');
+    const next = document.getElementById('btnNext');
+    const prev = document.getElementById('btnPrev');
+    if (allDone()) {
+        next.disabled = true;
+        next.textContent = '已完成';
+        prev.disabled = false;
+        tip.className = 'foot-tip';
+        tip.textContent = '🎉 全部任务完成，实训报告已生成';
+        return;
+    }
+    const step = steps[S.step];
+    next.disabled = false;
+    next.textContent = footBtnText(step);
+    prev.disabled = S.step === 0;
+    tip.className = 'foot-tip';
+    const tips = {
+        text: '阅读背景资料后继续',
+        choice: '选择后提交，答错不扣分但会揭示解析',
+        quiz: '每小题首次作答计分，答错也会揭示正确答案',
+        siteselect: '点击候选位置查看分析，确认后计 2 分',
+        survey: '🔍 字段可点击「测量」自动采集，每项 1 分',
+        design: '全部决策完成后提交，每组 1 分'
+    };
+    tip.textContent = tips[step.type] || '';
+}
+
+function reportHtml() {
+    const total = S.score.reduce((a, b) => a + b, 0);
+    const max = steps.reduce((a, st) => a + calcTaskMax(st), 0);
+    const rows = steps.map((st, i) => {
+        const m = calcTaskMax(st);
+        return `<div class="rep-row">
+            <span class="rn">${i + 1}.</span>
+            <span class="rt">${esc(st.title || TYPE_META[st.type].tag)}<span class="muted small">（${TYPE_META[st.type].tag}）</span></span>
+            <span class="rs">${m ? S.score[i] + ' / ' + m + ' 分' : '不计分'}</span>
+        </div>`;
+    }).join('');
+    return `<div class="card">
+        <div class="rep-head">
+            <h2>✨ ${esc(topic) || 'AI 自定义剧情'} · 实训报告</h2>
+            <p>共 ${steps.length} 项任务${aiGenerated ? ' · 剧本由 AI 生成' : ''}</p>
+            <div class="rep-score"><b>${total}</b><span>/ ${max} 分</span></div>
+        </div>
+        ${rows}
+        <div style="display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap">
+            <button class="btn" onclick="resetAll()">🔄 重新演练本剧本</button>
+            <button class="btn primary" onclick="showGenPanel()">✨ AI 生成新剧情</button>
+        </div>
+    </div>`;
+}
+
+/* ---------------- 各题型渲染 ---------------- */
+function taskCardHtml(step) {
+    const tag = `<span class="step-tag">${TYPE_META[step.type].tag}</span>`;
+    switch (step.type) {
+        case 'text':
+            return `<div class="card">${tag}<div class="task-desc">${step.content || ''}</div></div>`;
+        case 'choice':
+            return `<div class="card">${tag}
+                <div class="opt-intro">${step.intro || ''}</div>
+                <div class="opt-grid" id="optGrid">${(step.options || []).map((o, i) => optCardHtml(o, i, false)).join('')}</div>
+                <div class="feedback-bar" id="optFb"></div>
+            </div>`;
+        case 'quiz': {
+            const sub = step.subSteps[step._qidx] || { q: '', options: [] };
+            return `<div class="card">${tag}
+                <div class="quiz-no">研判题 ${step._qidx + 1} / ${step.subSteps.length}${sub.multi ? ' · 可多选' : ''}</div>
+                <div class="opt-intro">${sub.q || ''}${sub.multi ? '<span style="color:#ffd66b;font-size:12px">（多选题，选完点「提交本题」）</span>' : ''}</div>
+                <div class="opt-grid" id="optGrid">${(sub.options || []).map((o, i) => optCardHtml(o, i, !!sub.multi)).join('')}</div>
+                <div class="feedback-bar" id="optFb"></div>
+            </div>`;
+        }
+        case 'siteselect':
+            return `<div class="card">${tag}
+                <div class="opt-intro">${step.intro || ''}</div>
+                <div class="site-wrap">
+                    <div class="map-wrap">${cityMapSvg()}<div id="pinLayer"></div></div>
+                    <div class="site-side">
+                        <div class="side-label">候选位置（点击查看分析）</div>
+                        <div class="spot-grid" id="spotGrid">${(step.spots || []).map((s, i) => `<button class="spot-btn" data-idx="${i}">${esc(s.name)}</button>`).join('')}</div>
+                        <button class="spot-btn confirm" id="btnConfirmSite" style="display:none">✅ 确认选址（+2 分）</button>
+                        <div class="feedback-bar" id="optFb"></div>
+                    </div>
+                </div>
+            </div>`;
+        case 'survey': {
+            const tab = typeof step._tab === 'number' ? step._tab : (step._tab = 0);
+            return `<div class="card">${tag}
+                <div class="survey-head">
+                    <div class="opt-intro" style="margin-bottom:0">${step.intro || ''}</div>
+                    <button class="btn ghost sm" onclick="showPlan()">📋 工程规划</button>
+                </div>
+                <div class="survey-tabs">${step.tabs.map((t, i) => `<div class="survey-tab ${i === tab ? 'active' : ''}" data-tab="${i}">${i + 1} · ${esc(t)}</div>`).join('')}</div>
+                <div class="form-grid" id="surveyForm"></div>
+            </div>`;
+        }
+        case 'design':
+            return `<div class="card">${tag}
+                <div class="opt-intro">${step.intro || ''}</div>
+                ${(step.groups || []).map((g, gi) => `
+                    <div class="quiz-no">${gi + 1}. ${esc(g.q)}</div>
+                    <div class="opt-grid design-g" data-g="${gi}" style="margin-bottom:14px">${(g.options || []).map((o, oi) => optCardHtml(typeof o === 'string' ? { name: o } : o, oi, false)).join('')}</div>
+                `).join('')}
+                <div class="design-result" id="designResult"></div>
+            </div>`;
+        default:
+            return `<div class="card"><div class="task-desc">未知任务类型</div></div>`;
+    }
+}
+
+function optCardHtml(o, i, multi) {
+    return `<div class="opt-card ${multi ? 'multi' : ''}" data-idx="${i}">
+        <div class="opt-name">${o.name}</div>
+        ${o.sub ? `<div class="opt-sub">${o.sub}</div>` : ''}
+    </div>`;
+}
+
+/* ---- 抽象城市地图（任意主题通用） ---- */
+function cityMapSvg() {
+    const bld = (x, y, w, h, f) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="${f}" stroke="rgba(77,216,255,.18)" stroke-width="1"/>`;
+    return `<svg viewBox="0 0 460 300" preserveAspectRatio="xMidYMid slice">
+        <rect width="460" height="300" fill="#07131f"/>
+        ${bld(28, 24, 86, 52, 'rgba(56,86,110,.55)')}
+        ${bld(140, 20, 104, 58, 'rgba(46,74,96,.6)')}
+        ${bld(272, 26, 88, 50, 'rgba(56,86,110,.55)')}
+        ${bld(376, 22, 62, 54, 'rgba(46,74,96,.6)')}
+        ${bld(26, 118, 76, 48, 'rgba(46,74,96,.6)')}
+        ${bld(126, 112, 96, 54, 'rgba(56,86,110,.55)')}
+        ${bld(250, 116, 82, 50, 'rgba(46,74,96,.6)')}
+        ${bld(356, 114, 82, 52, 'rgba(56,86,110,.55)')}
+        ${bld(30, 214, 82, 52, 'rgba(56,86,110,.55)')}
+        ${bld(136, 208, 88, 58, 'rgba(46,74,96,.6)')}
+        ${bld(252, 214, 80, 52, 'rgba(56,86,110,.55)')}
+        <ellipse cx="392" cy="246" rx="46" ry="26" fill="rgba(74,222,128,.1)" stroke="rgba(74,222,128,.25)"/>
+        <text x="392" y="250" text-anchor="middle" font-size="10" fill="rgba(198,248,216,.75)">绿地公园</text>
+        <line x1="0" y1="96" x2="460" y2="96" stroke="rgba(230,243,255,.1)" stroke-width="12"/>
+        <line x1="0" y1="186" x2="460" y2="186" stroke="rgba(230,243,255,.1)" stroke-width="12"/>
+        <line x1="118" y1="0" x2="118" y2="300" stroke="rgba(230,243,255,.08)" stroke-width="10"/>
+        <line x1="242" y1="0" x2="242" y2="300" stroke="rgba(230,243,255,.08)" stroke-width="10"/>
+        <line x1="346" y1="0" x2="346" y2="300" stroke="rgba(230,243,255,.08)" stroke-width="10"/>
+    </svg>`;
+}
+
+/* ---- 事件绑定 ---- */
+let choiceSel = -1;
+let siteSel = -1;
+let siteConfirmed = false;
+let designSel = [];
+
+function bindTask(step, body) {
+    choiceSel = -1; siteSel = -1; siteConfirmed = false; designSel = [];
+    switch (step.type) {
+        case 'choice': {
+            body.querySelectorAll('#optGrid .opt-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    body.querySelectorAll('#optGrid .opt-card').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    choiceSel = parseInt(card.dataset.idx);
+                    const o = step.options[choiceSel];
+                    const fb = body.querySelector('#optFb');
+                    fb.className = 'feedback-bar show ' + (o.good ? 'good' : 'bad');
+                    fb.innerHTML = o.feedback || '';
+                });
+            });
+            break;
+        }
+        case 'quiz': {
+            const sub = step.subSteps[step._qidx];
+            const grid = body.querySelector('#optGrid');
+            grid.querySelectorAll('.opt-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    if (step._qlock[step._qidx]) return;
+                    const idx = parseInt(card.dataset.idx);
+                    if (sub.multi) {
+                        card.classList.toggle('selected');
+                        quizSel = quizSel.includes(idx) ? quizSel.filter(x => x !== idx) : quizSel.concat(idx);
+                    } else {
+                        quizSel = [idx];
+                        grid.querySelectorAll('.opt-card').forEach(c => c.classList.remove('selected'));
+                        card.classList.add('selected');
+                        revealQuiz(step, sub, body);
+                    }
+                });
+            });
+            if (step._qlock[step._qidx]) revealQuiz(step, sub, body);   // 恢复已判定小题
+            break;
+        }
+        case 'siteselect': {
+            const pinLayer = body.querySelector('#pinLayer');
+            const fb = body.querySelector('#optFb');
+            const confirmBtn = body.querySelector('#btnConfirmSite');
+            body.querySelectorAll('#spotGrid .spot-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const idx = parseInt(btn.dataset.idx);
+                    siteSel = idx;
+                    body.querySelectorAll('#spotGrid .spot-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const s = step.spots[idx];
+                    pinLayer.innerHTML = `<div class="map-pin" style="left:${s.x}%;top:${s.y}%">📍</div>`;
+                    fb.className = 'feedback-bar show ' + (s.ok ? 'good' : 'bad');
+                    fb.innerHTML = s.feedback || '';
+                    confirmBtn.style.display = s.ok ? '' : 'none';
+                });
+            });
+            confirmBtn.addEventListener('click', () => {
+                if (siteConfirmed) return;
+                siteConfirmed = true;
+                confirmBtn.classList.add('ok-done');
+                confirmBtn.textContent = '✅ 已确认选址';
+                const s = step.spots[siteSel];
+                if (s.ok && !step._siteScored) { addScore(2); step._siteScored = true; }
+                fb.innerHTML += `<div style="margin-top:6px;color:#5eff9b">已确认！点击「完成任务」继续。</div>`;
+            });
+            break;
+        }
+        case 'survey': {
+            renderSurveyTab(step, body);
+            body.querySelectorAll('.survey-tab').forEach(t => {
+                t.addEventListener('click', () => {
+                    collectSurveyVals(body, step);
+                    step._tab = parseInt(t.dataset.tab);
+                    body.querySelectorAll('.survey-tab').forEach(x => x.classList.remove('active'));
+                    t.classList.add('active');
+                    renderSurveyTab(step, body);
+                });
+            });
+            break;
+        }
+        case 'design': {
+            designSel = new Array((step.groups || []).length).fill(-1);
+            if (step._designSel) designSel = step._designSel.slice();
+            body.querySelectorAll('.design-g').forEach(grid => {
+                const gi = parseInt(grid.dataset.g);
+                grid.querySelectorAll('.opt-card').forEach(card => {
+                    card.addEventListener('click', () => {
+                        if (step._designDone) return;
+                        grid.querySelectorAll('.opt-card').forEach(c => c.classList.remove('selected'));
+                        card.classList.add('selected');
+                        designSel[gi] = parseInt(card.dataset.idx);
+                        step._designSel = designSel.slice();
+                    });
+                });
+                // 恢复已选
+                if (designSel[gi] >= 0) grid.querySelectorAll('.opt-card')[designSel[gi]].classList.add('selected');
+            });
+            if (step._designDone) revealDesign(step, body, true);
+            break;
+        }
+    }
+}
+
+let quizSel = [];
+
+function quizRequired(sub) {
+    if (sub.multi) return Array.isArray(sub.required) ? sub.required : [sub.required];
+    return [sub.correct];
+}
+
+function revealQuiz(step, sub, body) {
+    const req = quizRequired(sub);
+    const ok = sub.multi
+        ? (quizSel.length === req.length && req.every(i => quizSel.includes(i)))
+        : quizSel[0] === sub.correct;
+    const grid = body.querySelector('#optGrid');
+    grid.classList.add('revealed');
+    grid.querySelectorAll('.opt-card').forEach(c => {
+        const i = parseInt(c.dataset.idx);
+        if (req.includes(i)) c.classList.add('right');
+        else if (quizSel.includes(i)) c.classList.add('wrong');
+    });
+    const fb = body.querySelector('#optFb');
+    fb.className = 'feedback-bar show ' + (ok ? 'good' : 'bad');
+    fb.innerHTML = ok
+        ? (sub.multi ? '✓ <b>全部选对</b>，点击按钮继续' : '✓ <b>回答正确</b>，点击按钮继续')
+        : (sub.multi ? '✗ <b>选择不全或选入了无关项</b>，正确项已标绿，请阅读解析后继续'
+                     : '✗ <b>回答不正确</b>，正确答案已标绿，请阅读解析后继续');
+    if (!step._scored[step._qidx]) { if (ok) addScore(1); step._scored[step._qidx] = true; }
+    step._qlock[step._qidx] = true;
+    document.getElementById('btnNext').textContent = footBtnText(step);
+    persist();
+}
+
+/* ---- 勘察表 ---- */
+function renderSurveyTab(step, body) {
+    const tab = typeof step._tab === 'number' ? step._tab : 0;
+    const grid = body.querySelector('#surveyForm');
+    if (!grid) return;
+    grid.innerHTML = (step.fields || []).filter(f => (f.tab || 0) === tab).map(f => {
+        const val = f._val || '';
+        if (f.type === 'select') {
+            return `<div class="form-item"><label>${esc(f.key)}</label><select data-key="${esc(f.key)}">${(f.opts || []).map(o => `<option ${o === val ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select></div>`;
+        }
+        const mBtn = f.measure ? `<button class="btn sm" data-key="${esc(f.key)}">🔍 测量</button>` : '';
+        return `<div class="form-item"><label>${esc(f.key)}${f.measure ? ' 🔍' : ''}</label><div class="form-row"><input data-key="${esc(f.key)}" placeholder="${esc(f.ph || '')}" value="${esc(val)}">${mBtn}</div></div>`;
+    }).join('');
+    grid.querySelectorAll('input,select').forEach(el => {
+        const handler = () => {
+            const f = step.fields.find(x => x.key === el.dataset.key);
+            if (f) f._val = el.value;
+        };
+        el.addEventListener('change', handler);
+        el.addEventListener('input', handler);
+    });
+    grid.querySelectorAll('.form-row .btn').forEach(btn => btn.addEventListener('click', () => doMeasure(step, btn, body)));
+}
+
+function collectSurveyVals(body, step) {
+    (body.querySelectorAll('#surveyForm input') || []).forEach(inp => {
+        const f = (step.fields || []).find(x => x.key === inp.dataset.key);
+        if (f) f._val = inp.value;
+    });
+    (body.querySelectorAll('#surveyForm select') || []).forEach(sel => {
+        const f = (step.fields || []).find(x => x.key === sel.dataset.key);
+        if (f) f._val = sel.value;
+    });
+}
+
+function doMeasure(step, btn, body) {
+    const f = (step.fields || []).find(x => x.key === btn.dataset.key);
+    if (!f || !f.measure) return;
+    const pop = document.createElement('div');
+    pop.className = 'device-pop';
+    pop.innerHTML = `<div class="dev-icon">${f.measure.icon || '📟'}</div><div class="dev-name">${esc(f.measure.name || '测量设备')} · 测量中</div><div class="scan-bar"><i></i></div><div class="dev-val">正在采集数据…</div>`;
+    document.body.appendChild(pop);
+    btn.disabled = true;
+    setTimeout(() => {
+        pop.querySelector('.dev-val').textContent = f.measure.value;
+        const input = body.querySelector(`#surveyForm input[data-key="${CSS.escape(f.key)}"]`);
+        if (input) { input.value = f.measure.value; input.classList.add('filled-auto'); }
+        f._val = f.measure.value;
+        if (!f._measured) { f._measured = true; addScore(1); }
+        setTimeout(() => { pop.remove(); btn.disabled = false; btn.textContent = '✅ 已测'; }, 1000);
+    }, 1400);
+}
+
+function showPlan() {
+    const step = steps[S.step];
+    if (!step || step.type !== 'survey') return;
+    const modal = document.createElement('div');
+    modal.className = 'plan-modal';
+    modal.innerHTML = `<div class="plan-card"><h4>📋 工程规划（参考资料）</h4>
+        ${(step.plan || []).map((rows, i) => `<div style="color:#4dd8ff;font-size:12px;margin:10px 0 4px">—— ${esc(step.tabs[i] || ('参考' + (i + 1)))} ——</div>` +
+            (rows || []).map(r => `<div class="plan-row"><span class="k">${esc(r[0])}</span><span class="v">${r[1]}</span></div>`).join('')).join('')}
+        <div class="plan-close"><button class="btn sm" onclick="this.closest('.plan-modal').remove()">关闭</button></div></div>`;
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+    document.body.appendChild(modal);
+}
+
+/* ---- 方案设计 ---- */
+function revealDesign(step, body, silent) {
+    let got = 0;
+    const rows = (step.groups || []).map((g, gi) => {
+        const pick = o => (typeof o === 'string' ? o : (o && o.name) || '');
+        const ok = designSel[gi] === g.correct;
+        if (ok) got++;
+        return `<div>· <b>${esc(g.q)}</b>：${esc(pick(g.options[designSel[gi]]))} ${ok ? '✅' : '❌（建议：' + esc(pick(g.options[g.correct])) + '）'}</div>`;
+    }).join('');
+    const res = body.querySelector('#designResult');
+    res.innerHTML = rows + `<div style="margin-top:8px;color:#5eff9b">🎯 ${step.result || ''}</div>`;
+    res.classList.add('show');
+    body.querySelectorAll('.design-g').forEach(g => g.classList.add('revealed'));
+    if (!silent && !step._designScored) { addScore(got); step._designScored = true; }
+    step._designDone = true;
+    document.getElementById('btnNext').textContent = footBtnText(step);
+    persist();
+}
+
+/* ---------------- 提交 / 完成 ---------------- */
+function submitTask() {
+    const step = steps[S.step];
+    if (!step || allDone()) return;
+    const body = document.getElementById('body');
+    switch (step.type) {
+        case 'text':
+            completeTask();
+            break;
+        case 'choice':
+            if (choiceSel < 0) { toast('请先做出选择', 'err'); return; }
+            completeTask();
+            break;
+        case 'quiz': {
+            const sub = step.subSteps[step._qidx];
+            if (!step._qlock[step._qidx]) {
+                if (sub.multi) {
+                    if (!quizSel.length) { toast('请先选择后再提交', 'err'); return; }
+                    revealQuiz(step, sub, body);
+                    return;
+                }
+                if (quizSel.length !== 1) { toast('请先作答', 'err'); return; }
+                revealQuiz(step, sub, body);
+                return;
+            }
+            if (step._qidx < step.subSteps.length - 1) {
+                step._qidx++;
+                quizSel = [];
+                body.innerHTML = taskCardHtml(step);
+                bindTask(step, body);
+                document.getElementById('btnNext').textContent = footBtnText(step);
+                body.scrollTop = 0;
+                return;
+            }
+            completeTask();
+            break;
+        }
+        case 'siteselect':
+            if (!siteConfirmed) { toast('请查看选址分析并确认站址', 'err'); return; }
+            completeTask();
+            break;
+        case 'survey': {
+            collectSurveyVals(body, step);
+            const unfilled = (step.fields || []).filter(f => f.type === 'input' && !(f._val || '').trim()).length;
+            if (unfilled > 0 && !confirm(`还有 ${unfilled} 项未填写（可通过「工程规划」参考或点击「测量」获得），确认跳过继续吗？`)) return;
+            completeTask();
+            break;
+        }
+        case 'design':
+            if (!step._designDone) {
+                if (designSel.some(v => v < 0)) { toast(`请完成全部 ${step.groups.length} 项决策选择`, 'err'); return; }
+                revealDesign(step, body);
+                return;
+            }
+            completeTask();
+            break;
+        default:
+            completeTask();
+    }
+}
+
+function completeTask() {
+    S.done[S.step] = true;
+    persist();
+    if (S.step >= steps.length - 1) {
+        render();
+        toast('🎉 实训全部完成！', 'ok');
+    } else {
+        go(S.step + 1);
+        toast('任务完成，已解锁下一项', 'ok');
+    }
+}
+
+/* ---------------- AI 生成 ---------------- */
+let genTimer = null;
+
+function showGenPanel() {
+    document.getElementById('genMask').classList.add('show');
+    document.getElementById('genForm').style.display = 'block';
+    document.getElementById('genLoading').classList.remove('show');
+    document.getElementById('genBtn').disabled = false;
+}
+
+function hideGenPanel() { document.getElementById('genMask').classList.remove('show'); }
+
+function startGenLoading() {
+    const lines = [
+        '正在梳理「接报 → 研判 → 现场 → 处置 → 验收」工程全流程…',
+        '正在编写告警研判与诊断推理题目…',
+        '正在设计仪表实测数据与判定门限…',
+        '正在布置误判陷阱与安全红线考点…',
+        '正在生成处置方案、验收标准与复盘总结…'
+    ];
+    let sec = 0, li = 0;
+    document.getElementById('genLoadSub').textContent = lines[0];
+    document.getElementById('genLoadSec').textContent = '0';
+    stopGenLoading();
+    genTimer = setInterval(() => {
+        sec++;
+        document.getElementById('genLoadSec').textContent = sec;
+        if (sec % 8 === 0) { li = (li + 1) % lines.length; document.getElementById('genLoadSub').textContent = lines[li]; }
+    }, 1000);
+}
+
+function stopGenLoading() { if (genTimer) { clearInterval(genTimer); genTimer = null; } }
+
+function backToGenForm() {
+    stopGenLoading();
+    document.getElementById('genForm').style.display = 'block';
+    document.getElementById('genLoading').classList.remove('show');
+    document.getElementById('genBtn').disabled = false;
+}
+
+async function generateScenario() {
+    const t = document.getElementById('genTopic').value.trim();
+    const q = document.getElementById('genQuestion').value.trim();
+    if (!t) { toast('请输入场景主题', 'err'); return; }
+
+    document.getElementById('genForm').style.display = 'none';
+    document.getElementById('genLoading').classList.add('show');
+    document.getElementById('genBtn').disabled = true;
+    startGenLoading();
+
+    // 前端 500 秒超时保护（略大于后端 480 秒墙钟）
+    const ctrl = new AbortController();
+    const timeoutId = setTimeout(() => ctrl.abort(), 500000);
+    try {
+        const resp = await fetch('/api/scenario/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ topic: t, question: q }),
+            signal: ctrl.signal
+        });
+        clearTimeout(timeoutId);
+        const data = await resp.json();
+        if (!resp.ok) {
+            toast('生成失败：' + (data.error || '未知错误'), 'err');
+            backToGenForm();
+            return;
+        }
+        stopGenLoading();
+        hideGenPanel();
+        topic = t;
+        aiGenerated = true;
+        steps = normalizeSteps(data.steps || []);
+        S = initState(steps.length);
+        persist();
+        render();
+        toast(`✨ AI 剧情已生成：共 ${steps.length} 项任务`, 'ok');
+    } catch (e) {
+        clearTimeout(timeoutId);
+        const aborted = e.name === 'AbortError';
+        toast(aborted ? '生成超时（已等待约8分钟），请重试一次' : '请求失败：' + e.message, 'err');
+        backToGenForm();
+    }
+}
+
+document.getElementById('genMask').addEventListener('click', function (ev) {
+    if (ev.target === this && !document.getElementById('genLoading').classList.contains('show')) hideGenPanel();
+});
+
+/* ---------------- 时钟 ---------------- */
+function updateClock() {
+    const now = new Date();
+    const p = n => String(n).padStart(2, '0');
+    document.getElementById('clock').textContent =
+        `${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())} ${p(now.getHours())}:${p(now.getMinutes())}:${p(now.getSeconds())}`;
+}
+
+/* ---------------- 初始化 ---------------- */
+if (!restore()) resetState(false);
+render();
+updateClock();
+setInterval(updateClock, 1000);
+</script>
+</body>
+</html>

@@ -185,7 +185,7 @@
 
         .mode-selector {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             padding: 12px 24px;
             background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.4));
             backdrop-filter: blur(8px);
@@ -193,37 +193,68 @@
         }
 
         .mode-btn {
-            padding: 8px 20px;
-            border: 2px solid rgba(102,126,234,0.25);
-            background: rgba(255,255,255,0.7);
-            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 8px 18px;
+            border: 1.5px solid rgba(102,126,234,0.22);
+            background: rgba(255,255,255,0.65);
+            border-radius: 12px;
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.25s;
             color: #4a5a8a;
+        }
+        .mode-btn .mb-ic {
+            font-size: 18px;
+            filter: grayscale(0.35);
+            transition: filter 0.25s, transform 0.25s;
+        }
+        .mode-btn .mb-tx { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.25; }
+        .mode-btn .mb-tx i {
+            font-style: normal;
+            font-size: 11px;
+            font-weight: 400;
+            color: #8a93b8;
+            transition: color 0.25s;
         }
 
         .mode-btn:hover {
             border-color: #667eea;
-            color: #667eea;
-            background: rgba(255,255,255,0.9);
+            color: #4a5a8a;
+            background: rgba(255,255,255,0.92);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(102,126,234,0.18);
         }
 
         .mode-btn.active {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-color: transparent;
             color: white;
+            box-shadow: 0 4px 16px rgba(102,126,234,0.35);
         }
+        .mode-btn.active .mb-ic { filter: none; transform: scale(1.12); }
+        .mode-btn.active .mb-tx i { color: rgba(255,255,255,0.78); }
 
         .messages-area {
             flex: 1;
             overflow-y: auto;
             padding: 24px;
-            background: linear-gradient(180deg, #f0f4ff 0%, #e8edff 50%, #f0f4ff 100%);
+            background:
+                radial-gradient(circle 260px at 88% 102%, rgba(91,141,255,0.15), transparent 70%),
+                radial-gradient(circle 230px at 5% -6%, rgba(168,85,247,0.11), transparent 70%),
+                radial-gradient(circle 190px at 52% 115%, rgba(0,200,255,0.09), transparent 70%),
+                linear-gradient(180deg, #f0f4ff 0%, #e8edff 50%, #f0f4ff 100%);
+            animation: auroraDrift 16s ease-in-out infinite alternate;
             position: relative;
         }
-        /* 聊天区背景装饰：淡淡的网格 + 光圈 */
+        @keyframes auroraDrift {
+            0%   { background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%; }
+            50%  { background-position: -3% -4%, 4% 3%, -2% -5%, 0% 0%; }
+            100% { background-position: 2% -6%, -3% 5%, 3% -3%, 0% 0%; }
+        }
+        /* 聊天区背景装饰：网格（极光光斑在容器背景上动画） */
         .messages-area::before {
             content: '';
             position: absolute;
@@ -234,14 +265,14 @@
             background-size: 32px 32px;
             pointer-events: none;
         }
-        .messages-area::after {
-            content: '';
-            position: absolute;
-            width: 300px; height: 300px;
-            background: radial-gradient(circle, rgba(91,141,255,0.12), transparent 70%);
-            bottom: -100px; right: -80px;
-            pointer-events: none;
+        /* 聊天区滚动条 */
+        .messages-area::-webkit-scrollbar { width: 8px; }
+        .messages-area::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, rgba(102,126,234,0.35), rgba(118,75,162,0.35));
+            border-radius: 8px;
         }
+        .messages-area::-webkit-scrollbar-thumb:hover { background: rgba(102,126,234,0.55); }
+        .messages-area::-webkit-scrollbar-track { background: transparent; }
 
         .message {
             margin-bottom: 24px;
@@ -355,6 +386,94 @@
             margin-bottom: 8px;
             user-select: none;
         }
+
+        /* ================= 欢迎区 Hero ================= */
+        .chat-welcome {
+            max-width: 720px;
+            margin: 28px auto 8px;
+            text-align: center;
+            animation: fadeInUp 0.45s ease;
+        }
+        .cw-hero {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 92px; height: 92px;
+            margin-bottom: 18px;
+        }
+        .cw-hero img {
+            width: 84px; height: 84px;
+            object-fit: contain;
+            border-radius: 50%;
+            position: relative; z-index: 2;
+            -webkit-mask-image: radial-gradient(circle, #000 56%, rgba(0,0,0,.55) 66%, transparent 74%);
+            mask-image: radial-gradient(circle, #000 56%, rgba(0,0,0,.55) 66%, transparent 74%);
+            mix-blend-mode: multiply;
+            animation: cwFloat 4.5s ease-in-out infinite;
+        }
+        .cw-hero::before {
+            content: '';
+            position: absolute; inset: 0;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, #667eea, #00c8ff, #a855f7, #667eea);
+            animation: cwSpin 6s linear infinite;
+            opacity: 0.55;
+            filter: blur(1px);
+        }
+        .cw-hero::after {
+            content: '';
+            position: absolute; inset: 7px;
+            border-radius: 50%;
+            background: linear-gradient(180deg, #f0f4ff, #e8edff);
+        }
+        @keyframes cwSpin { to { transform: rotate(360deg); } }
+        @keyframes cwFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+        .cw-title { font-size: 22px; font-weight: 800; color: #1a1a2e; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .cw-title b {
+            background: linear-gradient(90deg, #667eea, #00c8ff);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .cw-sub { font-size: 13.5px; color: #6b7699; line-height: 1.8; margin-bottom: 22px; }
+        .cw-chips {
+            display: flex; flex-wrap: wrap; justify-content: center;
+            gap: 10px; max-width: 560px; margin: 0 auto;
+        }
+        .cw-chip {
+            display: inline-flex; align-items: center; gap: 7px;
+            padding: 9px 16px;
+            background: rgba(255,255,255,0.85);
+            border: 1.5px solid rgba(102,126,234,0.25);
+            border-radius: 14px;
+            font-size: 13px; font-weight: 500; color: #3d4a75;
+            cursor: pointer; transition: all 0.22s;
+            backdrop-filter: blur(6px);
+            box-shadow: 0 2px 6px rgba(91,141,255,0.06);
+        }
+        .cw-chip .ci { font-size: 15px; }
+        .cw-chip:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: transparent; color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(102,126,234,0.35);
+        }
+        .cw-mode-hint {
+            margin-top: 20px; font-size: 12px; color: #8a93b8;
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 6px 14px; border-radius: 20px;
+            background: rgba(255,255,255,0.6); border: 1px dashed rgba(102,126,234,0.3);
+        }
+
+        /* 消息时间戳 */
+        .msg-time {
+            font-size: 11px;
+            color: #9aa3c0;
+            margin-top: 6px;
+            user-select: none;
+        }
+        .message.user .msg-time { text-align: right; }
 
         .message-actions {
             display: flex;
@@ -511,6 +630,21 @@
 
         .typing-dots span:nth-child(3) {
             animation-delay: 0.4s;
+        }
+
+        .typing-label {
+            margin-left: 10px;
+            font-size: 12.5px;
+            font-weight: 600;
+            background: linear-gradient(90deg, #667eea 25%, #00c8ff 50%, #667eea 75%);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmerText 1.8s linear infinite;
+        }
+        @keyframes shimmerText {
+            to { background-position: -200% 0; }
         }
 
         @keyframes bounce {
@@ -712,18 +846,19 @@
             background: #f5f5f5;
         }
 
-        /* ====================== 会话侧边栏（豆包风格） ====================== */
+        /* ====================== 会话侧边栏（停靠在返回按钮下方） ====================== */
         .conv-sidebar {
             position: fixed;
-            left: 0; top: 0; bottom: 0;
-            width: 270px;
+            left: 12px; top: 118px; bottom: 18px;
+            width: 260px;
             background: rgba(10, 26, 74, 0.96);
             backdrop-filter: blur(16px);
-            border-right: 1px solid rgba(0, 200, 255, 0.25);
+            border: 1px solid rgba(0, 200, 255, 0.25);
+            border-radius: 16px;
             box-shadow: 8px 0 40px rgba(0, 0, 0, 0.35);
             display: flex;
             flex-direction: column;
-            transform: translateX(-100%);
+            transform: translateX(-120%);
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 900;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
@@ -1122,26 +1257,6 @@
             line-height: 1.8;
         }
 
-        /* 收起后的悬浮展开按钮 */
-        .conv-fab {
-            position: fixed;
-            left: 14px; top: 50%;
-            transform: translateY(-50%) translateX(-60px);
-            width: 44px; height: 44px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border: 1px solid rgba(0, 200, 255, 0.4);
-            color: #fff;
-            font-size: 18px;
-            cursor: pointer;
-            z-index: 890;
-            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.5);
-            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            display: flex; align-items: center; justify-content: center;
-        }
-        .conv-fab.show { transform: translateY(-50%) translateX(0); }
-        .conv-fab:hover { box-shadow: 0 6px 28px rgba(102, 126, 234, 0.7); }
-
         /* ============ 移动端功能导航（汉堡菜单） ============ */
         .mobile-menu-btn { display: none; }
         .mmenu-close { display: none; }
@@ -1196,9 +1311,9 @@
             body.sidebar-open .chat-container { margin-left: auto !important; margin-right: auto; }
         }
         @media (max-width: 768px) {
-            .conv-sidebar { width: 82vw; }
-            .conv-fab { left: 8px; top: 76px; transform: translateY(0) translateX(-60px); width: 38px; height: 38px; }
-            .conv-fab.show { transform: translateY(0) translateX(0); }
+            .conv-sidebar { width: 82vw; left: 8px; top: 112px; bottom: 12px; border-radius: 14px; }
+            /* 手机端侧边栏为覆盖式，展开时聊天容器不推挤 */
+            body.sidebar-open .chat-container { margin-left: 0 !important; margin-right: 0; }
         }
         /* ============ 移动端补充适配（不改动桌面端外观） ============ */
         @media (max-width: 768px) {
@@ -1306,7 +1421,6 @@
             </div>
         </div>
     </div>
-    <button class="conv-fab" id="convFab" onclick="toggleSidebar()" title="对话历史">💬</button>
 
     <!-- 知识库课件在线预览 -->
     <div class="kb-preview-overlay" id="kbPreviewOverlay">
@@ -1745,6 +1859,10 @@
             <div class="hx-dirtitle" style="padding:13px 15px 9px"><span class="hx-dot" style="background:#FFA24B;box-shadow:0 0 8px #FFA24B"></span>老师共享文件<span class="hx-more"><a href="/ppt-resources-page" target="_blank" title="打开课件中心">更多 ›</a></span></div>
             <div id="hxTeacherFiles" style="padding:0 6px 10px;display:flex;flex-direction:column;gap:6px"><div class="hx-nitem">加载中…</div></div>
           </div>
+          <div class="hx-glass" style="margin-top:14px">
+            <div class="hx-dirtitle" style="padding:13px 15px 9px"><span class="hx-dot" style="background:#7C5CFF;box-shadow:0 0 8px #9D7CFF"></span>对话历史<span class="hx-more"><a href="javascript:void(0)" onclick="goChatView()" title="进入 AI 助教查看全部">进入 AI 助教 ›</a></span></div>
+            <div id="hxHomeConvs" style="padding:0 6px 10px;display:flex;flex-direction:column;gap:6px"><div class="hx-nitem">加载中…</div></div>
+          </div>
         </aside>
       </div>
 
@@ -1782,20 +1900,18 @@
 
         <div class="mode-selector">
             <button class="mode-btn active" data-mode="fast" onclick="switchMode('fast')">
-                ⚡ 快速回答
+                <span class="mb-ic">⚡</span><span class="mb-tx">快速回答<i>秒级响应 · 日常答疑</i></span>
             </button>
             <button class="mode-btn" data-mode="deep" onclick="switchMode('deep')">
-                🧠 深度思考
+                <span class="mb-ic">🧠</span><span class="mb-tx">深度思考<i>更严谨 · 疑难题目解析</i></span>
+            </button>
+            <button class="mode-btn" onclick="toggleSidebar()" title="展开 / 收起左侧对话历史">
+                <span class="mb-ic">🕘</span><span class="mb-tx">对话历史<i>展开 / 收起侧栏</i></span>
             </button>
         </div>
 
         <div class="messages-area" id="messagesArea">
-            <div class="message assistant">
-                <div class="avatar"><img src="/static/bot_new.jpg" alt="AI"></div>
-                <div class="message-content">
-                    你好！我是灵智尚人，很高兴为您服务！您可以选择快速回答或深度思考模式来问我问题。
-                </div>
-            </div>
+            <div class="chat-welcome" id="chatWelcome"></div>
         </div>
 
         <div class="input-area">
@@ -1846,6 +1962,8 @@
                     updateHeaderTitle();
                     updateUserAvatar();
                     loadNotificationCount();
+                    // 刷新欢迎区个性化问候（尚未开始对话时才刷新）
+                    showWelcome();
                 }
             } catch (error) {
                 console.error('获取用户信息失败:', error);
@@ -2303,12 +2421,16 @@
                 if (chat) chat.style.display = 'block';
                 document.body.style.overflow = 'hidden';
                 hxCloseDrawer();
+                // 进入 AI 助教：会话侧边栏默认展开（不记忆偏好，返回主页时自动收起）
+                toggleSidebarForce(true, false);
                 return;
             }
             if (chat) chat.style.display = 'none';
             if (home) home.style.display = 'block';
             const ck = tabEl.dataset.center || '';
             if (ck) hxRenderCenter(ck);
+            // 离开 AI 助教：收起会话侧边栏，还主页一个干净视野
+            toggleSidebarForce(false, false);
             hxSetMode(ck ? 'center' : 'home');
             hxSyncTab(ck);
             document.body.style.overflow = 'auto';
@@ -2789,9 +2911,29 @@
             } catch (e) { console.error('加载会话列表失败', e); }
         }
 
+        /* ===== 主页右栏「对话历史」卡片 ===== */
+        function renderHomeConvs() {
+            const box = document.getElementById('hxHomeConvs');
+            if (!box) return;
+            if (!conversations.length) {
+                box.innerHTML = '<div class="hx-nitem" style="cursor:default;opacity:.6">暂无历史对话，去 AI 助教聊一句吧 ✨</div>';
+                return;
+            }
+            box.innerHTML = conversations.slice(0, 6).map(c => `
+                <div class="hx-nitem" onclick="goChatView();openConversation('${c.id}')">
+                    <span style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">💬 ${escapeTitle(c.title)}</span>
+                    <time>${timeAgo(c.updated_at)} · ${c.message_count}条</time>
+                </div>`).join('');
+        }
+        function goChatView() {
+            const tab = document.querySelector('.hx-tab[data-view="chat"]');
+            if (tab) hxTab(tab);
+        }
+
         function renderConvList() {
             const list = document.getElementById('convList');
             document.getElementById('convCount').textContent = conversations.length ? conversations.length + ' 条' : '';
+            renderHomeConvs();
             if (!conversations.length) {
                 list.innerHTML = '<div class="conv-empty">暂无历史对话<br>发一条消息开始吧 ✨</div>';
                 return;
@@ -2824,16 +2966,42 @@
             });
         }
 
+        /* ===== 欢迎区 Hero + 快捷提问 ===== */
+        const QUICK_PROMPTS = [
+            { ic: '📡', t: '讲解 5G NR 空口关键技术' },
+            { ic: '📶', t: 'RSRP、RSRQ、SINR 有什么区别？' },
+            { ic: '🛠', t: '5G 单站验证的完整流程是什么？' },
+            { ic: '🧪', t: '帮我出 3 道通信原理练习题' },
+            { ic: '🗺', t: '什么叫网格优化？怎么做路测？' },
+            { ic: '💼', t: '通信工程专业的就业方向有哪些？' },
+        ];
+        function chatWelcomeHtml() {
+            const name = (currentUser && currentUser.student_name) ? currentUser.student_name : '';
+            const chips = QUICK_PROMPTS.map(p =>
+                `<button class="cw-chip" data-q="${p.t}" onclick="askQuick(this)"><span class="ci">${p.ic}</span>${p.t}</button>`).join('');
+            return `
+                <div class="cw-hero"><img src="/static/bot_new.jpg" alt="AI"></div>
+                <div class="cw-title">你好${name ? '，<b>' + escapeHtml(name) + '</b>' : '<b>同学</b>'}，我是灵智尚人</div>
+                <div class="cw-sub">5G 通信工程学习助手 · 支持拍照识题、知识库问答、错题分析<br>点下方卡片直接开聊，或在输入框描述你的问题</div>
+                <div class="cw-chips">${chips}</div>
+                <div class="cw-mode-hint">💡 当前模式：<b id="cwModeName">快速回答</b> · 可在顶部切换深度思考</div>`;
+        }
+        function renderWelcome() {
+            messagesArea.innerHTML = `<div class="chat-welcome" id="chatWelcome">${chatWelcomeHtml()}</div>`;
+        }
+        function showWelcome() {
+            if (!messagesArea.querySelector('.message')) renderWelcome();
+        }
+        function askQuick(btn) {
+            if (isGenerating) return;
+            userInput.value = btn.dataset.q || btn.textContent.trim();
+            sendMessage();
+        }
+
         function resetChatUI() {
             chatHistory = [];
             conversationHistory = [];
-            messagesArea.innerHTML = `
-                <div class="message assistant">
-                    <div class="avatar"><img src="/static/bot_new.jpg" alt="AI"></div>
-                    <div class="message-content">
-                        你好！我是灵智尚人，很高兴为您服务！您可以选择快速回答或深度思考模式来问我问题。
-                    </div>
-                </div>`;
+            renderWelcome();
         }
 
         async function newConversation() {
@@ -2858,7 +3026,7 @@
                 chatHistory = [];
                 conversationHistory = [];
                 (d.messages || []).forEach(m => {
-                    addMessage(m.content, m.isUser, m.image, false);
+                    addMessage(m.content, m.isUser, m.image, false, m.timestamp);
                     chatHistory.push({ content: m.content, isUser: m.isUser, image: m.image, timestamp: m.timestamp });
                     conversationHistory.push({ role: m.isUser ? 'user' : 'assistant', content: m.content });
                 });
@@ -2919,18 +3087,17 @@
             }).then(r => { if (r.ok) loadConversations(); }).catch(() => {});
         }
 
-        function toggleSidebarForce(open) {
+        function toggleSidebarForce(open, persist) {
             const sb = document.getElementById('convSidebar');
-            const fab = document.getElementById('convFab');
             sb.classList.toggle('open', open);
             document.body.classList.toggle('sidebar-open', open);
-            fab.classList.toggle('show', !open);
-            localStorage.setItem('lzr_sidebar_open', open ? '1' : '0');
+            // 仅用户手动操作才记忆偏好；视图切换的自动开合不写入
+            if (persist) localStorage.setItem('lzr_sidebar_open', open ? '1' : '0');
             if (open) loadKbPpts(); // 侧边栏打开时懒加载知识库课件
         }
         function toggleSidebar() {
             const sb = document.getElementById('convSidebar');
-            toggleSidebarForce(!sb.classList.contains('open'));
+            toggleSidebarForce(!sb.classList.contains('open'), true);
         }
 
         /* ===== 知识库课件（侧边栏底部） ===== */
@@ -3113,11 +3280,8 @@
         }
 
         async function initSidebar() {
-            const prefer = localStorage.getItem('lzr_sidebar_open');
-            // 默认收起：会话侧边栏打开时会盖住左侧功能导航（270px fixed 层），
-            // 只有点过浮动按钮（记住偏好=1）才自动展开
-            const wantOpen = prefer === '1';
-            toggleSidebarForce(wantOpen);
+            // 侧边栏改为「进入 AI 助教视图时默认展开」的策略，启动时保持收起
+            toggleSidebarForce(false, false);
             await migrateOldHistory();
             // 恢复上次会话
             if (currentConvId) {
@@ -3141,6 +3305,8 @@
                 btn.classList.remove('active');
             });
             document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+            const hint = document.getElementById('cwModeName');
+            if (hint) hint.textContent = mode === 'deep' ? '深度思考' : '快速回答';
         }
 
         imageUpload.addEventListener('change', function(e) {
@@ -3304,7 +3470,7 @@
             contentDiv.appendChild(actionsDiv);
         }
 
-        function addMessage(content, isUser, imageBase64 = null, saveToHistory = true) {
+        function addMessage(content, isUser, imageBase64 = null, saveToHistory = true, ts = null) {
             // 保存到聊天历史（可以选择不立即保存）
             if (saveToHistory) {
                 // 确保图片数据完整（包含data URL前缀）
@@ -3388,13 +3554,27 @@
             if (!isUser && content) {
                 appendMessageActions(contentDiv, content);
             }
-            
+
+            // 时间戳（流式渲染会重写 innerHTML，故抽成辅助函数便于收尾时重挂）
+            appendMsgTime(contentDiv, ts || (saveToHistory && chatHistory.length ? chatHistory[chatHistory.length - 1].timestamp : null));
+
             messageDiv.appendChild(avatar);
             messageDiv.appendChild(contentDiv);
             messagesArea.appendChild(messageDiv);
-            
+
             scrollToBottom();
             return contentDiv;
+        }
+
+        function appendMsgTime(contentDiv, ts) {
+            if (!contentDiv) return;
+            const old = contentDiv.querySelector('.msg-time');
+            if (old) old.remove();
+            const d = ts ? new Date(ts) : new Date();
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'msg-time';
+            timeDiv.textContent = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+            contentDiv.appendChild(timeDiv);
         }
 
         function formatMessage(content) {
@@ -3417,7 +3597,8 @@
             
             const contentDiv = document.createElement('div');
             contentDiv.className = 'message-content typing-indicator';
-            contentDiv.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+            contentDiv.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span>' +
+                '<span class="typing-label">正在思考…</span></div>';
             
             messageDiv.appendChild(avatar);
             messageDiv.appendChild(contentDiv);
@@ -3606,6 +3787,8 @@
                 isGenerating = false;
                 setInputDisabled(false);
                 selectedImage = null;
+                // 流式渲染收尾：重挂时间戳（流式过程中 innerHTML 被反复重写）
+                if (messageContentDiv) appendMsgTime(messageContentDiv);
                 userInput.focus();
             }
         }
@@ -3618,6 +3801,7 @@
         }
 
         // 页面加载时初始化会话侧边栏并获取用户信息
+        showWelcome();
         initSidebar();
         loadCurrentUser();
         
@@ -4693,7 +4877,7 @@
                 <span class="modal-close" onclick="closeScenarioPicker()">×</span>
             </div>
             <p style="font-size:13px;color:#666;margin-bottom:16px;line-height:1.8">
-                三个副本的流程与进度相互独立，分别保存在本地，可任选其一进入。
+                四个副本的流程与进度相互独立，分别保存在本地，可任选其一进入。
             </p>
             <div class="sc-pick-grid">
                 <a class="sc-pick" href="/scenario-demo" onclick="pickScenario(event,'/scenario-demo','副本一 · 5G 单站验证')">
@@ -4712,6 +4896,12 @@
                     <div class="sc-pick-ic" style="background:rgba(16,185,129,.14)">🛰</div>
                     <h3>副本三 · 5G 网格优化（网格1）</h3>
                     <p>10 步任务 · 满分 100<br>通知接收 → 验证项解读 → 终端清点 → 上电预调试 → 资料准备 → 轨迹规划 → 现场评估 → 网格路测 → 收尾 → 报告</p>
+                    <span class="sc-pick-go">进入实训 →</span>
+                </a>
+                <a class="sc-pick" href="/scenario-ai" onclick="pickScenario(event,'/scenario-ai','AI 自定义剧情')">
+                    <div class="sc-pick-ic" style="background:rgba(168,85,247,.14)">✨</div>
+                    <h3>AI 自定义剧情</h3>
+                    <p>任意主题 · 自动生成<br>输入主题与要求，AI 自动创作完整实训剧本：背景研判 → 现场勘察 → 诊断处置 → 验收复盘</p>
                     <span class="sc-pick-go">进入实训 →</span>
                 </a>
             </div>

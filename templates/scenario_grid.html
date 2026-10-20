@@ -1905,7 +1905,21 @@ ${row('4/5G 锚点驻留占比', (S.d.t8.anchor || '--') + '%（门限 ≥ ' + K
         save();
         render();
     }
+    submitScenarioResult();
     toast('报告已导出到下载目录', 'ok');
+}
+
+/* ---------------- 成绩回传（接入能力画像） ---------------- */
+function submitScenarioResult() {
+    if (S._reported) return;
+    S._reported = true;
+    save();
+    try {
+        fetch('/api/scenario-result', { method: 'POST', credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ scene_id: 'grid', scene_name: '5G 网格优化',
+                score: S.score.reduce((a, b) => a + b, 0), score_max: 100 }) }).catch(() => {});
+    } catch (e) {}
 }
 
 /* ---------------- 时钟 ---------------- */
@@ -1920,6 +1934,7 @@ setInterval(tick, 1000);
 /* ---------------- 启动 ---------------- */
 tick();
 render();
+if (S.done[N - 1]) submitScenarioResult();   // 历史已完成的实训，补传一次成绩
 
 </script>
 </body>

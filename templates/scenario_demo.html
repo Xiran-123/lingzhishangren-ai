@@ -1815,7 +1815,21 @@ ${S.d['t7'].cells.map((c, i) => row('邻区 ' + (i + 1) + '（PCI ' + c.pci + '�
         save();
         render();
     }
+    submitScenarioResult();
     toast('报告已导出到下载目录', 'ok');
+}
+
+/* ---------------- 成绩回传（接入能力画像） ---------------- */
+function submitScenarioResult() {
+    if (S._reported) return;
+    S._reported = true;
+    save();
+    try {
+        fetch('/api/scenario-result', { method: 'POST', credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ scene_id: 'ssv', scene_name: '5G 单站验证',
+                score: S.score.reduce((a, b) => a + b, 0), score_max: 100 }) }).catch(() => {});
+    } catch (e) {}
 }
 
 /* ---------------- 时钟 ---------------- */
@@ -1828,6 +1842,7 @@ setInterval(tick, 1000);
 /* ---------------- 启动 ---------------- */
 tick();
 render();
+if (S.done[7]) submitScenarioResult();   // 历史已完成的实训，补传一次成绩
 </script>
 </body>
 </html>
