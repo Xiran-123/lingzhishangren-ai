@@ -71,13 +71,13 @@
 
         .brand-content {
             position: relative; z-index: 2;
-            max-width: 480px;
+            max-width: 545px;
             width: 100%;
         }
 
         .brand-logo-row {
             display: flex; align-items: center; gap: 14px;
-            margin-bottom: 36px;
+            margin-bottom: 22px;
         }
         .brand-logo-box {
             width: 56px; height: 56px;
@@ -109,21 +109,21 @@
             color: rgba(255,255,255,0.65);
             font-size: 15px;
             line-height: 1.8;
-            margin-bottom: 48px;
+            margin-bottom: 24px;
         }
 
         /* 功能亮点列表 */
         .brand-features {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 14px;
-            margin-bottom: 50px;
+            gap: 12px;
+            margin-bottom: 28px;
         }
         .feature-item {
             background: rgba(255,255,255,0.05);
             border: 1px solid rgba(255,255,255,0.08);
             border-radius: 12px;
-            padding: 16px 18px;
+            padding: 13px 15px;
             transition: all 0.3s;
         }
         .feature-item:hover {
@@ -140,6 +140,405 @@
         }
         .feature-desc {
             color: rgba(255,255,255,0.45); font-size: 12px; line-height: 1.5;
+        }
+
+        /* ===== 应用场景预览轮播舞台（桌面端品牌面板） ===== */
+        .scene-stage {
+            position: relative;
+            margin-bottom: 26px;
+            border-radius: 16px;
+            background: linear-gradient(165deg, #132450 0%, #0a1738 100%);
+            border: 1px solid rgba(0, 200, 255, 0.28);
+            box-shadow: 0 16px 44px rgba(0, 0, 0, 0.45), 0 0 30px rgba(0, 130, 255, 0.1) inset;
+            overflow: hidden;
+        }
+        .scene-screen {
+            position: relative;
+            height: 288px;
+            background:
+                radial-gradient(circle 210px at 85% 110%, rgba(0, 200, 255, 0.12), transparent 70%),
+                radial-gradient(circle 190px at 8% -10%, rgba(91, 61, 255, 0.12), transparent 70%),
+                linear-gradient(rgba(0, 200, 255, 0.045) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 200, 255, 0.045) 1px, transparent 1px),
+                #071230;
+            background-size: auto, auto, 34px 34px, 34px 34px, auto;
+            overflow: hidden;
+        }
+        .scene-chrome {
+            position: absolute; top: 0; left: 0; right: 0; z-index: 6;
+            display: flex; align-items: center; gap: 5px;
+            padding: 10px 14px;
+            background: linear-gradient(180deg, #0a1633 0%, rgba(10, 22, 51, 0) 100%);
+        }
+        .scene-chrome span {
+            width: 9px; height: 9px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.18);
+        }
+        .scene-chrome span:first-child { background: #ff5f57; }
+        .scene-chrome span:nth-child(2) { background: #febc2e; }
+        .scene-chrome span:nth-child(3) { background: #28c840; }
+        .scene-chrome em {
+            margin-left: auto; font-style: normal;
+            font-size: 9px; letter-spacing: 2px;
+            color: rgba(0, 229, 255, 0.75);
+            font-family: 'Consolas', monospace;
+        }
+        .scene-chrome em::before {
+            content: '●';
+            margin-right: 5px;
+            animation: ledBlink 1.4s ease-in-out infinite;
+        }
+
+        .scene {
+            position: absolute; inset: 0;
+            opacity: 0; visibility: hidden;
+            transform: translateX(14px);
+            transition: opacity 0.55s ease, transform 0.55s ease, visibility 0.55s;
+        }
+        .scene.active { opacity: 1; visibility: visible; transform: none; }
+
+        .scene-tag {
+            position: absolute; left: 14px; bottom: 12px; z-index: 5;
+            font-size: 11px; letter-spacing: 1.5px;
+            color: #00e5ff;
+            background: #0b1730;
+            border: 1px solid rgba(0, 229, 255, 0.35);
+            border-radius: 12px;
+            padding: 4px 12px;
+            font-family: 'Consolas', monospace;
+        }
+
+        /* ── 场景1：5G 单站验证（基站信号脉冲 + 手机信号条） ── */
+        .tower { position: absolute; left: 40px; bottom: 10px; width: 72px; height: 168px; }
+        .tower-mast {
+            position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 9px; height: 122px;
+            background: linear-gradient(180deg, #3f5a96, #22355e);
+            border-radius: 4px;
+        }
+        .tower-mast::before, .tower-mast::after {
+            content: '';
+            position: absolute; bottom: 8px; left: 50%; width: 42px; height: 6px;
+            background: #3f5a96; border-radius: 3px;
+        }
+        .tower-mast::before { transform: translateX(-50%) rotate(24deg); }
+        .tower-mast::after { transform: translateX(-50%) rotate(-24deg); bottom: 26px; }
+        .tower-head {
+            position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+            width: 20px; height: 44px;
+            background: linear-gradient(135deg, #0080ff, #00c8ff);
+            border-radius: 6px;
+            box-shadow: 0 0 14px rgba(0, 180, 255, 0.8);
+            animation: headGlow 2.2s ease-in-out infinite;
+        }
+        @keyframes headGlow {
+            0%, 100% { box-shadow: 0 0 10px rgba(0, 180, 255, 0.55); }
+            50% { box-shadow: 0 0 22px rgba(0, 200, 255, 0.95); }
+        }
+        .pulse {
+            position: absolute; top: 30px; left: 50%;
+            width: 34px; height: 34px;
+            border: 2.5px solid rgba(0, 200, 255, 0.7);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: pulseOut 2.6s linear infinite;
+            pointer-events: none;
+        }
+        .pulse.p2 { animation-delay: 0.85s; }
+        .pulse.p3 { animation-delay: 1.7s; }
+        @keyframes pulseOut {
+            0% { width: 30px; height: 30px; opacity: 0.9; }
+            100% { width: 190px; height: 190px; opacity: 0; }
+        }
+        .mini-phone {
+            position: absolute; right: 36px; bottom: 16px;
+            width: 92px; height: 150px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 2px solid rgba(140, 170, 255, 0.35);
+            border-radius: 14px;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 10px;
+            animation: phoneSway 4s ease-in-out infinite;
+        }
+        @keyframes phoneSway {
+            0%, 100% { transform: rotate(-2deg) translateY(0); }
+            50% { transform: rotate(2deg) translateY(-6px); }
+        }
+        .mini-phone .bars { display: flex; align-items: flex-end; gap: 5px; height: 46px; }
+        .mini-phone .bars i {
+            width: 10px; border-radius: 3px 3px 0 0;
+            background: linear-gradient(180deg, #00e5ff, #0080ff);
+            animation: barUp 1.8s ease-in-out infinite;
+        }
+        .mini-phone .bars i:nth-child(1) { height: 14px; animation-delay: 0s; }
+        .mini-phone .bars i:nth-child(2) { height: 23px; animation-delay: 0.15s; }
+        .mini-phone .bars i:nth-child(3) { height: 33px; animation-delay: 0.3s; }
+        .mini-phone .bars i:nth-child(4) { height: 44px; animation-delay: 0.45s; }
+        @keyframes barUp {
+            0%, 100% { transform: scaleY(0.55); opacity: 0.55; }
+            50% { transform: scaleY(1); opacity: 1; }
+        }
+        .mini-phone b {
+            font-size: 10.5px; color: #00e5ff;
+            font-family: 'Consolas', monospace; font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        /* ── 场景2：网格优化路测（地图轨迹行进） ── */
+        .sc-2 svg.route-map {
+            position: absolute; left: 10px; right: 10px; top: 34px;
+            width: calc(100% - 20px); height: 218px;
+        }
+        .route-line {
+            fill: none; stroke: rgba(0, 200, 255, 0.35);
+            stroke-width: 3; stroke-dasharray: 8 7;
+            stroke-linecap: round;
+        }
+        .route-line.ghost { stroke: rgba(255, 255, 255, 0.1); stroke-dasharray: none; }
+        .route-car {
+            fill: #00e5ff;
+            filter: drop-shadow(0 0 7px rgba(0, 229, 255, 0.9));
+        }
+        .map-kpi {
+            position: absolute; right: 16px; top: 46px;
+            font-size: 11px; color: #9db4e8;
+            font-family: 'Consolas', monospace;
+            background: #0e1b3a;
+            border: 1px solid rgba(140, 170, 255, 0.3);
+            border-radius: 7px; padding: 4px 9px;
+        }
+        .map-kpi i {
+            display: inline-block; font-style: normal;
+            color: #00e5ff; margin-right: 4px;
+            animation: ledBlink 1.2s ease-in-out infinite;
+        }
+
+        /* ── 场景3：AI 剧情生成（打字机 + 进度） ── */
+        .ai-lines {
+            position: absolute; left: 18px; right: 18px; top: 40px;
+            display: flex; flex-direction: column; gap: 12px;
+        }
+        .ai-lines i {
+            font-style: normal;
+            font-size: 13px; line-height: 1.5;
+            font-family: 'Consolas', 'Courier New', monospace;
+            color: #9fd8ff;
+            background: rgba(0, 200, 255, 0.06);
+            border-left: 2.5px solid rgba(0, 200, 255, 0.5);
+            border-radius: 0 9px 9px 0;
+            padding: 9px 13px;
+            width: fit-content; max-width: 92%;
+            white-space: nowrap; overflow: hidden;
+            animation: typeIn 9s steps(1) infinite;
+        }
+        .ai-lines i:nth-child(1) { animation-delay: 0.4s; }
+        .ai-lines i:nth-child(2) { animation-delay: 2.6s; color: #c9b8ff; border-left-color: rgba(155, 120, 255, 0.6); background: rgba(140, 100, 255, 0.07); }
+        .ai-lines i:nth-child(3) { animation-delay: 5.4s; color: #7dffb8; border-left-color: rgba(60, 220, 140, 0.6); background: rgba(60, 220, 140, 0.06); }
+        @keyframes typeIn {
+            0%, 8% { clip-path: inset(0 100% 0 0); }
+            16%, 92% { clip-path: inset(0 0 0 0); }
+            100% { clip-path: inset(0 100% 0 0); opacity: 0; }
+        }
+        .ai-cursor {
+            position: absolute; left: 18px; bottom: 52px;
+            width: 9px; height: 17px;
+            background: #00e5ff;
+            animation: caretBlink 0.8s steps(1) infinite;
+        }
+        @keyframes caretBlink { 50% { opacity: 0; } }
+
+        /* ── 场景4：机房动环监控（机柜灯闪 + 温度计） ── */
+        .rack {
+            position: absolute; bottom: 20px;
+            width: 70px; height: 150px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(140, 170, 255, 0.3);
+            border-radius: 10px;
+            padding: 10px 11px;
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
+        .rack.r1 { left: 44px; }
+        .rack.r2 { left: 136px; }
+        .rack i {
+            display: flex; align-items: center; justify-content: space-between;
+            height: 17px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 4px;
+            padding: 0 6px;
+        }
+        .rack i::before {
+            content: '';
+            width: 6px; height: 6px; border-radius: 50%;
+            background: #22c55e;
+            box-shadow: 0 0 5px rgba(34, 197, 94, 0.9);
+            animation: ledBlink var(--d, 1.6s) ease-in-out infinite;
+        }
+        .rack i::after {
+            content: '';
+            width: 17px; height: 4px;
+            background: rgba(0, 229, 255, 0.4);
+            border-radius: 2px;
+        }
+        .rack i:nth-child(2)::before { --d: 2.1s; }
+        .rack i:nth-child(3)::before { --d: 1.2s; background: #febc2e; box-shadow: 0 0 5px rgba(254, 188, 46, 0.8); }
+        .rack i:nth-child(4)::before { --d: 2.7s; }
+        .rack .fan {
+            position: absolute; top: -16px; right: -14px;
+            width: 26px; height: 26px;
+            border: 2.5px solid rgba(0, 200, 255, 0.5);
+            border-radius: 50%;
+            animation: fanSpin 1.6s linear infinite;
+        }
+        .rack .fan::before {
+            content: '';
+            position: absolute; inset: 4px;
+            background: conic-gradient(rgba(0, 229, 255, 0.9) 0 25%, transparent 25% 50%, rgba(0, 229, 255, 0.9) 50% 75%, transparent 75%);
+            border-radius: 50%;
+        }
+        @keyframes fanSpin { to { transform: rotate(360deg); } }
+        .temp-gauge {
+            position: absolute; right: 34px; top: 56px;
+            width: 150px;
+            font-family: 'Consolas', monospace;
+        }
+        .temp-gauge b { display: block; font-size: 18px; color: #00e5ff; margin-bottom: 7px; }
+        .temp-gauge b small { font-size: 10.5px; color: #9db4e8; margin-left: 7px; letter-spacing: 1px; }
+        .temp-bar {
+            height: 9px; border-radius: 5px;
+            background: rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+        }
+        .temp-bar span {
+            display: block; height: 100%; width: 42%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #22c55e, #00e5ff);
+            animation: tempBreathe 3.2s ease-in-out infinite;
+        }
+        @keyframes tempBreathe {
+            0%, 100% { width: 40%; }
+            50% { width: 52%; }
+        }
+
+        /* ── 场景5：光缆抢修 · OTDR 定位（曲线描边 + 断点脉冲） ── */
+        .sc-5 svg.otdr-map {
+            position: absolute; left: 10px; right: 10px; top: 32px;
+            width: calc(100% - 20px); height: 222px;
+        }
+        .otdr-curve {
+            fill: none; stroke: #00e5ff; stroke-width: 2.5;
+            stroke-linecap: round; stroke-linejoin: round;
+            filter: drop-shadow(0 0 5px rgba(0, 229, 255, 0.7));
+            stroke-dasharray: 480; stroke-dashoffset: 480;
+            animation: otdrDraw 4.5s ease-in-out infinite;
+        }
+        @keyframes otdrDraw {
+            0% { stroke-dashoffset: 480; }
+            55% { stroke-dashoffset: 0; }
+            88% { stroke-dashoffset: 0; }
+            100% { stroke-dashoffset: 480; }
+        }
+        .otdr-bp {
+            fill: #ff5f57;
+            filter: drop-shadow(0 0 6px rgba(255, 95, 87, 0.95));
+            transform-box: fill-box; transform-origin: center;
+            animation: bpPulse 1.6s ease-in-out infinite;
+        }
+        @keyframes bpPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.7); }
+        }
+        .otdr-kpi {
+            position: absolute; right: 16px; top: 46px;
+            font-size: 11px; color: #ffd2cf;
+            font-family: 'Consolas', monospace;
+            background: #0e1b3a;
+            border: 1px solid rgba(255, 95, 87, 0.45);
+            border-radius: 7px; padding: 4px 9px;
+        }
+        .otdr-kpi i {
+            display: inline-block; font-style: normal;
+            color: #ff5f57; margin-right: 4px;
+            animation: ledBlink 1.1s ease-in-out infinite;
+        }
+
+        /* ── 场景6：天馈调测 · 驻波比表盘（指针摆动） ── */
+        .vswr-gauge {
+            position: absolute; left: 50%; top: 44%;
+            transform: translate(-50%, -50%);
+            width: 210px; text-align: center;
+        }
+        .vswr-gauge svg { width: 150px; height: 92px; }
+        .gauge-arc {
+            fill: none; stroke: rgba(255, 255, 255, 0.18);
+            stroke-width: 7; stroke-linecap: round;
+        }
+        .gauge-zone {
+            fill: none; stroke: #22c55e; stroke-width: 7;
+            stroke-linecap: round;
+        }
+        .gauge-tick {
+            stroke: rgba(255, 255, 255, 0.4); stroke-width: 2;
+            stroke-linecap: round;
+        }
+        .gauge-needle {
+            stroke: #00e5ff; stroke-width: 3; stroke-linecap: round;
+            filter: drop-shadow(0 0 5px rgba(0, 229, 255, 0.9));
+            transform-box: view-box;
+            transform-origin: 75px 80px; /* 表盘圆心（viewBox 坐标） */
+            animation: needleSway 3.2s ease-in-out infinite;
+        }
+        @keyframes needleSway {
+            0%, 100% { transform: rotate(-32deg); }
+            50% { transform: rotate(18deg); }
+        }
+        .vswr-gauge b {
+            display: inline-block; margin-top: 6px;
+            font-size: 15px; color: #7dffb8;
+            font-family: 'Consolas', monospace; font-weight: 600;
+            letter-spacing: 1px;
+            background: #0b1730;
+            border: 1px solid rgba(125, 255, 184, 0.4);
+            border-radius: 8px; padding: 3px 12px;
+            animation: vswrBlink 3.2s ease-in-out infinite;
+        }
+        @keyframes vswrBlink {
+            0%, 100% { color: #7dffb8; border-color: rgba(125, 255, 184, 0.4); }
+            50% { color: #00e5ff; border-color: rgba(0, 229, 255, 0.5); }
+        }
+
+        /* ── 舞台底部：指示点 + 标题描述 ── */
+        .scene-meta {
+            position: relative;
+            padding: 12px 18px 14px;
+            border-top: 1px solid rgba(0, 200, 255, 0.16);
+            background: #0a1633;
+        }
+        .scene-dots {
+            position: absolute; top: -11px; left: 16px;
+            display: flex; gap: 6px;
+        }
+        .scene-dots span {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.22);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .scene-dots span.on {
+            background: #00e5ff;
+            box-shadow: 0 0 8px rgba(0, 229, 255, 0.9);
+            transform: scale(1.25);
+        }
+        .scene-meta b {
+            display: block;
+            color: #eaf4ff; font-size: 14.5px; font-weight: 600;
+            margin-bottom: 3px; letter-spacing: 0.5px;
+        }
+        .scene-meta p {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px; line-height: 1.55;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .scene, .scene * { animation-duration: 0.001s !important; animation-iteration-count: 1 !important; }
         }
 
         /* 底部版权 */
@@ -1114,6 +1513,99 @@
                     <div class="brand-logo-text">灵智尚人 · AI 工程训练平台</div>
                 </div>
 
+                <!-- 应用场景预览轮播（纯 CSS 动画 + JS 轮播，仅桌面端显示） -->
+                <div class="scene-stage" id="sceneStage">
+                    <div class="scene-screen">
+                        <div class="scene-chrome"><span></span><span></span><span></span><em>LIVE DEMO</em></div>
+
+                        <div class="scene sc-1 active">
+                            <div class="tower">
+                                <div class="tower-mast"></div>
+                                <div class="tower-head"></div>
+                                <div class="pulse p1"></div><div class="pulse p2"></div><div class="pulse p3"></div>
+                            </div>
+                            <div class="mini-phone">
+                                <div class="bars"><i></i><i></i><i></i><i></i></div>
+                                <b>RSRP -87dBm</b>
+                            </div>
+                            <span class="scene-tag">5G 单站验证</span>
+                        </div>
+
+                        <div class="scene sc-2">
+                            <svg class="route-map" viewBox="0 0 300 140" preserveAspectRatio="xMidYMid meet">
+                                <line x1="0" y1="110" x2="300" y2="110" stroke="rgba(255,255,255,0.07)" stroke-width="8"/>
+                                <line x1="90" y1="0" x2="90" y2="140" stroke="rgba(255,255,255,0.07)" stroke-width="8"/>
+                                <line x1="210" y1="0" x2="210" y2="140" stroke="rgba(255,255,255,0.07)" stroke-width="8"/>
+                                <line x1="0" y1="40" x2="300" y2="40" stroke="rgba(255,255,255,0.07)" stroke-width="6"/>
+                                <path class="route-line ghost" d="M18,122 L90,122 L90,70 L150,70 L150,96 L210,96 L210,24 L262,24"/>
+                                <path class="route-line" d="M18,122 L90,122 L90,70 L150,70 L150,96 L210,96 L210,24 L262,24"/>
+                                <circle class="route-car" r="5.5">
+                                    <animateMotion dur="7s" repeatCount="indefinite" rotate="auto"
+                                        path="M18,122 L90,122 L90,70 L150,70 L150,96 L210,96 L210,24 L262,24"/>
+                                </circle>
+                            </svg>
+                            <b class="map-kpi"><i>●</i>GRID-1 路测中</b>
+                            <span class="scene-tag">网格优化 · 路测轨迹</span>
+                        </div>
+
+                        <div class="scene sc-3">
+                            <div class="ai-lines">
+                                <i>▍生成场景：数据中心机房设计…</i>
+                                <i>▍步骤 3/11 · 现场勘察 · 光纤路由研判</i>
+                                <i>▍✓ 已植入 2 处工程陷阱 · 报告就绪</i>
+                            </div>
+                            <div class="ai-cursor"></div>
+                            <span class="scene-tag">AI 自动生成剧情</span>
+                        </div>
+
+                        <div class="scene sc-4">
+                            <div class="rack r1"><i></i><i></i><i></i><i></i><span class="fan"></span></div>
+                            <div class="rack r2"><i></i><i></i><i></i><i></i></div>
+                            <div class="temp-gauge">
+                                <b>24.6℃<small>环境温度</small></b>
+                                <div class="temp-bar"><span></span></div>
+                            </div>
+                            <span class="scene-tag">机房动环监控</span>
+                        </div>
+
+                        <div class="scene sc-5">
+                            <svg class="otdr-map" viewBox="0 0 300 140" preserveAspectRatio="xMidYMid meet">
+                                <line x1="14" y1="122" x2="286" y2="122" stroke="rgba(255,255,255,0.14)" stroke-width="1.5"/>
+                                <line x1="14" y1="122" x2="14" y2="16" stroke="rgba(255,255,255,0.14)" stroke-width="1.5"/>
+                                <line x1="14" y1="92" x2="286" y2="92" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+                                <line x1="14" y1="54" x2="286" y2="54" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+                                <polyline class="otdr-curve" points="14,42 50,44 90,48 130,56 168,66 206,80 244,98 280,116"/>
+                                <circle class="otdr-bp" cx="206" cy="80" r="5"/>
+                            </svg>
+                            <b class="otdr-kpi"><i>●</i>断点 2.37km</b>
+                            <span class="scene-tag">光缆抢修 · OTDR</span>
+                        </div>
+
+                        <div class="scene sc-6">
+                            <div class="vswr-gauge">
+                                <svg viewBox="0 0 150 92">
+                                    <path class="gauge-arc" d="M18,80 A57,57 0 0 1 132,80"/>
+                                    <path class="gauge-zone" d="M32,52 A48,48 0 0 1 74,25" />
+                                    <line class="gauge-tick" x1="75" y1="14" x2="75" y2="24"/>
+                                    <line class="gauge-tick" x1="30" y1="35" x2="37" y2="42"/>
+                                    <line class="gauge-tick" x1="120" y1="35" x2="113" y2="42"/>
+                                    <line class="gauge-needle" x1="75" y1="80" x2="75" y2="28"/>
+                                    <circle cx="75" cy="80" r="5" fill="#00e5ff"/>
+                                </svg>
+                                <b>VSWR 1.42</b>
+                            </div>
+                            <span class="scene-tag">天馈调测 · 驻波比</span>
+                        </div>
+                    </div>
+                    <div class="scene-meta">
+                        <div class="scene-dots" id="sceneDots">
+                            <span class="on" data-i="0"></span><span data-i="1"></span><span data-i="2"></span><span data-i="3"></span><span data-i="4"></span><span data-i="5"></span>
+                        </div>
+                        <b id="sceneTitle">5G 单站验证 · 信号覆盖测试</b>
+                        <p id="sceneDesc">基站天馈调测与覆盖验证，实时读取 RSRP / SINR 等关键指标</p>
+                    </div>
+                </div>
+
                 <h2 class="brand-headline">
                     让工程训练<br>
                     从此 <span>更智能、更高效</span>
@@ -1607,7 +2099,43 @@
         })();
     </script>
 
-    <!-- 全局桌宠 Desktop Pet -->
+    <!-- 场景预览轮播控制 -->
+    <script>
+        (function () {
+            const stage = document.getElementById('sceneStage');
+            if (!stage) return;
+            const scenes = stage.querySelectorAll('.scene');
+            const dots = document.querySelectorAll('#sceneDots span');
+            const titleEl = document.getElementById('sceneTitle');
+            const descEl = document.getElementById('sceneDesc');
+            const infos = [
+                ['5G 单站验证 · 信号覆盖测试', '基站天馈调测与覆盖验证，实时读取 RSRP / SINR 等关键指标'],
+                ['网格优化 · 路测轨迹规划', '测试车辆按规划轨迹遍历网格，采集路测数据并定位弱覆盖区域'],
+                ['AI 自动生成剧情实训', '输入任意工程主题，AI 自动创作沉浸式实训剧本并智能评分'],
+                ['机房动环监控 · 仿真演练', '机柜指示灯 / 温湿度实时监测，掌握数据中心运维要点'],
+                ['光缆抢修 · OTDR 故障定位', 'OTDR 曲线分析定位断点距离，制定熔接抢修与割接方案'],
+                ['天馈调测 · 驻波比检测', '驻波比表盘实时监测天馈匹配状态，排查驻波比异常告警']
+            ];
+            let cur = 0, timer = null;
+
+            function show(i) {
+                cur = (i + scenes.length) % scenes.length;
+                scenes.forEach((s, k) => s.classList.toggle('active', k === cur));
+                dots.forEach((d, k) => d.classList.toggle('on', k === cur));
+                const [t, ds] = infos[cur];
+                titleEl.textContent = t;
+                descEl.textContent = ds;
+            }
+            function play() { stop(); timer = setInterval(() => show(cur + 1), 5000); }
+            function stop() { if (timer) { clearInterval(timer); timer = null; } }
+
+            dots.forEach(d => d.addEventListener('click', () => { show(+d.dataset.i); play(); }));
+            stage.addEventListener('mouseenter', stop);
+            stage.addEventListener('mouseleave', play);
+            play();
+        })();
+    </script>
+
     <link rel="stylesheet" href="/static/desktop_pet.css">
     <script src="/static/desktop_pet.js" defer></script>
 </body>
