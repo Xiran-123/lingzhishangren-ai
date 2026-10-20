@@ -2133,7 +2133,7 @@
                     A('/mock-interview-page', '🎤', 'AI 模拟面试') +
                     A('/interview-cases-page', '📚', '面试案例'));
             }
-            html += G('工 具', settingsNavHTML() + B('doLogout()', '🔓', '退出登录'));
+            html += G('工 具', settingsNavHTML());
 
             const side = document.getElementById('hxSideNav');
             const drawer = document.getElementById('hxDrawerNav');
@@ -2521,7 +2521,6 @@
                         <a class="settings-item" onclick="closeSettings();clearChatHistory();">🗑️ 清除对话记录</a>
                     </div>
                 </div>
-                <button class="nav-btn" style="background: linear-gradient(135deg, #ff4d4f, #cf1322);" onclick="doLogout()" title="退出登录">🔓 退出登录</button>
                 <input type="file" id="avatarInput" accept="image/png,image/jpeg,image/gif,image/webp" style="display:none" onchange="uploadAvatar(this);">`;
         }
 
@@ -2610,6 +2609,15 @@
                         <div style="margin-top:11px;font-size:17px;font-weight:700;color:#fff;letter-spacing:.5px;">${currentUser.student_name || '用户'}</div>
                         <span style="margin-top:7px;padding:3px 14px;font-size:11px;font-weight:600;letter-spacing:1px;border-radius:999px;background:linear-gradient(135deg,rgba(0,150,255,.22),rgba(0,200,255,.1));border:1px solid rgba(0,150,255,.42);color:#7cc4ff;">${isTeacher ? '教师 TEACHER' : '学生 STUDENT'}</span>
                         <div style="width:100%;display:flex;flex-direction:column;gap:8px;margin-top:16px;">${infoRows}</div>
+                        <div style="width:100%;margin-top:16px;display:flex;flex-direction:column;gap:8px;">
+                            <div style="font-size:11px;color:rgba(255,255,255,.4);letter-spacing:1.5px;font-weight:600;text-align:left;">快捷操作</div>
+                            <button id="petToggleProfile" onclick="togglePet()" style="width:100%;padding:10px 0;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.13);color:#fff;border-radius:11px;font-size:12.5px;cursor:pointer;transition:background .2s;" onmouseover="this.style.background='rgba(255,255,255,.11)'" onmouseout="this.style.background='rgba(255,255,255,.06)'">${localStorage.getItem('pet_disabled') === '1' ? '🐾 开启桌宠' : '🐾 关闭桌宠'}</button>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                                <button onclick="closePersonalCenter();showPlatformGuide();" style="padding:10px 0;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.13);color:#fff;border-radius:11px;font-size:12.5px;cursor:pointer;transition:background .2s;" onmouseover="this.style.background='rgba(255,255,255,.11)'" onmouseout="this.style.background='rgba(255,255,255,.06)'">📖 使用说明</button>
+                                <button onclick="closePersonalCenter();clearChatHistory();" style="padding:10px 0;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.13);color:#fff;border-radius:11px;font-size:12.5px;cursor:pointer;transition:background .2s;" onmouseover="this.style.background='rgba(255,255,255,.11)'" onmouseout="this.style.background='rgba(255,255,255,.06)'">🗑️ 清除对话记录</button>
+                            </div>
+                            <button onclick="doLogout()" style="width:100%;padding:10px 0;background:linear-gradient(135deg,#ff4d4f,#cf1322);border:none;color:#fff;border-radius:11px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(207,19,34,.3);transition:transform .15s;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">🔓 退出登录</button>
+                        </div>
                         <button onclick="document.getElementById('avatarInput').click()" style="margin-top:16px;width:100%;padding:11px 0;background:linear-gradient(135deg,#0080ff,#00c8ff);border:none;color:#fff;border-radius:12px;font-size:13.5px;font-weight:700;letter-spacing:1px;cursor:pointer;box-shadow:0 6px 18px rgba(0,130,255,.35);transition:transform .15s,box-shadow .15s;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 9px 24px rgba(0,130,255,.45)'" onmouseout="this.style.transform='';this.style.boxShadow='0 6px 18px rgba(0,130,255,.35)'">🖼️ 更换头像</button>
                         <div style="margin-top:12px;font-size:11px;color:rgba(255,255,255,.32);line-height:1.6;">头像支持 png/jpg/gif/webp · 大小不超过 2MB</div>
                     </div>
@@ -2752,6 +2760,9 @@
                 if (menu) menu.classList.remove('open');
                 const item = document.getElementById('petToggleItem');
                 if (item) item.textContent = '🐾 开启桌宠';
+                const pitem = document.getElementById('petToggleProfile');
+                if (pitem) pitem.textContent = '🐾 开启桌宠';
+                closePersonalCenter();
             }
         }
 
