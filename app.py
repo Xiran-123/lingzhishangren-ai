@@ -7357,6 +7357,232 @@ def _build_interviewer_system_prompt(student_name, company, position, interview_
 面试开始时，请先做一个简短的开场介绍（不超过100字），然后提出第一个问题。"""
 
 
+# ====================== AI 面试官质量评估（规则启发式） ======================
+# 岗位 → 关键词映射表（用于评估题目相关性）
+_POSITION_KEYWORDS = {
+    '无线网络优化': ['5G', 'LTE', 'NR', 'RSRP', 'SINR', '路测', '优化', '覆盖', '容量', '干扰', 'PCI', 'ICIC', 'MIMO', '波束', '网络优化', '无线'],
+    '核心网': ['核心网', 'EPC', '5GC', 'AMF', 'SMF', 'UPF', 'HSS', 'PCRF', '信令', '会话', '承载', 'MME', '网元', 'SBI', 'NFV'],
+    '射频': ['射频', 'RF', '发射机', '接收机', '功放', '天线', '滤波器', '匹配', 'S参数', '阻抗', '噪声系数', '互调'],
+    '天线': ['天线', '辐射', '方向图', '波束', '增益', '极化', '阵列', 'Massive MIMO', '波束赋形', '下倾'],
+    '传输': ['传输', '光通信', 'OTN', 'SDH', 'DWDM', '光纤', '波分', 'PON', 'GPON', '同步', 'OSNR', '色散'],
+    '数据通信': ['路由', '交换', 'BGP', 'OSPF', 'MPLS', 'VLAN', '交换机', '路由器', '数据中心', 'VXLAN', 'SDN'],
+    '协议': ['协议', 'MAC', 'PHY', 'RRC', 'PDCP', 'RLC', 'NAS', 'S1', 'X2', 'NG', '信令流程', '随机接入'],
+    '硬件': ['FPGA', '基带', 'ASIC', 'DSP', '嵌入式', '芯片', '电路', 'PCB', 'Verilog', '时钟', '功耗'],
+    '物联网': ['IoT', 'NB-IoT', 'LoRa', 'ZigBee', '边缘计算', '传感器', '低功耗'],
+    '车联网': ['C-V2X', '5G NR-V2X', 'OBU', 'RSU', '延迟', '自动驾驶'],
+    '测试': ['测试', '自动化', '用例', '回归', '性能测试', '压力测试', 'CI/CD'],
+}
+
+_DIFFICULTY_SIGNALS = {
+    '简单': ['什么是', '请简述', '概念', '定义', '介绍'],
+    '困难': ['综合分析', '工程实践', '设计', '方案', '权衡', '对比', '推导', '优化'],
+}
+
+
+def _eval_relevance(record):
+    """🎯 题目相关性：面试官问题是否和岗位方向匹配"""
+    pos = record.get('target_position', '')
+    if not pos:
+        return 80, '未指定岗位，跳过相关性检查'
+    # 找最匹配的岗位关键词组
+    kws = []
+    for k, v in _POSITION_KEYWORDS.items():
+        if k in pos:
+            kws = v; break
+    if not kws:
+        # 找不到精确匹配，取所有关键词合并
+        for v in _POSITION_KEYWORDS.values():
+            kws.extend(v)
+    questions = [m['content'] for m in record['messages'] if m['role'] == 'interviewer']
+    if not questions:
+        return 70, '无面试问题'
+    hit_cnt = 0
+    for q in questions:
+        if any(kw in q for kw in kws):
+            hit_cnt += 1
+    ratio = hit_cnt / len(questions)
+    score = int(min(100, ratio * 110))
+    note = f'共{len(questions)}道题，{hit_cnt}道命中岗位关键词'
+    return score, note
+
+
+def _eval_coverage(record):
+    """📚 知识点覆盖：是否考察了学生的薄弱维度、验证了优势维度"""
+    vector = record.get('competence_vector') or {}
+    questions = [m['content'] for m in record['messages'] if m['role'] == 'interviewer']
+    if not questions:
+        return 70, '无面试问题'
+    # 维度 → 关键词
+    dim_kw = {
+        'communication_principle': ['信源', '信道', '调制', '编码', '香农', '调制方式', '通信原理'],
+        'rf_engineering': ['射频', '天线', 'MIMO', '波束', '功放', '匹配'],
+        'network_protocol': ['协议', 'RRC', 'PDCP', 'RLC', 'MAC', 'NAS', '随机接入'],
+        'troubleshooting': ['故障', '排查', '定位', '路测', '优化', '干扰', '掉话'],
+        'modulation': ['OFDM', 'QAM', 'PSK', 'QPSK', '调制', '子载波'],
+        'coding': ['LDPC', 'Polar', 'Turbo', '编码', '信道编码'],
+        'communication': ['沟通', '团队', '协作', '表达'],
+    }
+    if not vector:
+        return 75, '无能力画像数据，跳过薄弱维度对比'
+    weak = [k for k, v in vector.items() if 0 < v < 60]
+    strong = [k for k, v in vector.items() if v >= 80]
+    # 检查薄弱维度是否被问到
+    weak_hit = 0
+    for k in weak:
+        kws = dim_kw.get(k, [k])
+        if any(any(kw in q for kw in kws) for q in questions):
+            weak_hit += 1
+    weak_ratio = weak_hit / len(weak) if weak else 0.8
+    weak_score = weak_ratio * 60  # 薄弱维度覆盖最多 60 分
+    # 检查优势维度是否被验证（问到就是验证）
+    strong_hit = 0
+    for k in strong:
+        kws = dim_kw.get(k, [k])
+        if any(any(kw in q for kw in kws) for q in questions):
+            strong_hit += 1
+    strong_ratio = strong_hit / len(strong) if strong else 0.8
+    strong_score = strong_ratio * 40  # 优势维度验证最多 40 分
+    score = int(min(100, weak_score + strong_score))
+    note = f'薄弱维度{len(weak)}个考到{weak_hit}个，优势维度{len(strong)}个验证{strong_hit}个'
+    return score, note
+
+
+def _eval_followup(record):
+    """🔗 追问连贯性：新问题是否延续了上一个学生回答的核心内容"""
+    msgs = record['messages']
+    interviewer_qs = []
+    last_student_ans = None
+    for m in msgs:
+        if m['role'] == 'interviewer':
+            interviewer_qs.append((m['content'], last_student_ans))
+        elif m['role'] == 'student':
+            last_student_ans = m['content']
+    if len(interviewer_qs) <= 1:
+        return 80, '问题过少，无法评估追问连贯性'
+    # 提取学生回答的核心名词（长度>=2的中文词片段）
+    import re as _re
+    def extract_nouns(text):
+        words = _re.findall(r'[\u4e00-\u9fa5]{2,}|[A-Za-z]{2,}', text)
+        # 去掉停用词
+        stop = {'我们', '你们', '他们', '这个', '那个', '一个', '一些', '可以', '通过', '使用', '进行', '这个', '那种'}
+        return [w for w in words if w not in stop]
+    coherent = 0
+    total = 0
+    for q, prev_ans in interviewer_qs:
+        if prev_ans is None:
+            continue
+        total += 1
+        ans_words = set(extract_nouns(prev_ans))
+        q_words = set(extract_nouns(q))
+        if ans_words & q_words:
+            coherent += 1
+    ratio = coherent / total if total else 0.8
+    score = int(min(100, 50 + ratio * 50))
+    note = f'{total}次追问中{coherent}次延续了上一个回答'
+    return score, note
+
+
+def _eval_difficulty(record):
+    """🧠 难度适配：题目难度是否和设定匹配"""
+    diff = record.get('difficulty', '中等')
+    questions = [m['content'] for m in record['messages'] if m['role'] == 'interviewer']
+    if not questions:
+        return 75, '无面试问题'
+    easy_sig = _DIFFICULTY_SIGNALS['简单']
+    hard_sig = _DIFFICULTY_SIGNALS['困难']
+    easy_cnt = sum(any(s in q for s in easy_sig) for q in questions)
+    hard_cnt = sum(any(s in q for s in hard_sig) for q in questions)
+    n = len(questions)
+    # 设定简单 → 简单题占比应该高
+    if diff == '简单':
+        ratio = easy_cnt / n
+        score = int(min(100, 40 + ratio * 60))
+        note = f'设定简单，{easy_cnt}/{n}道为基础概念题'
+    elif diff == '困难':
+        ratio = hard_cnt / n
+        score = int(min(100, 40 + ratio * 60))
+        note = f'设定困难，{hard_cnt}/{n}道为综合分析题'
+    else:  # 中等
+        # 中等 = 混合的原理+应用，不能太简单也不能太难
+        mixed = (easy_cnt > 0 and hard_cnt > 0) or (easy_cnt + hard_cnt <= n / 2)
+        score = 82 if mixed else 55
+        note = f'中等难度，简单题{easy_cnt}道/困难题{hard_cnt}道/普通题{n-easy_cnt-hard_cnt}道'
+    return score, note
+
+
+def _eval_score_consistency(record):
+    """⚖️ 评分自洽性：分数和评语/各维度分是否自洽"""
+    score = record.get('score')
+    comp_scores = record.get('competence_scores') or {}
+    if score is None or not comp_scores:
+        return 80, '无完整评分数据，跳过自洽性检查'
+    # 各维度加权平均
+    avg = sum(comp_scores.values()) / len(comp_scores)
+    deviation = abs(score - avg)
+    if deviation <= 5:
+        score_val = 95; note = f'综合分{score}与维度均分{avg:.0f}一致（偏差{deviation:.0f}）'
+    elif deviation <= 12:
+        score_val = 80; note = f'综合分{score}与维度均分{avg:.0f}略有偏差（{deviation:.0f}）'
+    elif deviation <= 20:
+        score_val = 55; note = f'综合分{score}与维度均分{avg:.0f}偏差较大（{deviation:.0f}）'
+    else:
+        score_val = 30; note = f'综合分{score}与维度均分{avg:.0f}严重不一致（{deviation:.0f}）'
+    return score_val, note
+
+
+def _eval_naturalness(record):
+    """💬 对话自然度：面试官消息是否自然、无模板感、无穿帮"""
+    msgs = [m['content'] for m in record['messages'] if m['role'] == 'interviewer']
+    if not msgs:
+        return 80, '无面试官消息'
+    # 1. 句式多样性：每句话的开头词重复率
+    openings = [m[:3] for m in msgs]
+    from collections import Counter
+    top_freq = Counter(openings).most_common(1)[0][1]
+    repeat_penalty = max(0, top_freq - 1) * 8  # 重复多扣分
+    # 2. 穿帮词检测
+    leak_words = ['参考答案', '标准答案', '正确答案', '参见题库', '考察要点']
+    leak_cnt = sum(any(w in m for w in leak_words) for m in msgs)
+    leak_penalty = leak_cnt * 15
+    # 3. 消息长度分布（太短或太长扣分）
+    lengths = [len(m) for m in msgs]
+    avg_len = sum(lengths) / len(lengths)
+    len_penalty = 0
+    if avg_len < 8:
+        len_penalty = 20  # 太短像模板
+    elif avg_len > 200:
+        len_penalty = 10  # 太长不像口语化面试
+    score = max(40, int(100 - repeat_penalty - leak_penalty - len_penalty))
+    note = f'开头重复最多{top_freq}次，穿帮词{leak_cnt}个，平均每句{avg_len:.0f}字'
+    return score, note
+
+
+def _evaluate_interviewer_quality(record):
+    """AI 面试官质量评估（6 维度），返回结构化结果"""
+    try:
+        s_rel, n_rel = _eval_relevance(record)
+        s_cov, n_cov = _eval_coverage(record)
+        s_fol, n_fol = _eval_followup(record)
+        s_dif, n_dif = _eval_difficulty(record)
+        s_sco, n_sco = _eval_score_consistency(record)
+        s_nat, n_nat = _eval_naturalness(record)
+        overall = int((s_rel + s_cov + s_fol + s_dif + s_sco + s_nat) / 6)
+        return {
+            'dimensions': [
+                {'id': 'relevance', 'label': '题目相关性', 'score': s_rel, 'note': n_rel},
+                {'id': 'coverage', 'label': '知识点覆盖', 'score': s_cov, 'note': n_cov},
+                {'id': 'followup', 'label': '追问连贯性', 'score': s_fol, 'note': n_fol},
+                {'id': 'difficulty', 'label': '难度适配', 'score': s_dif, 'note': n_dif},
+                {'id': 'consistency', 'label': '评分自洽', 'score': s_sco, 'note': n_sco},
+                {'id': 'naturalness', 'label': '对话自然度', 'score': s_nat, 'note': n_nat},
+            ],
+            'overall': overall,
+        }
+    except Exception as e:
+        print(f'AI面试官评估异常: {e}')
+        return {'dimensions': [], 'overall': 0}
+
+
 def _build_scoring_prompt(interview_messages, company, position, interview_type, case_questions, competence_vector):
     """构建评分system+user prompt"""
     dialog_lines = []
@@ -10649,6 +10875,8 @@ def api_mock_interview_end():
                                 r['competence_scores'] = result.get('competence_scores', {})
                         except Exception as e:
                             print(f"评分解析失败: {e}")
+                        # AI 面试官质量评估（规则启发式，秒级）
+                        r['ai_evaluator'] = _evaluate_interviewer_quality(r)
                         break
                 save_interview_records(recs)
             yield "data: [DONE]\n\n"

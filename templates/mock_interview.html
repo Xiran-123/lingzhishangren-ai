@@ -484,6 +484,74 @@
             width: 28px; text-align: right; flex-shrink: 0;
         }
 
+        /* ============ AI 面试官质量评估卡 ============ */
+        .ai-evaluator-card {
+            margin-top: 16px;
+            background: linear-gradient(135deg, #f8fafc, #eff6ff);
+            border: 1px solid #dbeafe;
+            border-radius: 12px;
+            padding: 16px 18px;
+        }
+        .ai-eval-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .ai-eval-title {
+            font-size: 15px; font-weight: 700; color: #1e3a8a;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .ai-eval-overall {
+            display: flex; align-items: baseline; gap: 4px;
+        }
+        .ai-eval-overall .num {
+            font-size: 28px; font-weight: 800; color: #1e40af;
+            line-height: 1;
+        }
+        .ai-eval-overall .unit {
+            font-size: 13px; color: #64748b;
+        }
+        .eval-dim-row {
+            display: flex; align-items: center; gap: 10px;
+            margin-bottom: 8px;
+        }
+        .eval-dim-row:last-child { margin-bottom: 0; }
+        .eval-dim-label {
+            font-size: 12px; color: #4b5563; flex-shrink: 0;
+            width: 80px; text-align: right;
+        }
+        .eval-bar-bg {
+            flex: 1; height: 6px; background: #e5e7eb;
+            border-radius: 3px; overflow: hidden;
+        }
+        .eval-bar-fill {
+            height: 100%; border-radius: 3px;
+            background: linear-gradient(90deg, #0ea5e9, #2563eb);
+            transition: width 0.6s ease;
+        }
+        .eval-bar-fill.high { background: linear-gradient(90deg, #10b981, #059669); }
+        .eval-bar-fill.mid { background: linear-gradient(90deg, #f59e0b, #d97706); }
+        .eval-bar-fill.low { background: linear-gradient(90deg, #ef4444, #dc2626); }
+        .eval-score {
+            font-size: 12px; font-weight: 700;
+            width: 30px; text-align: right; flex-shrink: 0;
+        }
+        .eval-score.high { color: #059669; }
+        .eval-score.mid { color: #d97706; }
+        .eval-score.low { color: #dc2626; }
+        .eval-note {
+            font-size: 11px; color: #94a3b8;
+            margin-top: 10px; padding-top: 10px;
+            border-top: 1px dashed #cbd5e1;
+            line-height: 1.6;
+        }
+        .eval-note .row { display: flex; gap: 4px; margin-bottom: 2px; }
+        .eval-note .tag {
+            flex-shrink: 0; background: #fff; border: 1px solid #dbeafe;
+            color: #1e40af; font-size: 10px; padding: 0 6px; border-radius: 4px;
+            height: 16px; line-height: 14px;
+        }
+        .eval-note .txt { color: #64748b; }
+
         /* 报告内嵌的优势/不足/建议/评语 */
         .structured-report { font-size: 13px; line-height: 1.75; color: #374151; }
         .structured-report .s-block { margin-bottom: 14px; }
@@ -1425,6 +1493,8 @@ function buildStructuredReport(record) {
         }
     }
     html += '</div>';
+    // ⑤ AI 面试官质量评估
+    html += buildAiEvaluatorCard(record.ai_evaluator);
     return html;
 }
 
@@ -1460,6 +1530,8 @@ function buildScoreReportFromJson(r, fallbackText) {
             formatMessage(fallbackText) + '</p></div>';
     }
     html += '</div>';
+    // ⑤ AI 面试官质量评估
+    html += buildAiEvaluatorCard(r.ai_evaluator);
     return html;
 }
 
@@ -1514,6 +1586,39 @@ function buildCompetenceChart(competenceScores) {
         <div class="competence-chart">
             <div class="chart-title">📈 能力维度得分</div>
             ${rows}
+        </div>`;
+}
+
+/* ==================== AI 面试官质量评估卡 ==================== */
+function buildAiEvaluatorCard(evaluator) {
+    if (!evaluator || !evaluator.dimensions || !evaluator.dimensions.length) return '';
+    const overall = evaluator.overall || 0;
+    const overallCls = overall >= 80 ? 'high' : (overall >= 60 ? 'mid' : 'low');
+    const dims = evaluator.dimensions.map(d => {
+        const s = d.score;
+        const cls = s >= 80 ? 'high' : (s >= 60 ? 'mid' : 'low');
+        return `
+            <div class="eval-dim-row">
+                <span class="eval-dim-label" title="${escapeHtml(d.note || '')}">${escapeHtml(d.label)}</span>
+                <div class="eval-bar-bg"><div class="eval-bar-fill ${cls}" style="width:${s}%"></div></div>
+                <span class="eval-score ${cls}">${Math.round(s)}</span>
+            </div>`;
+    }).join('');
+    // 每个维度的简短说明（前 2 个）
+    const notes = evaluator.dimensions.slice(0, 2).map(d =>
+        `<div class="row"><span class="tag">${escapeHtml(d.label)}</span><span class="txt">${escapeHtml(d.note || '')}</span></div>`
+    ).join('');
+    return `
+        <div class="ai-evaluator-card">
+            <div class="ai-eval-header">
+                <div class="ai-eval-title">🤖 AI 面试官评估</div>
+                <div class="ai-eval-overall">
+                    <span class="num ${overallCls}">${overall}</span>
+                    <span class="unit">/ 100</span>
+                </div>
+            </div>
+            ${dims}
+            ${notes ? `<div class="eval-note">${notes}</div>` : ''}
         </div>`;
 }
 
