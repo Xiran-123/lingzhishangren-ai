@@ -2664,9 +2664,16 @@ def _build_kb_context(query: str):
                 }
         except Exception as e:  # noqa: BLE001 - 召回异常绝不阻断问答
             print(f"[RAG] 召回失败，退回全文注入: {e}")
-    return (knowledge_content or ""), {
-        'mode': 'full', 'chunks': 0, 'used_chars': total_chars, 'total_chars': total_chars,
-        'compress_ratio': 0, 'degraded': False, 'sources': [],
+    full_kb = knowledge_content or ""
+    # ⚠️ 保险截断：实测 >40KB 的 system prompt 会让 SiliconFlow 推理挂起 60 秒+，
+    # 这是聊天主链路，宁可少注入知识也不能拖死首包。RAG 召回正常时不会走到这里。
+    max_kb_chars = 12000
+    truncated = len(full_kb) > max_kb_chars
+    if truncated:
+        full_kb = full_kb[:max_kb_chars] + "\n\n（知识库内容过长，已截断，仅展示核心部分）"
+    return full_kb, {
+        'mode': 'full', 'chunks': 0, 'used_chars': len(full_kb), 'total_chars': total_chars,
+        'compress_ratio': 0, 'degraded': truncated, 'sources': [],
     }
 
 
