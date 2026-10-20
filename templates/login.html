@@ -247,19 +247,66 @@
         .login-particles span:nth-child(15) { left: 74%; top: 14%; width:3px; height:3px; animation-duration: 14s; animation-delay: -1s; }
         .login-particles span:nth-child(16) { left: 32%; top: 60%; width:3px; height:3px; animation-duration: 11s; animation-delay: -9s; }
 
-        /* ===== 登录卡片（毛玻璃风，融入深色背景） ===== */
+        /* ===== 登录卡片（深色玻璃拟态，与首页同风格） ===== */
         .login-container {
-            background: rgba(255, 255, 255, 0.96);
-            backdrop-filter: blur(12px);
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4),
-                        0 0 0 1px rgba(0, 200, 255, 0.15);
-            padding: 44px 36px;
+            background: linear-gradient(165deg, rgba(16, 34, 78, 0.88) 0%, rgba(9, 20, 50, 0.92) 100%);
+            backdrop-filter: blur(18px);
+            border-radius: 22px;
+            border: 1px solid rgba(0, 200, 255, 0.28);
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5),
+                        0 0 40px rgba(0, 130, 255, 0.12) inset;
+            padding: 30px 30px 26px;
             width: 100%;
             max-width: 400px;
             text-align: center;
             position: relative;
             z-index: 5;
+            overflow: hidden;
+        }
+        /* 卡片顶部流光边 */
+        .login-container::before {
+            content: '';
+            position: absolute; top: 0; left: 8%; right: 8%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00c8ff, #5b8dff, transparent);
+            border-radius: 2px;
+            animation: shineSlide 3.2s ease-in-out infinite;
+        }
+        @keyframes shineSlide {
+            0%, 100% { opacity: 0.5; transform: scaleX(0.85); }
+            50% { opacity: 1; transform: scaleX(1); }
+        }
+        /* 右下角光晕装饰 */
+        .login-container::after {
+            content: '';
+            position: absolute;
+            width: 220px; height: 220px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 200, 255, 0.14), transparent 70%);
+            bottom: -80px; right: -60px;
+            pointer-events: none;
+        }
+
+        /* ===== 面板漂浮装饰图标 ===== */
+        .panel-deco {
+            position: absolute; inset: 0;
+            pointer-events: none;
+            z-index: 2;
+        }
+        .pd-ic {
+            position: absolute;
+            font-size: 26px;
+            opacity: 0.14;
+            filter: saturate(0.6);
+            animation: pdFloat 9s ease-in-out infinite;
+        }
+        .pd-1 { top: 14%; left: 9%; animation-delay: 0s; }
+        .pd-2 { top: 24%; right: 10%; font-size: 30px; animation-delay: -2.5s; }
+        .pd-3 { bottom: 20%; left: 12%; font-size: 22px; animation-delay: -5s; }
+        .pd-4 { bottom: 12%; right: 9%; animation-delay: -7s; }
+        @keyframes pdFloat {
+            0%, 100% { transform: translateY(0) rotate(-4deg); }
+            50% { transform: translateY(-16px) rotate(5deg); }
         }
 
         /* ===== 右面板顶部：系统状态条 ===== */
@@ -305,60 +352,107 @@
         }
 
         .icon {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 20px;
+            position: relative;
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #0080ff 0%, #00c8ff 100%);
+            border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 24px;
-            font-size: 40px;
-            overflow: hidden;
+            margin: 0 auto 14px;
+            font-size: 32px;
+            overflow: visible;
+            box-shadow: 0 8px 28px rgba(0, 140, 255, 0.5);
         }
-        .icon img { width: 100%; height: 100%; object-fit: cover; }
+        /* logo 同心圆环 + 旋转光点装饰 */
+        .icon::before, .icon::after {
+            content: '';
+            position: absolute;
+            inset: -9px;
+            border-radius: 22px;
+            border: 1px dashed rgba(0, 200, 255, 0.4);
+            pointer-events: none;
+        }
+        .icon::after {
+            inset: -17px;
+            border-radius: 28px;
+            border-color: rgba(0, 200, 255, 0.18);
+            animation: iconSpin 14s linear infinite;
+        }
+        @keyframes iconSpin { to { transform: rotate(360deg); } }
+        .icon img { width: 100%; height: 100%; object-fit: cover; border-radius: 16px; }
 
         h1 {
-            color: #1a1a1a;
-            font-size: 28px;
-            margin-bottom: 8px;
-            font-weight: 600;
+            background: linear-gradient(90deg, #eaf4ff 20%, #00c8ff 60%, #5b8dff 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 25px;
+            margin-bottom: 4px;
+            font-weight: 700;
+            letter-spacing: 3px;
         }
 
         .subtitle {
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 24px;
+            color: #8fa3c8;
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+
+        /* 功能亮点 chips：填充留白的装饰 + 产品信息 */
+        .hero-chips {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .hero-chips span {
+            font-size: 11px;
+            color: #9db4e8;
+            background: rgba(0, 200, 255, 0.07);
+            border: 1px solid rgba(0, 200, 255, 0.22);
+            border-radius: 20px;
+            padding: 4px 11px;
+            letter-spacing: 0.5px;
+            transition: all 0.25s;
+        }
+        .hero-chips span:hover {
+            color: #fff;
+            background: rgba(0, 200, 255, 0.16);
+            transform: translateY(-1px);
         }
 
         .role-section {
-            margin-bottom: 24px;
+            margin-bottom: 14px;
         }
 
         .role-title {
             display: block;
             text-align: left;
-            color: #333;
-            font-size: 14px;
+            color: #a8b8dc;
+            font-size: 13px;
             font-weight: 500;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
         }
 
         .role-buttons {
             display: flex;
-            gap: 12px;
+            gap: 10px;
         }
 
         .role-btn {
             flex: 1;
-            padding: 14px;
-            border: 2px solid #e8e8f0;
+            padding: 10px;
+            border: 1.5px solid rgba(140, 170, 255, 0.24);
             border-radius: 12px;
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.3s;
-            background: white;
+            background: rgba(255, 255, 255, 0.05);
+            color: #c6d2ee;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -366,60 +460,69 @@
         }
 
         .role-btn:hover {
-            border-color: #667eea;
-            background: #f8f9fc;
+            border-color: rgba(0, 200, 255, 0.55);
+            background: rgba(0, 200, 255, 0.08);
         }
 
         .role-btn.selected {
-            border-color: #667eea;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-            color: #667eea;
+            border-color: transparent;
+            background: linear-gradient(135deg, #0080ff 0%, #00c8ff 100%);
+            color: #fff;
+            box-shadow: 0 4px 18px rgba(0, 150, 255, 0.45);
         }
 
         .input-group {
-            margin-bottom: 20px;
+            margin-bottom: 13px;
         }
 
         .input-group label {
             display: block;
             text-align: left;
-            color: #333;
-            font-size: 14px;
+            color: #a8b8dc;
+            font-size: 13px;
             font-weight: 500;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
         }
 
         .input-group input {
             width: 100%;
-            padding: 14px 16px;
-            border: 2px solid #e8e8f0;
-            border-radius: 12px;
-            font-size: 16px;
+            padding: 11px 14px;
+            border: 1.5px solid rgba(140, 170, 255, 0.24);
+            border-radius: 11px;
+            font-size: 15px;
             outline: none;
-            transition: border-color 0.3s;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            background: rgba(255, 255, 255, 0.06);
+            color: #eaf0ff;
         }
 
+        .input-group input::placeholder { color: #5d6f96; }
+
         .input-group input:focus {
-            border-color: #667eea;
+            border-color: rgba(0, 200, 255, 0.7);
+            box-shadow: 0 0 0 3px rgba(0, 200, 255, 0.12);
+            background: rgba(255, 255, 255, 0.09);
         }
 
         .login-btn {
             width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 12px;
+            background: linear-gradient(135deg, #0080ff 0%, #00c8ff 100%);
             color: white;
             border: none;
             border-radius: 12px;
             font-size: 16px;
             font-weight: 600;
+            letter-spacing: 6px;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
-            margin-top: 8px;
+            margin-top: 6px;
+            box-shadow: 0 6px 20px rgba(0, 140, 255, 0.35);
         }
 
         .login-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 10px 26px rgba(0, 160, 255, 0.5);
         }
 
         .login-btn:active {
@@ -433,9 +536,9 @@
         }
 
         .error {
-            color: #ff4757;
+            color: #ff6b78;
             font-size: 14px;
-            margin-top: 16px;
+            margin-top: 12px;
             display: none;
         }
 
@@ -464,10 +567,10 @@
             border: none; background: transparent; border-radius: 8px;
             cursor: pointer; font-size: 16px; opacity: 0.55; transition: all 0.2s;
         }
-        .pwd-eye:hover { opacity: 1; background: #f0f2f8; }
+        .pwd-eye:hover { opacity: 1; background: rgba(255, 255, 255, 0.1); }
         .caps-hint {
             display: none; text-align: left;
-            color: #fa8c16; font-size: 12px; margin-top: 6px;
+            color: #ffb35c; font-size: 12px; margin-top: 6px;
         }
         .caps-hint.show { display: block; }
 
@@ -488,9 +591,18 @@
         }
 
         .footer {
-            margin-top: 24px;
-            color: #999;
-            font-size: 12px;
+            margin-top: 14px;
+            padding-top: 12px;
+            color: rgba(255, 255, 255, 0.35);
+            font-size: 11px;
+            letter-spacing: 2px;
+            position: relative;
+        }
+        .footer::before {
+            content: '';
+            position: absolute; top: 0; left: 30%; right: 30%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 200, 255, 0.35), transparent);
         }
 
         .student-info {
@@ -712,19 +824,20 @@
             position: absolute;
             top: 16px;
             right: 16px;
-            background: rgba(255, 255, 255, 0.15);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.35);
-            padding: 7px 14px;
+            background: rgba(0, 200, 255, 0.1);
+            color: #9db4e8;
+            border: 1px solid rgba(0, 200, 255, 0.3);
+            padding: 6px 13px;
             border-radius: 20px;
-            font-size: 13px;
+            font-size: 12px;
             cursor: pointer;
             transition: all 0.2s;
             backdrop-filter: blur(4px);
         }
 
         .guide-trigger:hover {
-            background: rgba(255, 255, 255, 0.28);
+            background: rgba(0, 200, 255, 0.22);
+            color: #fff;
             transform: translateY(-1px);
         }
 
@@ -933,18 +1046,28 @@
             .splash-logo { width: 80px; height: 80px; font-size: 38px; }
         }
         @media (max-width: 480px) {
-            .login-panel { padding: 18px 12px; }
-            .login-container { padding: 28px 18px; border-radius: 16px; }
-            .login-container .icon { width: 64px; height: 64px; font-size: 32px; border-radius: 16px; margin-bottom: 18px; }
-            .login-container h1 { font-size: 22px; }
-            .login-container .subtitle { font-size: 13px; margin-bottom: 18px; }
+            .login-panel { padding: 14px 10px; }
+            .login-container { padding: 22px 16px 18px; border-radius: 18px; }
+            .login-container .icon { width: 54px; height: 54px; font-size: 27px; border-radius: 14px; margin-bottom: 10px; }
+            .login-container .icon::before { inset: -7px; border-radius: 19px; }
+            .login-container .icon::after { inset: -13px; border-radius: 23px; }
+            .login-container h1 { font-size: 21px; letter-spacing: 2px; }
+            .login-container .subtitle { font-size: 12px; margin-bottom: 10px; }
+            .hero-chips { gap: 6px; margin-bottom: 12px; }
+            .hero-chips span { font-size: 10px; padding: 3px 9px; }
+            .role-section { margin-bottom: 10px; }
             .role-buttons { gap: 8px; }
-            .role-btn { padding: 11px 8px; font-size: 13px; gap: 4px; }
-            .input-group { margin-bottom: 14px; }
-            .input-group label { font-size: 13px; }
-            .input-group input { padding: 11px 12px; font-size: 15px; }
-            .login-btn { padding: 12px; font-size: 15px; }
+            .role-btn { padding: 9px 8px; font-size: 13px; gap: 4px; }
+            .input-group { margin-bottom: 10px; }
+            .input-group label { font-size: 12.5px; margin-bottom: 4px; }
+            .input-group input { padding: 10px 12px; font-size: 15px; }
+            .login-btn { padding: 11px; font-size: 15px; margin-top: 4px; }
+            .footer { margin-top: 10px; padding-top: 9px; }
+            .sys-status { margin-bottom: 14px; }
+            .login-stats { margin-top: 14px; }
             .guide-trigger { top: 10px; right: 10px; padding: 5px 10px; font-size: 12px; }
+            .pd-ic { font-size: 20px; opacity: 0.1; }
+            .pd-2 { font-size: 23px; }
             .guide-header-text h2 { font-size: 16px; }
             .guide-header-text p { font-size: 11.5px; }
             .guide-step { padding: 10px 12px; gap: 10px; }
@@ -1036,6 +1159,13 @@
                 <span></span><span></span><span></span><span></span>
                 <span></span><span></span><span></span><span></span>
             </div>
+            <!-- 漂浮装饰图标：填充面板留白 -->
+            <div class="panel-deco" aria-hidden="true">
+                <span class="pd-ic pd-1">📡</span>
+                <span class="pd-ic pd-2">🛰</span>
+                <span class="pd-ic pd-3">⚡</span>
+                <span class="pd-ic pd-4">📶</span>
+            </div>
 
             <!-- 顶部系统状态条 -->
             <div class="sys-status">
@@ -1052,6 +1182,11 @@
         <div class="icon"><img src="/static/brand_logo.svg" alt="logo"></div>
         <h1>灵智尚人</h1>
         <p class="subtitle">请选择角色并登录</p>
+        <div class="hero-chips">
+            <span>📡 单站验证</span>
+            <span>🛰 簇·网格优化</span>
+            <span>✨ AI 生成剧情</span>
+        </div>
         
         <!-- 角色选择 -->
         <div class="role-section">
