@@ -144,7 +144,7 @@
 
         /* ===== 应用场景预览轮播（桌面端品牌面板） ===== */
         /* 无屏幕外壳：动画直接浮在面板深蓝背景上 */
-        .scene-stage {
+        .scene-showcase {
             position: relative;
             margin-bottom: 26px;
             background: transparent;
@@ -760,14 +760,14 @@
         }
 
         /* 功能亮点 chips：填充留白的装饰 + 产品信息 */
-        .hero-chips {
+        .hero-badges {
             display: flex;
             justify-content: center;
             gap: 8px;
             margin-bottom: 16px;
             flex-wrap: wrap;
         }
-        .hero-chips span {
+        .hero-badges span {
             font-size: 11px;
             color: #9db4e8;
             background: rgba(0, 200, 255, 0.07);
@@ -777,7 +777,7 @@
             letter-spacing: 0.5px;
             transition: all 0.25s;
         }
-        .hero-chips span:hover {
+        .hero-badges span:hover {
             color: #fff;
             background: rgba(0, 200, 255, 0.16);
             transform: translateY(-1px);
@@ -1412,8 +1412,8 @@
             .login-container .icon::after { inset: -13px; border-radius: 23px; }
             .login-container h1 { font-size: 21px; letter-spacing: 2px; }
             .login-container .subtitle { font-size: 12px; margin-bottom: 10px; }
-            .hero-chips { gap: 6px; margin-bottom: 12px; }
-            .hero-chips span { font-size: 10px; padding: 3px 9px; }
+            .hero-badges { gap: 6px; margin-bottom: 12px; }
+            .hero-badges span { font-size: 10px; padding: 3px 9px; }
             .role-section { margin-bottom: 10px; }
             .role-buttons { gap: 8px; }
             .role-btn { padding: 9px 8px; font-size: 13px; gap: 4px; }
@@ -1474,7 +1474,7 @@
                 </div>
 
                 <!-- 应用场景预览轮播（纯 CSS 动画 + JS 轮播，仅桌面端显示） -->
-                <div class="scene-stage" id="sceneStage">
+                <div class="scene-showcase" id="sceneStage">
                     <div class="scene-screen">
                         <div class="scene sc-1 active">
                             <div class="tower">
@@ -1626,7 +1626,7 @@
         <div class="icon"><img src="/static/brand_logo.svg" alt="logo"></div>
         <h1>灵智尚人</h1>
         <p class="subtitle">请选择角色并登录</p>
-        <div class="hero-chips">
+        <div class="hero-badges">
             <span>📡 单站验证</span>
             <span>🛰 簇·网格优化</span>
             <span>✨ AI 生成剧情</span>
