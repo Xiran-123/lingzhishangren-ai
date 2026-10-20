@@ -10180,7 +10180,10 @@ def mock_interview_page():
     """AI模拟面试页面"""
     if not session.get('authenticated'):
         return render_template('login.html')
-    return render_template('mock_interview.html')
+    resp = app.make_response(render_template('mock_interview.html'))
+    resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    resp.headers['Pragma'] = 'no-cache'
+    return resp
 
 
 @app.route('/interview-cases-page')
@@ -10314,10 +10317,10 @@ def api_mock_interview_start():
     """开始面试（SSE流式返回面试官开场白）"""
     if not session.get('authenticated'):
         return jsonify({'error': '请先登录'}), 401
-    if session.get('role') != 'student':
-        return jsonify({'error': '仅学生可参加模拟面试'}), 403
-    student_no = session.get('student_no', '')
-    student_name = session.get('student_name', '')
+    # 允许 teacher/admin 也能参加（便于体验/演示），非 student 角色使用默认占位
+    student_no = session.get('student_no', '') if session.get('role') == 'student' else '0000000000000'
+    student_name = session.get('student_name', '') if session.get('role') == 'student' else session.get('student_name') or '访客'
+    interviewer_is_teacher = session.get('role') != 'student'
     body = request.get_json() or {}
     company = body.get('company', '自定义企业')
     position = body.get('position', '通信工程师')
@@ -10402,8 +10405,6 @@ def api_mock_interview_chat():
     """面试对话（SSE流式返回面试官回复）"""
     if not session.get('authenticated'):
         return jsonify({'error': '请先登录'}), 401
-    if session.get('role') != 'student':
-        return jsonify({'error': '仅学生可参加模拟面试'}), 403
     body = request.get_json() or {}
     interview_id = body.get('interview_id', '')
     student_message = body.get('message', '').strip()
@@ -10413,7 +10414,9 @@ def api_mock_interview_chat():
     record = next((r for r in records if r['id'] == interview_id), None)
     if not record:
         return jsonify({'error': '面试记录不存在'}), 404
-    if record['student_no'] != session.get('student_no'):
+    # 老师/访客：允许操作自己 start 的记录（匹配默认占位学号）
+    my_no = session.get('student_no', '') if session.get('role') == 'student' else '0000000000000'
+    if record.get('student_no') != my_no and session.get('role') != 'teacher':
         return jsonify({'error': '无权操作'}), 403
     if record['status'] != 'in_progress':
         return jsonify({'error': '面试已结束'}), 400
@@ -10480,14 +10483,16 @@ def api_mock_interview_end():
     """结束面试（SSE流式生成评分报告）"""
     if not session.get('authenticated'):
         return jsonify({'error': '请先登录'}), 401
-    if session.get('role') != 'student':
-        return jsonify({'error': '仅学生可参加模拟面试'}), 403
     body = request.get_json() or {}
     interview_id = body.get('interview_id', '')
     records = load_interview_records()
     record = next((r for r in records if r['id'] == interview_id), None)
     if not record:
         return jsonify({'error': '面试记录不存在'}), 404
+    # 老师也能结束
+    my_no = session.get('student_no', '') if session.get('role') == 'student' else '0000000000000'
+    if record.get('student_no') != my_no and session.get('role') != 'teacher':
+        return jsonify({'error': '无权操作'}), 403
     if record['status'] != 'in_progress':
         return jsonify({'error': '面试已结束'}), 400
     record['status'] = 'scoring'
