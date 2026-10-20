@@ -10219,14 +10219,20 @@ def init_job_scheduler_async():
     if JOB_MODULE_AVAILABLE:
         try:
             import threading
-            import fcntl
             # 用文件锁确保只有一个 gunicorn worker 启动调度器，避免并发写文件
-            lock_file = open(os.path.join(DATA_DIR, '.scheduler.lock'), 'w')
+            # （fcntl 为 Linux 专属，Windows 本地开发环境直接跳过锁）
             try:
-                fcntl.flock(lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            except (IOError, OSError):
-                print("[调度器] 另一个 worker 已持有锁，跳过启动")
-                return
+                import fcntl
+            except ImportError:
+                fcntl = None
+            lock_file = None
+            if fcntl:
+                lock_file = open(os.path.join('data', '.scheduler.lock'), 'w')
+                try:
+                    fcntl.flock(lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                except (IOError, OSError):
+                    print("[调度器] 另一个 worker 已持有锁，跳过启动")
+                    return
 
             def _init():
                 _time.sleep(2)

@@ -214,7 +214,7 @@ def chunk_text(text: str) -> list:
 
 # ============================ 向量化 ============================
 
-def embed_texts(texts: list, batch: int = EMBED_BATCH, retries: int = 2) -> list:
+def embed_texts(texts: list, batch: int = EMBED_BATCH, retries: int = 2, timeout=60) -> list:
     """批量向量化。失败抛 RuntimeError，由调用方决定降级策略"""
     if not texts:
         return []
@@ -229,7 +229,7 @@ def embed_texts(texts: list, batch: int = EMBED_BATCH, retries: int = 2) -> list
                     EMBED_API_URL,
                     headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
                     json={"model": EMBED_MODEL, "input": piece},
-                    timeout=60,
+                    timeout=timeout,
                 )
                 if resp.status_code == 200:
                     data = resp.json().get("data", [])
@@ -421,7 +421,9 @@ def search(query: str, top_k: int = TOP_K, min_score: float = MIN_SCORE) -> list
     query_vec = None
     if vectors:
         try:
-            query_vec = embed_texts([query])[0]
+            # 查询向量化必须快失败：这是聊天主链路的前置步骤，
+            # embedding 接口异常时宁可用关键词召回也不能拖死整个 /chat
+            query_vec = embed_texts([query], retries=0, timeout=(2.5, 4))[0]
         except Exception as e:  # noqa: BLE001 - 向量接口不可用时退化为关键词召回
             print(f"[RAG] 查询向量化失败，退化为关键词召回: {e}")
             query_vec = None
