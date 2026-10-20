@@ -7200,18 +7200,19 @@ def save_interview_records(records: List[Dict]):
 
 
 def _get_cases_for_interview(company: str, position: str, interview_type: str) -> List[Dict]:
-    """按企业+岗位+面试类型检索相关案例"""
+    """按企业+岗位+面试类型检索相关案例（带随机打散，每次面试拿到的题库顺序不同）"""
+    import random as _r
     cases = load_interview_cases()
     exact = [c for c in cases if c.get('company') == company and c.get('position') == position and c.get('interview_type') == interview_type]
     if exact:
-        return exact[:3]
+        _r.shuffle(exact); return exact[:3]
     company_type = [c for c in cases if c.get('company') == company and c.get('interview_type') == interview_type]
     if company_type:
-        return company_type[:3]
+        _r.shuffle(company_type); return company_type[:3]
     type_only = [c for c in cases if c.get('interview_type') == interview_type]
     if type_only:
-        return type_only[:3]
-    return cases[:3]
+        _r.shuffle(type_only); return type_only[:3]
+    fallback = list(cases); _r.shuffle(fallback); return fallback[:3]
 
 
 def _build_interviewer_system_prompt(student_name, company, position, interview_type, difficulty, competence_vector, student_extras, case_questions):
@@ -7238,10 +7239,16 @@ def _build_interviewer_system_prompt(student_name, company, position, interview_
 
     case_text = ""
     if case_questions:
-        for i, cq in enumerate(case_questions[:10], 1):
-            q = cq.get('question', '')
-            kp = cq.get('key_points', [])
-            case_text += f"\n{i}. {q}\n   考察要点：{', '.join(kp) if kp else '无'}"
+        # 只给考察知识点关键词，绝对不给原题！让 LLM 自己组织问题
+        all_kps = []
+        for cq in case_questions[:10]:
+            kps = cq.get('key_points', [])
+            if kps:
+                all_kps.extend(kps)
+        all_kps = list(dict.fromkeys(all_kps))[:20]  # 去重，最多20个
+        if all_kps:
+            case_text = f"【考察知识点参考】（仅方向参考，绝对不要照搬原题，请根据这些方向自行组织自然的面试官式问题）\n" + \
+                "、".join(all_kps)
 
     if interview_type == 'HR面':
         focus = "请侧重考察综合素质：团队协作、沟通表达、职业规划、抗压能力、责任心等，不涉及具体技术细节。"
@@ -7267,11 +7274,11 @@ def _build_interviewer_system_prompt(student_name, company, position, interview_
 【候选人附加信息】
 {extras_text}
 
-【参考题库】（从知识库检索，可灵活使用但不要照搬）
-{case_text if case_text else "（无参考题库，请根据岗位要求自行出题）"}
+{case_text}
 
 【面试方向引导】
 请根据候选人能力画像，优先考察其薄弱维度相关的知识点，同时验证其优势维度是否名副其实。
+⚠️ 核心原则：你必须自己组织全新的、自然的面试官式问题，绝对不要从参考资料里抄任何现成题目。每场面试的问题都必须不同。
 面试开始时，请先做一个简短的开场介绍（不超过100字），然后提出第一个问题。"""
 
 
@@ -10322,10 +10329,10 @@ def api_mock_interview_start():
     student_name = session.get('student_name', '') if session.get('role') == 'student' else session.get('student_name') or '访客'
     interviewer_is_teacher = session.get('role') != 'student'
     body = request.get_json() or {}
-    company = body.get('company', '自定义企业')
-    position = body.get('position', '通信工程师')
-    interview_type = body.get('interview_type', '技术面')
-    difficulty = body.get('difficulty', '中等')
+    company = body.get('company') or '自定义企业'
+    position = body.get('position') or '通信工程师'
+    interview_type = body.get('interview_type') or '技术面'
+    difficulty = body.get('difficulty') or '中等'
     comp = _get_student_competence_vector(student_no)
     case_list = _get_cases_for_interview(company, position, interview_type)
     case_questions = []
@@ -10351,7 +10358,10 @@ def api_mock_interview_start():
     records.append(record)
     save_interview_records(records)
     messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": "请开始面试。"}]
-    payload = {"model": MODEL_FLASH, "messages": messages, "temperature": 0.7, "max_tokens": 800, "stream": True, "enable_thinking": False}
+    import random as _r
+    payload = {"model": MODEL_FLASH, "messages": messages, "temperature": 0.8,
+               "max_tokens": 800, "stream": True, "enable_thinking": False,
+               "seed": _r.randint(0, 999999)}
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {API_KEY}"}
 
     def generate(interview_id=interview_id):
@@ -10430,7 +10440,10 @@ def api_mock_interview_chat():
             messages.append({"role": "assistant", "content": msg['content']})
         elif msg['role'] == 'student':
             messages.append({"role": "user", "content": msg['content']})
-    payload = {"model": MODEL_FLASH, "messages": messages, "temperature": 0.7, "max_tokens": 800, "stream": True, "enable_thinking": False}
+    import random as _r
+    payload = {"model": MODEL_FLASH, "messages": messages, "temperature": 0.8,
+               "max_tokens": 800, "stream": True, "enable_thinking": False,
+               "seed": _r.randint(0, 999999)}
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {API_KEY}"}
 
     def generate(interview_id=interview_id):

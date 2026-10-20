@@ -57,6 +57,8 @@
             max-width: 560px;
             margin: 0 auto;
             padding: 40px 20px 30px;
+            position: relative;
+            min-height: calc(100vh - 62px);
         }
         .config-card {
             background: #fff;
@@ -103,44 +105,137 @@
         .start-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(37, 99, 235, 0.45); }
         .start-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-        /* 历史记录 */
-        .history {
-            margin-top: 22px;
-            background: #fff;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            overflow: hidden;
+        .config-hint {
+            text-align: center; margin-top: 16px;
+            font-size: 12px; color: #9ca3af;
         }
-        .history-head {
-            padding: 13px 18px;
-            font-size: 14px; font-weight: 600; color: #374151;
-            display: flex; justify-content: space-between; align-items: center;
-            cursor: pointer; user-select: none;
+
+        /* 右侧悬浮按钮 */
+        .history-fab {
+            position: fixed; right: 0; top: 50%; transform: translateY(-50%);
+            background: #1e3a8a; color: #fff;
+            padding: 18px 10px; border-radius: 12px 0 0 12px;
+            border: none; cursor: pointer; z-index: 100;
+            display: flex; flex-direction: column; gap: 6px; align-items: center;
+            box-shadow: -4px 4px 16px rgba(30, 58, 138, 0.3);
+            transition: all 0.2s ease;
+            font-family: inherit;
         }
-        .history-head .toggle-icon { color: #6b7280; font-size: 12px; transition: transform 0.2s; }
-        .history-head.collapsed .toggle-icon { transform: rotate(-90deg); }
-        .history-list { max-height: 360px; overflow-y: auto; }
-        .history.collapsed .history-list { display: none; }
+        .history-fab:hover { background: #1e40af; padding-right: 14px; }
+        .history-fab .fab-icon { font-size: 20px; line-height: 1; }
+        .history-fab .fab-count {
+            font-size: 11px; font-weight: 700;
+            background: #ef4444; padding: 1px 6px; border-radius: 10px;
+            min-width: 18px; text-align: center;
+        }
+        .history-fab .fab-label {
+            font-size: 12px; font-weight: 600;
+            writing-mode: vertical-rl; letter-spacing: 2px;
+        }
+        .history-fab .fab-arrow { font-size: 10px; opacity: 0.7; transition: transform 0.2s; }
+        .history-fab.fab-open .fab-arrow { transform: scaleX(-1); }
+
+        /* 抽屉遮罩 */
+        .drawer-backdrop {
+            position: fixed; inset: 0;
+            background: rgba(15, 23, 42, 0.35);
+            backdrop-filter: blur(1px);
+            z-index: 199;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+        .drawer-backdrop.show { opacity: 1; pointer-events: auto; }
+
+        /* 右侧抽屉 */
+        .history-drawer {
+            position: fixed; right: 0; top: 0; bottom: 0;
+            width: 420px; max-width: 90vw;
+            background: #fff; z-index: 200;
+            box-shadow: -10px 0 32px rgba(15, 23, 42, 0.18);
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; flex-direction: column;
+        }
+        .history-drawer.open { transform: translateX(0); }
+
+        .drawer-header {
+            padding: 20px 22px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex; align-items: center; justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .drawer-header .dh-title {
+            font-size: 16px; font-weight: 700; color: #1f2937;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .drawer-header .dh-count {
+            font-size: 12px; font-weight: 500; color: #6b7280;
+            margin-left: 4px;
+        }
+        .drawer-header .dh-close {
+            width: 30px; height: 30px; border-radius: 8px;
+            border: none; background: #f1f5f9; color: #6b7280;
+            cursor: pointer; font-size: 18px; line-height: 1;
+            transition: all 0.15s;
+        }
+        .drawer-header .dh-close:hover { background: #e5e7eb; color: #1f2937; }
+
+        .drawer-list {
+            flex: 1; overflow-y: auto;
+            padding: 4px 0;
+        }
+        .drawer-tip {
+            padding: 14px 22px;
+            font-size: 12px; color: #9ca3af;
+            text-align: center; border-top: 1px solid #f1f5f9;
+            flex-shrink: 0;
+        }
+
+        /* 抽屉里的历史条目（复用 history-item 的结构） */
         .history-item {
-            padding: 14px 18px;
-            border-top: 1px solid #f1f5f9;
-            font-size: 13px;
+            padding: 15px 22px;
+            border-bottom: 1px solid #f1f5f9;
             cursor: pointer;
-            transition: background 0.15s;
+            transition: background 0.15s, border-left-color 0.15s;
+            border-left: 3px solid transparent;
         }
         .history-item:hover { background: #f8fafc; }
-        .history-item-row {
-            display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;
+        .history-item.selected {
+            background: #eff6ff;
+            border-left-color: #2563eb;
         }
-        .history-company { font-weight: 600; color: #1f2937; }
-        .history-score { color: #16a34a; font-weight: 700; font-size: 15px; }
-        .history-meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .history-item-row {
+            display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 5px;
+        }
+        .history-item-row .hi-left {
+            display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;
+        }
+        .history-item .hi-avatar {
+            width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 700; color: #fff;
+        }
+        .history-company { font-weight: 600; color: #1f2937; font-size: 14px; }
+        .history-position { font-size: 12px; color: #6b7280; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+        .history-score { color: #16a34a; font-weight: 700; font-size: 15px; flex-shrink: 0; }
+        .history-score.low { color: #f59e0b; }
+        .history-score.high { color: #16a34a; }
+        .history-score.excellent { color: #059669; }
+        .history-meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 4px; }
         .history-tag {
             font-size: 11px; color: #2563eb;
             background: #eff6ff; padding: 2px 8px; border-radius: 4px;
         }
-        .history-date { font-size: 11px; color: #9ca3af; }
-        .history-empty { text-align: center; color: #9ca3af; padding: 28px 0; font-size: 13px; }
+        .history-tag.type { color: #0891b2; background: #ecfeff; }
+        .history-tag.diff { color: #c026d3; background: #faf5ff; }
+        .history-date { font-size: 11px; color: #9ca3af; margin-left: auto; }
+        .history-empty { text-align: center; color: #9ca3af; padding: 40px 0; font-size: 13px; }
+
+        /* 抽屉打开时配置卡片稍微右移露出内容 */
+        .state-config.drawer-open .config-card {
+            transform: translateX(-8px);
+            transition: transform 0.3s ease;
+        }
 
         /* ==================== 状态② 面试中 ==================== */
         .state-chat {
@@ -260,20 +355,20 @@
 
         /* ==================== 状态③ 面试后 ==================== */
         .state-done {
-            max-width: 1100px; margin: 0 auto;
+            max-width: 1200px; margin: 0 auto;
             padding: 24px 20px 0;
             min-height: calc(100vh - 62px);
             display: flex; flex-direction: column;
         }
         .done-body {
-            display: flex; gap: 18px;
+            display: grid; grid-template-columns: 40% 60%; gap: 18px;
         }
         .replay, .report {
             background: #fff; border: 1px solid #e5e7eb; border-radius: 14px;
             padding: 20px; min-height: 480px;
         }
-        .replay { flex: 1; display: flex; flex-direction: column; max-height: calc(100vh - 180px); overflow: hidden; }
-        .report { width: 360px; display: flex; flex-direction: column; max-height: calc(100vh - 180px); overflow-y: auto; }
+        .replay { display: flex; flex-direction: column; max-height: calc(100vh - 180px); overflow: hidden; }
+        .report { display: flex; flex-direction: column; max-height: calc(100vh - 180px); overflow-y: auto; }
         .col-title {
             font-size: 15px; font-weight: 700; color: #1f2937;
             margin-bottom: 14px; flex-shrink: 0;
@@ -329,6 +424,64 @@
         }
         .score-badge::before {
             content: '综合得分'; font-size: 13px; color: #6b7280; display: block; margin-bottom: 6px;
+        }
+
+        /* 报告头部信息（企业/岗位/类型/时间/状态） */
+        .score-meta {
+            display: flex; align-items: center; gap: 12px;
+            padding: 14px; background: #f8fafc; border-radius: 10px;
+            margin-bottom: 14px; border: 1px solid #f1f5f9;
+        }
+        .score-meta .sm-avatar {
+            width: 42px; height: 42px; border-radius: 10px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; font-weight: 700; color: #fff;
+        }
+        .score-meta .sm-info { flex: 1; min-width: 0; }
+        .score-meta .sm-company { font-size: 14px; font-weight: 700; color: #1f2937; }
+        .score-meta .sm-position { font-size: 12px; color: #6b7280; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .score-meta .sm-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+        .score-meta .sm-tag {
+            font-size: 11px; color: #2563eb; background: #eff6ff;
+            padding: 1px 7px; border-radius: 4px;
+        }
+        .score-meta .sm-status {
+            font-size: 12px; font-weight: 600; color: #16a34a; white-space: nowrap;
+            background: #ecfdf5; padding: 3px 10px; border-radius: 14px;
+        }
+        .score-meta .sm-status.pending { color: #f59e0b; background: #fffbeb; }
+
+        /* 能力维度条形图 */
+        .competence-chart {
+            background: #f8fafc; border-radius: 10px; padding: 14px 16px;
+            margin-bottom: 14px; border: 1px solid #f1f5f9;
+        }
+        .competence-chart .chart-title {
+            font-size: 13px; font-weight: 700; color: #374151;
+            margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+        }
+        .dim-row {
+            display: flex; align-items: center; gap: 10px;
+            margin-bottom: 8px;
+        }
+        .dim-row:last-child { margin-bottom: 0; }
+        .dim-label {
+            font-size: 12px; color: #4b5563; flex-shrink: 0;
+            width: 80px; text-align: right;
+        }
+        .dim-bar-bg {
+            flex: 1; height: 8px; background: #e5e7eb;
+            border-radius: 4px; overflow: hidden;
+        }
+        .dim-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #2563eb);
+            border-radius: 4px;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .dim-score {
+            font-size: 12px; font-weight: 700; color: #2563eb;
+            width: 28px; text-align: right; flex-shrink: 0;
         }
 
         /* 报告内嵌的优势/不足/建议/评语 */
@@ -478,16 +631,33 @@
         </div>
 
         <button class="start-btn" id="startBtn" onclick="startInterview()">🚀 开始模拟面试</button>
+        <div class="config-hint">拉出右侧边栏，查看历史面试记录 →</div>
     </div>
 
-    <div class="history" id="historyBox">
-        <div class="history-head" onclick="toggleHistory(this)">
-            <span>📜 历史面试记录</span>
-            <span class="toggle-icon">▾</span>
-        </div>
-        <div id="historyList" class="history-list">加载中...</div>
-    </div>
+    <!-- 右侧悬浮按钮 -->
+    <button class="history-fab" id="historyFab" onclick="toggleHistoryDrawer()" title="历史面试记录">
+        <span class="fab-icon">📋</span>
+        <span class="fab-count" id="fabCount">0</span>
+        <span class="fab-label">历史记录</span>
+        <span class="fab-arrow">◀</span>
+    </button>
 </div>
+
+<!-- 抽屉遮罩 -->
+<div class="drawer-backdrop" id="drawerBackdrop" onclick="closeHistoryDrawer()"></div>
+
+<!-- 右侧抽屉 -->
+<aside class="history-drawer" id="historyDrawer">
+    <div class="drawer-header">
+        <div class="dh-title">
+            📜 历史面试记录
+            <span class="dh-count" id="drawerCount">（共 0 次）</span>
+        </div>
+        <button class="dh-close" onclick="closeHistoryDrawer()">×</button>
+    </div>
+    <div id="drawerList" class="drawer-list">加载中...</div>
+    <div class="drawer-tip">点击任意一条记录，查看完整对话回放</div>
+</aside>
 
 <!-- ==================== 状态② 面试中 ==================== -->
 <div class="state state-chat" id="stateChat" style="display:none;">
@@ -733,11 +903,43 @@ const COMPANY_AVATAR = {
     '科研院所/国企': { bg: '#be123c', text: '研' }
 };
 
+/* 从具体企业名 → 找到所属分组 → 取头像 */
+function getCompanyAvatar(companyName) {
+    if (!companyName) return { bg: '#6b7280', text: '？' };
+    // 1. 先在静态 COMPANY_GROUPS 里找
+    for (const group of COMPANY_GROUPS) {
+        if (group.companies.includes(companyName)) {
+            const g = COMPANY_AVATAR[group.name];
+            if (g) return g;
+        }
+    }
+    // 2. 关键词匹配兜底
+    if (/华为/.test(companyName)) return { bg: '#dc2626', text: '华' };
+    if (/中兴/.test(companyName)) return { bg: '#2563eb', text: '兴' };
+    if (/大唐/.test(companyName)) return { bg: '#f97316', text: '大' };
+    if (/爱立信/.test(companyName)) return { bg: '#7c3aed', text: '爱' };
+    if (/诺基亚/.test(companyName)) return { bg: '#2563eb', text: '诺' };
+    if (/烽火/.test(companyName)) return { bg: '#dc2626', text: '烽' };
+    if (/海能达/.test(companyName)) return { bg: '#ea580c', text: '海' };
+    if (/迈普/.test(companyName)) return { bg: '#0891b2', text: '迈' };
+    if (/京信/.test(companyName)) return { bg: '#be123c', text: '京' };
+    if (/紫光/.test(companyName)) return { bg: '#8b5cf6', text: '紫' };
+    if (/普天/.test(companyName)) return { bg: '#4f46e5', text: '普' };
+    if (/中电/.test(companyName) || /CETC/.test(companyName)) return { bg: '#0f766e', text: '电' };
+    if (/移动/.test(companyName)) return COMPANY_AVATAR['运营商集团'];
+    if (/电信/.test(companyName)) return { bg: '#15803d', text: '信' };
+    if (/联通/.test(companyName)) return { bg: '#15803d', text: '联' };
+    // 3. 默认灰色
+    return { bg: '#6b7280', text: companyName.charAt(0) || '?' };
+}
+
 /* ==================== 全局状态 ==================== */
 let currentInterviewId = null;
 let isGenerating = false;
 let companyJobMap = {};
 let studentReplyCount = 0;
+let enteredFromHistory = false;   // done 状态是否从历史记录进来
+let lastHistoryRecords = [];       // 缓存最近一次历史记录（FAB 计数用）
 const MAX_INTERVIEW_ROUNDS = 8;
 
 /* ==================== 状态切换 ==================== */
@@ -748,21 +950,38 @@ function switchState(stateName) {
     // 更新品牌栏
     const br = document.getElementById('brandRight');
     const bb = document.getElementById('brandBack');
-    const bt = document.getElementById('brandTitle');
     if (stateName === 'config') {
-        br.textContent = '学生端'; bb.textContent = '← 返回'; bb.style.display = 'inline-block';
+        br.textContent = '学生端';
+        bb.textContent = '← 返回'; bb.style.display = 'inline-block';
+        bb.href = '/'; bb.onclick = null;
+        closeHistoryDrawer();
     } else if (stateName === 'chat') {
         br.textContent = '学生端'; bb.style.display = 'none';
-    } else {
-        br.textContent = '✅ 面试完成'; bb.textContent = '← 返回'; bb.style.display = 'inline-block';
+        closeHistoryDrawer();
+    } else if (stateName === 'done') {
+        br.textContent = '✅ 面试完成'; bb.style.display = 'inline-block';
+        if (enteredFromHistory) {
+            bb.textContent = '← 返回历史记录';
+            bb.removeAttribute('href');
+            bb.onclick = function(e) { e.preventDefault(); backToConfig(); };
+        } else {
+            bb.textContent = '← 返回';
+            bb.href = '/'; bb.onclick = null;
+        }
     }
+}
+
+function backToConfig() {
+    enteredFromHistory = false;
+    switchState('config');
+    openHistoryDrawer();
 }
 
 /* ==================== 下拉框初始化 ==================== */
 function initStaticConfig() {
     // 填充企业下拉
     const companySelect = document.getElementById('companySelect');
-    let html = '';
+    let html = '<option value="">— 不选择 —</option>';
     COMPANY_GROUPS.forEach(group => {
         html += `<optgroup label="${group.name}">`;
         group.companies.forEach(c => {
@@ -782,7 +1001,7 @@ function initStaticConfig() {
 
     // 填充岗位下拉（默认显示全部）
     const positionSelect = document.getElementById('positionSelect');
-    let posHtml = '';
+    let posHtml = '<option value="">— 不选择 —</option>';
     POSITION_CLUSTERS.forEach(cluster => {
         posHtml += `<optgroup label="${cluster.name}">`;
         cluster.positions.forEach(p => {
@@ -795,16 +1014,18 @@ function initStaticConfig() {
 
     // 填充面试类型
     const typeSelect = document.getElementById('typeSelect');
-    typeSelect.innerHTML = INTERVIEW_TYPES.map(t =>
-        `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`
-    ).join('');
+    typeSelect.innerHTML = '<option value="">— 不选择 —</option>' +
+        INTERVIEW_TYPES.map(t =>
+            `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`
+        ).join('');
     typeSelect.value = '技术一面（基础）';
 
     // 填充难度
     const diffSelect = document.getElementById('difficultySelect');
-    diffSelect.innerHTML = DIFFICULTY_OPTIONS.map(d =>
-        `<option value="${d.value}">${d.text}</option>`
-    ).join('');
+    diffSelect.innerHTML = '<option value="">— 不选择 —</option>' +
+        DIFFICULTY_OPTIONS.map(d =>
+            `<option value="${d.value}">${d.text}</option>`
+        ).join('');
     diffSelect.value = '中等';
 }
 
@@ -896,15 +1117,12 @@ function updateProgress() {
 async function startInterview() {
     if (isGenerating) return;
 
-    const company = getCompanyValue();
-    const position = getPositionValue();
-    const interviewType = document.getElementById('typeSelect').value;
-    const difficulty = document.getElementById('difficultySelect').value;
+    let company = getCompanyValue() || '自定义企业';
+    let position = getPositionValue() || '通信工程师';
+    let interviewType = document.getElementById('typeSelect').value || '技术面';
+    let difficulty = document.getElementById('difficultySelect').value || '中等';
 
-    if (!company) { alert('请选择目标企业'); return; }
-    if (!position) { alert('请选择或输入目标岗位'); return; }
-
-    // 更新面试信息
+    // 更新面试信息（空值时显示默认名称）
     document.getElementById('chatTitle').textContent = company + ' · ' + position;
     document.getElementById('chatSubtitle').textContent = interviewType + ' · ' + difficulty;
 
@@ -1138,7 +1356,10 @@ async function endInterviewConfirmed() {
     } finally {
         currentInterviewId = null;
         isGenerating = false;
-        loadRecords();
+        // 刷新 FAB 计数（面试结束后新增了一条记录）
+        fetch('/api/mock-interview/records').then(r => r.json()).then(d => {
+            updateFabCount((d.records || []).length);
+        });
     }
 }
 
@@ -1156,11 +1377,32 @@ function tryFormatScoreReport(text) {
     return formatMessage(text);
 }
 
+/* 能力维度 ID → 中文名称映射（与后端 COMPETENCE_AREAS 同步） */
+const COMPETENCE_NAME_MAP = {
+    communication_principle: '通信原理',
+    rf_engineering: '射频工程',
+    network_protocol: '网络协议',
+    troubleshooting: '故障排查',
+    digital_signal: '数字信号',
+    modulation: '调制技术',
+    coding: '编码技术',
+    signal_system: '信号与系统',
+    hardware: '硬件设计',
+    communication: '沟通表达',
+    'communication_principle ': '通信原理',
+};
+
 function buildStructuredReport(record) {
     let html = '';
+    // ① 报告头部信息
+    html += buildScoreMeta(record);
+    // ② 大分数徽章
     if (record.score != null && record.score !== undefined) {
-        html += `<div class="score-badge"><span>${escapeHtml(String(record.score))}</span></div>`;
+        html += `<div class="score-badge"><span>${escapeHtml(String(Math.round(record.score)))}</span></div>`;
     }
+    // ③ 能力维度条形图
+    html += buildCompetenceChart(record.competence_scores);
+    // ④ 结构化报告块
     html += '<div class="structured-report">';
     if (record.strengths && record.strengths.length) {
         html += '<div class="s-block"><div class="s-title">✅ 优势</div><ul>' +
@@ -1175,7 +1417,6 @@ function buildStructuredReport(record) {
             record.suggestions.map(s => `<li>${escapeHtml(s)}</li>`).join('') + '</ul></div>';
     }
     if (record.score_report) {
-        // 去掉 score_report 里重复的 JSON 部分，只保留评语
         let reportText = record.score_report;
         try { reportText = reportText.replace(/\{[\s\S]*\}/, '').trim(); } catch(e) {}
         if (reportText) {
@@ -1189,9 +1430,15 @@ function buildStructuredReport(record) {
 
 function buildScoreReportFromJson(r, fallbackText) {
     let html = '';
+    // ① 报告头部信息（从 fallbackText 可能拿不到完整 record，r 里如果没有就跳过）
+    html += buildScoreMeta(r);
+    // ② 大分数
     if (r.score != null) {
-        html += `<div class="score-badge"><span>${escapeHtml(String(r.score))}</span></div>`;
+        html += `<div class="score-badge"><span>${escapeHtml(String(Math.round(r.score)))}</span></div>`;
     }
+    // ③ 能力条形图
+    html += buildCompetenceChart(r.competence_scores);
+    // ④ 结构化块
     html += '<div class="structured-report">';
     if (r.strengths && r.strengths.length) {
         html += '<div class="s-block"><div class="s-title">✅ 优势</div><ul>' +
@@ -1208,9 +1455,66 @@ function buildScoreReportFromJson(r, fallbackText) {
     if (r.report) {
         html += '<div class="s-block"><div class="s-title">📋 综合评语</div><p>' +
             formatMessage(r.report) + '</p></div>';
+    } else if (fallbackText) {
+        html += '<div class="s-block"><div class="s-title">📋 综合评语</div><p>' +
+            formatMessage(fallbackText) + '</p></div>';
     }
     html += '</div>';
     return html;
+}
+
+/* ==================== 报告头部信息 ==================== */
+function buildScoreMeta(r) {
+    if (!r || (!r.target_company && !r.target_position)) return '';
+    const avatar = getCompanyAvatar(r.target_company);
+    const company = r.target_company || '';
+    const position = r.target_position || '';
+    const typeLabel = (r.interview_type || '技术面');
+    const diffLabel = r.difficulty || '';
+    const msgCount = (r.messages || []).length;
+    const studentMsgs = (r.messages || []).filter(m => m.role === 'student').length;
+    const date = r.started_at || r.completed_at || r.created_at
+        ? (r.started_at || r.completed_at || r.created_at).replace('T', ' ').slice(0, 16)
+        : (new Date().toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '-').slice(0, 16));
+    return `
+        <div class="score-meta">
+            <div class="sm-avatar" style="background:${avatar.bg}">${escapeHtml(avatar.text)}</div>
+            <div class="sm-info">
+                <div class="sm-company">${escapeHtml(company)}</div>
+                <div class="sm-position">${escapeHtml(position)}</div>
+                <div class="sm-tags">
+                    <span class="sm-tag">${escapeHtml(typeLabel)}</span>
+                    ${diffLabel ? `<span class="sm-tag">难度·${escapeHtml(diffLabel)}</span>` : ''}
+                    <span class="sm-tag">${studentMsgs} 轮问答</span>
+                </div>
+            </div>
+            <div class="sm-status">✓ 已完成</div>
+        </div>`;
+}
+
+/* ==================== 能力维度条形图 ==================== */
+function buildCompetenceChart(competenceScores) {
+    if (!competenceScores || typeof competenceScores !== 'object') return '';
+    const entries = Object.entries(competenceScores)
+        .filter(([k, v]) => v != null && Number(v) > 0)
+        .map(([k, v]) => ({ id: k, score: Number(v) }))
+        .sort((a, b) => b.score - a.score);
+    if (!entries.length) return '';
+    const dims = entries.slice(0, 8);
+    let rows = dims.map(d => {
+        const label = COMPETENCE_NAME_MAP[d.id] || d.id;
+        return `
+            <div class="dim-row">
+                <span class="dim-label">${escapeHtml(label)}</span>
+                <div class="dim-bar-bg"><div class="dim-bar-fill" style="width:${d.score}%"></div></div>
+                <span class="dim-score">${Math.round(d.score)}</span>
+            </div>`;
+    }).join('');
+    return `
+        <div class="competence-chart">
+            <div class="chart-title">📈 能力维度得分</div>
+            ${rows}
+        </div>`;
 }
 
 /* ==================== 对话回放 ==================== */
@@ -1422,12 +1726,9 @@ async function loadHistoryRecord(id) {
         if (!data.success) { alert('加载记录失败'); return; }
         const record = data.record;
 
+        enteredFromHistory = true;
         // 切换到完成态
         switchState('done');
-        document.getElementById('chatTitle').textContent =
-            (record.target_company || '') + ' · ' + (record.target_position || '');
-        document.getElementById('chatSubtitle').textContent =
-            (record.interview_type || '') + ' · ' + (record.difficulty || '') + ' · 回放模式';
 
         // 填充回放
         renderReplayFromRecords(record.messages || []);
@@ -1449,12 +1750,13 @@ async function loadHistoryRecord(id) {
 function resetInterview() {
     currentInterviewId = null;
     studentReplyCount = 0;
+    enteredFromHistory = false;
     document.getElementById('inputArea').style.display = 'none';
     clearMessages();
     updateProgress();
     switchState('config');
-    document.getElementById('historyBox').style.display = '';
-    loadRecords();
+    // 启动成功后刷新 FAB 计数
+    loadHistoryIntoDrawer();
 }
 
 function backToChat() {
@@ -1462,10 +1764,79 @@ function backToChat() {
     resetInterview();
 }
 
-function toggleHistory(el) {
-    const box = document.getElementById('historyBox');
-    box.classList.toggle('collapsed');
-    el.classList.toggle('collapsed');
+/* ==================== 历史抽屉 ==================== */
+function openHistoryDrawer() {
+    document.getElementById('historyDrawer').classList.add('open');
+    document.getElementById('drawerBackdrop').classList.add('show');
+    document.getElementById('historyFab').classList.add('fab-open');
+    document.getElementById('stateConfig').classList.add('drawer-open');
+    loadHistoryIntoDrawer();
+}
+function closeHistoryDrawer() {
+    document.getElementById('historyDrawer').classList.remove('open');
+    document.getElementById('drawerBackdrop').classList.remove('show');
+    document.getElementById('historyFab').classList.remove('fab-open');
+    document.getElementById('stateConfig').classList.remove('drawer-open');
+}
+function toggleHistoryDrawer() {
+    if (document.getElementById('historyDrawer').classList.contains('open')) {
+        closeHistoryDrawer();
+    } else {
+        openHistoryDrawer();
+    }
+}
+function updateFabCount(n) {
+    document.getElementById('fabCount').textContent = n || 0;
+}
+async function loadHistoryIntoDrawer() {
+    const listEl = document.getElementById('drawerList');
+    const countEl = document.getElementById('drawerCount');
+    listEl.innerHTML = '<div class="history-empty">加载中...</div>';
+    try {
+        const res = await fetch('/api/mock-interview/records');
+        const data = await res.json();
+        const records = data.records || [];
+        lastHistoryRecords = records;
+        updateFabCount(records.length);
+        countEl.textContent = `（共 ${records.length} 次）`;
+        if (records.length === 0) {
+            listEl.innerHTML = '<div class="history-empty">还没有面试记录<br>开始第一场模拟面试吧！</div>';
+            return;
+        }
+        listEl.innerHTML = records.map(r => renderDrawerItem(r)).join('');
+    } catch (e) {
+        listEl.innerHTML = '<div class="history-empty">加载失败，请重试</div>';
+    }
+}
+function renderDrawerItem(r) {
+    const avatar = getCompanyAvatar(r.target_company);
+    const scoreClass = r.score >= 85 ? 'excellent' : (r.score >= 70 ? 'high' : 'low');
+    const typeLabel = (r.interview_type || '技术面').replace('技术一面','技术一面').replace('技术二面','技术二面').replace('技术三面','技术三面');
+    const diffLabel = r.difficulty || '中等';
+    const date = r.created_at ? r.created_at.replace('T', ' ').slice(0, 16) : '';
+    const selectedCls = (enteredFromHistory && r.selected) ? ' selected' : '';
+    return `
+        <div class="history-item${selectedCls}" onclick="selectDrawerItem('${escapeHtml(r.id)}')">
+            <div class="history-item-row">
+                <div class="hi-left">
+                    <div class="hi-avatar" style="background:${avatar.bg}">${escapeHtml(avatar.text)}</div>
+                    <div style="min-width:0;">
+                        <div class="history-company">${escapeHtml(r.target_company || '')}</div>
+                        <div class="history-position">${escapeHtml(r.target_position || '')}</div>
+                    </div>
+                </div>
+                <div class="history-score ${scoreClass}">${r.score != null ? Math.round(r.score) : '--'}分</div>
+            </div>
+            <div class="history-meta">
+                <span class="history-tag type">${escapeHtml(typeLabel)}</span>
+                <span class="history-tag diff">${escapeHtml(diffLabel)}</span>
+                <span class="history-date">${escapeHtml(date)}</span>
+            </div>
+        </div>`;
+}
+function selectDrawerItem(id) {
+    closeHistoryDrawer();
+    loadHistoryRecord(id);
 }
 
 /* ==================== 页面初始化 ==================== */
@@ -1473,7 +1844,8 @@ document.addEventListener('DOMContentLoaded', function() {
     initStaticConfig();
     fetch('/current-user').then(r => r.json()).then(u => {
         if (!u.authenticated) { window.location.href = '/login'; return; }
-        loadRecords();
+        // 启动时刷新 FAB 计数（不强制开抽屉）
+        loadHistoryIntoDrawer().then(() => closeHistoryDrawer());
     }).catch(() => { window.location.href = '/login'; });
 });
 </script>
