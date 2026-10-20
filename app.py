@@ -3734,6 +3734,50 @@ def api_rename_conversation(cid):
     save_conversations(data)
     return jsonify(conv_summary(conv))
 
+@app.route('/api/conversations/<cid>/auto-title', methods=['POST'])
+def api_auto_title_conversation(cid):
+    """按对话内容用 AI 生成豆包式短标题，失败时回退为首条消息截断"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    data = load_conversations()
+    conv = find_conv(get_user_convs(data), cid)
+    if not conv:
+        return jsonify({'error': '会话不存在'}), 404
+    user_msgs = [m.get('content', '') for m in conv.get('messages', []) if m.get('isUser')]
+    user_msgs = [m for m in user_msgs if m and m.strip()]
+    if not user_msgs:
+        return jsonify({'title': conv.get('title', '新的对话')})
+    sample = '\n'.join('用户：' + m[:120] for m in user_msgs[:3])[:400]
+    title = ''
+    try:
+        payload = {
+            "model": MODEL_FLASH,
+            "messages": [
+                {"role": "system", "content": "根据学生与AI助教的对话开头，起一个不超过12个字的对话标题，概括对话主题。只输出标题本身：不要引号、不要句号、不要任何解释，用中文。"},
+                {"role": "user", "content": sample}
+            ],
+            "temperature": 0.3,
+            "max_tokens": 30,
+            "stream": False,
+            "enable_thinking": False
+        }
+        resp = requests.post(API_URL,
+                             headers={"Content-Type": "application/json",
+                                      "Authorization": f"Bearer {API_KEY}"},
+                             json=payload, timeout=20)
+        if resp.ok:
+            j = resp.json()
+            title = ((j.get('choices') or [{}])[0].get('message') or {}).get('content', '').strip()
+            title = title.strip('"\'「」『』。，！？!?…·、 ')
+            title = title.split('\n')[0][:16]
+    except Exception:
+        title = ''
+    if not title:
+        title = user_msgs[0][:16]
+    conv['title'] = title
+    save_conversations(data)
+    return jsonify({'title': title})
+
 @app.route('/api/conversations/<cid>', methods=['DELETE'])
 def api_delete_conversation(cid):
     if not session.get('authenticated'):

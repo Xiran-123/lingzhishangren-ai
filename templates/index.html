@@ -2923,6 +2923,7 @@
         }
 
         /* ===== 主页右栏「对话历史」卡片 ===== */
+        let homeConvExpanded = false;
         function renderHomeConvs() {
             const box = document.getElementById('hxHomeConvs');
             if (!box) return;
@@ -2930,11 +2931,19 @@
                 box.innerHTML = '<div class="hx-nitem" style="cursor:default;opacity:.6">暂无历史对话，去 AI 助教聊一句吧 ✨</div>';
                 return;
             }
-            box.innerHTML = conversations.slice(0, 6).map(c => `
+            const LIMIT = 4;
+            const shown = homeConvExpanded ? conversations : conversations.slice(0, LIMIT);
+            let html = shown.map(c => `
                 <div class="hx-nitem" onclick="goChatView();openConversation('${c.id}')">
                     <span style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">💬 ${escapeTitle(c.title)}</span>
                     <time>${timeAgo(c.updated_at)} · ${c.message_count}条</time>
                 </div>`).join('');
+            if (conversations.length > LIMIT) {
+                html += `<div class="hx-nitem" style="text-align:center;color:#9fb3ff;font-weight:600;border:1px dashed rgba(102,126,234,.35)" onclick="event.stopPropagation();homeConvExpanded=!homeConvExpanded;renderHomeConvs()">${homeConvExpanded ? '收起 ▴' : '展开全部 ' + conversations.length + ' 条对话 ▾'}</div>`;
+            }
+            box.style.maxHeight = homeConvExpanded ? '320px' : 'none';
+            box.style.overflowY = homeConvExpanded ? 'auto' : 'visible';
+            box.innerHTML = html;
         }
         function goChatView() {
             const tab = document.querySelector('.hx-tab[data-view="chat"]');
@@ -3072,7 +3081,8 @@
             loadConversations();
         }
 
-        // 发送首条消息时才真正创建会话（标题取消息前20字）
+        // 发送首条消息时才真正创建会话（标题先取消息前20字占位，首轮结束后AI自动生成）
+        let pendingAutoTitle = false;
         async function ensureConversation(firstMsg) {
             if (currentConvId) return;
             try {
@@ -3084,8 +3094,18 @@
                 const d = await r.json();
                 currentConvId = d.id;
                 localStorage.setItem(CURRENT_CONV_KEY, d.id);
+                pendingAutoTitle = true;
                 loadConversations();
             } catch (e) { console.error('创建会话失败', e); }
+        }
+
+        // 让后端按对话内容生成 AI 短标题，完成后刷新列表
+        function maybeAutoTitle() {
+            if (!pendingAutoTitle || !currentConvId || isGenerating) return;
+            pendingAutoTitle = false;
+            fetch(`/api/conversations/${currentConvId}/auto-title`, { method: 'POST' })
+                .then(r => { if (r.ok) loadConversations(); })
+                .catch(() => {});
         }
 
         // 消息落库（异步，不阻塞聊天）
@@ -3778,6 +3798,9 @@
 
                     // AI 回复落库
                     saveMsgToServer(fullResponse, false, null);
+
+                    // 新对话第一轮结束后，让 AI 生成豆包式短标题
+                    maybeAutoTitle();
 
                     // 流式回复补充追问/复制/朗读按钮（流中inner被反复覆盖，只能在流结束后添加）
                     appendMessageActions(messageContentDiv, fullResponse);
