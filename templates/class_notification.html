@@ -1578,11 +1578,11 @@
         }
 
         function goBack() {
-            // 如果有历史记录，返回上一页，否则返回首页
+            // 如果有历史记录，返回上一页，否则返回首页（top 确保从内嵌 iframe 中冲出）
             if (window.history.length > 1) {
                 window.history.back();
             } else {
-                window.location.href = '/';
+                top.location.href = '/';
             }
         }
 

@@ -185,7 +185,7 @@
 
         .mode-selector {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             padding: 12px 24px;
             background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.4));
             backdrop-filter: blur(8px);
@@ -193,37 +193,68 @@
         }
 
         .mode-btn {
-            padding: 8px 20px;
-            border: 2px solid rgba(102,126,234,0.25);
-            background: rgba(255,255,255,0.7);
-            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 8px 18px;
+            border: 1.5px solid rgba(102,126,234,0.22);
+            background: rgba(255,255,255,0.65);
+            border-radius: 12px;
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.25s;
             color: #4a5a8a;
+        }
+        .mode-btn .mb-ic {
+            font-size: 18px;
+            filter: grayscale(0.35);
+            transition: filter 0.25s, transform 0.25s;
+        }
+        .mode-btn .mb-tx { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.25; }
+        .mode-btn .mb-tx i {
+            font-style: normal;
+            font-size: 11px;
+            font-weight: 400;
+            color: #8a93b8;
+            transition: color 0.25s;
         }
 
         .mode-btn:hover {
             border-color: #667eea;
-            color: #667eea;
-            background: rgba(255,255,255,0.9);
+            color: #4a5a8a;
+            background: rgba(255,255,255,0.92);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(102,126,234,0.18);
         }
 
         .mode-btn.active {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-color: transparent;
             color: white;
+            box-shadow: 0 4px 16px rgba(102,126,234,0.35);
         }
+        .mode-btn.active .mb-ic { filter: none; transform: scale(1.12); }
+        .mode-btn.active .mb-tx i { color: rgba(255,255,255,0.78); }
 
         .messages-area {
             flex: 1;
             overflow-y: auto;
             padding: 24px;
-            background: linear-gradient(180deg, #f0f4ff 0%, #e8edff 50%, #f0f4ff 100%);
+            background:
+                radial-gradient(circle 260px at 88% 102%, rgba(91,141,255,0.15), transparent 70%),
+                radial-gradient(circle 230px at 5% -6%, rgba(168,85,247,0.11), transparent 70%),
+                radial-gradient(circle 190px at 52% 115%, rgba(0,200,255,0.09), transparent 70%),
+                linear-gradient(180deg, #f0f4ff 0%, #e8edff 50%, #f0f4ff 100%);
+            animation: auroraDrift 16s ease-in-out infinite alternate;
             position: relative;
         }
-        /* 聊天区背景装饰：淡淡的网格 + 光圈 */
+        @keyframes auroraDrift {
+            0%   { background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%; }
+            50%  { background-position: -3% -4%, 4% 3%, -2% -5%, 0% 0%; }
+            100% { background-position: 2% -6%, -3% 5%, 3% -3%, 0% 0%; }
+        }
+        /* 聊天区背景装饰：网格（极光光斑在容器背景上动画） */
         .messages-area::before {
             content: '';
             position: absolute;
@@ -234,14 +265,14 @@
             background-size: 32px 32px;
             pointer-events: none;
         }
-        .messages-area::after {
-            content: '';
-            position: absolute;
-            width: 300px; height: 300px;
-            background: radial-gradient(circle, rgba(91,141,255,0.12), transparent 70%);
-            bottom: -100px; right: -80px;
-            pointer-events: none;
+        /* 聊天区滚动条 */
+        .messages-area::-webkit-scrollbar { width: 8px; }
+        .messages-area::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, rgba(102,126,234,0.35), rgba(118,75,162,0.35));
+            border-radius: 8px;
         }
+        .messages-area::-webkit-scrollbar-thumb:hover { background: rgba(102,126,234,0.55); }
+        .messages-area::-webkit-scrollbar-track { background: transparent; }
 
         .message {
             margin-bottom: 24px;
@@ -355,6 +386,94 @@
             margin-bottom: 8px;
             user-select: none;
         }
+
+        /* ================= 欢迎区 Hero ================= */
+        .chat-welcome {
+            max-width: 720px;
+            margin: 28px auto 8px;
+            text-align: center;
+            animation: fadeInUp 0.45s ease;
+        }
+        .cw-hero {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 92px; height: 92px;
+            margin-bottom: 18px;
+        }
+        .cw-hero img {
+            width: 84px; height: 84px;
+            object-fit: contain;
+            border-radius: 50%;
+            position: relative; z-index: 2;
+            -webkit-mask-image: radial-gradient(circle, #000 56%, rgba(0,0,0,.55) 66%, transparent 74%);
+            mask-image: radial-gradient(circle, #000 56%, rgba(0,0,0,.55) 66%, transparent 74%);
+            mix-blend-mode: multiply;
+            animation: cwFloat 4.5s ease-in-out infinite;
+        }
+        .cw-hero::before {
+            content: '';
+            position: absolute; inset: 0;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, #667eea, #00c8ff, #a855f7, #667eea);
+            animation: cwSpin 6s linear infinite;
+            opacity: 0.55;
+            filter: blur(1px);
+        }
+        .cw-hero::after {
+            content: '';
+            position: absolute; inset: 7px;
+            border-radius: 50%;
+            background: linear-gradient(180deg, #f0f4ff, #e8edff);
+        }
+        @keyframes cwSpin { to { transform: rotate(360deg); } }
+        @keyframes cwFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+        .cw-title { font-size: 22px; font-weight: 800; color: #1a1a2e; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .cw-title b {
+            background: linear-gradient(90deg, #667eea, #00c8ff);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .cw-sub { font-size: 13.5px; color: #6b7699; line-height: 1.8; margin-bottom: 22px; }
+        .cw-chips {
+            display: flex; flex-wrap: wrap; justify-content: center;
+            gap: 10px; max-width: 560px; margin: 0 auto;
+        }
+        .cw-chip {
+            display: inline-flex; align-items: center; gap: 7px;
+            padding: 9px 16px;
+            background: rgba(255,255,255,0.85);
+            border: 1.5px solid rgba(102,126,234,0.25);
+            border-radius: 14px;
+            font-size: 13px; font-weight: 500; color: #3d4a75;
+            cursor: pointer; transition: all 0.22s;
+            backdrop-filter: blur(6px);
+            box-shadow: 0 2px 6px rgba(91,141,255,0.06);
+        }
+        .cw-chip .ci { font-size: 15px; }
+        .cw-chip:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: transparent; color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(102,126,234,0.35);
+        }
+        .cw-mode-hint {
+            margin-top: 20px; font-size: 12px; color: #8a93b8;
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 6px 14px; border-radius: 20px;
+            background: rgba(255,255,255,0.6); border: 1px dashed rgba(102,126,234,0.3);
+        }
+
+        /* 消息时间戳 */
+        .msg-time {
+            font-size: 11px;
+            color: #9aa3c0;
+            margin-top: 6px;
+            user-select: none;
+        }
+        .message.user .msg-time { text-align: right; }
 
         .message-actions {
             display: flex;
@@ -513,6 +632,21 @@
             animation-delay: 0.4s;
         }
 
+        .typing-label {
+            margin-left: 10px;
+            font-size: 12.5px;
+            font-weight: 600;
+            background: linear-gradient(90deg, #667eea 25%, #00c8ff 50%, #667eea 75%);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmerText 1.8s linear infinite;
+        }
+        @keyframes shimmerText {
+            to { background-position: -200% 0; }
+        }
+
         @keyframes bounce {
             0%, 60%, 100% {
                 transform: translateY(0);
@@ -598,6 +732,44 @@
             color: #666;
         }
 
+        /* 剧情演练副本选择 */
+        .sc-pick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+
+        .sc-pick {
+            display: block;
+            padding: 18px;
+            border: 1px solid #e3e9f2;
+            border-radius: 14px;
+            background: #fafcff;
+            text-decoration: none;
+            color: #333;
+            transition: all .2s;
+        }
+
+        .sc-pick:hover {
+            border-color: #3d7bff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 22px rgba(61, 123, 255, .14);
+        }
+
+        .sc-pick-ic {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .sc-pick h3 { font-size: 15px; margin-bottom: 8px; color: #1a2233; }
+        .sc-pick p { font-size: 12px; line-height: 1.8; color: #66788f; }
+        .sc-pick-go { display: inline-block; margin-top: 12px; font-size: 12px; color: #3d7bff; font-weight: 600; }
+
+        @media (max-width: 900px) {
+            .sc-pick-grid { grid-template-columns: 1fr; }
+        }
+
         .upload-area {
             border: 2px dashed #e0e0e8;
             border-radius: 10px;
@@ -674,18 +846,19 @@
             background: #f5f5f5;
         }
 
-        /* ====================== 会话侧边栏（豆包风格） ====================== */
+        /* ====================== 会话侧边栏（停靠在返回按钮下方） ====================== */
         .conv-sidebar {
             position: fixed;
-            left: 0; top: 0; bottom: 0;
-            width: 270px;
+            left: 12px; top: 118px; bottom: 18px;
+            width: 260px;
             background: rgba(10, 26, 74, 0.96);
             backdrop-filter: blur(16px);
-            border-right: 1px solid rgba(0, 200, 255, 0.25);
+            border: 1px solid rgba(0, 200, 255, 0.25);
+            border-radius: 16px;
             box-shadow: 8px 0 40px rgba(0, 0, 0, 0.35);
             display: flex;
             flex-direction: column;
-            transform: translateX(-100%);
+            transform: translateX(-120%);
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 900;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
@@ -1084,26 +1257,6 @@
             line-height: 1.8;
         }
 
-        /* 收起后的悬浮展开按钮 */
-        .conv-fab {
-            position: fixed;
-            left: 14px; top: 50%;
-            transform: translateY(-50%) translateX(-60px);
-            width: 44px; height: 44px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border: 1px solid rgba(0, 200, 255, 0.4);
-            color: #fff;
-            font-size: 18px;
-            cursor: pointer;
-            z-index: 890;
-            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.5);
-            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            display: flex; align-items: center; justify-content: center;
-        }
-        .conv-fab.show { transform: translateY(-50%) translateX(0); }
-        .conv-fab:hover { box-shadow: 0 6px 28px rgba(102, 126, 234, 0.7); }
-
         /* ============ 移动端功能导航（汉堡菜单） ============ */
         .mobile-menu-btn { display: none; }
         .mmenu-close { display: none; }
@@ -1158,9 +1311,9 @@
             body.sidebar-open .chat-container { margin-left: auto !important; margin-right: auto; }
         }
         @media (max-width: 768px) {
-            .conv-sidebar { width: 82vw; }
-            .conv-fab { left: 8px; top: 76px; transform: translateY(0) translateX(-60px); width: 38px; height: 38px; }
-            .conv-fab.show { transform: translateY(0) translateX(0); }
+            .conv-sidebar { width: 82vw; left: 8px; top: 112px; bottom: 12px; border-radius: 14px; }
+            /* 手机端侧边栏为覆盖式，展开时聊天容器不推挤 */
+            body.sidebar-open .chat-container { margin-left: 0 !important; margin-right: 0; }
         }
         /* ============ 移动端补充适配（不改动桌面端外观） ============ */
         @media (max-width: 768px) {
@@ -1268,7 +1421,6 @@
             </div>
         </div>
     </div>
-    <button class="conv-fab" id="convFab" onclick="toggleSidebar()" title="对话历史">💬</button>
 
     <!-- 知识库课件在线预览 -->
     <div class="kb-preview-overlay" id="kbPreviewOverlay">
@@ -1314,8 +1466,39 @@
     #hxHome .notification-bell{all:unset;cursor:pointer;position:relative;width:34px;height:34px;border-radius:50%;background:var(--hx-card);border:1px solid var(--hx-cardb);display:grid;place-items:center;font-size:15px;transition:.2s}
     #hxHome .notification-bell:hover{background:rgba(255,255,255,.1)}
     #hxHome .notification-bell .notification-badge{position:absolute;top:-3px;right:-3px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--hx-gradhot);color:#fff;border-radius:9px;font-size:10px;font-weight:700;display:none;align-items:center;justify-content:center}
-    .hx-chip{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 6px;border-radius:22px;background:var(--hx-card);border:1px solid var(--hx-cardb);font-size:13px;cursor:pointer;transition:.2s}
-    .hx-chip:hover{background:rgba(255,255,255,.1)}
+    .hx-prog-wrap{position:relative;display:flex;align-items:center;gap:9px;padding:5px 13px 5px 6px;border-radius:999px;background:var(--hx-card);border:1px solid var(--hx-cardb);cursor:pointer;transition:.22s}
+    .hx-prog-wrap:hover{background:rgba(255,255,255,.1);border-color:rgba(93,140,255,.55);box-shadow:0 6px 20px rgba(61,123,255,.28)}
+    .hx-prog{position:relative;width:34px;height:34px;flex:0 0 auto}
+    .hx-prog svg{display:block;width:34px;height:34px;transform:rotate(-90deg)}
+    .hx-prog circle{fill:none;stroke-width:4;stroke-linecap:round}
+    .hx-prog .hx-pbg{stroke:rgba(255,255,255,.16)}
+    .hx-prog .hx-pfg{stroke:url(#hxProgGrad);stroke-dasharray:113.1;stroke-dashoffset:113.1;filter:drop-shadow(0 0 5px rgba(61,123,255,.6));transition:stroke-dashoffset .7s ease}
+    .hx-ptxt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:800;color:#fff}
+    .hx-fbtn{all:unset;cursor:pointer;flex:0 0 auto;min-width:24px;height:24px;padding:0 4px;border-radius:7px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);display:grid;place-items:center;font-size:11px;transition:.2s}
+    .hx-fbtn:hover{background:rgba(61,123,255,.4);border-color:rgba(61,123,255,.6)}
+    .hx-tname{cursor:pointer;transition:color .2s}
+    .hx-tname:hover{color:#7cc4ff !important}
+    .hx-prog-meta{display:flex;flex-direction:column;line-height:1.18;white-space:nowrap}
+    .hx-prog-meta b{font-size:12.5px;font-weight:700;color:var(--hx-txt)}
+    .hx-prog-meta span{font-size:10.5px;color:var(--hx-txt2)}
+    .hx-prog-pop{position:absolute;top:calc(100% + 12px);right:0;width:268px;padding:14px 15px 13px;border-radius:16px;
+      background:rgba(16,30,70,.95);backdrop-filter:blur(18px);border:1px solid rgba(93,140,255,.32);
+      box-shadow:0 20px 50px rgba(0,0,0,.5);z-index:200;
+      opacity:0;visibility:hidden;transform:translateY(-8px) scale(.97);transform-origin:top right;
+      transition:opacity .22s ease,transform .22s ease,visibility .22s}
+    .hx-prog-wrap:hover .hx-prog-pop,.hx-prog-pop.show{opacity:1;visibility:visible;transform:translateY(0) scale(1)}
+    .hx-pp-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+    .hx-pp-t{font-size:13px;font-weight:700;color:#fff}
+    .hx-pp-d{font-size:11px;color:var(--hx-txt2)}
+    .hx-pp-bar{height:7px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden;margin-bottom:12px}
+    .hx-pp-bar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#2ADFB4,#3D7BFF);transition:width .6s ease}
+    .hx-pp-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .hx-pp-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07)}
+    .hx-pp-ic{font-size:14px;flex:0 0 auto}
+    .hx-pp-item>div{display:flex;flex-direction:column;line-height:1.2;min-width:0}
+    .hx-pp-item b{font-size:14px;font-weight:800;color:#fff}
+    .hx-pp-k{font-size:10.5px;color:var(--hx-txt2)}
+    .hx-pp-foot{margin-top:11px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08);font-size:11.5px;color:var(--hx-txt2);line-height:1.5}
     .hx-avatar{width:26px;height:26px;border-radius:50%;background:var(--hx-grad);display:grid;place-items:center;font-size:12px;overflow:hidden}
     .hx-roletag{font-size:11px;color:var(--hx-cyan)}
 
@@ -1344,8 +1527,11 @@
     .hx-dot{width:6px;height:6px;border-radius:50%;background:var(--hx-cyan);box-shadow:0 0 8px var(--hx-cyan);flex-shrink:0}
     .hx-dirgroup{padding:0 10px 14px}
     .hx-glabel{font-size:11px;color:var(--hx-txt3);padding:9px 8px 5px;letter-spacing:1px}
-    .hx-navitem{display:flex;align-items:center;gap:9px;width:100%;padding:8px 10px;border-radius:10px;font-size:13px;color:var(--hx-txt2);transition:.18s;position:relative;border:none;background:none;text-align:left;font-family:inherit;cursor:pointer}
+    .hx-navitem{display:flex;align-items:center;gap:9px;width:100%;padding:8px 10px;border-radius:10px;font-size:13px;color:var(--hx-txt);transition:.18s;position:relative;border:none;background:none;text-align:left;font-family:inherit;cursor:pointer}
     .hx-navitem:hover{background:rgba(255,255,255,.06);color:#fff;transform:translateX(2px)}
+    /* #hxHome a{color:inherit} 权重高于 .hx-navitem，链接型导航项需显式对齐，按钮型才与之一致 */
+    #hxHome a.hx-navitem{color:var(--hx-txt)}
+    #hxHome a.hx-navitem:hover{color:#fff}
     .hx-navitem .ic{width:17px;text-align:center;font-size:13.5px}
     .hx-navitem .hx-new{margin-left:auto;font-size:10px;padding:1px 6px;border-radius:8px;background:var(--hx-gradhot);color:#fff}
     .hx-gitems .nav-btn{background:rgba(255,255,255,.06)!important;border:1px solid rgba(255,255,255,.1)!important;color:var(--hx-txt)!important;width:100%;justify-content:flex-start;font-size:13px;margin:3px 0}
@@ -1418,7 +1604,7 @@
     .hx-pagetitle{flex:1;font-size:15px;font-weight:700;color:#e8eeff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .hx-pagepop{color:#8ea6e8;font-size:12.5px;text-decoration:none;border:1px solid rgba(142,166,232,.3);padding:6px 12px;border-radius:8px;white-space:nowrap}
     .hx-pagepop:hover{background:rgba(142,166,232,.15);color:#c7d6ff}
-    .hx-pageview iframe{width:100%;height:calc(100vh - 98px);min-height:540px;border:0;border-radius:14px;background:#fff;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+    .hx-pageview iframe{width:100%;height:calc(100vh - 104px);min-height:540px;border:0;border-radius:14px;background:#fff;box-shadow:0 8px 30px rgba(0,0,0,.25)}
 
     .hx-right{display:flex;flex-direction:column;gap:14px;min-width:0}
     .hx-more{margin-left:auto;font-size:11px;color:var(--hx-txt3);cursor:pointer}
@@ -1448,15 +1634,34 @@
     @media(max-width:1200px){.hx-layout{grid-template-columns:206px 1fr}.hx-right{display:none}.hx-qgrid{grid-template-columns:repeat(4,1fr)}}
     @media(max-width:900px){
       .hx-layout{grid-template-columns:1fr}.hx-left{display:none}.hx-burger{display:grid;place-items:center}
-      .hx-topbar{gap:10px;padding:0 14px}.hx-tabs{overflow-x:auto;scrollbar-width:none;margin-left:0}
-      .hx-pageview iframe{height:calc(100vh - 98px);min-height:480px}
+      .hx-topbar{gap:10px;padding:0 14px}.hx-logo{font-size:15px;gap:6px}.hx-logomark{width:26px;height:26px;font-size:13px;border-radius:8px}.hx-tabs{overflow-x:auto;scrollbar-width:none;margin-left:0}
+      .hx-pageview iframe{height:calc(100vh - 100px);min-height:480px}
       .hx-pagebar{padding:9px 12px;gap:8px}.hx-pageback{padding:7px 12px;font-size:12.5px}.hx-pagetitle{font-size:13.5px}.hx-pagepop{display:none}
+      .hx-pagetitle{max-width:40vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
       .hx-tabs::-webkit-scrollbar{display:none}.hx-tab{padding:6px 12px;font-size:12.5px}
       .hx-herobody{grid-template-columns:1fr}.hx-params{flex-direction:row;flex-wrap:wrap}
       .hx-params .hx-startbtn{margin-top:4px;flex:1 1 100%}
       .hx-frow{grid-template-columns:repeat(2,1fr)}.hx-qgrid{grid-template-columns:repeat(3,1fr)}
-      .hx-hero{padding:20px 18px}.hx-hero h1{font-size:19px}.hx-chip #hxUserName,.hx-chip .hx-roletag{display:none}
+      .hx-hero{padding:20px 18px}.hx-hero h1{font-size:19px}.hx-hero .hx-sub{font-size:12px}.hx-herobody{gap:14px}
+      .hx-prog-wrap{padding:4px 10px 4px 5px;gap:7px}.hx-prog{width:30px;height:30px}.hx-prog svg{width:30px;height:30px}.hx-prog-pop{width:236px}
       .hx-backbtn{top:66px}
+      .hx-notice{padding:0 14px;margin-top:8px}.hx-noticein{padding:7px 12px;font-size:12px}
+    }
+    @media(max-width:560px){
+      .hx-topbar{padding:0 10px;height:52px}.hx-logo{font-size:0;gap:0}.hx-logo .hx-logomark{width:24px;height:24px;font-size:13px;border-radius:7px}
+      .hx-tabs{gap:2px}.hx-tab{padding:5px 8px;font-size:11.5px}
+      .hx-burger{width:30px;height:30px;font-size:14px}.notification-bell{width:30px;height:30px;font-size:13px}
+      .hx-prog-wrap{gap:3px;padding:3px 6px 3px 4px}.hx-prog{width:26px;height:26px}.hx-prog svg{width:26px;height:26px}
+      .hx-prog-meta{display:none}
+      .hx-prog-pop{width:calc(100vw - 24px);right:12px;left:12px;top:60px}
+      .hx-layout{padding:10px 10px 0}.hx-notice{padding:0 10px;margin-top:6px}
+      .hx-hero{padding:16px 14px}.hx-hero h1{font-size:17px;margin:8px 0 4px}.hx-hero .hx-sub{font-size:11.5px;line-height:1.6}.hx-meta{gap:6px}.hx-mchip{font-size:11px;padding:4px 9px}
+      .hx-herobody{gap:12px;margin-top:12px}.hx-params{padding:12px;gap:7px}.hx-art svg{transform:scale(.85);transform-origin:center top}
+      .hx-frow{grid-template-columns:1fr;gap:10px}.hx-fcard{padding:12px 14px}
+      .hx-qgrid{grid-template-columns:repeat(2,1fr);gap:8px}.hx-qitem{padding:10px 8px;font-size:12px}
+      .hx-pagebar{padding:8px 10px;gap:6px;margin-bottom:8px}.hx-pageback{padding:6px 10px;font-size:11.5px}.hx-pagetitle{font-size:12.5px;max-width:45vw}
+      .hx-pageview iframe{height:calc(100vh - 170px);min-height:420px}
+      .hx-drawer{width:88vw;max-width:88vw}.hx-ucard{padding:12px}.hx-ubtns{flex-direction:column}.hx-ubtn{width:100%}
     }
     </style>
 
@@ -1466,10 +1671,11 @@
       <header class="hx-topbar">
         <div class="hx-logo"><div class="hx-logomark">🧠</div>灵智尚人</div>
         <nav class="hx-tabs">
-          <button class="hx-tab on" data-view="home" data-cat="all" onclick="hxTab(this)">🧪 实训中心</button>
-          <button class="hx-tab" data-view="home" data-cat="study" onclick="hxTab(this)">📖 学习中心</button>
-          <button class="hx-tab" data-view="home" data-cat="res" onclick="hxTab(this)">🗂 资源中心</button>
-          <button class="hx-tab" data-view="home" data-cat="grow" onclick="hxTab(this)">🌱 成长中心</button>
+          <button class="hx-tab on" id="hxTabHome" data-view="home" data-center="" onclick="hxTab(this)">🏠 首页</button>
+          <button class="hx-tab" data-view="home" data-center="train" onclick="hxTab(this)">🧪 实训中心</button>
+          <button class="hx-tab" data-view="home" data-center="study" onclick="hxTab(this)">📖 学习中心</button>
+          <button class="hx-tab" data-view="home" data-center="res" onclick="hxTab(this)">🗂 资源中心</button>
+          <button class="hx-tab" data-view="home" data-center="grow" onclick="hxTab(this)">🌱 成长中心</button>
           <button class="hx-tab" data-view="chat" onclick="hxTab(this)">🤖 AI 助手</button>
         </nav>
         <div class="hx-topright">
@@ -1477,9 +1683,35 @@
           <button class="notification-bell" id="notificationBell" onclick="showNotificationModal()">🔔
             <span id="notificationBadge" class="notification-badge">0</span>
           </button>
-          <div class="hx-chip" onclick="closeSettings();showPersonalCenter();">
-            <div class="hx-avatar" id="hxAvatar">学</div>
-            <span id="hxUserName">同学</span><span class="hx-roletag" id="hxRoleTag">学生端</span>
+          <div class="hx-prog-wrap" id="hxTodayProg" title="今日学习进度" onmouseenter="hxProgPop(true)" onmouseleave="hxProgPop(false)" onclick="hxProgPop('toggle')">
+            <div class="hx-prog">
+              <svg viewBox="0 0 44 44" aria-hidden="true">
+                <defs>
+                  <linearGradient id="hxProgGrad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#2ADFB4"></stop>
+                    <stop offset="100%" stop-color="#3D7BFF"></stop>
+                  </linearGradient>
+                </defs>
+                <circle class="hx-pbg" cx="22" cy="22" r="18"></circle>
+                <circle class="hx-pfg" id="hxProgArc" cx="22" cy="22" r="18"></circle>
+              </svg>
+              <span class="hx-ptxt" id="hxProgPct">0%</span>
+            </div>
+            <div class="hx-prog-meta"><b id="hxProgMini">0/10</b><span>今日完成</span></div>
+            <div class="hx-prog-pop" id="hxProgPop">
+              <div class="hx-pp-head">
+                <span class="hx-pp-t">📈 今日学习进度</span>
+                <span class="hx-pp-d" id="hxProgDate"></span>
+              </div>
+              <div class="hx-pp-bar"><i id="hxProgBar"></i></div>
+              <div class="hx-pp-grid">
+                <div class="hx-pp-item"><span class="hx-pp-ic">✅</span><div><b id="hxProgDone">0/10</b><span class="hx-pp-k">已完成 / 目标</span></div></div>
+                <div class="hx-pp-item"><span class="hx-pp-ic">🎯</span><div><b id="hxProgAcc">0%</b><span class="hx-pp-k">正确率</span></div></div>
+                <div class="hx-pp-item"><span class="hx-pp-ic">📕</span><div><b id="hxProgWrong">0</b><span class="hx-pp-k">今日错题</span></div></div>
+                <div class="hx-pp-item"><span class="hx-pp-ic">⭐</span><div><b id="hxProgAvg">0</b><span class="hx-pp-k">平均分</span></div></div>
+              </div>
+              <div class="hx-pp-foot" id="hxProgFoot">今天还没有学习记录，去「互动练习」开始吧 →</div>
+            </div>
           </div>
         </div>
       </header>
@@ -1509,7 +1741,7 @@
         <main class="hx-main">
           <section class="hx-hero">
             <span class="hx-badge">🚀 全新上线 · 剧情式实训</span>
-            <h1>5G 基站工程勘察设计虚拟仿真</h1>
+            <h1>5G 基站工程勘察设计</h1>
             <p class="hx-sub">化身无线网络规划工程师，走进智慧校园 5G 建设项目，完成从工具认知、站址筛选、现场勘察到方案设计的完整工程闭环，最后生成你的工程复盘报告。</p>
             <div class="hx-meta">
               <span class="hx-mchip">🎬 8 个剧情步骤</span>
@@ -1518,7 +1750,7 @@
               <span class="hx-mchip">🧠 Massive MIMO · 选址 · 参数规划</span>
             </div>
             <div class="hx-actions">
-              <a class="hx-btnp" href="/scenario-demo">▶ 继续实训</a>
+              <a class="hx-btnp" href="javascript:void(0)" onclick="openScenarioPicker(event)">▶ 继续实训</a>
               <button class="hx-btng" onclick="hxTab(document.querySelector('.hx-tab[data-view=chat]'))">🤖 问 AI 助教</button>
             </div>
 
@@ -1569,7 +1801,7 @@
                 <div class="hx-prow"><span>预计用时</span><b>25 分钟</b></div>
                 <div class="hx-prow"><span>任务满分</span><b>13 分</b></div>
                 <div class="hx-prow"><span>角色</span><b>无线网络规划工程师</b></div>
-                <a class="hx-startbtn" href="/scenario-demo">开始仿真</a>
+                <a class="hx-startbtn" href="javascript:void(0)" onclick="openScenarioPicker(event)">开始仿真</a>
               </div>
             </div>
           </section>
@@ -1589,7 +1821,7 @@
             <div class="hx-qtitle"><span class="hx-dot" style="background:#6E4BFF;box-shadow:0 0 7px #6E4BFF"></span>全部功能</div>
             <div class="hx-qgrid" id="hxQuickGrid">
               <a class="hx-qitem hx-glass" data-cat="all" href="/scenario-page"><div class="hx-qic" style="background:rgba(0,200,255,.13)">🎬</div><span>剧情演绎</span></a>
-              <a class="hx-qitem hx-glass" data-cat="all" href="/scenario-demo"><div class="hx-qic" style="background:rgba(0,128,255,.16)">🎞</div><span>沉浸式剧情</span></a>
+              <a class="hx-qitem hx-glass" data-cat="all" href="javascript:void(0)" onclick="openScenarioPicker(event)"><div class="hx-qic" style="background:rgba(0,128,255,.16)">🎞</div><span>沉浸式剧情</span></a>
               <a class="hx-qitem hx-glass" data-cat="all" href="/multi-fault-page"><div class="hx-qic" style="background:rgba(255,81,47,.13)">🚨</div><span>多故障应急</span></a>
               <a class="hx-qitem hx-glass" data-cat="all" href="/fault-chain"><div class="hx-qic" style="background:rgba(235,51,73,.13)">🧬</div><span>因果故障链</span></a>
               <a class="hx-qitem hx-glass" data-cat="study" href="/exercise-page"><div class="hx-qic" style="background:rgba(42,223,180,.13)">✏️</div><span>互动练习</span></a>
@@ -1623,12 +1855,34 @@
             </div>
             <div class="hx-mcin"><input id="hxMiniInput" placeholder="输入问题，回车直达 AI 助手…" onkeydown="if(event.key==='Enter')hxMiniSend()"><button class="hx-send" onclick="hxMiniSend()">➤</button></div>
           </div>
+          <div class="hx-glass">
+            <div class="hx-dirtitle" style="padding:13px 15px 9px"><span class="hx-dot" style="background:#FFA24B;box-shadow:0 0 8px #FFA24B"></span>老师共享文件<span class="hx-more"><a href="/ppt-resources-page" target="_blank" title="打开课件中心">更多 ›</a></span></div>
+            <div id="hxTeacherFiles" style="padding:0 6px 10px;display:flex;flex-direction:column;gap:6px"><div class="hx-nitem">加载中…</div></div>
+          </div>
+          <div class="hx-glass" style="margin-top:14px">
+            <div class="hx-dirtitle" style="padding:13px 15px 9px"><span class="hx-dot" style="background:#7C5CFF;box-shadow:0 0 8px #9D7CFF"></span>对话历史<span class="hx-more"><a href="javascript:void(0)" onclick="goChatView()" title="进入 AI 助教查看全部">进入 AI 助教 ›</a></span></div>
+            <div id="hxHomeConvs" style="padding:0 6px 10px;display:flex;flex-direction:column;gap:6px"><div class="hx-nitem">加载中…</div></div>
+          </div>
         </aside>
       </div>
 
       <!-- 内嵌功能页面承载层：点击侧边导航/宫格时主区域原地切换为对应页面 -->
       <div class="hx-pageview" id="hxPageView" style="display:none">
+        <div class="hx-pagebar hx-glass">
+          <button class="hx-pageback" id="hxPageBack" onclick="hxClosePage()">← 返回首页</button>
+          <span class="hx-pagetitle" id="hxPageTitle">功能页面</span>
+          <a class="hx-pagepop" id="hxPagePop" href="#" target="_blank" title="在新窗口打开">↗ 新窗口</a>
+        </div>
         <iframe id="hxPageIframe" src="about:blank" title="功能页面"></iframe>
+      </div>
+
+      <!-- 中心二级页面承载层：首页为一层，各中心为其下一级页面，原生渲染（非 iframe） -->
+      <div class="hx-pageview" id="hxCenterView" style="display:none">
+        <div class="hx-pagebar hx-glass">
+          <button class="hx-pageback" onclick="hxCloseCenter()">← 返回首页</button>
+          <span class="hx-pagetitle" id="hxCenterTitle">中心</span>
+        </div>
+        <div id="hxCenterBody"></div>
       </div>
     </div>
 
@@ -1641,25 +1895,23 @@
 
     <!-- ==================== AI 助手聊天视图 ==================== -->
     <div id="hxChatView" style="display:none">
-      <button class="hx-backbtn" onclick="hxTab(document.querySelector('.hx-tab[data-cat=all]'))">← 返回主页</button>
+      <button class="hx-backbtn" onclick="hxTab(document.getElementById('hxTabHome'))">← 返回主页</button>
       <div class="chat-container" style="margin: 0 auto;">
 
         <div class="mode-selector">
             <button class="mode-btn active" data-mode="fast" onclick="switchMode('fast')">
-                ⚡ 快速回答
+                <span class="mb-ic">⚡</span><span class="mb-tx">快速回答<i>秒级响应 · 日常答疑</i></span>
             </button>
             <button class="mode-btn" data-mode="deep" onclick="switchMode('deep')">
-                🧠 深度思考
+                <span class="mb-ic">🧠</span><span class="mb-tx">深度思考<i>更严谨 · 疑难题目解析</i></span>
+            </button>
+            <button class="mode-btn" onclick="toggleSidebar()" title="展开 / 收起左侧对话历史">
+                <span class="mb-ic">🕘</span><span class="mb-tx">对话历史<i>展开 / 收起侧栏</i></span>
             </button>
         </div>
 
         <div class="messages-area" id="messagesArea">
-            <div class="message assistant">
-                <div class="avatar"><img src="/static/bot_new.jpg" alt="AI"></div>
-                <div class="message-content">
-                    你好！我是灵智尚人，很高兴为您服务！您可以选择快速回答或深度思考模式来问我问题。
-                </div>
-            </div>
+            <div class="chat-welcome" id="chatWelcome"></div>
         </div>
 
         <div class="input-area">
@@ -1710,6 +1962,8 @@
                     updateHeaderTitle();
                     updateUserAvatar();
                     loadNotificationCount();
+                    // 刷新欢迎区个性化问候（尚未开始对话时才刷新）
+                    showWelcome();
                 }
             } catch (error) {
                 console.error('获取用户信息失败:', error);
@@ -1828,7 +2082,7 @@
                 // 学生端导航
                 html += G('实 训',
                     A('/scenario-page', '🎬', '剧情演绎') +
-                    A('/scenario-demo', '🎞', '沉浸式剧情', '新') +
+                    B('openScenarioPicker(event)', '🎞', '沉浸式剧情', '新') +
                     A('/multi-fault-page', '🚨', '多故障应急') +
                     A('/fault-chain', '🧬', '因果故障链'));
                 html += G('学 习',
@@ -1852,7 +2106,7 @@
                 // 教师端导航
                 html += G('实训 · 通用',
                     A('/scenario-page', '🎬', '剧情演绎') +
-                    A('/scenario-demo', '🎞', '沉浸式剧情', '新') +
+                    B('openScenarioPicker(event)', '🎞', '沉浸式剧情', '新') +
                     A('/multi-fault-page', '🚨', '多故障应急') +
                     A('/fault-chain', '🧬', '因果故障链') +
                     A('/exercise-page', '✏️', '互动练习') +
@@ -1879,7 +2133,7 @@
                     A('/mock-interview-page', '🎤', 'AI 模拟面试') +
                     A('/interview-cases-page', '📚', '面试案例'));
             }
-            html += G('工 具', settingsNavHTML() + B('doLogout()', '🔓', '退出登录'));
+            html += G('工 具', settingsNavHTML());
 
             const side = document.getElementById('hxSideNav');
             const drawer = document.getElementById('hxDrawerNav');
@@ -1899,67 +2153,320 @@
                 ? `<img src="${currentUser.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
                 : (name[0] || '学');
             const ua = document.getElementById('hxUcardAvatar');
-            if (ua && ua.firstChild) ua.firstChild.textContent = name[0] || '学';
+            if (ua) {
+                if (currentUser.avatar_url) {
+                    // 用背景图展示头像，保留 hxRoleBadge 等级角标
+                    ua.style.backgroundImage = `url("${currentUser.avatar_url}")`;
+                    ua.style.backgroundSize = 'cover';
+                    ua.style.backgroundPosition = 'center';
+                    ua.style.color = 'transparent';
+                    if (ua.firstChild && ua.firstChild.nodeType === 3) ua.firstChild.textContent = '';
+                } else {
+                    ua.style.backgroundImage = '';
+                    ua.style.color = '';
+                    if (ua.firstChild) ua.firstChild.textContent = name[0] || '学';
+                }
+            }
 
             hxLoadNotices();
+            hxLoadTodayProgress();
+            hxLoadTeacherFiles();
+        }
+
+        // ===== 右栏：老师共享文件 =====
+        let hxTeacherFileCache = [];
+        async function hxLoadTeacherFiles() {
+            const el = document.getElementById('hxTeacherFiles');
+            if (!el) return;
+            let files = [];
+            try {
+                const r = await fetch('/api/teacher-files', { credentials: 'same-origin' });
+                if (r.ok) { const d = await r.json(); files = d.files || []; }
+            } catch (e) {}
+            hxTeacherFileCache = files;
+            if (!files.length) {
+                el.innerHTML = '<div style="padding:4px 10px 8px;color:var(--hx-txt3);font-size:12px;line-height:1.6">暂无共享文件<br>老师上传的课件会出现在这里</div>';
+                return;
+            }
+            const iconFor = ext => ({ppt:'📊',pptx:'📊',doc:'📄',docx:'📄',txt:'📝',pdf:'📕',zip:'🗜️',rar:'🗜️'}[ext] || '📎');
+            el.innerHTML = files.map((f, i) => {
+                const ext = f.file_ext || '';
+                const canPreview = ['ppt','pptx','doc','docx'].includes(ext);
+                const dateStr = (f.upload_time || '').slice(5, 10);
+                const action = canPreview
+                    ? `<button class="hx-fbtn" data-i="${i}" title="在线预览">👁</button>`
+                    : `<a class="hx-fbtn" href="/uploads/${encodeURIComponent(f.download_name)}" download="${escapeKbHtml(f.filename)}" title="下载">⬇</a>`;
+                // 文件名本身可点击：PPT/Word → 预览，TXT/其他 → 下载
+                const nameEl = canPreview
+                    ? `<span class="hx-tname" onclick="openKbPreview(hxTeacherFileCache[${i}])" title="点击预览：${escapeKbHtml(f.filename)}" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--hx-txt);font-size:12.5px">${escapeKbHtml(f.filename)}</span>`
+                    : `<a class="hx-tname" href="/uploads/${encodeURIComponent(f.download_name)}" download="${escapeKbHtml(f.filename)}" title="点击下载：${escapeKbHtml(f.filename)}" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--hx-txt);font-size:12.5px;text-decoration:none">${escapeKbHtml(f.filename)}</a>`;
+                return `<div style="display:flex;align-items:center;gap:8px;min-width:0">
+                    <span style="font-size:15px;flex:0 0 auto">${iconFor(ext)}</span>
+                    ${nameEl}
+                    <span style="color:var(--hx-txt3);font-size:10.5px;flex:0 0 auto">${dateStr}</span>
+                    ${action}
+                </div>`;
+            }).join('');
+            el.querySelectorAll('.hx-fbtn[data-i]').forEach(b => {
+                b.onclick = ev => { ev.stopPropagation(); openKbPreview(hxTeacherFileCache[+b.dataset.i]); };
+            });
         }
 
         // ===== 新版主页：视图切换 / 抽屉 / 迷你聊天 / 通知 =====
+        // 首页为第一层，四个「中心」为其下一级页面，各中心突出一个主要功能
+        let hxFromCenter = null;
+        const HX_CENTERS = {
+            train: {
+                short: '实训中心', title: '🧪 实训中心', label: '实训中心',
+                hero: {
+                    badge: '🚀 旗舰实训', icon: '🛰',
+                    h1: '5G 基站工程勘察设计',
+                    sub: '化身无线网络规划工程师，走进智慧校园 5G 建设项目，完成从工具认知、站址筛选、现场勘察到方案设计的完整工程闭环。',
+                    meta: ['🎬 8 个剧情步骤', '⏱ 约 25 分钟', '🎯 无线网络规划工程师'],
+                    rows: [['实训形态', '沉浸式剧情'], ['剧情步骤', '8 步'], ['任务满分', '13 分']],
+                    href: '/scenario-demo', cta: '开始仿真'
+                },
+                items: [
+                    ['/scenario-page', '🎬', '剧情演绎', '多场景剧本自由切换'],
+                    ['/scenario-demo', '🎞', '沉浸式剧情', '5G 基站勘察全流程演练'],
+                    ['/multi-fault-page', '🚨', '多故障应急', '并发故障排序与人力调度'],
+                    ['/fault-chain', '🧬', '因果故障链', '从告警逐层定位根因'],
+                    ['/mock-interview-page', '🎤', 'AI 模拟面试', '岗位面试实战与即时点评'],
+                    ['/interview-cases-page', '📚', '面试案例', '真实题例与答题思路']
+                ]
+            },
+            study: {
+                short: '学习中心', title: '📖 学习中心', label: '学习中心',
+                hero: {
+                    badge: '✏️ 旗舰功能', icon: '✏️',
+                    h1: '互动练习',
+                    sub: '按知识点自动生成练习，边做边批改，实时追踪薄弱环节并推送变式重练。',
+                    meta: ['📝 多题型支持', '⚡ 即时批改', '📈 薄弱点追踪'],
+                    rows: [['练习形式', '知识点智能出题'], ['批改方式', '即时反馈'], ['错题处理', '自动归集重练']],
+                    href: '/exercise-page', cta: '开始练习'
+                },
+                items: [
+                    ['/exercise-page', '✏️', '互动练习', '智能出题 · 即时批改'],
+                    ['/wrong-questions-page', '📝', '错题本', '自动归集 · 变式重练'],
+                    ['/knowledge-graph-page', '🕸', '知识图谱', '知识关联 · 缺口定位'],
+                    ['/weekly-tasks-page', '📋', '每周任务', '本周学习计划与进度'],
+                    ['/homework-page', '📒', '我的作业', '提交作业 · 查看批改']
+                ]
+            },
+            res: {
+                short: '资源中心', title: '🗂 资源中心', label: '资源中心',
+                hero: {
+                    badge: '📚 旗舰资源', icon: '📚',
+                    h1: '课件中心',
+                    sub: '课程 PPT / Word 资料在线预览，支持关键词检索与分类浏览，随取随用。',
+                    meta: ['📚 在线预览', '🔍 关键词检索', '🗂 分类浏览'],
+                    rows: [['资源类型', '课件 / 文档'], ['预览方式', '在线高清预览'], ['检索方式', '关键词 + 分类']],
+                    href: '/ppt-resources-page', cta: '进入课件中心'
+                },
+                items: [
+                    ['/ppt-resources-page', '📚', '课件中心', '课件在线预览与检索'],
+                    ['/frontier-update-page', '🚀', '前沿动态', '3GPP / 厂商前沿资讯'],
+                    ['/rag-console', '🔎', '知识检索', 'RAG 问答 · 教材溯源']
+                ]
+            },
+            grow: {
+                short: '成长中心', title: '🌱 成长中心', label: '成长中心',
+                hero: {
+                    badge: '🎯 旗舰功能', icon: '🎯',
+                    h1: '能力画像',
+                    sub: '基于作业、错题、面试与学习行为多维数据，生成 12 维能力雷达与个性化提升建议。',
+                    meta: ['📊 12 维能力雷达', '🤖 AI 深度分析', '💡 提升建议'],
+                    rows: [['数据来源', '作业 / 错题 / 面试'], ['能力维度', '12 维'], ['输出形式', '雷达图 + 报告']],
+                    href: '/student-portrait-page', cta: '查看能力画像'
+                },
+                items: [
+                    ['/student-portrait-page', '🎯', '能力画像', '12 维能力雷达与 AI 分析'],
+                    ['/credential-chain', '🎖', '成长档案', '可信哈希链成长记录'],
+                    ['/job-recruitment-page', '💼', '岗位招聘', '实时招聘岗位浏览'],
+                    ['/job-match-page', '🤝', '岗位匹配', '岗位胜任力匹配度分析']
+                ]
+            }
+        };
+
+        function hxCenterHTML(key) {
+            const c = HX_CENTERS[key];
+            if (!c) return '';
+            const chips = c.hero.meta.map(m => `<span class="hx-mchip">${m}</span>`).join('');
+            const rows = c.hero.rows.map(r => `<div class="hx-prow"><span>${r[0]}</span><b>${r[1]}</b></div>`).join('');
+            const cards = c.items.map(it =>
+                `<a class="hx-fcard hx-glass" href="${it[0]}"><span class="hx-farr">→</span>
+                   <div class="hx-fic" style="background:rgba(61,123,255,.14)">${it[1]}</div>
+                   <h3>${it[2]}</h3><p>${it[3]}</p></a>`).join('');
+            return `
+              <section class="hx-hero">
+                <span class="hx-badge">${c.hero.badge}</span>
+                <h1>${c.hero.h1}</h1>
+                <p class="hx-sub">${c.hero.sub}</p>
+                <div class="hx-meta">${chips}</div>
+                <div class="hx-herobody">
+                  <div class="hx-art" style="display:flex;align-items:center;justify-content:center">
+                    <div style="font-size:76px;filter:drop-shadow(0 8px 22px rgba(61,123,255,.45))">${c.hero.icon}</div>
+                  </div>
+                  <div class="hx-params">${rows}
+                    <a class="hx-startbtn" href="${c.hero.href}">${c.hero.cta}</a>
+                  </div>
+                </div>
+              </section>
+              <div class="hx-qtitle" style="margin-top:20px"><span class="hx-dot" style="background:#6E4BFF;box-shadow:0 0 7px #6E4BFF"></span>${c.label} · 全部功能</div>
+              <div class="hx-frow">${cards}</div>`;
+        }
+
+        // 主区域内三种模式：home（首页三栏）/ center（中心二级页）/ page（功能页 iframe）
+        function hxSetMode(mode) {
+            const home = document.getElementById('hxHome');
+            if (!home) return;
+            const showHomeParts = (mode === 'home');
+            // 首页专属元素：只有 home 模式才显示，page/center 模式全部隐藏
+            home.querySelectorAll(':scope > .hx-aurora, :scope > header.hx-topbar, :scope > .hx-notice, :scope > .hx-layout').forEach(el => {
+                el.style.display = showHomeParts ? '' : 'none';
+            });
+            const cv = document.getElementById('hxCenterView');
+            if (cv) cv.style.display = (mode === 'center') ? 'block' : 'none';
+            const pv = document.getElementById('hxPageView');
+            if (pv) pv.style.display = (mode === 'page') ? 'block' : 'none';
+            if (mode !== 'page') {
+                const f = document.getElementById('hxPageIframe');
+                if (f) f.src = 'about:blank';
+            }
+        }
+        function hxSyncTab(key) {
+            document.querySelectorAll('.hx-tab').forEach(t => {
+                t.classList.toggle('on', t.dataset.view !== 'chat' && (t.dataset.center || '') === (key || ''));
+            });
+        }
+        function hxRenderCenter(key) {
+            const c = HX_CENTERS[key];
+            const cv = document.getElementById('hxCenterView');
+            if (!c || !cv) return;
+            cv.dataset.key = key;
+            const t = document.getElementById('hxCenterTitle');
+            if (t) t.textContent = c.title;
+            const b = document.getElementById('hxCenterBody');
+            if (b) b.innerHTML = hxCenterHTML(key);
+        }
+        function hxOpenCenter(key) {
+            if (!HX_CENTERS[key]) return;
+            hxRenderCenter(key);
+            hxFromCenter = null;
+            hxSetMode('center');
+            hxSyncTab(key);
+            document.body.style.overflow = 'auto';
+            window.scrollTo({ top: 0 });
+        }
+        function hxCloseCenter() {
+            hxFromCenter = null;
+            hxSetMode('home');
+            hxSyncTab('');
+            document.body.style.overflow = 'auto';
+            window.scrollTo({ top: 0 });
+        }
+
+        // ===== 右上角：今日学习进度 =====
+        const HX_PROG_C = 2 * Math.PI * 18;
+        async function hxLoadTodayProgress() {
+            const arc = document.getElementById('hxProgArc');
+            const pctEl = document.getElementById('hxProgPct');
+            if (!arc || !pctEl) return;
+            let d = null;
+            try {
+                const r = await fetch('/api/today-progress');
+                if (r.ok) d = await r.json();
+            } catch (e) {}
+            const ok = !!(d && d.success);
+            const pct = ok ? (d.percent || 0) : 0;
+            const done = ok ? (d.done || 0) : 0;
+            const goal = ok ? (d.goal || 10) : 10;
+            const acc = ok ? (d.accuracy || 0) : 0;
+            const wrong = ok ? (d.wrong || 0) : 0;
+            const avg = ok ? (d.avg_score || 0) : 0;
+            pctEl.textContent = pct + '%';
+            arc.style.strokeDashoffset = HX_PROG_C * (1 - pct / 100);
+            const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+            setTxt('hxProgMini', done + '/' + goal);
+            setTxt('hxProgDone', done + '/' + goal);
+            setTxt('hxProgAcc', acc + '%');
+            setTxt('hxProgWrong', wrong);
+            setTxt('hxProgAvg', avg);
+            setTxt('hxProgDate', ok ? d.date : '');
+            const bar = document.getElementById('hxProgBar');
+            if (bar) bar.style.width = pct + '%';
+            const foot = document.getElementById('hxProgFoot');
+            if (foot) foot.textContent = done > 0
+                ? '今日已完成 ' + done + ' 项，继续冲刺 ' + goal + ' 项目标 💪'
+                : '今天还没有学习记录，去「互动练习」开始吧 →';
+        }
+        function hxProgPop(mode) {
+            const el = document.getElementById('hxProgPop');
+            if (!el) return;
+            if (mode === true) el.classList.add('show');
+            else if (mode === false) el.classList.remove('show');
+            else el.classList.toggle('show');
+        }
+
         function hxTab(tabEl) {
             if (!tabEl) return;
             const view = tabEl.dataset.view;
-            document.querySelectorAll('.hx-tab').forEach(t => t.classList.remove('on'));
-            tabEl.classList.add('on');
             const home = document.getElementById('hxHome');
             const chat = document.getElementById('hxChatView');
+            hxFromCenter = null;
             if (view === 'chat') {
+                document.querySelectorAll('.hx-tab').forEach(t => t.classList.remove('on'));
+                tabEl.classList.add('on');
                 if (home) home.style.display = 'none';
                 if (chat) chat.style.display = 'block';
                 document.body.style.overflow = 'hidden';
                 hxCloseDrawer();
-            } else {
-                if (chat) chat.style.display = 'none';
-                hxClosePage();
-                if (home) home.style.display = 'block';
-                document.body.style.overflow = 'auto';
-                hxFilter(tabEl.dataset.cat || 'all');
-                hxCloseDrawer();
-                window.scrollTo({ top: 0 });
+                // 进入 AI 助教：会话侧边栏默认展开（不记忆偏好，返回主页时自动收起）
+                toggleSidebarForce(true, false);
+                return;
             }
-        }
-        function hxFilter(cat) {
-            document.querySelectorAll('#hxQuickGrid .hx-qitem').forEach(it => {
-                it.classList.toggle('hx-hide', cat !== 'all' && it.dataset.cat !== cat);
-            });
+            if (chat) chat.style.display = 'none';
+            if (home) home.style.display = 'block';
+            const ck = tabEl.dataset.center || '';
+            if (ck) hxRenderCenter(ck);
+            // 离开 AI 助教：收起会话侧边栏，还主页一个干净视野
+            toggleSidebarForce(false, false);
+            hxSetMode(ck ? 'center' : 'home');
+            hxSyncTab(ck);
+            document.body.style.overflow = 'auto';
+            hxCloseDrawer();
+            window.scrollTo({ top: 0 });
         }
         // ===== 主区域内嵌页面切换：点导航不跳转，主区域原地变页面 =====
         function hxOpenPage(url, title) {
-            const home = document.getElementById('hxHome');
-            const pv = document.getElementById('hxPageView');
             const frame = document.getElementById('hxPageIframe');
-            if (!pv || !frame) { window.location.href = url; return; }
-            // 隐藏首页内容区（公告条+三栏布局），保留顶部 Tab 栏
-            home.querySelectorAll(':scope > .hx-notice, :scope > .hx-layout').forEach(el => el.style.display = 'none');
-            pv.style.display = 'block';
-            const titleEl = document.getElementById('hxPageTitle');
-            if (titleEl) titleEl.textContent = title || '功能页面';
+            if (!frame) { window.location.href = url; return; }
+            const cv = document.getElementById('hxCenterView');
+            hxFromCenter = (cv && cv.style.display !== 'none' && cv.dataset.key) ? cv.dataset.key : null;
+            hxSetMode('page');
+            const tt = document.getElementById('hxPageTitle');
+            if (tt) tt.textContent = title || '功能页面';
             const pop = document.getElementById('hxPagePop');
             if (pop) pop.href = url;
+            const bb = document.getElementById('hxPageBack');
+            if (bb) bb.textContent = hxFromCenter ? ('← 返回' + (HX_CENTERS[hxFromCenter].short || '中心')) : '← 返回首页';
             frame.src = url;
             document.body.style.overflow = 'hidden';
             hxCloseDrawer();
             window.scrollTo({ top: 0 });
         }
         function hxClosePage() {
-            const pv = document.getElementById('hxPageView');
-            const frame = document.getElementById('hxPageIframe');
-            const home = document.getElementById('hxHome');
-            if (pv) pv.style.display = 'none';
-            if (frame) frame.src = 'about:blank';
-            if (home) home.querySelectorAll(':scope > .hx-notice, :scope > .hx-layout').forEach(el => el.style.display = '');
+            if (hxFromCenter) {
+                const k = hxFromCenter;
+                hxFromCenter = null;
+                hxOpenCenter(k);
+                return;
+            }
+            hxSetMode('home');
+            hxSyncTab('');
             document.body.style.overflow = 'auto';
         }
-        // 首页内所有内部链接（宫格卡片/快捷卡/开始仿真）统一原地内嵌打开
+        // 首页内所有内部链接（宫格卡片/快捷卡/开始仿真/中心卡片）统一原地内嵌打开
         document.getElementById('hxHome').addEventListener('click', function(e) {
             const a = e.target.closest('a[href^="/"]');
             if (!a || a.target === '_blank') return;
@@ -2014,7 +2521,6 @@
                         <a class="settings-item" onclick="closeSettings();clearChatHistory();">🗑️ 清除对话记录</a>
                     </div>
                 </div>
-                <button class="nav-btn" style="background: linear-gradient(135deg, #ff4d4f, #cf1322);" onclick="doLogout()" title="退出登录">🔓 退出登录</button>
                 <input type="file" id="avatarInput" accept="image/png,image/jpeg,image/gif,image/webp" style="display:none" onchange="uploadAvatar(this);">`;
         }
 
@@ -2064,38 +2570,56 @@
                 ? `<img src="${currentUser.avatar_url}" alt="头像" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
                 : (currentUser.student_name || '?').charAt(0);
 
+            const row = (icon, label, value) => `
+                <div style="display:flex;align-items:center;gap:11px;padding:11px 13px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:13px;transition:background .2s;" onmouseover="this.style.background='rgba(255,255,255,.09)'" onmouseout="this.style.background='rgba(255,255,255,.05)'">
+                    <span style="width:33px;height:33px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;background:rgba(0,140,255,.14);border:1px solid rgba(0,140,255,.28);border-radius:10px;font-size:15px;">${icon}</span>
+                    <span style="color:rgba(255,255,255,.5);font-size:12.5px;flex:0 0 auto;">${label}</span>
+                    <span style="margin-left:auto;color:#fff;font-size:13px;font-weight:600;text-align:right;">${value}</span>
+                </div>`;
+
+            const editClsBtn = `<button onclick="showClassPicker(event)" style="margin-left:8px;padding:3px 11px;background:rgba(0,140,255,.16);border:1px solid rgba(0,140,255,.4);color:#6db8ff;border-radius:7px;font-size:11.5px;cursor:pointer;">修改</button>`;
+
             const rows = isTeacher ? [
-                ['🏷️ 角色', '教师'],
-                ['👤 账号', currentUser.student_name || '-']
+                row('🏷️', '角色', '教师 · 老师工作台'),
+                row('👤', '账号', currentUser.student_name || '-')
             ] : [
-                ['🏷️ 角色', '学生'],
-                ['👤 姓名', currentUser.student_name || '-'],
-                ['🎓 学号', currentUser.student_no
+                row('🏷️', '角色', '学生'),
+                row('👤', '姓名', currentUser.student_name || '-'),
+                row('🎓', '学号', currentUser.student_no
                     ? `<span style="font-family:monospace;font-weight:600;letter-spacing:.5px;">${currentUser.student_no}</span>`
-                    : '<span style="color:#fa8c16;">未绑定（可联系老师补录）</span>'],
-                ['📁 班级', currentUser.class_name || '未分班']
+                    : '<span style="color:#ffb35c;">未绑定（可联系老师补录）</span>'),
+                row('📁', '班级', `${currentUser.class_name || '未分班'}${editClsBtn}`)
             ];
-            const infoRows = rows.map(([k, v]) => `
-                <div style="display:flex;justify-content:space-between;align-items:center;padding:13px 4px;border-bottom:1px solid #f0f2f5;font-size:14px;">
-                    <span style="color:#888;">${k}</span>
-                    <span style="color:#2d3142;font-weight:600;">${v}</span>
-                </div>`).join('');
+            const infoRows = rows.join('');
 
             const overlay = document.createElement('div');
             overlay.id = 'profileOverlay';
-            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.55);backdrop-filter:blur(3px);z-index:100001;display:flex;justify-content:center;align-items:center;padding:20px;';
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(2,8,28,0.62);backdrop-filter:blur(8px);z-index:100001;display:flex;justify-content:center;align-items:center;padding:20px;';
             overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
             overlay.innerHTML = `
-                <div style="background:#fff;border-radius:18px;max-width:420px;width:100%;max-height:calc(100vh - 40px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.3);animation:slideUp .25s ease;">
-                    <div style="background:linear-gradient(135deg,#667eea,#764ba2);padding:26px 24px 56px;position:relative;flex-shrink:0;">
-                        <div style="color:#fff;font-size:17px;font-weight:700;">👤 个人中心</div>
-                        <button onclick="document.getElementById('profileOverlay').remove()" style="position:absolute;top:14px;right:16px;background:rgba(255,255,255,.2);border:none;color:#fff;font-size:16px;cursor:pointer;border-radius:50%;width:30px;height:30px;">×</button>
+                <div style="position:relative;background:linear-gradient(165deg,#13244f 0%,#182f6b 48%,#0d1a3d 100%);border:1px solid rgba(255,255,255,.13);border-radius:22px;max-width:390px;width:100%;max-height:calc(100vh - 40px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.55),0 0 0 1px rgba(0,140,255,.08) inset;animation:slideUp .28s ease;">
+                    <div style="position:relative;padding:24px 22px 60px;flex-shrink:0;background:radial-gradient(130% 120% at 50% -20%, rgba(0,130,255,.38) 0%, rgba(90,60,220,.18) 45%, transparent 75%);">
+                        <div style="display:flex;align-items:center;gap:8px;color:#fff;font-size:15.5px;font-weight:700;letter-spacing:.5px;">👤 个人中心</div>
+                        <button onclick="document.getElementById('profileOverlay').remove()" style="position:absolute;top:14px;right:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.85);font-size:15px;cursor:pointer;border-radius:50%;width:29px;height:29px;transition:background .2s;" onmouseover="this.style.background='rgba(255,255,255,.22)'" onmouseout="this.style.background='rgba(255,255,255,.1)'">×</button>
                     </div>
-                    <div class="profile-scroll" style="padding:0 24px 22px;margin-top:-40px;">
-                        <div id="profileAvatar" style="width:84px;height:84px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:34px;font-weight:700;display:flex;align-items:center;justify-content:center;border:4px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,.18);overflow:hidden;margin-bottom:12px;">${avatarHTML}</div>
-                        <button onclick="document.getElementById('avatarInput').click()" style="margin-bottom:18px;padding:9px 22px;background:#f0f5ff;border:1.5px solid #667eea;color:#4a5ac8;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;">🖼️ 更换头像</button>
-                        ${infoRows}
-                        <div style="margin-top:16px;font-size:12px;color:#aaa;line-height:1.6;">头像支持 png/jpg/gif/webp，大小不超过 2MB</div>
+                    <div class="profile-scroll" style="margin-top:-44px;padding:0 22px 20px;position:relative;z-index:1;overflow-y:auto;display:flex;flex-direction:column;align-items:center;">
+                        <div style="padding:3px;border-radius:50%;background:linear-gradient(135deg,#00c8ff,#3d7bff 55%,#8a5cff);box-shadow:0 10px 28px rgba(0,130,255,.4);">
+                            <div id="profileAvatar" style="width:88px;height:88px;border-radius:50%;background:linear-gradient(135deg,#1c3a7d,#12275a);color:#fff;font-size:34px;font-weight:700;display:flex;align-items:center;justify-content:center;overflow:hidden;border:3px solid #13244f;">${avatarHTML}</div>
+                        </div>
+                        <div style="margin-top:11px;font-size:17px;font-weight:700;color:#fff;letter-spacing:.5px;">${currentUser.student_name || '用户'}</div>
+                        <span style="margin-top:7px;padding:3px 14px;font-size:11px;font-weight:600;letter-spacing:1px;border-radius:999px;background:linear-gradient(135deg,rgba(0,150,255,.22),rgba(0,200,255,.1));border:1px solid rgba(0,150,255,.42);color:#7cc4ff;">${isTeacher ? '教师 TEACHER' : '学生 STUDENT'}</span>
+                        <div style="width:100%;display:flex;flex-direction:column;gap:8px;margin-top:16px;">${infoRows}</div>
+                        <div style="width:100%;margin-top:16px;display:flex;flex-direction:column;gap:8px;">
+                            <div style="font-size:11px;color:rgba(255,255,255,.4);letter-spacing:1.5px;font-weight:600;text-align:left;">快捷操作</div>
+                            <button id="petToggleProfile" onclick="togglePet()" style="width:100%;padding:10px 0;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.13);color:#fff;border-radius:11px;font-size:12.5px;cursor:pointer;transition:background .2s;" onmouseover="this.style.background='rgba(255,255,255,.11)'" onmouseout="this.style.background='rgba(255,255,255,.06)'">${localStorage.getItem('pet_disabled') === '1' ? '🐾 开启桌宠' : '🐾 关闭桌宠'}</button>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                                <button onclick="closePersonalCenter();showPlatformGuide();" style="padding:10px 0;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.13);color:#fff;border-radius:11px;font-size:12.5px;cursor:pointer;transition:background .2s;" onmouseover="this.style.background='rgba(255,255,255,.11)'" onmouseout="this.style.background='rgba(255,255,255,.06)'">📖 使用说明</button>
+                                <button onclick="closePersonalCenter();clearChatHistory();" style="padding:10px 0;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.13);color:#fff;border-radius:11px;font-size:12.5px;cursor:pointer;transition:background .2s;" onmouseover="this.style.background='rgba(255,255,255,.11)'" onmouseout="this.style.background='rgba(255,255,255,.06)'">🗑️ 清除对话记录</button>
+                            </div>
+                            <button onclick="doLogout()" style="width:100%;padding:10px 0;background:linear-gradient(135deg,#ff4d4f,#cf1322);border:none;color:#fff;border-radius:11px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(207,19,34,.3);transition:transform .15s;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">🔓 退出登录</button>
+                        </div>
+                        <button onclick="document.getElementById('avatarInput').click()" style="margin-top:16px;width:100%;padding:11px 0;background:linear-gradient(135deg,#0080ff,#00c8ff);border:none;color:#fff;border-radius:12px;font-size:13.5px;font-weight:700;letter-spacing:1px;cursor:pointer;box-shadow:0 6px 18px rgba(0,130,255,.35);transition:transform .15s,box-shadow .15s;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 9px 24px rgba(0,130,255,.45)'" onmouseout="this.style.transform='';this.style.boxShadow='0 6px 18px rgba(0,130,255,.35)'">🖼️ 更换头像</button>
+                        <div style="margin-top:12px;font-size:11px;color:rgba(255,255,255,.32);line-height:1.6;">头像支持 png/jpg/gif/webp · 大小不超过 2MB</div>
                     </div>
                 </div>`;
             document.body.appendChild(overlay);
@@ -2103,6 +2627,70 @@
 
         function closePersonalCenter() {
             document.getElementById('profileOverlay')?.remove();
+        }
+
+        // ===== 修改班级：弹层选择已有班级 =====
+        function _clsEsc(s) {
+            return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        async function showClassPicker(ev) {
+            if (ev) ev.stopPropagation();
+            document.getElementById('classPickerOverlay')?.remove();
+            let list = [];
+            try {
+                const r = await fetch('/api/classes');
+                if (r.ok) {
+                    const d = await r.json();
+                    list = (d.classes || []).map(c => c.name).filter(Boolean);
+                }
+            } catch (e) {}
+            if (!list.length) { alert('暂无可选班级，请联系老师先创建班级'); return; }
+            const overlay = document.createElement('div');
+            overlay.id = 'classPickerOverlay';
+            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);z-index:100002;display:flex;justify-content:center;align-items:center;padding:20px;';
+            overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+            const opts = list.map(name => `
+                <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid #eee;border-radius:10px;cursor:pointer;font-size:14px;margin-bottom:8px;transition:border-color .2s;">
+                    <input type="radio" name="clsPick" value="${_clsEsc(name)}" ${name === currentUser.class_name ? 'checked' : ''}>
+                    <span style="font-weight:600;color:#2d3142;">${_clsEsc(name)}</span>
+                </label>`).join('');
+            overlay.innerHTML = `
+                <div style="background:#fff;border-radius:16px;max-width:360px;width:100%;padding:22px;box-shadow:0 20px 50px rgba(0,0,0,.3);animation:slideUp .25s ease;">
+                    <div style="font-size:16px;font-weight:700;color:#2d3142;margin-bottom:14px;">📁 选择班级</div>
+                    <div style="max-height:260px;overflow-y:auto;">${opts}</div>
+                    <div style="display:flex;gap:10px;margin-top:16px;">
+                        <button onclick="document.getElementById('classPickerOverlay').remove()" style="flex:1;padding:11px;background:#f0f2f5;border:none;border-radius:10px;font-size:14px;cursor:pointer;">取消</button>
+                        <button onclick="saveMyClass()" style="flex:1;padding:11px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;">保存</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(overlay);
+        }
+
+        async function saveMyClass() {
+            const sel = document.querySelector('input[name="clsPick"]:checked');
+            if (!sel) { alert('请选择班级'); return; }
+            try {
+                const r = await fetch('/api/update-class', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ class_name: sel.value })
+                });
+                const d = await r.json();
+                if (d.success) {
+                    currentUser.class_name = d.class_name;
+                    const uc = document.getElementById('hxUcardClass');
+                    if (uc) uc.textContent = d.class_name;
+                    document.getElementById('classPickerOverlay')?.remove();
+                    showKbToast('✓ 班级已更新为 ' + d.class_name);
+                    closePersonalCenter();
+                    showPersonalCenter();
+                } else {
+                    alert(d.error || '修改失败，请重试');
+                }
+            } catch (e) {
+                alert('网络错误，请重试');
+            }
         }
 
         // ===== 头像上传 =====
@@ -2126,6 +2714,15 @@
                     // 同步刷新个人中心弹窗里的大头像
                     const pa = document.getElementById('profileAvatar');
                     if (pa) pa.innerHTML = `<img src="${currentUser.avatar_url}" alt="头像" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+                    // 同步刷新左侧用户卡头像（hxUcardAvatar，保留角标）
+                    const ua = document.getElementById('hxUcardAvatar');
+                    if (ua) {
+                        ua.style.backgroundImage = `url("${currentUser.avatar_url}")`;
+                        ua.style.backgroundSize = 'cover';
+                        ua.style.backgroundPosition = 'center';
+                        ua.style.color = 'transparent';
+                        if (ua.firstChild && ua.firstChild.nodeType === 3) ua.firstChild.textContent = '';
+                    }
                     showKbToast('✓ 头像已更新');
                 } else {
                     alert(d.error || '上传失败，请重试');
@@ -2163,6 +2760,9 @@
                 if (menu) menu.classList.remove('open');
                 const item = document.getElementById('petToggleItem');
                 if (item) item.textContent = '🐾 开启桌宠';
+                const pitem = document.getElementById('petToggleProfile');
+                if (pitem) pitem.textContent = '🐾 开启桌宠';
+                closePersonalCenter();
             }
         }
 
@@ -2322,9 +2922,29 @@
             } catch (e) { console.error('加载会话列表失败', e); }
         }
 
+        /* ===== 主页右栏「对话历史」卡片 ===== */
+        function renderHomeConvs() {
+            const box = document.getElementById('hxHomeConvs');
+            if (!box) return;
+            if (!conversations.length) {
+                box.innerHTML = '<div class="hx-nitem" style="cursor:default;opacity:.6">暂无历史对话，去 AI 助教聊一句吧 ✨</div>';
+                return;
+            }
+            box.innerHTML = conversations.slice(0, 6).map(c => `
+                <div class="hx-nitem" onclick="goChatView();openConversation('${c.id}')">
+                    <span style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">💬 ${escapeTitle(c.title)}</span>
+                    <time>${timeAgo(c.updated_at)} · ${c.message_count}条</time>
+                </div>`).join('');
+        }
+        function goChatView() {
+            const tab = document.querySelector('.hx-tab[data-view="chat"]');
+            if (tab) hxTab(tab);
+        }
+
         function renderConvList() {
             const list = document.getElementById('convList');
             document.getElementById('convCount').textContent = conversations.length ? conversations.length + ' 条' : '';
+            renderHomeConvs();
             if (!conversations.length) {
                 list.innerHTML = '<div class="conv-empty">暂无历史对话<br>发一条消息开始吧 ✨</div>';
                 return;
@@ -2357,16 +2977,42 @@
             });
         }
 
+        /* ===== 欢迎区 Hero + 快捷提问 ===== */
+        const QUICK_PROMPTS = [
+            { ic: '📡', t: '讲解 5G NR 空口关键技术' },
+            { ic: '📶', t: 'RSRP、RSRQ、SINR 有什么区别？' },
+            { ic: '🛠', t: '5G 单站验证的完整流程是什么？' },
+            { ic: '🧪', t: '帮我出 3 道通信原理练习题' },
+            { ic: '🗺', t: '什么叫网格优化？怎么做路测？' },
+            { ic: '💼', t: '通信工程专业的就业方向有哪些？' },
+        ];
+        function chatWelcomeHtml() {
+            const name = (currentUser && currentUser.student_name) ? currentUser.student_name : '';
+            const chips = QUICK_PROMPTS.map(p =>
+                `<button class="cw-chip" data-q="${p.t}" onclick="askQuick(this)"><span class="ci">${p.ic}</span>${p.t}</button>`).join('');
+            return `
+                <div class="cw-hero"><img src="/static/bot_new.jpg" alt="AI"></div>
+                <div class="cw-title">你好${name ? '，<b>' + escapeHtml(name) + '</b>' : '<b>同学</b>'}，我是灵智尚人</div>
+                <div class="cw-sub">5G 通信工程学习助手 · 支持拍照识题、知识库问答、错题分析<br>点下方卡片直接开聊，或在输入框描述你的问题</div>
+                <div class="cw-chips">${chips}</div>
+                <div class="cw-mode-hint">💡 当前模式：<b id="cwModeName">快速回答</b> · 可在顶部切换深度思考</div>`;
+        }
+        function renderWelcome() {
+            messagesArea.innerHTML = `<div class="chat-welcome" id="chatWelcome">${chatWelcomeHtml()}</div>`;
+        }
+        function showWelcome() {
+            if (!messagesArea.querySelector('.message')) renderWelcome();
+        }
+        function askQuick(btn) {
+            if (isGenerating) return;
+            userInput.value = btn.dataset.q || btn.textContent.trim();
+            sendMessage();
+        }
+
         function resetChatUI() {
             chatHistory = [];
             conversationHistory = [];
-            messagesArea.innerHTML = `
-                <div class="message assistant">
-                    <div class="avatar"><img src="/static/bot_new.jpg" alt="AI"></div>
-                    <div class="message-content">
-                        你好！我是灵智尚人，很高兴为您服务！您可以选择快速回答或深度思考模式来问我问题。
-                    </div>
-                </div>`;
+            renderWelcome();
         }
 
         async function newConversation() {
@@ -2391,7 +3037,7 @@
                 chatHistory = [];
                 conversationHistory = [];
                 (d.messages || []).forEach(m => {
-                    addMessage(m.content, m.isUser, m.image, false);
+                    addMessage(m.content, m.isUser, m.image, false, m.timestamp);
                     chatHistory.push({ content: m.content, isUser: m.isUser, image: m.image, timestamp: m.timestamp });
                     conversationHistory.push({ role: m.isUser ? 'user' : 'assistant', content: m.content });
                 });
@@ -2452,18 +3098,17 @@
             }).then(r => { if (r.ok) loadConversations(); }).catch(() => {});
         }
 
-        function toggleSidebarForce(open) {
+        function toggleSidebarForce(open, persist) {
             const sb = document.getElementById('convSidebar');
-            const fab = document.getElementById('convFab');
             sb.classList.toggle('open', open);
             document.body.classList.toggle('sidebar-open', open);
-            fab.classList.toggle('show', !open);
-            localStorage.setItem('lzr_sidebar_open', open ? '1' : '0');
+            // 仅用户手动操作才记忆偏好；视图切换的自动开合不写入
+            if (persist) localStorage.setItem('lzr_sidebar_open', open ? '1' : '0');
             if (open) loadKbPpts(); // 侧边栏打开时懒加载知识库课件
         }
         function toggleSidebar() {
             const sb = document.getElementById('convSidebar');
-            toggleSidebarForce(!sb.classList.contains('open'));
+            toggleSidebarForce(!sb.classList.contains('open'), true);
         }
 
         /* ===== 知识库课件（侧边栏底部） ===== */
@@ -2646,11 +3291,8 @@
         }
 
         async function initSidebar() {
-            const prefer = localStorage.getItem('lzr_sidebar_open');
-            // 默认收起：会话侧边栏打开时会盖住左侧功能导航（270px fixed 层），
-            // 只有点过浮动按钮（记住偏好=1）才自动展开
-            const wantOpen = prefer === '1';
-            toggleSidebarForce(wantOpen);
+            // 侧边栏改为「进入 AI 助教视图时默认展开」的策略，启动时保持收起
+            toggleSidebarForce(false, false);
             await migrateOldHistory();
             // 恢复上次会话
             if (currentConvId) {
@@ -2674,6 +3316,8 @@
                 btn.classList.remove('active');
             });
             document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+            const hint = document.getElementById('cwModeName');
+            if (hint) hint.textContent = mode === 'deep' ? '深度思考' : '快速回答';
         }
 
         imageUpload.addEventListener('change', function(e) {
@@ -2837,7 +3481,7 @@
             contentDiv.appendChild(actionsDiv);
         }
 
-        function addMessage(content, isUser, imageBase64 = null, saveToHistory = true) {
+        function addMessage(content, isUser, imageBase64 = null, saveToHistory = true, ts = null) {
             // 保存到聊天历史（可以选择不立即保存）
             if (saveToHistory) {
                 // 确保图片数据完整（包含data URL前缀）
@@ -2921,13 +3565,27 @@
             if (!isUser && content) {
                 appendMessageActions(contentDiv, content);
             }
-            
+
+            // 时间戳（流式渲染会重写 innerHTML，故抽成辅助函数便于收尾时重挂）
+            appendMsgTime(contentDiv, ts || (saveToHistory && chatHistory.length ? chatHistory[chatHistory.length - 1].timestamp : null));
+
             messageDiv.appendChild(avatar);
             messageDiv.appendChild(contentDiv);
             messagesArea.appendChild(messageDiv);
-            
+
             scrollToBottom();
             return contentDiv;
+        }
+
+        function appendMsgTime(contentDiv, ts) {
+            if (!contentDiv) return;
+            const old = contentDiv.querySelector('.msg-time');
+            if (old) old.remove();
+            const d = ts ? new Date(ts) : new Date();
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'msg-time';
+            timeDiv.textContent = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+            contentDiv.appendChild(timeDiv);
         }
 
         function formatMessage(content) {
@@ -2950,7 +3608,8 @@
             
             const contentDiv = document.createElement('div');
             contentDiv.className = 'message-content typing-indicator';
-            contentDiv.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+            contentDiv.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span>' +
+                '<span class="typing-label">正在思考…</span></div>';
             
             messageDiv.appendChild(avatar);
             messageDiv.appendChild(contentDiv);
@@ -3139,6 +3798,8 @@
                 isGenerating = false;
                 setInputDisabled(false);
                 selectedImage = null;
+                // 流式渲染收尾：重挂时间戳（流式过程中 innerHTML 被反复重写）
+                if (messageContentDiv) appendMsgTime(messageContentDiv);
                 userInput.focus();
             }
         }
@@ -3151,6 +3812,7 @@
         }
 
         // 页面加载时初始化会话侧边栏并获取用户信息
+        showWelcome();
         initSidebar();
         loadCurrentUser();
         
@@ -4219,6 +4881,71 @@
     </script>
 
     <!-- 上传知识库文件模态框 -->
+    <div class="modal-overlay" id="scenarioPicker">
+        <div class="modal" style="max-width:920px">
+            <div class="modal-title">
+                🎞 选择剧情演练副本
+                <span class="modal-close" onclick="closeScenarioPicker()">×</span>
+            </div>
+            <p style="font-size:13px;color:#666;margin-bottom:16px;line-height:1.8">
+                四个副本的流程与进度相互独立，分别保存在本地，可任选其一进入。
+            </p>
+            <div class="sc-pick-grid">
+                <a class="sc-pick" href="/scenario-demo" onclick="pickScenario(event,'/scenario-demo','副本一 · 5G 单站验证')">
+                    <div class="sc-pick-ic" style="background:rgba(0,128,255,.12)">📡</div>
+                    <h3>副本一 · 5G 单站验证</h3>
+                    <p>8 步任务 · 满分 100<br>工单核对 → 设备检查 → 工具选型 → 覆盖测试 → 业务测试 → 邻区验证 → 报告</p>
+                    <span class="sc-pick-go">进入实训 →</span>
+                </a>
+                <a class="sc-pick" href="/scenario-cluster" onclick="pickScenario(event,'/scenario-cluster','副本二 · 5G 簇优化')">
+                    <div class="sc-pick-ic" style="background:rgba(255,81,47,.12)">🗺</div>
+                    <h3>副本二 · 5G 簇优化（簇2）</h3>
+                    <p>10 步任务 · 满分 100<br>工单接收 → 模块解读 → 设备清单 → 上电自检 → 资料准备 → 路线规划 → 安全评估 → DT 路测 → 收尾 → 报告</p>
+                    <span class="sc-pick-go">进入实训 →</span>
+                </a>
+                <a class="sc-pick" href="/scenario-grid" onclick="pickScenario(event,'/scenario-grid','副本三 · 5G 网格优化')">
+                    <div class="sc-pick-ic" style="background:rgba(16,185,129,.14)">🛰</div>
+                    <h3>副本三 · 5G 网格优化（网格1）</h3>
+                    <p>10 步任务 · 满分 100<br>通知接收 → 验证项解读 → 终端清点 → 上电预调试 → 资料准备 → 轨迹规划 → 现场评估 → 网格路测 → 收尾 → 报告</p>
+                    <span class="sc-pick-go">进入实训 →</span>
+                </a>
+                <a class="sc-pick" href="/scenario-ai" onclick="pickScenario(event,'/scenario-ai','AI 自定义剧情')">
+                    <div class="sc-pick-ic" style="background:rgba(168,85,247,.14)">✨</div>
+                    <h3>AI 自定义剧情</h3>
+                    <p>任意主题 · 自动生成<br>输入主题与要求，AI 自动创作完整实训剧本：背景研判 → 现场勘察 → 诊断处置 → 验收复盘</p>
+                    <span class="sc-pick-go">进入实训 →</span>
+                </a>
+            </div>
+        </div>
+    </div>
+    <script>
+        function openScenarioPicker(e) {
+            if (e) {
+                e.preventDefault();
+                // 阻止冒泡，避免首页统一链接代理再打开一次页面
+                e.stopPropagation();
+            }
+            // 从侧边栏/移动端抽屉触发时，先把抽屉收起
+            if (typeof hxCloseDrawer === 'function') hxCloseDrawer();
+            document.getElementById('scenarioPicker').classList.add('active');
+        }
+        function closeScenarioPicker() {
+            document.getElementById('scenarioPicker').classList.remove('active');
+        }
+        function pickScenario(e, url, title) {
+            if (e) e.preventDefault();
+            closeScenarioPicker();
+            if (typeof hxOpenPage === 'function') {
+                hxOpenPage(url, title || '沉浸式剧情');
+            } else {
+                window.location.href = url;
+            }
+        }
+        document.getElementById('scenarioPicker').addEventListener('click', function (ev) {
+            if (ev.target === this) closeScenarioPicker();
+        });
+    </script>
+
     <div class="modal-overlay" id="uploadModal">
         <div class="modal">
             <div class="modal-title">

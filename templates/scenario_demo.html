@@ -3,2048 +3,1846 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>剧情演绎 - 灵智尚人</title>
+    <title>5G基站单站验证 - 灵智尚人</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
-            min-height: 100vh;
-            overflow: hidden;
-            background: #0a1a2e;
+        :root {
+            --bg: #071521;
+            --bg2: #0b2233;
+            --panel: rgba(13, 33, 52, .92);
+            --panel2: rgba(18, 43, 66, .96);
+            --line: rgba(77, 216, 255, .16);
+            --line2: rgba(77, 216, 255, .34);
+            --cyan: #4dd8ff;
+            --cyan2: #00c8ff;
+            --text: #e6f3ff;
+            --muted: #7ea6c6;
+            --green: #4ade80;
+            --gold: #ffd66b;
+            --red: #ff6b6b;
+            --radius: 12px;
         }
 
-        /* ============ 主舞台容器 ============ */
-        .stage {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* ============ 场景背景层 ============ */
-        /* ============ 场景背景（实景感） ============ */
-        .scene-bg {
-            position: absolute;
-            inset: 0;
-            transition: opacity 1s ease, background 1s ease;
-            z-index: 0;
-        }
-
-        /* 场景0：校园鸟瞰 - 晴朗蓝天 */
-        .scene-bg[data-step="0"] {
-            background:
-                radial-gradient(ellipse at 50% 15%, #87CEEB 0%, rgba(135,206,235,0) 40%),
-                radial-gradient(ellipse at 30% 85%, rgba(34,139,34,0.35) 0%, transparent 50%),
-                linear-gradient(180deg, #4a90c8 0%, #6ba3d4 35%, #7fa5c8 55%, #5b8a6c 85%, #3d6b4f 100%);
-        }
-        /* 场景1：校园傍晚 - 夕阳 */
-        .scene-bg[data-step="1"] {
-            background:
-                radial-gradient(ellipse at 70% 20%, #ff9944 0%, rgba(255,153,68,0) 45%),
-                radial-gradient(ellipse at 50% 100%, rgba(80,60,100,0.4) 0%, transparent 50%),
-                linear-gradient(180deg, #3a3d5e 0%, #6b4a6a 25%, #a56550 45%, #4a5a3a 80%, #2a3a28 100%);
-        }
-        /* 场景2：野外勘测 - 绿色田野 */
-        .scene-bg[data-step="2"] {
-            background:
-                radial-gradient(ellipse at 50% 20%, rgba(150,200,255,0.4) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 90%, rgba(50,120,60,0.5) 0%, transparent 50%),
-                linear-gradient(180deg, #7fb5d4 0%, #9bc4d8 30%, #a8cba0 60%, #4a7d3a 85%, #2d5a25 100%);
-        }
-        /* 场景3：参数查询 - 机房冷色调 */
-        .scene-bg[data-step="3"] {
-            background:
-                radial-gradient(ellipse at 50% 30%, rgba(100,180,220,0.3) 0%, transparent 50%),
-                linear-gradient(180deg, #1a2a3a 0%, #2a4a5a 40%, #1a3a4a 70%, #0f2030 100%);
-        }
-        /* 场景4：分光器选址 - 黄金时刻 */
-        .scene-bg[data-step="4"] {
-            background:
-                radial-gradient(ellipse at 80% 25%, #ffb347 0%, rgba(255,179,71,0) 50%),
-                radial-gradient(ellipse at 20% 90%, rgba(60,80,100,0.4) 0%, transparent 50%),
-                linear-gradient(180deg, #5a4a3a 0%, #8a6a4a 30%, #6a5a4a 55%, #3a4a3a 85%, #2a3a28 100%);
-        }
-        /* 场景5：勘察表填写 - 办公室内 */
-        .scene-bg[data-step="5"] {
-            background:
-                radial-gradient(ellipse at 50% 30%, rgba(255,200,120,0.25) 0%, transparent 50%),
-                linear-gradient(180deg, #2a2420 0%, #3a3028 50%, #2a2420 100%);
-        }
-        /* 场景6：工程设计 - 会议室 */
-        .scene-bg[data-step="6"] {
-            background:
-                radial-gradient(ellipse at 50% 20%, rgba(255,180,100,0.2) 0%, transparent 50%),
-                linear-gradient(180deg, #1a1820 0%, #2a2830 50%, #1a1820 100%);
-        }
-        /* 场景7+: 统一深色 */
-        .scene-bg[data-step="7"],
-        .scene-bg[data-step="8"],
-        .scene-bg[data-step="9"] {
-            background:
-                radial-gradient(ellipse at 50% 30%, rgba(100,150,200,0.25) 0%, transparent 50%),
-                linear-gradient(180deg, #0d1f35 0%, #2a4a6a 50%, #0d1f35 100%);
-        }
-
-        /* ============ SVG 装饰层 ============ */
-        .scene-bg svg.decor {
-            position: absolute;
-            inset: 0;
-            width: 100%;
+        html, body {
             height: 100%;
-            opacity: 0.6;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
         }
 
-        /* ============ 遮罩层 ============ */
-        .overlay {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(180deg, rgba(0,10,30,0.3) 0%, rgba(0,10,30,0.5) 100%);
-            z-index: 1;
+        .app {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            height: 100vh;
+            background:
+                radial-gradient(1100px 620px at 78% -12%, rgba(0, 160, 255, .16), transparent 62%),
+                radial-gradient(760px 520px at 4% 104%, rgba(0, 200, 190, .1), transparent 60%),
+                var(--bg);
         }
 
-        /* ============ 顶部导航栏 ============ */
-        .top-bar {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 56px;
-            background: rgba(10, 25, 50, 0.6);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(0, 200, 255, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 24px;
-            z-index: 10;
-        }
-
-        .top-bar .mode-selector {
-            display: flex;
-            gap: 8px;
-        }
-        .top-bar .mode-btn {
-            padding: 6px 16px;
-            background: rgba(0, 200, 255, 0.15);
-            color: #a0e8ff;
-            border: 1px solid rgba(0, 200, 255, 0.3);
-            border-radius: 4px;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .top-bar .mode-btn:hover {
-            background: rgba(0, 200, 255, 0.3);
-            color: #fff;
-        }
-        .top-bar .mode-btn.active {
-            background: rgba(0, 200, 255, 0.4);
-            color: #fff;
-            box-shadow: 0 0 12px rgba(0, 200, 255, 0.4);
-        }
-
-        .top-bar .title {
-            color: #fff;
-            font-size: 14px;
-            letter-spacing: 2px;
-        }
-
-        .top-bar .end-btn {
-            padding: 8px 20px;
-            background: rgba(255, 80, 80, 0.8);
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            font-size: 13px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .top-bar .end-btn:hover { background: rgba(255, 50, 50, 1); }
-
-        /* ============ 主标题区 ============ */
-        .main-header {
-            position: absolute;
-            top: 80px;
-            left: 0;
-            right: 0;
-            text-align: center;
-            z-index: 5;
-            pointer-events: none;
-        }
-        .main-header .deco {
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .main-header .deco .line {
-            width: 60px;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #00e5ff);
-        }
-        .main-header .deco .line:last-child {
-            background: linear-gradient(90deg, #00e5ff, transparent);
-        }
-        .main-header h1 {
-            color: #fff;
-            font-size: 22px;
-            font-weight: 600;
-            letter-spacing: 4px;
-            text-shadow: 0 0 20px rgba(0, 200, 255, 0.5);
-        }
-        .main-header .clock {
-            margin-top: 8px;
-            color: rgba(255,255,255,0.6);
-            font-size: 13px;
-            font-family: 'Consolas', monospace;
-        }
-        .main-header .clock span { color: #00e5ff; }
-
-        /* ============ 右侧步骤指示器 ============ */
-        .step-indicator {
-            position: absolute;
-            right: 32px;
-            top: 50%;
-            transform: translateY(-50%);
+        /* ============ 左侧任务清单 ============ */
+        .side {
             display: flex;
             flex-direction: column;
-            gap: 16px;
-            z-index: 10;
-        }
-        .step-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .step-item .label {
-            color: rgba(255,255,255,0.5);
-            font-size: 12px;
-            text-align: right;
-            min-width: 90px;
-            transition: all 0.3s;
-        }
-        .step-item .dot {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.1);
-            border: 2px solid rgba(255,255,255,0.2);
-            color: rgba(255,255,255,0.6);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13px;
-            font-weight: 600;
-            transition: all 0.3s;
-            position: relative;
-        }
-        .step-item.completed .dot {
-            background: rgba(0, 200, 255, 0.3);
-            border-color: rgba(0, 200, 255, 0.6);
-            color: #a0e8ff;
-        }
-        .step-item.completed .label { color: rgba(0, 200, 255, 0.8); }
-        .step-item.active .dot {
-            background: linear-gradient(135deg, #00c8ff, #0077ff);
-            border-color: #00e5ff;
-            color: #fff;
-            box-shadow: 0 0 20px rgba(0, 200, 255, 0.6), 0 0 40px rgba(0, 200, 255, 0.3);
-            transform: scale(1.15);
-        }
-        .step-item.active .dot::after {
-            content: '';
-            position: absolute;
-            inset: -6px;
-            border-radius: 50%;
-            border: 1px solid rgba(0, 229, 255, 0.4);
-            animation: pulse 2s infinite;
-        }
-        .step-item.active .label {
-            color: #fff;
-            font-weight: 600;
-            text-shadow: 0 0 10px rgba(0, 200, 255, 0.5);
-        }
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.3); opacity: 0; }
-        }
-
-        /* 步骤连接线 */
-        .step-connector {
-            position: absolute;
-            right: 47px;
-            width: 2px;
-            height: 16px;
-            background: rgba(255,255,255,0.1);
-        }
-        .step-connector.active {
-            background: linear-gradient(180deg, rgba(0, 200, 255, 0.6), rgba(255,255,255,0.1));
-        }
-
-        /* ============ 剧情对话面板 ============ */
-        .dialog-panel {
-            position: absolute;
-            left: 50%;
-            top: 55%;
-            transform: translate(-50%, -50%);
-            width: min(680px, 70vw);
-            z-index: 15;
-            animation: fadeInUp 0.8s ease;
-        }
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translate(-50%, -30px); }
-            to { opacity: 1; transform: translate(-50%, -50%); }
-        }
-
-        .dialog-box {
-            background: linear-gradient(135deg, rgba(10, 35, 65, 0.85) 0%, rgba(15, 25, 55, 0.9) 100%);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(0, 200, 255, 0.3);
-            border-radius: 16px;
-            padding: 40px 44px 32px;
-            box-shadow: 0 8px 40px rgba(0, 100, 200, 0.3),
-                        inset 0 1px 0 rgba(255,255,255,0.1);
-            position: relative;
-        }
-        .dialog-box::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 20px;
-            right: 20px;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #00e5ff, transparent);
-        }
-        /* 角装饰 */
-        .dialog-box .corner {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            border-color: rgba(0, 229, 255, 0.6);
-            border-style: solid;
-        }
-        .dialog-box .corner.tl { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
-        .dialog-box .corner.tr { top: -1px; right: -1px; border-width: 2px 2px 0 0; }
-        .dialog-box .corner.bl { bottom: -1px; left: -1px; border-width: 0 0 2px 2px; }
-        .dialog-box .corner.br { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
-
-        .dialog-title {
-            text-align: center;
-            color: #fff;
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            letter-spacing: 2px;
-            text-shadow: 0 0 15px rgba(0, 200, 255, 0.4);
-        }
-
-        .dialog-content {
-            color: rgba(255,255,255,0.85);
-            font-size: 15px;
-            line-height: 1.9;
-            margin-bottom: 28px;
-            text-align: justify;
-        }
-
-        .dialog-actions {
-            text-align: center;
-        }
-        .btn-next {
-            padding: 12px 48px;
-            background: linear-gradient(135deg, #0080ff 0%, #00c8ff 100%);
-            color: #fff;
-            border: none;
-            border-radius: 24px;
-            font-size: 15px;
-            font-weight: 500;
-            letter-spacing: 2px;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 4px 20px rgba(0, 150, 255, 0.4);
-        }
-        .btn-next:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 30px rgba(0, 150, 255, 0.6);
-        }
-        .btn-next:active { transform: translateY(0); }
-
-        .btn-skip {
-            margin-left: 12px;
-            padding: 12px 28px;
-            background: transparent;
-            color: rgba(255,255,255,0.5);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 24px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .btn-skip:hover {
-            color: rgba(255,255,255,0.8);
-            border-color: rgba(255,255,255,0.4);
-        }
-
-        /* ============ 进度条 ============ */
-        .progress-bar {
-            position: absolute;
-            bottom: 32px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            z-index: 10;
-        }
-        .progress-bar .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.25);
-            transition: all 0.3s;
-        }
-        .progress-bar .dot.active {
-            background: #00e5ff;
-            box-shadow: 0 0 10px rgba(0, 229, 255, 0.6);
-            width: 24px;
-            border-radius: 4px;
-        }
-        .progress-bar .dot.completed {
-            background: rgba(0, 229, 255, 0.5);
-        }
-
-        /* ============ 场景切换过渡 ============ */
-        .scene-bg.fade-out { opacity: 0; }
-
-        /* ============ 结束画面 ============ */
-        .end-screen {
-            position: absolute;
-            inset: 0;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            background: rgba(0, 10, 30, 0.9);
+            border-right: 1px solid var(--line);
+            background: rgba(8, 24, 38, .72);
             backdrop-filter: blur(10px);
+            min-height: 0;
         }
-        .end-screen.show { display: flex; }
-        .end-card {
-            background: linear-gradient(135deg, rgba(0, 50, 100, 0.9), rgba(0, 20, 60, 0.95));
-            border: 1px solid rgba(0, 229, 255, 0.4);
-            border-radius: 20px;
-            padding: 50px 60px;
-            text-align: center;
-            box-shadow: 0 0 60px rgba(0, 200, 255, 0.3);
-        }
-        .end-card h2 {
-            color: #fff;
-            font-size: 28px;
-            margin-bottom: 12px;
-            letter-spacing: 4px;
-        }
-        .end-card p {
-            color: rgba(255,255,255,0.7);
-            font-size: 15px;
-            margin-bottom: 28px;
-        }
-        .end-card .btn-back {
-            padding: 12px 36px;
-            background: linear-gradient(135deg, #0080ff, #00c8ff);
-            color: #fff;
-            border: none;
-            border-radius: 24px;
-            font-size: 14px;
-            cursor: pointer;
-            margin: 6px;
-        }
-        .end-card .btn-secondary {
-            padding: 12px 36px;
-            background: transparent;
-            color: rgba(255,255,255,0.7);
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 24px;
-            font-size: 14px;
-            cursor: pointer;
-            margin: 6px;
-        }
-        /* ================= 交互实训组件 ================= */
-        .dialog-panel.wide { width: min(940px, 92vw); }
 
-        .dialog-content {
-            max-height: 60vh;
-            overflow-y: auto;
-            padding-right: 4px;
+        .brand {
+            padding: 20px 20px 16px;
+            border-bottom: 1px solid var(--line);
         }
-        .dialog-content::-webkit-scrollbar { width: 5px; }
-        .dialog-content::-webkit-scrollbar-thumb { background: rgba(0, 190, 255, 0.35); border-radius: 3px; }
 
-        .score-badge {
-            background: rgba(0, 190, 255, 0.08);
-            border: 1px solid rgba(0, 200, 255, 0.35);
-            border-radius: 12px;
-            padding: 14px 30px;
-            margin: 6px auto 12px;
-            display: inline-block;
-        }
-        .score-num { font-size: 34px; font-weight: 800; color: #4dd8ff; font-family: Consolas, monospace; }
-        .score-num span { font-size: 16px; color: rgba(190, 220, 255, 0.6); }
-        .score-stars { font-size: 20px; margin: 4px 0; }
-        .score-cmt { color: #ffd66b; font-size: 14px; margin-top: 2px; }
-
-        .opt-intro {
-            color: rgba(190, 220, 255, 0.85);
-            font-size: 14px;
-            line-height: 1.7;
-            margin-bottom: 12px;
-        }
-        .opt-intro b { color: #4dd8ff; }
-        .opt-step-label {
-            border-left: 3px solid #4dd8ff;
-            padding-left: 8px;
-            color: #4dd8ff;
-            font-size: 15px;
-            font-weight: 700;
-            margin: 6px 0 12px;
-        }
-        .opt-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px 14px;
-        }
-        .opt-card {
-            background: rgba(20, 60, 120, 0.45);
-            border: 1px solid rgba(0, 190, 255, 0.35);
-            border-radius: 8px;
-            padding: 12px 14px;
-            cursor: pointer;
-            transition: all 0.18s;
-            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
-        }
-        .opt-card:hover { background: rgba(30, 90, 170, 0.55); border-color: rgba(0, 220, 255, 0.7); transform: translateY(-1px); }
-        .opt-card.selected {
-            background: linear-gradient(135deg, #1e4fd8, #1a3fb8);
-            border-color: #4dd8ff;
-            box-shadow: 0 0 16px rgba(0, 180, 255, 0.45);
-        }
-        .opt-card.multi.selected { background: linear-gradient(135deg, #0e7a4a, #0c6a40); }
-        /* quiz：作答前隐藏解析，作答后揭示并标对错 */
-        .quiz-grid .opt-sub { display: none; margin-top: 5px; line-height: 1.5; }
-        .quiz-grid.revealed .opt-sub { display: block; }
-        .quiz-grid .opt-card.right { border-color: #37b24d; background: rgba(32, 140, 80, 0.35); box-shadow: 0 0 14px rgba(55,178,77,0.35); }
-        .quiz-grid .opt-card.wrong { border-color: #e03131; background: rgba(200, 50, 50, 0.28); }
-        .quiz-grid.revealed .opt-card { cursor: default; }
-        .quiz-grid.revealed .opt-card:hover { transform: none; }
-        .opt-name { color: #fff; font-size: 14px; font-weight: 700; }
-        .opt-sub { color: rgba(170, 210, 255, 0.65); font-size: 12px; margin-top: 3px; }
-
-        .feedback-bar {
-            margin-top: 14px;
-            padding: 12px 14px;
-            border-radius: 8px;
-            border: 1px solid rgba(0, 190, 255, 0.3);
-            background: rgba(10, 40, 90, 0.6);
-            color: #cfe6ff;
-            font-size: 13.5px;
-            line-height: 1.75;
-            display: none;
-            animation: fadeInUp 0.4s ease;
-        }
-        .feedback-bar.show { display: block; }
-        .feedback-bar.good { border-color: rgba(40, 220, 130, 0.6); background: rgba(8, 70, 45, 0.65); }
-        .feedback-bar.bad { border-color: rgba(255, 150, 60, 0.55); background: rgba(90, 45, 8, 0.6); }
-
-        /* 选址场景 */
-        .site-wrap { display: flex; gap: 14px; align-items: stretch; }
-        .site-map {
-            flex: 1.4;
-            border: 1px solid rgba(0, 190, 255, 0.35);
-            border-radius: 10px;
-            background: rgba(6, 24, 56, 0.8);
-            overflow: hidden;
-            position: relative;
-        }
-        .site-side { flex: 1; display: flex; flex-direction: column; }
-        .spot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-        .spot-btn {
-            padding: 11px 0;
-            text-align: center;
-            color: #cfe9ff;
-            font-size: 13px;
-            font-weight: 600;
-            background: rgba(20, 60, 120, 0.5);
-            border: 1px solid rgba(0, 190, 255, 0.4);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.18s;
-        }
-        .spot-btn:hover { border-color: #4dd8ff; box-shadow: 0 0 12px rgba(0, 190, 255, 0.4); }
-        .spot-btn.active { background: linear-gradient(135deg, #1e4fd8, #1a3fb8); color: #fff; }
-        .spot-btn.ok { background: linear-gradient(135deg, #0e9a5a, #0b7a46); }
-        .site-side .feedback-bar { flex: 1; }
-        .map-pin {
-            position: absolute;
-            transform: translate(-50%, -100%);
-            font-size: 26px;
-            filter: drop-shadow(0 0 8px rgba(255, 230, 0, 0.8));
-            animation: pinBounce 0.5s ease;
-            pointer-events: none;
-        }
-        @keyframes pinBounce { 0% { transform: translate(-50%, -180%); } 100% { transform: translate(-50%, -100%); } }
-
-        /* 勘察表 */
-        .survey-tabs { display: flex; gap: 6px; margin-bottom: 12px; }
-        .survey-tab {
-            flex: 1;
-            padding: 9px 0;
-            text-align: center;
-            font-size: 13px;
-            color: rgba(180, 215, 255, 0.7);
-            background: rgba(20, 60, 120, 0.35);
-            border: 1px solid rgba(0, 190, 255, 0.25);
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.18s;
-        }
-        .survey-tab.active { color: #fff; background: linear-gradient(135deg, #1e4fd8, #1a3fb8); border-color: #4dd8ff; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; }
-        .form-item label { display: block; color: rgba(170, 210, 255, 0.75); font-size: 12px; margin-bottom: 4px; }
-        .form-row { display: flex; gap: 6px; align-items: center; }
-        .form-item input, .form-item select {
-            flex: 1;
-            width: 100%;
-            background: rgba(8, 30, 70, 0.8);
-            border: 1px solid rgba(0, 190, 255, 0.35);
-            border-radius: 6px;
-            color: #e8f4ff;
-            padding: 8px 10px;
-            font-size: 13px;
-            outline: none;
-            transition: border 0.2s;
-        }
-        .form-item input:focus, .form-item select:focus { border-color: #4dd8ff; box-shadow: 0 0 8px rgba(0, 190, 255, 0.3); }
-        .form-item input.filled-auto { border-color: rgba(40, 220, 130, 0.7); }
-        .measure-btn {
-            white-space: nowrap;
-            padding: 7px 12px;
+        .brand a {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--muted);
+            text-decoration: none;
             font-size: 12px;
-            color: #4dd8ff;
-            background: rgba(0, 120, 200, 0.2);
-            border: 1px solid rgba(0, 190, 255, 0.5);
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.18s;
+            margin-bottom: 12px;
+            transition: color .2s;
         }
-        .measure-btn:hover { background: rgba(0, 150, 255, 0.35); color: #fff; }
-        .measure-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* 测量设备模拟面板 */
-        .device-pop {
-            position: fixed;
-            right: 26px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 190px;
-            background: rgba(6, 22, 50, 0.95);
-            border: 1px solid rgba(0, 200, 255, 0.5);
-            border-radius: 14px;
-            padding: 14px;
-            z-index: 1300;
-            box-shadow: 0 0 30px rgba(0, 180, 255, 0.35);
+        .brand a:hover { color: var(--cyan); }
+
+        .brand h1 {
+            font-size: 17px;
+            font-weight: 600;
+            letter-spacing: .5px;
+            line-height: 1.45;
+        }
+
+        .brand h1 span {
+            display: block;
+            font-size: 11px;
+            font-weight: 400;
+            color: var(--muted);
+            letter-spacing: 2px;
+            margin-top: 4px;
+        }
+
+        .stat-row {
+            display: flex;
+            gap: 10px;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .stat {
+            flex: 1;
+            background: rgba(0, 200, 255, .05);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 9px 10px;
             text-align: center;
-            animation: fadeInUp 0.3s ease;
         }
-        .device-pop .dev-icon { font-size: 44px; }
-        .device-pop .dev-name { color: #9fd4ff; font-size: 12px; margin: 6px 0 10px; }
-        .scan-bar {
-            height: 6px;
-            border-radius: 3px;
-            background: rgba(0, 190, 255, 0.15);
+
+        .stat b {
+            display: block;
+            font-size: 18px;
+            color: var(--cyan);
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .stat span { font-size: 11px; color: var(--muted); }
+
+        .task-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 12px 8px;
+            min-height: 0;
+        }
+
+        .task-list::-webkit-scrollbar { width: 5px; }
+        .task-list::-webkit-scrollbar-thumb { background: rgba(77, 216, 255, .22); border-radius: 3px; }
+
+        .titem {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 11px 12px;
+            border-radius: 10px;
+            border: 1px solid transparent;
+            margin-bottom: 4px;
+            cursor: pointer;
+            transition: background .18s, border-color .18s;
+        }
+
+        .titem:hover:not(.locked) { background: rgba(77, 216, 255, .06); }
+
+        .titem.active {
+            background: rgba(77, 216, 255, .1);
+            border-color: var(--line2);
+        }
+
+        .titem.locked { cursor: not-allowed; opacity: .42; }
+
+        .tnum {
+            flex: 0 0 24px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-size: 11px;
+            font-weight: 600;
+            background: rgba(126, 166, 198, .16);
+            color: var(--muted);
+            margin-top: 1px;
+        }
+
+        .titem.active .tnum { background: var(--cyan); color: #062032; }
+        .titem.done .tnum { background: rgba(74, 222, 128, .18); color: var(--green); }
+
+        .tinfo { min-width: 0; flex: 1; }
+        .tinfo b {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            line-height: 1.4;
+            white-space: nowrap;
             overflow: hidden;
-            margin-bottom: 8px;
+            text-overflow: ellipsis;
         }
-        .scan-bar i {
+        .tinfo i {
+            display: block;
+            font-style: normal;
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 3px;
+        }
+
+        .side-foot {
+            padding: 12px 16px 16px;
+            border-top: 1px solid var(--line);
+        }
+
+        /* ============ 右侧主区 ============ */
+        .main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+
+        .top {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 28px;
+            border-bottom: 1px solid var(--line);
+            background: rgba(8, 24, 38, .55);
+        }
+
+        .top-title { font-size: 14px; font-weight: 500; }
+        .top-title small {
+            display: block;
+            font-size: 11px;
+            color: var(--muted);
+            font-weight: 400;
+            margin-top: 3px;
+        }
+
+        .bar {
+            flex: 1;
+            height: 6px;
+            background: rgba(126, 166, 198, .16);
+            border-radius: 99px;
+            overflow: hidden;
+            min-width: 80px;
+        }
+
+        .bar i {
             display: block;
             height: 100%;
             width: 0;
-            background: linear-gradient(90deg, #00c8ff, #667eea);
-            animation: scanFill 1.4s ease forwards;
+            border-radius: 99px;
+            background: linear-gradient(90deg, var(--cyan2), var(--green));
+            transition: width .45s cubic-bezier(.2, .8, .2, 1);
         }
-        @keyframes scanFill { to { width: 100%; } }
-        .device-pop .dev-val { color: #5eff9b; font-size: 13px; font-weight: 700; font-family: Consolas, monospace; }
 
-        /* 工程规划参考 */
-        .plan-fab {
-            position: absolute;
-            top: 12px;
-            right: 14px;
-            padding: 6px 14px;
+        .clock {
             font-size: 12px;
-            color: #ffd66b;
-            background: rgba(120, 80, 0, 0.3);
-            border: 1px solid rgba(255, 200, 80, 0.55);
-            border-radius: 6px;
-            cursor: pointer;
+            color: var(--muted);
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
         }
-        .plan-fab:hover { background: rgba(160, 110, 0, 0.45); }
-        .plan-modal {
-            position: absolute;
-            inset: 0;
-            background: rgba(2, 10, 28, 0.9);
-            border-radius: 10px;
-            z-index: 1200;
+
+        .body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 28px 12px;
+            min-height: 0;
+        }
+
+        .body::-webkit-scrollbar { width: 7px; }
+        .body::-webkit-scrollbar-thumb { background: rgba(77, 216, 255, .2); border-radius: 4px; }
+
+        .foot {
             display: flex;
             align-items: center;
-            justify-content: center;
-            animation: fadeInUp 0.3s ease;
+            gap: 12px;
+            padding: 14px 28px;
+            border-top: 1px solid var(--line);
+            background: rgba(8, 24, 38, .72);
         }
-        .plan-card {
-            width: min(520px, 90%);
-            max-height: 80%;
-            overflow-y: auto;
-            background: linear-gradient(160deg, rgba(16, 52, 110, 0.95), rgba(10, 30, 70, 0.95));
-            border: 1px solid rgba(0, 200, 255, 0.5);
-            border-radius: 12px;
-            padding: 18px 22px;
-        }
-        .plan-card h4 { color: #4dd8ff; text-align: center; margin-bottom: 12px; letter-spacing: 2px; }
-        .plan-row { display: flex; padding: 6px 0; border-bottom: 1px dashed rgba(0, 190, 255, 0.18); font-size: 13px; }
-        .plan-row .k { width: 45%; color: rgba(170, 210, 255, 0.7); }
-        .plan-row .v { color: #fff; font-weight: 600; }
-        .plan-close { text-align: center; margin-top: 12px; }
 
-        /* 热力图 */
-        .heat-legend {
+        .foot-tip { font-size: 12px; color: var(--muted); flex: 1; }
+        .foot-tip.warn { color: var(--gold); }
+
+        /* ============ 通用组件 ============ */
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 18px 20px;
+            margin-bottom: 16px;
+        }
+
+        .card-head {
             display: flex;
-            flex-direction: column;
-            gap: 4px;
-            font-size: 11px;
-            color: #d8ecff;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
         }
-        .heat-legend .li { display: flex; align-items: center; gap: 6px; }
-        .heat-legend .sw { width: 16px; height: 10px; border-radius: 2px; display: inline-block; }
 
-        /* 设计结果 */
-        .design-result {
-            margin-top: 12px;
-            padding: 14px;
+        .card-head h2 {
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: .3px;
+        }
+
+        .card-head h2 em {
+            font-style: normal;
+            color: var(--cyan);
+            margin-right: 8px;
+        }
+
+        .muted { color: var(--muted); }
+        .small { font-size: 12px; }
+
+        .task-desc {
+            background: rgba(0, 200, 255, .045);
+            border: 1px solid var(--line);
+            border-left: 3px solid var(--cyan);
             border-radius: 8px;
-            border: 1px solid rgba(40, 220, 130, 0.5);
-            background: rgba(8, 60, 40, 0.55);
-            color: #d6ffe8;
-            font-size: 13.5px;
-            line-height: 1.8;
+            padding: 14px 16px;
+            margin-bottom: 18px;
+            font-size: 13px;
+            line-height: 1.85;
+        }
+
+        .task-desc p { margin-bottom: 6px; }
+        .task-desc p:last-child { margin-bottom: 0; }
+        .task-desc b { color: var(--cyan); font-weight: 500; }
+
+        .kv {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(228px, 1fr));
+            gap: 10px;
+        }
+
+        .kv-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 13px;
+            background: rgba(255, 255, 255, .025);
+            border: 1px solid rgba(77, 216, 255, .1);
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .kv-item span { color: var(--muted); white-space: nowrap; }
+        .kv-item b { font-weight: 500; font-variant-numeric: tabular-nums; }
+        .kv-item.ok { border-color: rgba(74, 222, 128, .4); background: rgba(74, 222, 128, .06); }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 9px 20px;
+            border-radius: 8px;
+            border: 1px solid var(--line2);
+            background: rgba(77, 216, 255, .08);
+            color: var(--cyan);
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all .18s;
+            white-space: nowrap;
+        }
+
+        .btn:hover:not(:disabled) { background: rgba(77, 216, 255, .16); border-color: var(--cyan); }
+        .btn:disabled { opacity: .38; cursor: not-allowed; }
+
+        .btn.primary {
+            background: linear-gradient(135deg, #00a8e8, #00c8ff);
+            border-color: transparent;
+            color: #03202f;
+            font-weight: 600;
+            box-shadow: 0 6px 18px rgba(0, 180, 255, .22);
+        }
+
+        .btn.primary:hover:not(:disabled) { filter: brightness(1.08); }
+        .btn.ghost { background: transparent; border-color: var(--line); color: var(--muted); }
+        .btn.ghost:hover:not(:disabled) { color: var(--cyan); border-color: var(--line2); background: rgba(77, 216, 255, .06); }
+        .btn.sm { padding: 6px 12px; font-size: 12px; }
+
+        .field { margin-bottom: 14px; }
+        .field label {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(4, 16, 26, .8);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color .18s;
+            font-variant-numeric: tabular-nums;
+        }
+
+        input:focus, select:focus { border-color: var(--cyan); }
+        input::placeholder { color: rgba(126, 166, 198, .5); }
+        select option { background: #0b2233; }
+
+        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+
+        /* ============ 设备卡片 ============ */
+        .dev-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+        .dev {
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 15px;
+            background: rgba(255, 255, 255, .02);
+            cursor: pointer;
+            transition: all .18s;
+        }
+
+        .dev:hover { border-color: var(--line2); background: rgba(77, 216, 255, .05); }
+        .dev.open { border-color: var(--line2); background: rgba(77, 216, 255, .07); }
+
+        .dev-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .dev-name { font-size: 13px; font-weight: 500; }
+
+        .dot {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            color: var(--green);
+        }
+
+        .dot i {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 8px var(--green);
+        }
+
+        .dot.bad { color: var(--red); }
+        .dot.bad i { background: var(--red); box-shadow: 0 0 8px var(--red); }
+
+        .dev-body {
             display: none;
+            border-top: 1px dashed rgba(77, 216, 255, .16);
+            margin-top: 10px;
+            padding-top: 10px;
         }
-        .design-result.show { display: block; animation: fadeInUp 0.4s ease; }
 
-        /* ============ AI生成实训面板 ============ */
-        .gen-fab {
-            position: fixed; bottom: 28px; right: 28px; z-index: 50;
-            width: 52px; height: 52px; border-radius: 50%;
-            background: linear-gradient(135deg, #00b4ff, #0066ff);
-            border: 2px solid rgba(0, 229, 255, 0.6);
-            color: #fff; font-size: 22px; cursor: pointer;
-            box-shadow: 0 4px 24px rgba(0, 120, 255, 0.5);
-            display: flex; align-items: center; justify-content: center;
-            transition: transform 0.25s;
+        .dev.open .dev-body { display: block; }
+
+        .dev-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            padding: 4px 0;
+            color: var(--muted);
         }
-        .gen-fab:hover { transform: scale(1.1) rotate(8deg); }
 
-        /* AI生成内容标识（合规要求） */
-        .ai-gen-badge {
-            position: fixed; bottom: 92px; right: 28px; z-index: 50;
-            background: rgba(91, 108, 255, 0.15);
-            border: 1px solid rgba(91, 108, 255, 0.4);
-            color: #aab4ff; font-size: 12px;
-            padding: 6px 14px; border-radius: 16px;
-            backdrop-filter: blur(8px);
+        .dev-row b { color: var(--text); font-weight: 500; }
+
+        /* ============ 告警列表 ============ */
+        .alarm {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(77, 216, 255, .1);
+            background: rgba(255, 255, 255, .02);
+            margin-bottom: 8px;
+            font-size: 12.5px;
+        }
+
+        .alarm.active { border-color: rgba(255, 107, 107, .38); background: rgba(255, 107, 107, .07); }
+
+        .alarm-time { color: var(--muted); font-variant-numeric: tabular-nums; }
+        .alarm-name { flex: 1; }
+        .alarm-state { font-size: 11px; color: var(--green); }
+        .alarm.active .alarm-state { color: var(--red); }
+
+        /* ============ 工具清单 ============ */
+        .tool-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+
+        .tool {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 13px 14px;
+            border: 1px solid var(--line);
+            border-radius: 9px;
+            background: rgba(255, 255, 255, .02);
+            cursor: pointer;
+            transition: all .16s;
+            font-size: 13px;
+        }
+
+        .tool:hover { border-color: var(--line2); }
+
+        .tool.on {
+            border-color: rgba(74, 222, 128, .45);
+            background: rgba(74, 222, 128, .07);
+        }
+
+        .tick {
+            flex: 0 0 18px;
+            width: 18px;
+            height: 18px;
+            border-radius: 5px;
+            border: 1.5px solid rgba(126, 166, 198, .45);
+            display: grid;
+            place-items: center;
+            font-size: 11px;
+            color: transparent;
+            transition: all .16s;
+        }
+
+        .tool.on .tick {
+            background: var(--green);
+            border-color: var(--green);
+            color: #052b16;
+            font-weight: 700;
+        }
+
+        /* 待确认（参数已核对完，但尚未勾选阅读确认） */
+        .tool.ready {
+            border-color: rgba(77, 216, 255, .55);
+            background: rgba(77, 216, 255, .06);
+            animation: readyPulse 1.9s ease-in-out infinite;
+        }
+
+        .tool.ready .tick { border-color: var(--cyan); }
+
+        .tool.locked { opacity: .5; }
+
+        @keyframes readyPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(77, 216, 255, 0); }
+            50% { box-shadow: 0 0 0 3px rgba(77, 216, 255, .12); }
+        }
+
+        /* 错误选型 */
+        .tool.bad {
+            border-color: rgba(255, 107, 107, .55);
+            background: rgba(255, 107, 107, .08);
+        }
+
+        .tool.bad .tick {
+            background: var(--red);
+            border-color: var(--red);
+            color: #2b0505;
+            font-weight: 700;
+        }
+
+        .sel-tip {
+            font-size: 12px;
+            line-height: 1.7;
+            color: var(--muted);
+            background: rgba(77, 216, 255, .05);
+            border-left: 3px solid rgba(77, 216, 255, .35);
+            border-radius: 6px;
+            padding: 9px 12px;
+            margin-bottom: 12px;
+        }
+
+        .sel-err {
+            font-size: 12px;
+            line-height: 1.7;
+            color: #ffc9c9;
+            background: rgba(255, 107, 107, .09);
+            border: 1px solid rgba(255, 107, 107, .35);
+            border-radius: 6px;
+            padding: 9px 12px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .sel-err b { color: var(--red); }
+
+        .sel-err .pen {
+            margin-left: auto;
+            font-weight: 700;
+            color: var(--red);
+            white-space: nowrap;
+        }
+
+        /* ============ 地图 ============ */
+        .map-wrap {
+            position: relative;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            overflow: hidden;
+            background:
+                linear-gradient(rgba(77, 216, 255, .05) 1px, transparent 1px) 0 0 / 100% 34px,
+                linear-gradient(90deg, rgba(77, 216, 255, .05) 1px, transparent 1px) 0 0 / 34px 100%,
+                #061320;
+            height: 260px;
+        }
+
+        .map-svg { width: 100%; height: 100%; display: block; }
+
+        .route-line {
+            stroke: var(--cyan);
+            stroke-width: 2.5;
+            fill: none;
+            stroke-dasharray: 8 6;
+            stroke-dashoffset: 420;
+            transition: stroke-dashoffset 1.4s ease;
+        }
+
+        .route-line.show { stroke-dashoffset: 0; }
+
+        .map-meta {
+            position: absolute;
+            right: 12px;
+            bottom: 12px;
+            background: rgba(4, 16, 26, .88);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 11.5px;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        .map-meta b { color: var(--cyan); }
+
+        /* ============ 数据表 ============ */
+        table.dt {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12.5px;
+        }
+
+        table.dt th {
+            text-align: left;
+            font-weight: 500;
+            color: var(--muted);
+            font-size: 11.5px;
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--line);
+            white-space: nowrap;
+        }
+
+        table.dt td {
+            padding: 7px 10px;
+            border-bottom: 1px solid rgba(77, 216, 255, .07);
+            vertical-align: middle;
+        }
+
+        table.dt tr:last-child td { border-bottom: none; }
+
+        table.dt input {
+            padding: 7px 9px;
+            font-size: 12.5px;
+            text-align: right;
+        }
+
+        .pass { color: var(--green); }
+        .fail { color: var(--red); }
+        .wait { color: var(--muted); }
+
+        /* ============ 切换信令 ============ */
+        .sig {
+            font-family: 'SFMono-Regular', Consolas, monospace;
+            font-size: 12px;
+            line-height: 2;
+            background: rgba(4, 16, 26, .75);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 12px 14px;
+            color: var(--muted);
+            max-height: 168px;
+            overflow-y: auto;
+        }
+
+        .sig div { opacity: 0; animation: fadeIn .3s forwards; }
+        .sig div b { color: var(--cyan); font-weight: 500; }
+        .sig div.ok { color: var(--green); }
+
+        @keyframes fadeIn { to { opacity: 1; } }
+
+        /* ============ 报告 ============ */
+        .rep-head {
+            text-align: center;
+            padding: 22px 0 16px;
+            border-bottom: 1px solid var(--line);
+            margin-bottom: 18px;
+        }
+
+        .rep-head h2 { font-size: 19px; font-weight: 600; letter-spacing: 1px; }
+        .rep-head p { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+        .rep-score {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 14px;
+        }
+
+        .rep-score b {
+            font-size: 42px;
+            font-weight: 600;
+            color: var(--cyan);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .rep-score span { font-size: 13px; color: var(--muted); }
+
+        .rep-block { margin-bottom: 20px; }
+
+        .rep-block h3 {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--cyan);
+            margin-bottom: 10px;
+            padding-left: 9px;
+            border-left: 3px solid var(--cyan);
+        }
+
+        /* ============ 提示条 ============ */
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 88px;
+            transform: translate(-50%, 14px);
+            background: rgba(8, 26, 40, .97);
+            border: 1px solid var(--line2);
+            border-radius: 9px;
+            padding: 11px 20px;
+            font-size: 13px;
+            color: var(--text);
+            opacity: 0;
             pointer-events: none;
+            transition: all .25s;
+            z-index: 99;
+            max-width: 80vw;
+            text-align: center;
         }
 
-        .gen-mask {
-            position: fixed; inset: 0; z-index: 60;
-            background: rgba(0, 10, 30, 0.7); backdrop-filter: blur(6px);
-            display: none; align-items: center; justify-content: center;
-        }
-        .gen-mask.show { display: flex; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .toast.show { opacity: 1; transform: translate(-50%, 0); }
+        .toast.err { border-color: rgba(255, 107, 107, .5); color: #ffc9c9; }
+        .toast.ok { border-color: rgba(74, 222, 128, .5); color: #c6f8d8; }
 
-        .gen-panel {
-            width: min(520px, 90vw);
-            background: linear-gradient(160deg, #0d2540 0%, #102a4c 100%);
-            border: 1px solid rgba(0, 200, 255, 0.4);
-            border-radius: 14px; padding: 28px;
-            box-shadow: 0 8px 40px rgba(0, 100, 200, 0.4);
-            animation: fadeInUp 0.35s ease;
-        }
-        .gen-panel h2 {
-            color: #00e5ff; font-size: 20px; margin-bottom: 6px; text-align: center;
-        }
-        .gen-panel .gen-tip { color: rgba(190,220,255,0.7); font-size: 13px; text-align: center; margin-bottom: 18px; }
-        .gen-panel label { color: #a0e8ff; font-size: 13px; display: block; margin-bottom: 6px; }
-        .gen-panel input, .gen-panel textarea {
-            width: 100%; background: rgba(0, 30, 60, 0.6);
-            border: 1px solid rgba(0, 200, 255, 0.3); border-radius: 8px;
-            color: #e0f0ff; padding: 10px 14px; font-size: 14px; margin-bottom: 16px;
-            outline: none; transition: border-color 0.2s;
-        }
-        .gen-panel input:focus, .gen-panel textarea:focus { border-color: rgba(0, 229, 255, 0.8); }
-        .gen-panel textarea { resize: vertical; min-height: 70px; }
-        .gen-panel .gen-examples { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
-        .gen-panel .gen-examples span {
-            background: rgba(0, 200, 255, 0.15); border: 1px solid rgba(0, 200, 255, 0.3);
-            color: #a0e8ff; font-size: 12px; padding: 4px 10px; border-radius: 12px;
-            cursor: pointer; transition: all 0.2s;
-        }
-        .gen-panel .gen-examples span:hover { background: rgba(0, 200, 255, 0.35); color: #fff; }
-        .gen-panel .gen-btns { display: flex; gap: 10px; justify-content: center; }
-        .gen-panel .gen-btn {
-            padding: 10px 28px; border-radius: 8px; font-size: 14px; cursor: pointer; border: none;
-        }
-        .gen-panel .gen-submit {
-            background: linear-gradient(135deg, #00b4ff, #0066ff); color: #fff;
-        }
-        .gen-panel .gen-submit:disabled { opacity: 0.5; cursor: not-allowed; }
-        .gen-panel .gen-cancel {
-            background: rgba(255, 80, 80, 0.3); color: #ffb0b0;
-            border: 1px solid rgba(255, 80, 80, 0.4);
-        }
-        .gen-loading {
-            display: none; text-align: center; padding: 20px;
-        }
-        .gen-loading.show { display: block; }
-        .gen-loading .spinner {
-            width: 40px; height: 40px; border: 3px solid rgba(0, 200, 255, 0.2);
-            border-top-color: #00e5ff; border-radius: 50%;
-            animation: spin 0.8s linear infinite; margin: 0 auto 12px;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .gen-loading p { color: #a0e8ff; font-size: 14px; }
-        .gen-loading .gen-load-sub { color: #5bc7ff; font-size: 12.5px; min-height: 18px; margin-top: 2px; }
-        .gen-loading .gen-load-time { color: #7d93b3; font-size: 12px; margin-top: 10px; }
-        .gen-loading .gen-load-time b { color: #ffd66b; }
-        /* ============ 移动端适配（新增） ============ */
-        @media (max-width: 768px) {
-            .top-bar {
-                height: auto;
-                min-height: 56px;
-                padding: 8px 12px;
-                flex-wrap: wrap;
-                gap: 8px;
-            }
-            .top-bar .title { font-size: 12px; letter-spacing: 1px; }
-            .top-bar .mode-btn { padding: 5px 10px; font-size: 12px; }
-            .top-bar .end-btn { padding: 6px 12px; font-size: 12px; }
+        .empty { text-align: center; padding: 40px 0; color: var(--muted); font-size: 13px; }
 
-            .main-header { top: 64px; padding: 0 12px; }
-            .main-header .deco { gap: 8px; flex-wrap: wrap; justify-content: center; }
-            .main-header .deco .line { width: 30px; }
-            .main-header h1 { font-size: 16px; letter-spacing: 2px; }
-            .main-header .clock { font-size: 12px; margin-top: 4px; }
-
-            /* 步骤指示器缩小放右下角 */
-            .step-indicator {
-                right: 12px;
-                top: auto;
-                bottom: 90px;
-                transform: none;
-                gap: 8px;
-                background: rgba(10, 25, 50, 0.6);
-                padding: 8px 10px;
-                border-radius: 10px;
-                border: 1px solid rgba(0, 200, 255, 0.25);
-            }
-            .step-item .label { display: none; }
-            .step-item .dot { width: 22px; height: 22px; font-size: 11px; }
-            .step-item.active .dot { transform: scale(1.1); }
-            .step-item.active .dot::after { inset: -3px; }
-            .step-connector { right: 22px; height: 8px; }
-
-            .dialog-panel { width: 92vw; top: 50%; }
-            .dialog-box { padding: 24px 20px; }
-            .dialog-title { font-size: 16px; letter-spacing: 1px; margin-bottom: 14px; }
-            .dialog-content { font-size: 13.5px; line-height: 1.7; margin-bottom: 18px; }
-            .btn-next { padding: 10px 28px; font-size: 13px; letter-spacing: 1px; }
-            .btn-skip { padding: 9px 18px; font-size: 12px; margin-left: 8px; }
-            .dialog-panel.wide { width: 92vw; }
-
-            .opt-grid { grid-template-columns: 1fr; gap: 8px; }
-            .opt-card { padding: 10px 12px; }
-            .opt-intro { font-size: 13px; }
-            .opt-step-label { font-size: 13px; }
-
-            .site-wrap { flex-direction: column; gap: 10px; }
-            .site-map { min-height: 180px; }
-            .spot-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
-            .spot-btn { padding: 9px 0; font-size: 12px; }
-
-            .survey-tabs { flex-wrap: wrap; }
-            .survey-tab { font-size: 12px; padding: 8px 0; }
-            .form-grid { grid-template-columns: 1fr; gap: 10px; }
-
-            .device-pop {
-                position: fixed;
-                right: 10px;
-                top: auto;
-                bottom: 90px;
-                transform: none;
-                width: 140px;
-                padding: 10px;
-                border-radius: 10px;
-            }
-            .device-pop .dev-icon { font-size: 32px; }
-            .device-pop .dev-name { font-size: 11px; margin: 4px 0 6px; }
-
-            .plan-card { width: 92%; padding: 14px 16px; }
-            .plan-row .k { width: 42%; font-size: 12px; }
-            .plan-row .v { font-size: 12px; }
-
-            .progress-bar { bottom: 16px; gap: 6px; }
-            .end-card { padding: 30px 22px; }
-            .end-card h2 { font-size: 20px; letter-spacing: 2px; }
-            .end-card p { font-size: 13px; }
-            .end-card .btn-back,
-            .end-card .btn-secondary { padding: 10px 22px; font-size: 13px; }
-
-            .score-num { font-size: 26px; }
-            .score-num span { font-size: 14px; }
-            .score-badge { padding: 10px 18px; }
-
-            .gen-fab { bottom: 18px; right: 18px; width: 46px; height: 46px; font-size: 20px; }
-            .ai-gen-badge { bottom: 76px; right: 18px; font-size: 11px; padding: 5px 10px; }
-            .gen-panel { width: 92vw; padding: 20px; }
-            .gen-panel h2 { font-size: 17px; }
-            .gen-panel input, .gen-panel textarea { padding: 9px 12px; font-size: 13px; }
-            .gen-panel .gen-btn { padding: 9px 20px; font-size: 13px; }
-        }
-        @media (max-width: 480px) {
-            .main-header h1 { font-size: 14px; letter-spacing: 1px; }
-            .main-header .deco .line { width: 18px; }
-            .step-indicator { bottom: 76px; right: 8px; padding: 6px 8px; }
-            .step-item .dot { width: 20px; height: 20px; font-size: 10px; }
-            .dialog-box { padding: 18px 16px; }
-            .dialog-title { font-size: 14px; }
-            .dialog-content { font-size: 12.5px; }
-            .btn-next { padding: 9px 22px; font-size: 12px; }
-            .device-pop { right: 8px; bottom: 80px; width: 120px; padding: 8px; }
-            .design-result { padding: 10px 12px; font-size: 12.5px; }
-            .end-card { padding: 24px 16px; }
-            .end-card h2 { font-size: 18px; }
+        @media (max-width: 980px) {
+            .app { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+            .side { flex-direction: row; align-items: center; border-right: none; border-bottom: 1px solid var(--line); overflow-x: auto; }
+            .brand, .stat-row, .side-foot { border: none; padding: 12px 16px; }
+            .brand h1 span { display: none; }
+            .task-list { display: flex; gap: 6px; padding: 8px 12px; overflow-x: auto; }
+            .titem { margin-bottom: 0; white-space: nowrap; }
+            .tinfo i { display: none; }
+            .grid3, .dev-grid { grid-template-columns: 1fr; }
+            .grid2 { grid-template-columns: 1fr; }
+            .body { padding: 16px; }
+            .top, .foot { padding: 12px 16px; }
         }
     </style>
-    <!-- 全局按钮美化 -->
-    <link rel="stylesheet" href="/static/global_buttons.css">
-<link rel="stylesheet" href="/static/global_pages.css">
 </head>
 <body>
-    <div class="stage">
-        <!-- 场景背景 -->
-        <div class="scene-bg" id="sceneBg" data-step="0">
-            <svg class="decor" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
-                <defs>
-                    <linearGradient id="gridGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stop-color="rgba(0,180,220,0.18)"/>
-                        <stop offset="100%" stop-color="rgba(0,60,140,0.04)"/>
-                    </linearGradient>
-                    <radialGradient id="signalGrad" cx="50%" cy="50%" r="50%">
-                        <stop offset="0%" stop-color="rgba(0,220,255,0.28)"/>
-                        <stop offset="100%" stop-color="rgba(0,220,255,0)"/>
-                    </radialGradient>
-                    <pattern id="hexPat" x="0" y="0" width="120" height="104" patternUnits="userSpaceOnUse">
-                        <polygon points="60,2 110,30 110,74 60,102 10,74 10,30" fill="none" stroke="rgba(0,180,220,0.10)" stroke-width="1"/>
-                    </pattern>
-                </defs>
-
-                <!-- 蓝图底色 + 蜂窝网格 -->
-                <rect x="0" y="0" width="1440" height="900" fill="url(#gridGrad)"/>
-                <rect x="0" y="0" width="1440" height="900" fill="url(#hexPat)"/>
-
-                <!-- 主网格线 -->
-                <g stroke="rgba(0,180,220,0.07)" stroke-width="1">
-                    <line x1="0" y1="225" x2="1440" y2="225"/>
-                    <line x1="0" y1="450" x2="1440" y2="450"/>
-                    <line x1="0" y1="675" x2="1440" y2="675"/>
-                    <line x1="360" y1="0" x2="360" y2="900"/>
-                    <line x1="720" y1="0" x2="720" y2="900"/>
-                    <line x1="1080" y1="0" x2="1080" y2="900"/>
-                </g>
-
-                <!-- 中心信号源 + 扩散波纹 -->
-                <g>
-                    <circle cx="720" cy="450" r="70" fill="url(#signalGrad)"/>
-                    <circle cx="720" cy="450" r="70" fill="none" stroke="rgba(0,220,255,0.22)" stroke-width="1.5">
-                        <animate attributeName="r" values="60;320;60" dur="7s" repeatCount="indefinite"/>
-                        <animate attributeName="opacity" values="0.55;0;0.55" dur="7s" repeatCount="indefinite"/>
-                    </circle>
-                    <circle cx="720" cy="450" r="140" fill="none" stroke="rgba(0,220,255,0.16)" stroke-width="1.2">
-                        <animate attributeName="r" values="60;300;60" dur="7s" begin="2.3s" repeatCount="indefinite"/>
-                        <animate attributeName="opacity" values="0.45;0;0.45" dur="7s" begin="2.3s" repeatCount="indefinite"/>
-                    </circle>
-                    <g transform="translate(720,450)">
-                        <polygon points="0,-26 22,-13 22,13 0,26 -22,13 -22,-13" fill="rgba(0,200,255,0.18)" stroke="rgba(0,220,255,0.65)" stroke-width="1.5"/>
-                        <circle cx="0" cy="0" r="5" fill="#00e5ff"/>
-                    </g>
-                </g>
-
-                <!-- 副信号节点（左上 / 右下） -->
-                <g>
-                    <circle cx="300" cy="250" r="40" fill="url(#signalGrad)"/>
-                    <circle cx="300" cy="250" r="40" fill="none" stroke="rgba(0,220,255,0.18)" stroke-width="1.2">
-                        <animate attributeName="r" values="30;180;30" dur="9s" begin="1s" repeatCount="indefinite"/>
-                        <animate attributeName="opacity" values="0.45;0;0.45" dur="9s" begin="1s" repeatCount="indefinite"/>
-                    </circle>
-                    <g transform="translate(300,250)">
-                        <polygon points="0,-18 16,-9 16,9 0,18 -16,9 -16,-9" fill="rgba(0,200,255,0.14)" stroke="rgba(0,220,255,0.55)" stroke-width="1.2"/>
-                        <circle cx="0" cy="0" r="4" fill="#5be5ff"/>
-                    </g>
-                </g>
-                <g>
-                    <circle cx="1140" cy="650" r="44" fill="url(#signalGrad)"/>
-                    <circle cx="1140" cy="650" r="44" fill="none" stroke="rgba(0,220,255,0.18)" stroke-width="1.2">
-                        <animate attributeName="r" values="30;200;30" dur="10s" begin="3s" repeatCount="indefinite"/>
-                        <animate attributeName="opacity" values="0.45;0;0.45" dur="10s" begin="3s" repeatCount="indefinite"/>
-                    </circle>
-                    <g transform="translate(1140,650)">
-                        <polygon points="0,-20 18,-10 18,10 0,20 -18,10 -18,-10" fill="rgba(0,200,255,0.14)" stroke="rgba(0,220,255,0.55)" stroke-width="1.2"/>
-                        <circle cx="0" cy="0" r="4" fill="#5be5ff"/>
-                    </g>
-                </g>
-
-                <!-- 数据流连线 -->
-                <g fill="none" stroke="rgba(0,220,255,0.22)" stroke-width="1.2" stroke-dasharray="6,8">
-                    <path d="M300,250 Q510,350 720,450"/>
-                    <path d="M720,450 Q930,550 1140,650"/>
-                    <path d="M300,250 Q200,500 720,450" stroke="rgba(0,220,255,0.12)"/>
-                    <path d="M720,450 Q1000,400 1140,650" stroke="rgba(0,220,255,0.12)"/>
-                    <circle r="3" fill="#00e5ff">
-                        <animateMotion dur="6s" repeatCount="indefinite" path="M300,250 Q510,350 720,450"/>
-                        <animate attributeName="opacity" values="0;1;0" dur="6s" repeatCount="indefinite"/>
-                    </circle>
-                    <circle r="3" fill="#00e5ff">
-                        <animateMotion dur="7s" begin="2s" repeatCount="indefinite" path="M720,450 Q930,550 1140,650"/>
-                        <animate attributeName="opacity" values="0;1;0" dur="7s" begin="2s" repeatCount="indefinite"/>
-                    </circle>
-                    <circle r="3" fill="#5be5ff">
-                        <animateMotion dur="8s" begin="1s" repeatCount="indefinite" path="M1140,650 Q930,550 720,450"/>
-                        <animate attributeName="opacity" values="0;1;0" dur="8s" begin="1s" repeatCount="indefinite"/>
-                    </circle>
-                </g>
-
-                <!-- 信号波形条（底部装饰） -->
-                <g stroke="rgba(0,220,255,0.18)" stroke-width="1.5" fill="none">
-                    <path d="M0,820 Q120,790 240,820 T480,820 T720,820 T960,820 T1200,820 T1440,820"/>
-                    <path d="M0,845 Q120,815 240,845 T480,845 T720,845 T960,845 T1200,845 T1440,845" stroke="rgba(0,220,255,0.10)"/>
-                </g>
-
-                <!-- 角落坐标刻度（蓝图感） -->
-                <g fill="rgba(0,220,255,0.30)" font-size="11" font-family="monospace">
-                    <text x="24" y="28">N 32&#176;06&#8242;</text>
-                    <text x="24" y="884">FIG.01 / 5G SITE SURVEY</text>
-                    <text x="1340" y="884" text-anchor="end">REV 2.0</text>
-                </g>
-            </svg>
+<div class="app">
+    <aside class="side">
+        <div class="brand">
+            <a href="/" target="_top">&#8592; 返回首页</a>
+            <h1>5G 基站单站验证<span>SSV FIELD TRAINING</span></h1>
         </div>
-
-        <div class="overlay"></div>
-
-        <!-- 顶部导航栏 -->
-        <div class="top-bar">
-            <div class="mode-selector">
-                <button class="mode-btn active" onclick="switchMode('story')" id="btnModeStory">剧情演绎模式</button>
-                <button class="mode-btn" onclick="switchMode('explore')" id="btnModeExplore">自由探索模式</button>
-            </div>
-            <div class="title">5G基站工程勘察设计虚拟仿真实训平台</div>
-            <button class="end-btn" onclick="showEndScreen()">结束实训</button>
+        <div class="stat-row">
+            <div class="stat"><b id="statDone">0/8</b><span>任务完成</span></div>
+            <div class="stat"><b id="statScore">0</b><span>实训得分</span></div>
         </div>
-
-        <!-- 主标题 -->
-        <div class="main-header">
-            <div class="deco">
-                <span class="line"></span>
-                <h1 id="sceneTitle">5G基站工程勘察设计虚拟仿真实训平台</h1>
-                <span class="line"></span>
-            </div>
-            <div class="clock">
-                <span id="clockDate"></span> · <span id="clockTime"></span>
-            </div>
+        <div class="task-list" id="taskList"></div>
+        <div class="side-foot">
+            <button class="btn ghost sm" style="width:100%" onclick="resetAll()">重新开始实训</button>
         </div>
+    </aside>
 
-        <!-- 右侧步骤指示器 -->
-        <div class="step-indicator" id="stepIndicator"></div>
-
-        <!-- 剧情对话面板 -->
-        <div class="dialog-panel" id="dialogPanel">
-            <div class="dialog-box">
-                <span class="corner tl"></span>
-                <span class="corner tr"></span>
-                <span class="corner bl"></span>
-                <span class="corner br"></span>
-                <div class="dialog-title" id="dialogTitle">背景</div>
-                <div class="dialog-content" id="dialogContent"></div>
-                <div class="dialog-actions">
-                    <button class="btn-next" id="btnNext" onclick="nextStep()">下一步</button>
-                    <button class="btn-skip" id="btnSkip" onclick="skipDialog()">跳过</button>
-                </div>
+    <main class="main">
+        <div class="top">
+            <div class="top-title">
+                实训演示基站-TEST01
+                <small id="topSub">单站验证任务清单</small>
             </div>
+            <div class="bar"><i id="barFill"></i></div>
+            <div class="clock" id="clock"></div>
         </div>
-
-        <!-- 底部进度指示 -->
-        <div class="progress-bar" id="progressBar"></div>
-
-        <!-- 结束画面 -->
-        <div class="end-screen" id="endScreen">
-            <div class="end-card">
-                <h2>🎉 实训完成</h2>
-                <div class="score-badge" id="scoreBox"></div>
-                <p>恭喜你完成了 5G 基站工程勘察设计实训任务！<br>你可以选择重新开始或返回主菜单。</p>
-                <button class="btn-back" onclick="restart()">重新开始</button>
-                <button class="btn-secondary" onclick="goBack()">返回主菜单</button>
-            </div>
+        <div class="body" id="body"></div>
+        <div class="foot">
+            <div class="foot-tip" id="footTip"></div>
+            <button class="btn ghost" id="btnPrev" onclick="prevStep()">上一任务</button>
+            <button class="btn primary" id="btnNext" onclick="submitTask()">提交并解锁下一任务</button>
         </div>
+    </main>
+</div>
+<div class="toast" id="toast"></div>
 
-        <!-- AI生成实训：浮动按钮 -->
-        <button class="gen-fab" onclick="showGenPanel()" title="AI自动生成场景实训">✨</button>
+<link rel="stylesheet" href="/static/desktop_pet.css">
+<script src="/static/desktop_pet.js" defer></script>
 
-        <!-- AI生成内容标识（合规要求） -->
-        <div class="ai-gen-badge" id="aiGenBadge" style="display:none">✨ 本实训场景由 AI 生成</div>
+<script>
+/* =========================================================
+   5G 基站单站验证实训 —— 任务状态机
+   ========================================================= */
 
-        <!-- AI生成实训：弹窗 -->
-        <div class="gen-mask" id="genMask">
-            <div class="gen-panel" id="genPanel">
-                <div id="genForm">
-                    <h2>AI 自动生成场景实训</h2>
-                    <p class="gen-tip">输入任意场景主题，AI将自动生成完整的交互式实训流程<br>
-                        <span style="display:inline-block;margin-top:6px;font-size:11px;color:#5b6cff;background:rgba(91,108,255,0.12);border:1px solid rgba(91,108,255,0.35);border-radius:4px;padding:2px 8px;">✨ 生成内容由 AI 生成，仅供参考</span>
-                    </p>
-                    <label>场景主题 *</label>
-                    <input type="text" id="genTopic" placeholder="如：光纤铺设工程勘察、数据中心机房设计、通信线路故障排查…">
-                    <label>具体要求（可选）</label>
-                    <textarea id="genQuestion" placeholder="如：包含线路路由选择、材料核算、施工验收等环节"></textarea>
-                    <div class="gen-examples">
-                        <span onclick="document.getElementById('genTopic').value='光纤铺设工程勘察'">光纤铺设勘察</span>
-                        <span onclick="document.getElementById('genTopic').value='数据中心机房设计'">数据中心设计</span>
-                        <span onclick="document.getElementById('genTopic').value='通信线路故障排查'">线路故障排查</span>
-                        <span onclick="document.getElementById('genTopic').value='5G基站勘察设计'">5G基站勘察</span>
-                    </div>
-                    <div class="gen-btns">
-                        <button class="gen-btn gen-submit" id="genBtn" onclick="generateScenario()">生成实训</button>
-                        <button class="gen-btn gen-cancel" onclick="hideGenPanel()">取消</button>
-                    </div>
-                </div>
-                <div class="gen-loading" id="genLoading">
-                    <div class="spinner"></div>
-                    <p id="genLoadMain">AI 正在创作专属实训场景…</p>
-                    <p class="gen-load-sub" id="genLoadSub"></p>
-                    <p class="gen-load-time">已等待 <b id="genLoadSec">0</b> 秒 · 预计 1~3 分钟，请勿关闭窗口</p>
-                </div>
+const STATION = {
+    name: '实训演示基站-TEST01',
+    code: '1080108',
+    tac: '2228501',
+    freq: '51300',
+    band: '100M',
+    mode: 'TDD',
+    pci: '201 / 202 / 203',
+    azimuth: '0° / 120° / 240°',
+    tilt: '10° / 10° / 10°',
+    height: '35m',
+    address: '河北省石家庄市实训园区创新路12号',
+    lng: '114.4021',
+    lat: '38.0201',
+    net: '5G',
+    poleH: '7m',
+    buildingH: '35m',
+    antLen: '1m',
+    power: '≤60W'
+};
+
+const TASKS = [
+    { t: '接到单站验证通知', s: '核对基站基础参数' },
+    { t: '设备状态检查', s: '主设备 / 天馈 / 传输 / 告警' },
+    { t: '挑选外场测试工具', s: '外场工具选型' },
+    { t: '预约司机并规划路线', s: '导航至实训基站' },
+    { t: '外场信号覆盖测试', s: '多点采集 RSRP / SINR' },
+    { t: '业务性能测试', s: '语音 / 视频 / 数据业务' },
+    { t: '邻区关系验证', s: '切换信令与成功率' },
+    { t: '实训报告生成', s: '汇总数据并导出' }
+];
+
+const KEY = 'lsr_ssv_v1';
+
+const DEFAULT = () => ({
+    step: 0,
+    done: [false, false, false, false, false, false, false, false],
+    score: [0, 0, 0, 0, 0, 0, 0, 0],
+    d: {
+        t1: { checked: [] },
+        t2: { open: '', alarms: [true, true, false], dev: { main: '', ant: '', trans: '' }, note: '' },
+        t3: { tools: [], lastErr: [], penalty: 0, passed: false },
+        t4: { from: '实训中心（创新路8号）', lng: '114.4021', lat: '38.0201', driver: '', routed: false },
+        t5: { pts: [null, null, null, null, null] },
+        t6: { voice: null, video: null, data: null },
+        t7: { cells: [{ pci: '202', ok: null }, { pci: '203', ok: null }, { pci: '118', ok: null }], added: false },
+        t8: { exported: false }
+    }
+});
+
+let S = load();
+
+function load() {
+    try {
+        const raw = localStorage.getItem(KEY);
+        if (!raw) return DEFAULT();
+        const o = JSON.parse(raw);
+        const base = DEFAULT();
+        const merged = Object.assign(base, o, { d: Object.assign(base.d, o.d || {}) });
+        merged.d['t3'] = Object.assign({ tools: [], lastErr: [], penalty: 0, passed: false }, merged.d['t3'] || {});
+        return merged;
+    } catch (e) { return DEFAULT(); }
+}
+
+function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
+}
+
+/* ---------------- 通用工具 ---------------- */
+function esc(v) {
+    return String(v == null ? '' : v).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+
+function toast(msg, type) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast show' + (type ? ' ' + type : '');
+    clearTimeout(el._t);
+    el._t = setTimeout(() => { el.className = 'toast'; }, 2400);
+}
+
+function unlocked(i) { return i === 0 || S.done[i - 1]; }
+
+function go(step) {
+    if (step < 0 || step > 7) return;
+    if (!unlocked(step)) { toast('请先完成上一个任务', 'err'); return; }
+    S.step = step;
+    save();
+    render();
+    document.getElementById('body').scrollTop = 0;
+}
+
+function prevStep() { go(S.step - 1); }
+
+function resetAll() {
+    if (!confirm('确定要清空本次实训的全部记录并重新开始吗？')) return;
+    S = DEFAULT();
+    save();
+    render();
+    toast('已重置实训进度', 'ok');
+}
+
+/* ---------------- 渲染骨架 ---------------- */
+function render() {
+    renderList();
+    renderBar();
+    document.getElementById('body').innerHTML = renderTask(S.step);
+    bindTask(S.step);
+    renderFoot();
+}
+
+function renderList() {
+    const box = document.getElementById('taskList');
+    box.innerHTML = TASKS.map((tk, i) => {
+        const cls = ['titem'];
+        if (i === S.step) cls.push('active');
+        if (S.done[i]) cls.push('done');
+        if (!unlocked(i)) cls.push('locked');
+        const num = S.done[i] ? '&#10003;' : (i + 1);
+        return `<div class="${cls.join(' ')}" onclick="go(${i})">
+            <div class="tnum">${num}</div>
+            <div class="tinfo"><b>${esc(tk.t)}</b><i>${esc(tk.s)}</i></div>
+        </div>`;
+    }).join('');
+
+    const doneCount = S.done.filter(Boolean).length;
+    document.getElementById('statDone').textContent = doneCount + '/8';
+    document.getElementById('statScore').textContent = S.score.reduce((a, b) => a + b, 0);
+}
+
+function renderBar() {
+    const doneCount = S.done.filter(Boolean).length;
+    const pct = Math.round((doneCount + (S.done[S.step] ? 0 : 0)) / 8 * 100);
+    document.getElementById('barFill').style.width = pct + '%';
+    document.getElementById('topSub').textContent =
+        S.done[7] ? '实训已完成，可导出报告' : '第 ' + (S.step + 1) + ' / 8 项任务 · ' + TASKS[S.step].t;
+}
+
+function renderFoot() {
+    const tip = document.getElementById('footTip');
+    const next = document.getElementById('btnNext');
+    const prev = document.getElementById('btnPrev');
+    prev.disabled = S.step === 0;
+    tip.className = 'foot-tip';
+    next.disabled = false;
+
+    if (S.step === 7) {
+        next.textContent = '导出实训报告';
+        if (!S.done[7]) tip.textContent = '确认报告内容无误后，点击右侧导出';
+    } else if (S.done[S.step]) {
+        next.textContent = '进入下一任务';
+        tip.className = 'foot-tip';
+        tip.textContent = '本任务已完成，可继续下一项';
+    } else {
+        next.textContent = '提交并解锁下一任务';
+        tip.textContent = '完成判定条件后即可提交';
+    }
+}
+
+/* ---------------- 任务内容分发 ---------------- */
+function renderTask(i) {
+    switch (i) {
+        case 0: return t1();
+        case 1: return t2();
+        case 2: return t3();
+        case 3: return t4();
+        case 4: return t5();
+        case 5: return t6();
+        case 6: return t7();
+        case 7: return t8();
+    }
+    return '';
+}
+
+function head(title, desc) {
+    return `<div class="task-desc"><h3 style="font-size:14px;margin-bottom:8px;color:var(--cyan);font-weight:600">${title}</h3>${desc}</div>`;
+}
+
+/* =========================================================
+   任务 1：接到单站验证通知
+   ========================================================= */
+const KEY_PARAMS = ['code', 'tac', 'freq', 'pci', 'lng', 'height'];
+const PARAM_LABEL = {
+    name: '基站名称', code: '基站标识', tac: 'TAC', freq: '下行频点', band: '带宽',
+    mode: '制式', pci: 'PCI', azimuth: '方位角', tilt: '下倾角', height: '挂高',
+    address: '地址', lng: '经度', lat: '纬度', net: '网络类型',
+    poleH: '站高', buildingH: '楼高', antLen: '天线长度', power: '天线功率'
+};
+
+function t1() {
+    const ck = S.d['t1'].checked || [];
+    const rows = Object.keys(PARAM_LABEL).map(k => {
+        const isKey = KEY_PARAMS.includes(k);
+        const on = ck.includes(k);
+        const val = k === 'lng' ? STATION.lng : k === 'lat' ? STATION.lat : STATION[k];
+        return `<div class="kv-item ${on ? 'ok' : ''}">
+            <span>${PARAM_LABEL[k]}</span>
+            <b>${esc(val)}</b>
+            ${isKey ? `<button class="btn sm ${on ? '' : 'ghost'}" style="margin-left:6px" onclick="t1check('${k}')">${on ? '已核对' : '核对'}</button>` : ''}
+        </div>`;
+    }).join('');
+
+    const allDone = ck.length >= KEY_PARAMS.length;
+    const agreed = !!S.d['t1'].agreed;
+    const boxCls = agreed ? 'on' : (allDone ? 'ready' : 'locked');
+    const boxTxt = agreed
+        ? '已阅读任务通知，基站参数核对无误'
+        : (allDone ? '点击确认：已阅读任务通知，基站参数核对无误' : '请先完成上方 6 项关键参数核对');
+
+    return head('任务 1 · 接到单站验证通知',
+        `<p><b>任务描述：</b>接收下发的单站验证任务通知，阅读实训基站基础资料，核对基站参数信息。</p>
+         <p><b>操作动作：</b>打开通知，逐项核对基站名称、标识、频点、PCI、经纬度、挂高等关键参数。</p>
+         <p><b>完成判定：</b>6 项关键参数核对完成，勾选「已阅读任务通知」后提交。</p>`) +
+    `<div class="card">
+        <div class="card-head"><h2><em>工单</em>单站验证任务通知</h2><span class="small muted">工单号 SSV-20261019-001</span></div>
+        <div class="grid3" style="margin-bottom:14px">
+            <div class="kv-item"><span>下发单位</span><b>网络优化中心</b></div>
+            <div class="kv-item"><span>执行角色</span><b>单站验证工程师</b></div>
+            <div class="kv-item"><span>完成时限</span><b>当日 18:00 前</b></div>
+        </div>
+        <p class="small muted" style="line-height:1.9">请前往 <b style="color:var(--text)">${esc(STATION.address)}</b> 完成 ${esc(STATION.name)} 的单站验证，覆盖设备状态核查、外场信号覆盖测试、业务性能测试与邻区关系验证，并输出验证报告。</p>
+    </div>
+    <div class="card">
+        <div class="card-head"><h2><em>参数</em>基站基础信息</h2><span class="small muted">点击「核对」逐项确认</span></div>
+        <div class="kv">${rows}</div>
+    </div>
+    <div class="card" style="display:flex;align-items:center;gap:12px">
+        <span class="tool ${boxCls}" style="flex:1" onclick="t1agree()">
+            <span class="tick">&#10003;</span><span>${boxTxt}</span>
+        </span>
+    </div>`;
+}
+
+function t1check(k) {
+    const arr = S.d['t1'].checked || [];
+    if (!arr.includes(k)) arr.push(k);
+    S.d['t1'].checked = arr;
+    save();
+    document.getElementById('body').innerHTML = renderTask(0);
+    bindTask(0);
+}
+
+function t1agree() {
+    if ((S.d['t1'].checked || []).length < KEY_PARAMS.length) {
+        toast('请先完成全部 6 项关键参数核对', 'err');
+        return;
+    }
+    S.d['t1'].agreed = !S.d['t1'].agreed;
+    save();
+    document.getElementById('body').innerHTML = renderTask(0);
+    bindTask(0);
+}
+
+/* =========================================================
+   任务 2：设备状态检查
+   ========================================================= */
+const DEVICES = [
+    {
+        id: 'main', name: '主设备（BBU/AAU）',
+        rows: [['设备型号', 'BBU5900 + AAU5613'], ['运行状态', '正常'], ['CPU 占用', '32%'], ['设备温度', '41 ℃'], ['供电电压', '-48.2 V']]
+    },
+    {
+        id: 'ant', name: '天馈系统',
+        rows: [['通道配置', '64T64R'], ['驻波比 VSWR', '1.18'], ['机械下倾', '10°'], ['方位角', '0°/120°/240°'], ['天馈链路', '正常']]
+    },
+    {
+        id: 'trans', name: '传输设备',
+        rows: [['传输方式', 'SPN 光纤'], ['收光功率', '-8.2 dBm'], ['发光功率', '-3.1 dBm'], ['链路状态', '正常'], ['保护倒换', '未触发']]
+    }
+];
+
+function t2() {
+    const d = S.d['t2'];
+    const devs = DEVICES.map(dv => `
+        <div class="dev ${d.open === dv.id ? 'open' : ''}" onclick="t2open('${dv.id}')">
+            <div class="dev-top">
+                <span class="dev-name">${dv.name}</span>
+                <span class="dot"><i></i>正常</span>
             </div>
+            <div class="dev-body">
+                ${dv.rows.map(r => `<div class="dev-row"><span>${r[0]}</span><b>${r[1]}</b></div>`).join('')}
+            </div>
+        </div>`).join('');
+
+    const ALARMS = [
+        ['08:12:36', '主设备', '设备温度告警', 0],
+        ['09:05:11', '天馈系统', '驻波比越限告警', 1],
+        ['10:47:52', '传输设备', '光路 LOS 告警', 2]
+    ];
+    const alarms = ALARMS.map(a => {
+        const cleared = d.alarms[a[3]];
+        return `<div class="alarm ${cleared ? '' : 'active'}">
+            <span class="alarm-time">${a[0]}</span>
+            <span class="alarm-name">${a[1]} · ${a[2]}</span>
+            <span class="alarm-state">${cleared ? '已清除' : '未清除'}</span>
+            ${cleared ? '' : `<button class="btn sm" onclick="t2clear(${a[3]})">确认处理</button>`}
+        </div>`;
+    }).join('');
+
+    const sel = (id, label) => `
+        <div class="field"><label>${label}</label>
+            <select onchange="t2set('${id}', this.value)">
+                <option value="">请选择</option>
+                <option value="正常" ${d.dev[id] === '正常' ? 'selected' : ''}>正常</option>
+                <option value="异常" ${d.dev[id] === '异常' ? 'selected' : ''}>异常</option>
+            </select>
+        </div>`;
+
+    const allCleared = d.alarms.every(Boolean);
+
+    return head('任务 2 · 设备状态检查',
+        `<p><b>任务描述：</b>远程登录基站网管平台，核查基站主设备、天馈系统、传输设备运行状态，检查有无告警。</p>
+         <p><b>操作动作：</b>依次查看主设备运行状态、天馈链路状态、传输链路状态，查看告警列表并处理活动告警。</p>
+         <p><b>完成判定：</b>无未清除告警，设备状态检查表三项均填写为「正常」后提交。</p>`) +
+    `<div class="card">
+        <div class="card-head"><h2><em>网管</em>设备运行状态</h2><span class="small muted">点击卡片展开详情</span></div>
+        <div class="dev-grid">${devs}</div>
+    </div>
+    <div class="card">
+        <div class="card-head"><h2><em>告警</em>当前告警列表</h2>
+            <span class="small ${allCleared ? 'pass' : 'fail'}">${allCleared ? '全部已清除' : '存在未清除告警'}</span></div>
+        ${alarms}
+    </div>
+    <div class="card">
+        <div class="card-head"><h2><em>表单</em>设备状态检查表</h2></div>
+        <div class="grid3">
+            ${sel('main', '主设备运行状态')}
+            ${sel('ant', '天馈链路状态')}
+            ${sel('trans', '传输链路状态')}
+        </div>
+    </div>`;
+}
+
+function t2open(id) {
+    S.d['t2'].open = S.d['t2'].open === id ? '' : id;
+    save();
+    document.getElementById('body').innerHTML = renderTask(1);
+    bindTask(1);
+}
+
+function t2clear(i) {
+    S.d['t2'].alarms[i] = true;
+    save();
+    document.getElementById('body').innerHTML = renderTask(1);
+    bindTask(1);
+    toast('告警已确认处理', 'ok');
+}
+
+function t2set(k, v) {
+    S.d['t2'].dev[k] = v;
+    save();
+}
+
+/* =========================================================
+   任务 3：挑选外场测试工具（含错误干扰选项）
+   ========================================================= */
+const TOOL_ITEMS = [
+    { n: '测试手机', ok: true },
+    { n: 'GPS模块', ok: true },
+    { n: '笔记本电脑（预装路测软件）', ok: true },
+    { n: '移动电源', ok: true },
+    { n: '数据线', ok: true },
+    { n: '手持云台', ok: true },
+    { n: '示波器', ok: false },
+    { n: '电焊台', ok: false },
+    { n: '万用表', ok: false },
+    { n: '光纤熔接机', ok: false },
+    { n: '信号发生器', ok: false }
+];
+const TOOL_OK = TOOL_ITEMS.filter(t => t.ok).map(t => t.n);
+const TOOL_MAP = {};
+TOOL_ITEMS.forEach(t => { TOOL_MAP[t.n] = t.ok; });
+
+function t3() {
+    const d = S.d['t3'];
+    const on = d.tools || [];
+    const err = d.lastErr || [];
+    const okCnt = on.filter(t => TOOL_MAP[t]).length;
+
+    const list = TOOL_ITEMS.map(t => {
+        const sel = on.indexOf(t.n) >= 0;
+        const bad = err.indexOf(t.n) >= 0;
+        return `
+        <div class="tool ${sel ? 'on' : ''} ${bad ? 'bad' : ''}" onclick="t3toggle('${t.n}')">
+            <span class="tick">&#10003;</span><span>${t.n}</span>
+        </div>`;
+    }).join('');
+
+    const banner = err.length ? `
+        <div class="sel-err">
+            <b>存在错误选型：</b>${err.join('/')} 不属于本次外场单站验证所需工具，请重新选择。
+            <span class="pen">已扣 ${d.penalty || 0} 分</span>
+        </div>` : '';
+
+    const tip = `<div class="sel-tip">提示：单站外场路测只需要采集无线信号、业务数据，焊接、光纤熔接、电路测量类设备不需要带到现场。</div>`;
+
+    return head('任务 3 · 挑选外场测试工具',
+        `<p><b>题干：</b>本次 5G 基站单站验证外场测试，请选出本次实训<b>需要携带</b>的测试工具，不要勾选无关设备，选错将会扣除实训分数。</p>
+         <p><b>操作动作：</b>逐项判断工具用途，点击勾选本次外场路测真正需要的工具。</p>
+         <p><b>完成判定：</b>6 项必需工具全部勾选，且不得勾选任何无关设备。每次误选扣 2 分，取消错误选项后可重新提交。</p>`) +
+    `<div class="card">
+        <div class="card-head"><h2><em>选型</em>外场测试工具</h2>
+            <span class="small ${okCnt === TOOL_OK.length && !err.length ? 'pass' : 'wait'}">已选 ${on.length} 项 · 必需 ${okCnt}/${TOOL_OK.length}</span></div>
+        ${tip}
+        ${banner}
+        <div class="tool-grid">${list}</div>
+    </div>`;
+}
+
+function t3toggle(t) {
+    const d = S.d['t3'];
+    const arr = d.tools || [];
+    const i = arr.indexOf(t);
+    if (i >= 0) arr.splice(i, 1); else arr.push(t);
+    d.tools = arr;
+    d.lastErr = (d.lastErr || []).filter(x => arr.indexOf(x) >= 0);
+    save();
+    document.getElementById('body').innerHTML = renderTask(2);
+    bindTask(2);
+}
+
+/* =========================================================
+   任务 4：预约司机，规划路线
+   ========================================================= */
+const DRIVERS = ['张师傅 · 冀A·8F21K · 越野车', '李师傅 · 冀A·6D07M · 商务车', '王师傅 · 冀A·2K55P · 皮卡'];
+
+function t4() {
+    const d = S.d['t4'];
+    const routed = d.routed;
+    return head('任务 4 · 预约司机，规划路线',
+        `<p><b>任务描述：</b>预约车辆，输入基站经纬度，规划前往实训基站的外场测试路线。</p>
+         <p><b>操作动作：</b>填写起点与基站经纬度，选择随车司机，生成导航路线。</p>
+         <p><b>完成判定：</b>经纬度合法且路线生成成功后提交。</p>`) +
+    `<div class="card">
+        <div class="card-head"><h2><em>预约</em>车辆与目的地</h2></div>
+        <div class="grid2">
+            <div class="field"><label>出发地</label><input type="text" id="from" value="${esc(d.from)}" onchange="t4set('from', this.value)"></div>
+            <div class="field"><label>随车司机 / 车辆</label>
+                <select id="driver" onchange="t4set('driver', this.value)">
+                    <option value="">请选择</option>
+                    ${DRIVERS.map(x => `<option value="${esc(x)}" ${d.driver === x ? 'selected' : ''}>${esc(x)}</option>`).join('')}
+                </select>
+            </div>
+            <div class="field"><label>基站经度</label><input type="text" id="lng" value="${esc(d.lng)}" onchange="t4set('lng', this.value)"></div>
+            <div class="field"><label>基站纬度</label><input type="text" id="lat" value="${esc(d.lat)}" onchange="t4set('lat', this.value)"></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+            <button class="btn" onclick="t4route()">${routed ? '重新规划路线' : '生成导航路线'}</button>
+            <span class="small muted">基站坐标参考：${esc(STATION.lng)}, ${esc(STATION.lat)}</span>
         </div>
     </div>
+    <div class="card">
+        <div class="card-head"><h2><em>路线</em>导航预览</h2>${routed ? '<span class="small pass">路线已生成</span>' : '<span class="small wait">尚未规划</span>'}</div>
+        <div class="map-wrap">
+            <svg class="map-svg" viewBox="0 0 640 260" preserveAspectRatio="none">
+                <path d="M 60 210 L 160 210 L 160 150 L 300 150 L 300 96 L 460 96 L 460 60 L 575 60"
+                      class="route-line ${routed ? 'show' : ''}" style="stroke-dashoffset:${routed ? 0 : 420}"/>
+                <circle cx="60" cy="210" r="5" fill="#4dd8ff"/>
+                <text x="60" y="234" fill="#7ea6c6" font-size="11" text-anchor="middle">出发点</text>
+                <circle cx="575" cy="60" r="6" fill="${routed ? '#4ade80' : '#7ea6c6'}"/>
+                <text x="575" y="44" fill="${routed ? '#4ade80' : '#7ea6c6'}" font-size="11" text-anchor="middle">实训基站</text>
+            </svg>
+            <div class="map-meta">
+                全程 <b>${routed ? '12.6' : '--'} km</b><br>
+                预计 <b>${routed ? '23' : '--'} 分钟</b><br>
+                目的地 <b>${esc(STATION.address)}</b>
+            </div>
+        </div>
+    </div>`;
+}
 
-    <script>
-        // ============ 实训状态 ============
-        let currentStep = 0;
-        let score = 0;          // 实训得分
-        let scoreMax = 0;       // 满分
-        let quizIdx = 0;        // 工具选型子步骤
-        let quizSel = [];       // 当前子步选择
-        let quizDone = false;
-        let mapShown = false;
-        let choiceSel = -1;
-        let siteSel = -1;
-        let siteConfirmed = false;
-        let surveyTab = 0;
-        let surveyMeasured = new Set();
-        let designSel = [-1, -1, -1, -1];
-        let designDone = false;
-        let mode = 'story';     // 'story'=剧情演绎(按步骤+评分), 'explore'=自由探索(可跳步+无评分)
+function t4set(k, v) { S.d['t4'][k] = v; save(); }
 
-        // ============ 剧情步骤数据（交互式实训） ============
-        let steps = [
-            {
-                type: 'text',
-                title: "背景",
-                label: "项目背景",
-                content: `某高校启动<b>智慧校园 5G 网络建设项目</b>，校园占地约 <b>1200 亩</b>，涵盖教学楼、实验楼、图书馆、学生宿舍区及大型体育场，在校师生约 <b>2.3 万人</b>。现有 4G 网络在宿舍晚间高峰与体育场馆大型活动期间已出现明显拥塞，无法满足超高清直播教学、AR/VR 实验实训及海量物联网终端接入需求。<br><br>运营商承接该校 <b>5G 基站新建工程</b>，采用 <b>Sub-6GHz（n78 频段）宏站组网</b>，要求实现校园室外连续覆盖与重点楼宇深度覆盖。<br><br>当前处于<b>站点勘察设计阶段</b>，需对候选站址进行现场勘测，采集关键参数并完成基站建设方案设计。<br><br><span style="color:#4dd8ff">请代入无线网络规划工程师的角色，依次完成本次实训的各项任务。</span>`,
-                nextText: "下一步"
-            },
-            {
-                type: 'choice',
-                title: "岗位选择",
-                label: "岗位选择",
-                intro: `<b>任务描述：</b>校园 5G 基站新建工程，需完成候选站址勘测、覆盖评估、天线参数规划及基站建设方案设计。<br><b>请从以下角色中选择最适合主导本次勘察设计任务的人员：</b>`,
-                options: [
-                    { name: "无线网络规划工程师", sub: "负责站点选址、覆盖规划与参数设计", good: true, feedback: "✅ 选择正确！无线网络规划工程师正是本次 5G 站点勘察设计的核心岗位——负责覆盖需求分析、站址评估筛选与天线参数规划，本次任务将由此岗位主导完成。" },
-                    { name: "基站硬件安装工程师", sub: "负责 BBU/AAU 现场安装与线缆布放", feedback: "❌ 硬件安装工程师负责<b>工程实施阶段</b>的设备安装与线缆布放，当前处于勘察设计阶段。" },
-                    { name: "核心网维护工程师", sub: "负责核心网元数据配置与维护", feedback: "❌ 核心网维护工程师负责<b>网元运维阶段</b>的数据配置，不主导无线站点勘察设计。" },
-                    { name: "通信工程监理员", sub: "负责施工现场质量监督", feedback: "❌ 监理员负责<b>施工阶段</b>的质量监督，当前处于规划勘察阶段。" },
-                    { name: "网络优化测试员", sub: "负责建成后的路测与优化", feedback: "❌ 网优测试员负责基站<b>开通后</b>的路测与优化，本次勘察设计应由无线网络规划工程师承担。" }
-                ]
-            },
-            {
-                type: 'quiz',
-                title: "勘察工具准备",
-                label: "工具准备",
-                subSteps: [
-                    {
-                        q: "第一步：选择测试 5G 网络覆盖信号的核心工具",
-                        options: [
-                            { name: "5G 路测手机+测试软件", sub: "采集RSRP/SINR等覆盖指标" },
-                            { name: "OTDR 光时域反射仪", sub: "测光缆损耗/断点" },
-                            { name: "光功率计", sub: "测光信号功率" },
-                            { name: "驻波比测试仪", sub: "测天馈系统匹配" }
-                        ],
-                        correct: 0
-                    },
-                    {
-                        q: "第二步：5G 测试终端需要支持的频段制式",
-                        options: [
-                            { name: "仅支持 4G LTE", sub: "无法测试5G信号" },
-                            { name: "支持 SA 组网的 5G 终端", sub: "可测5G独立组网" },
-                            { name: "仅支持 NSA 的终端", sub: "依赖4G锚点" },
-                            { name: "3G WCDMA 终端", sub: "与5G无关" }
-                        ],
-                        correct: 1
-                    },
-                    {
-                        q: "第三步：勘察站址天面空间与挂高需要携带",
-                        options: [
-                            { name: "激光测距仪", sub: "测楼高/天面尺寸" },
-                            { name: "万用表", sub: "测电气参数" },
-                            { name: "光纤熔接机", sub: "熔接光纤" }
-                        ],
-                        correct: 0
-                    },
-                    {
-                        q: "第四步：登站勘察必须携带的安全装备（多选）",
-                        options: [
-                            { name: "安全帽", sub: "防坠落物" },
-                            { name: "防滑鞋", sub: "登高防滑" },
-                            { name: "安全带", sub: "高空防坠" },
-                            { name: "绝缘手套", sub: "近电作业防护" }
-                        ],
-                        multi: true, required: [0, 1, 2, 3]
-                    }
-                ]
-            },
-            {
-                type: 'text',
-                title: "5G 参数查询",
-                label: "参数查询",
-                content: `通过查阅 3GPP 协议与设备手册，你了解到：<br><br>· 本工程采用 <b>n78 频段（3300-3600MHz）</b>，单载波带宽 <b>100MHz</b>；<br>· AAU 采用 <b>64T64R Massive MIMO</b>，最大发射功率 <b>200W（53dBm）</b>；<br>· 宏站单小区典型覆盖半径 <b>300-500m</b>（密集城区）；<br>· 参考信号接收功率（RSRP）良好覆盖门限 ≥ <b>-95dBm</b>；<br>· 天线方位角按覆盖目标方向规划，下倾角需结合挂高与覆盖距离核算（机械+电子下倾）；<br>· 共建共享场景需避开与邻频系统的干扰隔离要求。<br><br><span style="color:#4dd8ff">以上参数将作为站址筛选与天线规划的核心依据。</span>`,
-                nextText: "开始选址"
-            },
-            {
-                type: 'siteselect',
-                title: "基站选址",
-                label: "基站选址",
-                intro: `请结合<b>校园平面图</b>与覆盖需求，为本次 5G 宏站选择建设位置。点击位置查看分析，找到<b>最合理</b>的站址后点击"选址确认"。`,
-                spots: [
-                    {
-                        name: "位置1", ok: true, x: 48, y: 42,
-                        feedback: `✅ <b>选址分析（位置1 · 中心教学楼顶）：</b>位于校园几何中心，楼宇高度约 35m，可均衡覆盖教学区、宿舍区与图书馆；机房条件现成、传输电源配套齐全，天面无遮挡。是本次 5G 宏站的<b>理想站址</b>！`
-                    },
-                    {
-                        name: "位置2", ok: false, x: 80, y: 25,
-                        feedback: `❌ <b>选址分析（位置2 · 东北角水塔）：</b>1. 偏于一隅，西南片区覆盖距离过远，RSRP 难以达标。2. 水塔承重与天面空间有限，无法安装 64T64R AAU。3. 无现成机房与市电引入，配套改造成本高。`
-                    },
-                    {
-                        name: "位置3", ok: false, x: 22, y: 70,
-                        feedback: `❌ <b>选址分析（位置3 · 西校门门卫室旁）：</b>1. 距宿舍区、图书馆等覆盖热点过远，链路预算不足。2. 门卫室建筑高度低（约6m），挂高受限，越区遮挡严重。3. 临街施工存在安全与协调风险。`
-                    },
-                    {
-                        name: "位置4", ok: false, x: 66, y: 62,
-                        feedback: `❌ <b>选址分析（位置4 · 体育场灯塔）：</b>1. 灯塔位于体育场正中，日常覆盖目标偏离教学/宿舍核心区。2. 钢结构灯塔振动大，不满足 AAU 安装稳定性要求。3. 比赛期间强光与电磁环境复杂，运维不便。`
-                    },
-                    {
-                        name: "位置5", ok: false, x: 30, y: 30,
-                        feedback: `❌ <b>选址分析（位置5 · 实验楼配电室旁）：</b>1. 紧邻强电配电室，电磁环境复杂，存在干扰风险。2. 实验楼天面密布通风管道与实验设备，天面资源不足。3. 楼顶承重经评估不满足新增抱杆荷载要求。`
-                    }
-                ],
-                correctIdx: 0
-            },
-            {
-                type: 'survey',
-                title: "站点勘察表填写",
-                label: "勘察填写",
-                intro: `请根据现场勘测与工程规划资料，填写<b>5G 基站勘察表</b>。带 🔍 的字段可通过<b>专业测量设备</b>现场测量获得（点击"测量"按钮），其余信息可通过右上角"工程规划"参考资料核对。`,
-                tabs: ["基础信息", "机房配套", "天面参数"],
-                plan: [
-                    [["站点名称", "中心教学楼站"], ["楼宇高度", "约35m"], ["覆盖目标", "教学/宿舍/图书馆"], ["电源引入", "市电380V"], ["传输资源", "SPN光纤到位"], ["经纬度", "东经118.79632，北纬32.06148"]],
-                    [["机房位置", "教学楼附楼1F"], ["BBU型号", "BBU5900"], ["AAU型号", "AAU5613"], ["蓄电池备电", "4小时"], ["接地电阻", "≤5Ω"]],
-                    [["天线挂高", "32m"], ["方位角", "0°/120°/240°"], ["机械下倾角", "6°"], ["电子下倾角", "3°"], ["覆盖半径", "约450m"]]
-                ],
-                fields: [
-                    { tab: 0, key: "站点名称", type: "input", ph: "如：中心教学楼站" },
-                    { tab: 0, key: "楼宇高度", type: "input", ph: "如：约35m" },
-                    { tab: 0, key: "覆盖目标", type: "input", ph: "如：教学/宿舍/图书馆" },
-                    { tab: 0, key: "电源引入", type: "select", opts: ["市电380V", "市电220V", "太阳能", "暂无电源"] },
-                    { tab: 0, key: "传输资源", type: "select", opts: ["SPN光纤到位", "微波回传", "需新建光缆", "无传输资源"] },
-                    { tab: 0, key: "经纬度", type: "input", ph: "点击右侧测量获取", measure: { device: "gps", icon: "📡", name: "GPS定位仪", value: "东经118.79632，北纬32.06148" } },
-                    { tab: 1, key: "机房位置", type: "input", ph: "如：教学楼附楼1F" },
-                    { tab: 1, key: "BBU型号", type: "select", opts: ["BBU5900", "BBU3910", "V9200", "DBS3900"] },
-                    { tab: 1, key: "AAU型号", type: "select", opts: ["AAU5613", "AAU5336", "TDAU5164", "RRU5150"] },
-                    { tab: 1, key: "蓄电池备电", type: "select", opts: ["2小时", "4小时", "8小时", "不配置"] },
-                    { tab: 1, key: "接地电阻", type: "input", ph: "如：≤5Ω" },
-                    { tab: 2, key: "天线挂高", type: "input", ph: "点击右侧测量获取", measure: { device: "laser", icon: "📏", name: "激光测距仪", value: "32m" } },
-                    { tab: 2, key: "方位角", type: "select", opts: ["0°/120°/240°", "30°/150°/270°", "60°/180°/300°", "全向"] },
-                    { tab: 2, key: "机械下倾角", type: "select", opts: ["0°", "3°", "6°", "9°"] },
-                    { tab: 2, key: "电子下倾角", type: "select", opts: ["0°", "3°", "6°", "9°"] },
-                    { tab: 2, key: "覆盖半径", type: "input", ph: "点击右侧测量获取", measure: { device: "testphone", icon: "📱", name: "5G路测手机", value: "约450m" } }
-                ]
-            },
-            {
-                type: 'design',
-                title: "工程设计",
-                label: "工程设计",
-                intro: `综合勘测数据与协议手册，完成<b>5G 基站最终建设方案</b>。请结合前面的参数查询知识做出选择：`,
-                groups: [
-                    { q: "最终站址选择", options: ["中心教学楼顶", "体育场灯塔", "西校门门卫室旁"], correct: 0 },
-                    { q: "天线挂高设计", options: ["12m", "32m", "58m"], correct: 1 },
-                    { q: "AAU 选型与通道配置", options: ["8T8R RRU+无源天线", "64T64R Massive MIMO AAU", "4T4R 微站"], correct: 1 },
-                    { q: "下倾角规划（机械+电子）", options: ["0°+0°", "6°+3°", "12°+6°"], correct: 1 }
-                ],
-                result: `最终方案：在中心教学楼顶新建三扇区宏站，AAU5613（64T64R）挂高 32m，方位角 0°/120°/240°，机械下倾 6°+电子下倾 3°，n78 频段 100MHz 带宽，可均衡覆盖教学区、宿舍区与图书馆；机房配置 BBU5900、市电 380V 引入、4 小时备电，传输采用 SPN 光纤。经覆盖仿真预估，校园核心区 RSRP ≥ -95dBm 达标率 98.2%，方案已提交审核！`
-            },
-            {
-                type: 'text',
-                title: "工程复盘",
-                label: "工程复盘",
-                content: `<b>📋 项目回顾：</b><br>本次 5G 基站勘察设计围绕智慧校园建设项目展开，从项目背景理解、岗位角色定位、勘察工具选型、5G 参数查询、站址筛选、勘察表填写到最终方案设计，完整覆盖了<b>无线网络规划工程师</b>的核心工作流。<br><br><b>🔑 关键知识点：</b><br>· <b>频段与带宽</b>：n78（3300-3600MHz）是当前国内 5G 主力频段，100MHz 大带宽保障高速率；<br>· <b>Massive MIMO</b>：64T64R AAU 通过波束赋形提升容量与覆盖，是宏站主流形态；<br>· <b>选址原则</b>：贴近覆盖热点、挂高适中、机房传输电源配套齐全；<br>· <b>下倾角规划</b>：需结合挂高与目标覆盖距离综合核算，过大会造成覆盖空洞、过小则越区干扰。<br><br><b>⚠️ 常见误区：</b>选址偏于一隅导致远端覆盖不达标、忽视天面承重与电磁环境、下倾角凭感觉设置而非按覆盖目标核算。<br><br><span style="color:#4dd8ff">恭喜完成本次 5G 基站勘察设计实训！</span>`,
-                nextText: "完成实训"
-            }
-        ];
-        // 满分：工具4分 + 选址2分 + 测量3分 + 设计4分
-        scoreMax = 13;
+function t4route() {
+    const d = S.d['t4'];
+    const okNum = v => /^\d{2,3}\.\d{2,6}$/.test(String(v).trim());
+    if (!d.driver) { toast('请先选择随车司机', 'err'); return; }
+    if (!okNum(d.lng) || !okNum(d.lat)) { toast('经纬度格式不正确，应为 114.4021 / 38.0201 形式', 'err'); return; }
+    const dlng = Math.abs(parseFloat(d.lng) - parseFloat(STATION.lng));
+    const dlat = Math.abs(parseFloat(d.lat) - parseFloat(STATION.lat));
+    if (dlng > 0.05 || dlat > 0.05) { toast('坐标与实训基站偏差过大，请核对经纬度', 'err'); return; }
+    d.routed = true;
+    save();
+    document.getElementById('body').innerHTML = renderTask(3);
+    bindTask(3);
+    toast('路线规划完成，预计 23 分钟到达', 'ok');
+}
 
-        // ============ 初始化 ============
-        function init() {
-            renderStepIndicator();
-            renderProgressBar();
-            goToStep(0);
-            updateClock();
-            setInterval(updateClock, 1000);
+/* =========================================================
+   任务 5：外场信号覆盖测试
+   ========================================================= */
+const POINTS = [
+    { n: 'P1 近点', dsc: '站下 30m', base: [-72, 22] },
+    { n: 'P2 中近点', dsc: '站下 120m', base: [-81, 18] },
+    { n: 'P3 中点', dsc: '站下 260m', base: [-89, 13] },
+    { n: 'P4 远点', dsc: '站下 420m', base: [-97, 6] },
+    { n: 'P5 边缘点', dsc: '站下 600m', base: [-104, 1] }
+];
+const RSRP_MIN = -95, SINR_MIN = 0;
+
+function t5() {
+    const pts = S.d['t5'].pts;
+    const rows = POINTS.map((p, i) => {
+        const v = pts[i] || {};
+        const rsrp = v.rsrp, sinr = v.sinr;
+        let judge = '<span class="wait">未采样</span>';
+        if (rsrp != null && sinr != null) {
+            judge = (rsrp >= RSRP_MIN && sinr >= SINR_MIN)
+                ? '<span class="pass">达标</span>'
+                : '<span class="fail">不达标</span>';
         }
+        return `<tr>
+            <td>${p.n}<br><span class="small muted">${p.dsc}</span></td>
+            <td><input type="number" step="0.1" value="${rsrp != null ? rsrp : ''}" placeholder="dBm" onchange="t5set(${i},'rsrp',this.value)"></td>
+            <td><input type="number" step="0.1" value="${sinr != null ? sinr : ''}" placeholder="dB" onchange="t5set(${i},'sinr',this.value)"></td>
+            <td>${judge}</td>
+            <td style="text-align:right"><button class="btn sm ghost" onclick="t5sample(${i})">采样</button></td>
+        </tr>`;
+    }).join('');
 
-        // ============ 模式切换 ============
-        function switchMode(newMode) {
-            mode = newMode;
-            document.getElementById('btnModeStory').classList.toggle('active', mode === 'story');
-            document.getElementById('btnModeExplore').classList.toggle('active', mode === 'explore');
-            // 切换后重新渲染步骤指示器（自由探索模式下所有步骤可点击）
-            renderStepIndicator();
-            // 自由探索模式隐藏底部评分提示，剧情演绎模式恢复
-            const hint = document.getElementById('exploreHint');
-            if (hint) hint.style.display = mode === 'explore' ? '' : 'none';
-        }
+    const filled = pts.filter(p => p && p.rsrp != null && p.sinr != null).length;
+    const okCount = pts.filter(p => p && p.rsrp != null && p.sinr != null && p.rsrp >= RSRP_MIN && p.sinr >= SINR_MIN).length;
 
-        // ============ 渲染步骤指示器 ============
-        function renderStepIndicator() {
-            const container = document.getElementById('stepIndicator');
-            const connectorHtml = [];
-            let html = '';
-            steps.forEach((step, i) => {
-                html += `
-                    <div class="step-item ${i === 0 ? 'active' : ''}" data-index="${i}">
-                        <span class="label">${step.label}</span>
-                        <div class="dot">${i + 1}</div>
-                    </div>
-                `;
-                if (i < steps.length - 1) {
-                    html += `<div class="step-connector" data-idx="${i}"></div>`;
-                }
-            });
-            container.innerHTML = html;
+    return head('任务 5 · 外场信号覆盖测试',
+        `<p><b>任务描述：</b>驱车到达站点，在基站覆盖区域多点采集无线指标，记录 RSRP、SINR。</p>
+         <p><b>操作动作：</b>沿测试路线在多个采样点读取 RSRP、SINR 数值，填入测试记录表。</p>
+         <p><b>完成判定：</b>5 个采样点全部完成采样，指标记录完整后提交。判定门限：RSRP ≥ ${RSRP_MIN} dBm 且 SINR ≥ ${SINR_MIN} dB。</p>`) +
+    `<div class="card">
+        <div class="card-head"><h2><em>路测</em>覆盖指标采样</h2>
+            <span class="small ${filled === 5 ? 'pass' : 'wait'}">已采样 ${filled} / 5 · 达标 ${okCount}</span></div>
+        <table class="dt">
+            <thead><tr><th style="width:32%">采样点</th><th style="width:20%">RSRP (dBm)</th><th style="width:20%">SINR (dB)</th><th style="width:16%">判定</th><th></th></tr></thead>
+            <tbody>${rows}</tbody>
+        </table>
+    </div>
+    <div class="card small muted" style="line-height:1.9">
+        <b style="color:var(--text)">提示：</b>点击「采样」可模拟一次路测读数，也可手动录入。近点指标通常优良，边缘点低于门限属正常现象，需在报告中记录并说明。
+    </div>`;
+}
 
-            // 绑定点击事件
-            container.querySelectorAll('.step-item').forEach(item => {
-                item.addEventListener('click', () => {
-                    const idx = parseInt(item.dataset.index);
-                    if (mode === 'explore' || idx <= currentStep) {
-                        // 自由探索模式下允许跳步，跳过状态重置
-                        if (mode === 'explore') {
-                            // 跳步时只切换显示，不重置状态
-                            currentStep = idx;
-                            goToStep(idx);
-                        } else {
-                            goToStep(idx);
-                        }
-                    }
-                });
-            });
-        }
+function t5set(i, k, v) {
+    const pts = S.d['t5'].pts;
+    if (!pts[i]) pts[i] = {};
+    pts[i][k] = v === '' ? null : parseFloat(v);
+    save();
+    document.getElementById('body').innerHTML = renderTask(4);
+    bindTask(4);
+}
 
-        // ============ 渲染进度条 ============
-        function renderProgressBar() {
-            const bar = document.getElementById('progressBar');
-            let html = '';
-            steps.forEach((_, i) => {
-                html += `<div class="dot" data-idx="${i}"></div>`;
-            });
-            bar.innerHTML = html;
-        }
+function t5sample(i) {
+    const b = POINTS[i].base;
+    const jitter = () => (Math.random() * 3 - 1.5);
+    const pts = S.d['t5'].pts;
+    pts[i] = {
+        rsrp: Math.round((b[0] + jitter()) * 10) / 10,
+        sinr: Math.round((b[1] + jitter()) * 10) / 10
+    };
+    save();
+    document.getElementById('body').innerHTML = renderTask(4);
+    bindTask(4);
+}
 
-        // ============ 跳转到指定步骤 ============
-        function goToStep(index) {
-            currentStep = index;
-            const step = steps[index];
+/* =========================================================
+   任务 6：业务性能测试
+   ========================================================= */
+function t6() {
+    const d = S.d['t6'];
+    const block = (key, title, fields) => {
+        const v = d[key];
+        const done = v != null;
+        return `<div class="card">
+            <div class="card-head"><h2><em>${title[0]}</em>${title[1]}</h2>
+                <span class="small ${done ? 'pass' : 'wait'}">${done ? '已完成' : '未测试'}</span></div>
+            <div class="grid3">${fields.map(f => `
+                <div class="field"><label>${f[1]}</label>
+                    <input type="number" step="${f[3] || '1'}" value="${done && v[f[0]] != null ? v[f[0]] : ''}" placeholder="${f[2]}" onchange="t6set('${key}','${f[0]}',this.value)">
+                </div>`).join('')}</div>
+            <button class="btn sm ${done ? 'ghost' : ''}" onclick="t6run('${key}')">${done ? '重新拨测' : '执行拨测'}</button>
+        </div>`;
+    };
 
-            // 更新场景背景
-            const bg = document.getElementById('sceneBg');
-            bg.classList.add('fade-out');
-            setTimeout(() => {
-                bg.setAttribute('data-step', index);
-                bg.classList.remove('fade-out');
-            }, 400);
+    const v1 = d.voice, v2 = d.video, v3 = d.data;
+    let sum = '';
+    if (v1 && v1.calls) {
+        const ar = (v1.connected / v1.calls * 100).toFixed(1);
+        const dr = (v1.dropped / v1.calls * 100).toFixed(1);
+        sum = `<div class="card small">
+            <b style="color:var(--text)">实时统计：</b>
+            接通率 <b class="${ar >= 95 ? 'pass' : 'fail'}">${ar}%</b> ·
+            掉话率 <b class="${dr <= 3 ? 'pass' : 'fail'}">${dr}%</b>
+            <span class="muted">（考核门限：接通率 ≥ 95%，掉话率 ≤ 3%）</span>
+        </div>`;
+    }
 
-            // 更新步骤指示器
-            document.querySelectorAll('.step-item').forEach(item => {
-                const idx = parseInt(item.dataset.index);
-                item.classList.remove('active', 'completed');
-                if (idx === index) item.classList.add('active');
-                else if (idx < index) item.classList.add('completed');
-            });
+    return head('任务 6 · 业务性能测试',
+        `<p><b>任务描述：</b>在覆盖点位开展语音通话、视频通话、上下行数据业务测试，记录接通率、掉话率、传输速率。</p>
+         <p><b>操作动作：</b>依次执行拨测任务，填写各项业务指标。</p>
+         <p><b>完成判定：</b>语音、视频、数据三项业务全部测试完成并填写指标后提交。</p>`) +
+    block('voice', ['语音', '语音通话测试'], [
+        ['calls', '拨打次数', '次', '1'], ['connected', '接通次数', '次', '1'], ['dropped', '掉话次数', '次', '1']
+    ]) +
+    block('video', ['视频', '视频通话测试'], [
+        ['delay', '端到端时延 (ms)', 'ms', '1'], ['mos', 'MOS 评分', '1-5', '0.1']
+    ]) +
+    block('data', ['数据', '上下行数据业务'], [
+        ['dl', '下行速率 (Mbps)', 'Mbps', '0.1'], ['ul', '上行速率 (Mbps)', 'Mbps', '0.1']
+    ]) + sum;
+}
 
-            // 更新连接线
-            document.querySelectorAll('.step-connector').forEach(conn => {
-                const idx = parseInt(conn.dataset.idx);
-                conn.classList.toggle('active', idx < index);
-            });
+function t6set(key, k, v) {
+    if (!S.d['t6'][key]) S.d['t6'][key] = {};
+    S.d['t6'][key][k] = v === '' ? null : parseFloat(v);
+    save();
+    document.getElementById('body').innerHTML = renderTask(5);
+    bindTask(5);
+}
 
-            // 更新进度条
-            document.querySelectorAll('#progressBar .dot').forEach(dot => {
-                const idx = parseInt(dot.dataset.idx);
-                dot.classList.remove('active', 'completed');
-                if (idx === index) dot.classList.add('active');
-                else if (idx < index) dot.classList.add('completed');
-            });
+function t6run(key) {
+    const r = (a, b, f) => Math.round((a + Math.random() * (b - a)) * (f || 1)) / (f || 1);
+    if (key === 'voice') S.d['t6'].voice = { calls: 10, connected: 10, dropped: 0 };
+    if (key === 'video') S.d['t6'].video = { delay: r(24, 38), mos: r(4, 4.6, 10) };
+    if (key === 'data') S.d['t6'].data = { dl: r(760, 880, 10), ul: r(88, 112, 10) };
+    save();
+    document.getElementById('body').innerHTML = renderTask(5);
+    bindTask(5);
+    toast('拨测完成，请核对指标', 'ok');
+}
 
-            // 更新对话面板
-            const panel = document.getElementById('dialogPanel');
-            panel.style.animation = 'none';
-            void panel.offsetWidth;
-            panel.style.animation = 'fadeInUp 0.6s ease';
+/* =========================================================
+   任务 7：邻区关系验证
+   ========================================================= */
+function t7() {
+    const d = S.d['t7'];
+    const cells = d.cells.map((c, i) => {
+        const st = c.ok === null ? '<span class="wait">未验证</span>'
+            : c.ok ? '<span class="pass">切换成功</span>' : '<span class="fail">切换失败</span>';
+        return `<tr>
+            <td>邻区 ${i + 1}</td>
+            <td>PCI ${esc(c.pci)}</td>
+            <td>同站/异站邻区</td>
+            <td>${st}</td>
+            <td style="text-align:right"><button class="btn sm ghost" onclick="t7run(${i})">触发切换</button></td>
+        </tr>`;
+    }).join('');
 
-            document.getElementById('dialogTitle').textContent = step.title;
-            document.getElementById('sceneTitle').textContent = step.label;
-            renderStepContent(step);
-            updateNextBtn(step);
-            document.getElementById('btnSkip').style.display = (step.type === 'text') ? '' : 'none';
-        }
+    const okCount = d.cells.filter(c => c.ok === true).length;
+    const verified = d.cells.filter(c => c.ok !== null).length;
+    const rate = verified ? Math.round(okCount / verified * 100) : 0;
 
-        // ============ 内容渲染分发 ============
-        function addScore(n) { score += n; }
+    return head('任务 7 · 邻区关系验证',
+        `<p><b>任务描述：</b>验证本站与周边邻基站的切换过程，核查切换成功率。</p>
+         <p><b>操作动作：</b>模拟移动终端，逐个触发小区切换，查看切换信令，记录切换结果。</p>
+         <p><b>完成判定：</b>3 个邻区切换验证完成，切换成功率统计后提交。</p>`) +
+    `<div class="card">
+        <div class="card-head"><h2><em>邻区</em>切换验证</h2>
+            <span class="small ${verified === 3 ? 'pass' : 'wait'}">已验证 ${verified} / 3 · 成功率 ${rate}%</span></div>
+        <table class="dt">
+            <thead><tr><th>邻区</th><th>标识</th><th>类型</th><th>结果</th><th></th></tr></thead>
+            <tbody>${cells}</tbody>
+        </table>
+        ${d.cells.some(c => c.ok === false) && !d.added ? `
+        <div class="alarm active" style="margin-top:14px">
+            <span class="alarm-name">检测到邻区 ${d.cells.find(c => c.ok === false).pci} 未配置邻区关系，请在网管侧补配后重新验证</span>
+            <button class="btn sm" onclick="t7add()">添加邻区关系</button>
+        </div>` : ''}
+        ${d.added ? '<div class="small pass" style="margin-top:12px">邻区关系已补配完成，可重新触发切换</div>' : ''}
+    </div>
+    <div class="card">
+        <div class="card-head"><h2><em>信令</em>切换流程</h2></div>
+        <div class="sig" id="sigBox">等待触发切换测试…</div>
+    </div>`;
+}
 
-        function renderStepContent(step) {
-            const content = document.getElementById('dialogContent');
-            const panel = document.getElementById('dialogPanel');
-            const interactive = ['choice', 'quiz', 'siteselect', 'survey', 'design'].includes(step.type);
-            panel.classList.toggle('wide', interactive);
-            switch (step.type) {
-                case 'text': content.innerHTML = `<div style="line-height:2.05">${step.content}</div>`; break;
-                case 'choice': renderChoice(step, content); break;
-                case 'quiz': renderQuiz(step, content); break;
-                case 'siteselect': renderSite(step, content); break;
-                case 'survey': renderSurvey(step, content); break;
-                case 'design': renderDesign(step, content); break;
-            }
-        }
+const SIG_FLOW = [
+    ['RRC', 'Measurement Report', '终端上报邻区测量结果'],
+    ['X2', 'Handover Request', '源基站向目标基站发起切换请求'],
+    ['X2', 'Handover Request Ack', '目标基站接纳并返回确认'],
+    ['RRC', 'RRC Connection Reconfiguration', '源基站下发切换命令'],
+    ['RRC', 'RRC Connection Reconfiguration Complete', '终端接入目标小区完成']
+];
 
-        function updateNextBtn(step) {
-            const btn = document.getElementById('btnNext');
-            if (step.type === 'quiz') {
-                const heatPending = (step.heatmap === true && !step._heatDrawn) ||
-                                    (step.heatmap === undefined && !mapShown);
-                btn.textContent = (heatPending && quizIdx === step.subSteps.length - 1)
-                    ? '查看光功率测试图' : '下一步';
-            }
-            else if (step.type === 'design') btn.textContent = designDone ? '完成实训' : '提交方案';
-            else btn.textContent = step.nextText || '下一步';
-        }
-
-        function optCardHtml(o, i, multi) {
-            o = (typeof o === 'string') ? { name: o } : o;
-            return `<div class="opt-card ${multi ? 'multi' : ''}" data-idx="${i}">
-                <div class="opt-name">${o.name}</div>
-                ${o.sub ? `<div class="opt-sub">${o.sub}</div>` : ''}
-            </div>`;
-        }
-        function bindSingleSel(container, onPick) {
-            container.querySelectorAll('.opt-card').forEach(card => {
-                card.addEventListener('click', () => {
-                    container.querySelectorAll('.opt-card').forEach(c => c.classList.remove('selected'));
-                    card.classList.add('selected');
-                    onPick(parseInt(card.dataset.idx));
-                });
-            });
-        }
-
-        /* ---- 岗位选择 ---- */
-        function renderChoice(step, content) {
-            choiceSel = -1;
-            content.innerHTML = `
-                <div class="opt-intro">${step.intro}</div>
-                <div class="opt-grid" id="choiceGrid">${step.options.map((o, i) => optCardHtml(o, i, false)).join('')}</div>
-                <div class="feedback-bar" id="choiceFb"></div>`;
-            bindSingleSel(content.querySelector('#choiceGrid'), (idx) => {
-                choiceSel = idx;
-                const o = step.options[idx];
-                const fb = document.getElementById('choiceFb');
-                fb.className = 'feedback-bar show ' + (o.good ? 'good' : 'bad');
-                fb.innerHTML = o.feedback;
-            });
-        }
-
-        /* ---- 勘察工具准备（分步选择） ---- */
-        function quizHeatOn(step) {
-            // true=本步骤要求测试图且已答完；false=本步骤明确不要图；字段缺失=兼容老数据走全局mapShown
-            if (step.heatmap === true) return !!step._heatDrawn;
-            if (step.heatmap === false) return false;
-            return mapShown;
-        }
-        // quiz 判定与解析揭示（首次作答计分；错也放行，正确项标绿）
-        function quizRequired(sub) {
-            if (sub.multi) return Array.isArray(sub.required) ? sub.required : [sub.required];
-            return [sub.correct];
-        }
-        function revealQuiz(step, sub, grid, fb) {
-            const req = quizRequired(sub);
-            const ok = sub.multi
-                ? (quizSel.length === req.length && req.every(i => quizSel.includes(i)))
-                : quizSel[0] === sub.correct;
-            grid.classList.add('revealed');
-            grid.querySelectorAll('.opt-card').forEach(c => {
-                const i = parseInt(c.dataset.idx);
-                if (req.includes(i)) c.classList.add('right');
-                else if (quizSel.includes(i)) c.classList.add('wrong');
-            });
-            fb.className = 'feedback-bar show ' + (ok ? 'good' : 'bad');
-            if (sub.multi) {
-                fb.innerHTML = ok ? '✓ <b>全部选对</b>，可进入下一步'
-                                  : '✗ <b>选择不全或选入了无关项</b>，正确项已标绿，请阅读各项解析后继续';
+function t7run(i) {
+    const box = document.getElementById('sigBox');
+    if (!box) return;
+    const fail = S.d['t7'].cells[i].pci === '118' && !S.d['t7'].added;
+    box.innerHTML = '';
+    let k = 0;
+    const timer = setInterval(() => {
+        if (k < SIG_FLOW.length) {
+            const s = SIG_FLOW[k];
+            const div = document.createElement('div');
+            div.innerHTML = `<span style="color:#7ea6c6">[${s[0]}]</span> <b>${s[1]}</b> <span style="color:#7ea6c6">— ${s[2]}</span>`;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+            k++;
+        } else {
+            clearInterval(timer);
+            const end = document.createElement('div');
+            if (fail) {
+                end.className = 'ok';
+                end.style.color = '#ff6b6b';
+                end.innerHTML = '<span style="color:#ff6b6b">[X2] Handover Preparation Failure — 目标小区未配置邻区关系，切换失败</span>';
             } else {
-                fb.innerHTML = ok ? '✓ <b>回答正确</b>，可进入下一步'
-                                  : '✗ <b>回答不正确</b>，正确答案已标绿，请阅读各项解析后继续';
+                end.className = 'ok';
+                end.textContent = '[OK] 切换成功，终端已驻留目标小区';
             }
-            if (!step._scored) step._scored = [];
-            if (!step._scored[quizIdx]) { if (ok) addScore(1); step._scored[quizIdx] = true; }
-            if (!step._qlock) step._qlock = {};
-            step._qlock[quizIdx] = true;
-            updateNextBtn(step);
-        }
-
-        function renderQuiz(step, content) {
-            if (quizHeatOn(step)) { renderHeatmap(content); return; }
-            // 多 quiz 步骤：小题索引按步骤隔离
-            quizIdx = (typeof step._qidx === 'number') ? step._qidx : 0;
-            const sub = step.subSteps[quizIdx];
-            quizSel = [];
-            content.innerHTML = `
-                <div class="opt-intro">${sub.q}${sub.multi ? '<span style="color:#ffd66b;font-size:12px">（可多选）</span>' : ''}</div>
-                <div class="opt-grid quiz-grid" id="quizGrid">${sub.options.map((o, i) => optCardHtml(o, i, sub.multi)).join('')}</div>
-                <div class="feedback-bar" id="quizFb"></div>`;
-            const grid = content.querySelector('#quizGrid');
-            const fb = content.querySelector('#quizFb');
-            grid.querySelectorAll('.opt-card').forEach(card => {
-                card.addEventListener('click', () => {
-                    if (step._qlock && step._qlock[quizIdx]) return; // 已判定，锁定
-                    const idx = parseInt(card.dataset.idx);
-                    if (sub.multi) {
-                        card.classList.toggle('selected');
-                        quizSel = quizSel.includes(idx) ? quizSel.filter(x => x !== idx) : quizSel.concat(idx);
-                    } else {
-                        quizSel = [idx];
-                        // 单选：点选即判定并揭示解析
-                        grid.querySelectorAll('.opt-card').forEach(c => c.classList.remove('selected'));
-                        card.classList.add('selected');
-                        revealQuiz(step, sub, grid, fb);
-                    }
-                });
-            });
-            // 恢复已判定小题的揭示态（理论上只会前进，此处兜底）
-            if (step._qlock && step._qlock[quizIdx]) revealQuiz(step, sub, grid, fb);
-        }
-
-        /* ---- 光功率测试图 ---- */
-        function renderHeatmap(content) {
-            const legend = `
-                <div class="heat-legend">
-                    <div style="color:#8fc7ff;font-weight:700;margin-bottom:2px">光功率(dBm):</div>
-                    <div class="li"><span class="sw" style="background:#e03131"></span>[-140,-115]</div>
-                    <div class="li"><span class="sw" style="background:#f59f00"></span>(-115,-105]</div>
-                    <div class="li"><span class="sw" style="background:#ffe066"></span>(-105,-95]</div>
-                    <div class="li"><span class="sw" style="background:#51cf66"></span>(-95,-75]</div>
-                    <div class="li"><span class="sw" style="background:#2f9e44"></span>(-75,+∞)</div>
-                </div>`;
-            const B = (x, y, w, h, label, fs = 11) =>
-                `<g><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="#e9ecef" stroke="#adb5bd"/>
-                 <text x="${x + w / 2}" y="${y + h / 2 + 4}" text-anchor="middle" font-size="${fs}" fill="#495057">${label}</text></g>`;
-            const R = (x1, y1, x2, y2, color) =>
-                `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="7" stroke-linecap="round"/>`;
-            content.innerHTML = `
-                <div class="opt-step-label">第五步：小区光功率测试结果</div>
-                <div style="display:flex;gap:12px;align-items:stretch">
-                    <svg viewBox="0 0 560 300" style="flex:1;background:#f8f9fa;border-radius:8px;min-height:250px">
-                        ${R(40, 70, 520, 70, '#e03131')}
-                        ${R(150, 20, 150, 280, '#e03131')}
-                        ${R(300, 20, 300, 280, '#f59f00')}
-                        ${R(40, 170, 520, 170, '#ffe066')}
-                        ${R(430, 130, 430, 280, '#51cf66')}
-                        ${B(50, 25, 80, 32, '1-3栋')}
-                        ${B(190, 25, 80, 32, '4-7栋')}
-                        ${B(330, 25, 80, 32, '8-10栋', 10)}
-                        ${B(50, 95, 80, 32, '11-14栋', 10)}
-                        ${B(190, 95, 90, 32, '社区中心', 10)}
-                        ${B(330, 95, 80, 32, '幼儿园', 10)}
-                        ${B(50, 195, 80, 32, '15-18栋', 10)}
-                        ${B(190, 195, 90, 32, '19-22栋', 10)}
-                        ${B(330, 195, 80, 32, '23-26栋', 10)}
-                        ${B(50, 240, 80, 32, '地下车库', 10)}
-                        ${B(190, 240, 90, 32, '27-28栋', 10)}
-                        <g opacity="0.85">
-                            <circle cx="465" cy="90" r="26" fill="none" stroke="#2f9e44" stroke-width="2"/>
-                            <circle cx="465" cy="90" r="14" fill="rgba(47,158,68,0.35)"/>
-                            <text x="465" y="94" text-anchor="middle" font-size="10" fill="#2b8a3e">基站</text>
-                        </g>
-                    </svg>
-                    ${legend}
-                </div>
-                <div class="feedback-bar show" style="margin-top:10px">
-                    📡 <b>测试结论：</b>校园东北片区以 <b style="color:#ff8787">弱覆盖（红/橙，RSRP&lt;-105dBm）</b>为主，中心教学区与西南宿舍区 <b style="color:#ffe066">中等覆盖（黄）</b>，仅现有基站周边小范围良好。需合理选址补盲——请进入下一步完成站址筛选。
-                </div>`;
-        }
-
-        /* ---- 分光器选址 ---- */
-        function siteMapSvg() {
-            const bld = (x, y, w, h, f) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="${f}" stroke="rgba(0,60,110,0.5)"/>`;
-            return `<svg viewBox="0 0 420 260" style="width:100%;height:100%;display:block">
-                <defs>
-                    <linearGradient id="grass" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stop-color="#2e7d32"/><stop offset="100%" stop-color="#1b5e20"/>
-                    </linearGradient>
-                </defs>
-                <rect width="420" height="260" fill="url(#grass)"/>
-                <rect x="0" y="0" width="420" height="260" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="3"/>
-                ${bld(30, 30, 90, 50, '#8d6e63')}${bld(140, 25, 110, 55, '#a1887f')}${bld(280, 30, 100, 50, '#8d6e63')}
-                ${bld(35, 120, 80, 45, '#bcaaa4')}${bld(150, 115, 100, 50, '#a1887f')}${bld(290, 120, 90, 45, '#8d6e63')}
-                <ellipse cx="60" cy="215" rx="40" ry="20" fill="#66bb6a" stroke="rgba(255,255,255,0.3)"/>
-                <text x="60" y="219" text-anchor="middle" font-size="10" fill="#e8f5e9">中心花园</text>
-                <ellipse cx="350" cy="218" rx="42" ry="20" fill="#66bb6a" stroke="rgba(255,255,255,0.3)"/>
-                <text x="350" y="222" text-anchor="middle" font-size="10" fill="#e8f5e9">儿童活动区</text>
-                <line x1="0" y1="95" x2="420" y2="95" stroke="#eceff1" stroke-width="10" opacity="0.85"/>
-                <line x1="0" y1="185" x2="420" y2="185" stroke="#eceff1" stroke-width="10" opacity="0.85"/>
-                <line x1="120" y1="0" x2="120" y2="260" stroke="#eceff1" stroke-width="9" opacity="0.85"/>
-                <line x1="265" y1="0" x2="265" y2="260" stroke="#eceff1" stroke-width="9" opacity="0.85"/>
-                <g opacity="0.9"><polygon points="392,20 398,42 386,42" fill="#ff8f00"/><line x1="392" y1="42" x2="392" y2="62" stroke="#5d4037" stroke-width="3"/><line x1="384" y1="48" x2="400" y2="48" stroke="#5d4037" stroke-width="2"/></g>
-                <text x="392" y="76" text-anchor="middle" font-size="9" fill="#fff59d">配电房</text>
-                <g transform="translate(210,130)"><circle r="9" fill="#ff5252" opacity="0.9"/><circle r="16" fill="none" stroke="#ff5252" opacity="0.5"/><circle r="24" fill="none" stroke="#ff5252" opacity="0.25"/></g>
-            </svg>`;
-        }
-        function renderSite(step, content) {
-            siteSel = -1; siteConfirmed = false;
-            content.innerHTML = `
-                <div class="opt-intro">${step.intro}</div>
-                <div class="site-wrap">
-                    <div class="site-map">${siteMapSvg()}<div id="pinLayer"></div></div>
-                    <div class="site-side">
-                        <div class="opt-step-label" style="margin-top:0">候选位置</div>
-                        <div class="spot-grid" id="spotGrid">${step.spots.map((s, i) => `<div class="spot-btn" data-idx="${i}">${s.name}</div>`).join('')}</div>
-                        <div class="spot-btn" id="btnConfirmSite" style="visibility:hidden;background:linear-gradient(135deg,#0e9a5a,#0b7a46);border-color:#51cf66">✅ 选址确认</div>
-                        <div class="feedback-bar" id="siteFb"></div>
-                    </div>
-                </div>`;
-            const pinLayer = content.querySelector('#pinLayer');
-            const fb = content.querySelector('#siteFb');
-            const confirmBtn = content.querySelector('#btnConfirmSite');
-            content.querySelectorAll('#spotGrid .spot-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const idx = parseInt(btn.dataset.idx);
-                    siteSel = idx;
-                    content.querySelectorAll('#spotGrid .spot-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    const s = step.spots[idx];
-                    pinLayer.innerHTML = `<div class="map-pin" style="left:${s.x}%;top:${s.y}%">📍</div>`;
-                    fb.className = 'feedback-bar show ' + (s.ok ? 'good' : 'bad');
-                    fb.innerHTML = s.feedback;
-                    confirmBtn.style.visibility = s.ok ? 'visible' : 'hidden';
-                    if (!s.ok) { confirmBtn.textContent = '✅ 选址确认'; }
-                });
-            });
-            confirmBtn.addEventListener('click', () => {
-                siteConfirmed = true;
-                confirmBtn.classList.add('ok');
-                confirmBtn.textContent = '✅ 已确认选址';
-                const s = step.spots[siteSel];
-                if (s.ok && !step._scored) { addScore(2); step._scored = true; }
-                fb.innerHTML += `<div style="margin-top:6px;color:#5eff9b">已确认！点击"下一步"继续。</div>`;
-            });
-        }
-
-        /* ---- 勘察表填写 ---- */
-        function renderSurvey(step, content) {
-            // 多 survey 步骤：tab 索引按步骤隔离
-            surveyTab = (typeof step._tab === 'number') ? step._tab : 0;
-            content.innerHTML = `
-                <div class="opt-intro" style="font-size:12.5px;margin-bottom:8px">${step.intro}</div>
-                <button class="plan-fab" onclick="showPlan()">工程规划</button>
-                <div class="survey-tabs">${step.tabs.map((t, i) => `<div class="survey-tab ${i === surveyTab ? 'active' : ''}" data-tab="${i}">${i + 1} ${t}</div>`).join('')}</div>
-                <div class="form-grid" id="surveyForm"></div>`;
-            renderSurveyTab(step, content);
-            content.querySelectorAll('.survey-tab').forEach(t => {
-                t.addEventListener('click', () => {
-                    collectSurveyVals(content, step);
-                    surveyTab = parseInt(t.dataset.tab);
-                    step._tab = surveyTab;
-                    content.querySelectorAll('.survey-tab').forEach(x => x.classList.remove('active'));
-                    t.classList.add('active');
-                    renderSurveyTab(step, content);
-                });
-            });
-        }
-        function renderSurveyTab(step, content) {
-            const grid = content.querySelector('#surveyForm');
-            grid.innerHTML = step.fields.filter(f => f.tab === surveyTab).map(f => {
-                const val = f._val || '';
-                if (f.type === 'select') {
-                    return `<div class="form-item"><label>${f.key}</label><select data-key="${f.key}">${f.opts.map(o => `<option ${o === val ? 'selected' : ''}>${o}</option>`).join('')}</select></div>`;
-                }
-                const mBtn = f.measure ? `<button class="measure-btn" data-key="${f.key}">🔍 测量</button>` : '';
-                return `<div class="form-item"><label>${f.key}${f.measure ? ' 🔍' : ''}</label><div class="form-row"><input data-key="${f.key}" placeholder="${f.ph || ''}" value="${val}">${mBtn}</div></div>`;
-            }).join('');
-            grid.querySelectorAll('input,select').forEach(el => {
-                el.addEventListener('change', () => {
-                    const f = step.fields.find(x => x.key === el.dataset.key);
-                    if (f) f._val = el.value;
-                });
-                el.addEventListener('input', () => {
-                    const f = step.fields.find(x => x.key === el.dataset.key);
-                    if (f) f._val = el.value;
-                });
-            });
-            grid.querySelectorAll('.measure-btn').forEach(btn => btn.addEventListener('click', () => doMeasure(step, btn)));
-        }
-        function collectSurveyVals(content, step) {
-            content.querySelectorAll('#surveyForm input').forEach(inp => {
-                const f = step.fields.find(x => x.key === inp.dataset.key);
-                if (f) f._val = inp.value;
-            });
-            content.querySelectorAll('#surveyForm select').forEach(sel => {
-                const f = step.fields.find(x => x.key === sel.dataset.key);
-                if (f) f._val = sel.value;
-            });
-        }
-        function doMeasure(step, btn) {
-            const f = step.fields.find(x => x.key === btn.dataset.key);
-            const pop = document.createElement('div');
-            pop.className = 'device-pop';
-            pop.innerHTML = `<div class="dev-icon">${f.measure.icon}</div><div class="dev-name">${f.measure.name} · 测量中</div><div class="scan-bar"><i></i></div><div class="dev-val">正在采集数据…</div>`;
-            document.body.appendChild(pop);
-            btn.disabled = true;
+            box.appendChild(end);
+            box.scrollTop = box.scrollHeight;
+            S.d['t7'].cells[i].ok = !fail;
+            save();
             setTimeout(() => {
-                pop.querySelector('.dev-val').textContent = f.measure.value;
-                const input = document.querySelector(`#surveyForm input[data-key="${f.key}"]`);
-                if (input) { input.value = f.measure.value; input.classList.add('filled-auto'); }
-                f._val = f.measure.value;
-                if (!f._measured) { f._measured = true; addScore(1); }
-                setTimeout(() => { pop.remove(); btn.disabled = false; btn.textContent = '✅ 已测'; }, 1100);
-            }, 1500);
+                const body = document.getElementById('body');
+                if (body) { body.innerHTML = renderTask(6); bindTask(6); }
+            }, 700);
         }
-        function showPlan() {
-            const step = steps[currentStep];
-            const modal = document.createElement('div');
-            modal.className = 'plan-modal';
-            modal.innerHTML = `<div class="plan-card"><h4>📋 工程规划（参考资料）</h4>
-                ${(step.plan || []).map((rows, i) => `<div style="color:#4dd8ff;font-size:12px;margin:8px 0 2px">—— ${step.tabs[i] || ('参考' + (i + 1))} ——</div>` +
-                    rows.map(r => `<div class="plan-row"><span class="k">${r[0]}</span><span class="v">${r[1]}</span></div>`).join('')).join('')}
-                <div class="plan-close"><button class="measure-btn" onclick="this.closest('.plan-modal').remove()">关闭</button></div></div>`;
-            document.querySelector('#dialogPanel .dialog-box').appendChild(modal);
-        }
-        function countUnfilled(step) {
-            return step.fields.filter(f => f.type === 'input' && !(f._val || '').trim()).length;
+    }, 320);
+}
+
+function t7add() {
+    S.d['t7'].added = true;
+    S.d['t7'].cells.forEach(c => { if (c.pci === '118') c.ok = null; });
+    save();
+    document.getElementById('body').innerHTML = renderTask(6);
+    bindTask(6);
+    toast('邻区关系已添加，请重新验证', 'ok');
+}
+
+/* =========================================================
+   任务 8：实训报告生成
+   ========================================================= */
+function t8() {
+    const total = S.score.reduce((a, b) => a + b, 0);
+    const pts = S.d['t5'].pts;
+    const okPts = pts.filter(p => p && p.rsrp >= RSRP_MIN && p.sinr >= SINR_MIN).length;
+    const filledPts = pts.filter(p => p).length;
+    const voice = S.d['t6'].voice || {};
+    const ar = voice.calls ? (voice.connected / voice.calls * 100).toFixed(1) : '--';
+    const dr = voice.calls ? (voice.dropped / voice.calls * 100).toFixed(1) : '--';
+    const verified = S.d['t7'].cells.filter(c => c.ok !== null).length;
+    const okCells = S.d['t7'].cells.filter(c => c.ok === true).length;
+
+    const paramRows = Object.keys(PARAM_LABEL).map(k => {
+        const v = k === 'lng' ? STATION.lng : k === 'lat' ? STATION.lat : STATION[k];
+        return `<tr><td class="muted">${PARAM_LABEL[k]}</td><td>${esc(v)}</td></tr>`;
+    }).join('');
+
+    const ptRows = POINTS.map((p, i) => {
+        const v = pts[i];
+        const judge = v ? (v.rsrp >= RSRP_MIN && v.sinr >= SINR_MIN ? '<span class="pass">达标</span>' : '<span class="fail">不达标</span>') : '<span class="wait">未采样</span>';
+        return `<tr><td>${p.n}</td><td>${v ? v.rsrp : '--'}</td><td>${v ? v.sinr : '--'}</td><td>${judge}</td></tr>`;
+    }).join('');
+
+    const cellRows = S.d['t7'].cells.map((c, i) =>
+        `<tr><td>邻区 ${i + 1}</td><td>PCI ${esc(c.pci)}</td><td>${c.ok === null ? '<span class="wait">未验证</span>' : c.ok ? '<span class="pass">成功</span>' : '<span class="fail">失败</span>'}</td></tr>`
+    ).join('');
+
+    const t2dev = S.d['t2'].dev;
+    const devOk = ['main', 'ant', 'trans'].every(k => t2dev[k] === '正常');
+
+    return `<div class="card">
+        <div class="rep-head">
+            <h2>5G 基站单站验证实训报告</h2>
+            <p>${esc(STATION.name)} · ${esc(STATION.code)} · 报告生成时间 <span id="repTime"></span></p>
+            <div class="rep-score"><b>${total}</b><span>/ 100 分</span></div>
+        </div>
+
+        <div class="rep-block">
+            <h3>一、基站基础信息</h3>
+            <table class="dt"><tbody>${paramRows}</tbody></table>
+        </div>
+
+        <div class="rep-block">
+            <h3>二、设备状态检查</h3>
+            <table class="dt"><tbody>
+                <tr><td class="muted">主设备运行状态</td><td>${esc(t2dev.main || '未填写')}</td></tr>
+                <tr><td class="muted">天馈链路状态</td><td>${esc(t2dev.ant || '未填写')}</td></tr>
+                <tr><td class="muted">传输链路状态</td><td>${esc(t2dev.trans || '未填写')}</td></tr>
+                <tr><td class="muted">告警处理</td><td>${S.d['t2'].alarms.every(Boolean) ? '全部告警已清除' : '存在未清除告警'}</td></tr>
+            </tbody></table>
+        </div>
+
+        <div class="rep-block">
+            <h3>三、测试工具与路线</h3>
+            <table class="dt"><tbody>
+                <tr><td class="muted">工具选型</td><td>${(S.d['t3'].tools || []).join('、') || '未选择'}</td></tr>
+                <tr><td class="muted">选型判定</td><td>${S.d['t3'].passed ? '全选正确，无错误选型' : '未通过'}${S.d['t3'].penalty ? `（误选扣 ${S.d['t3'].penalty} 分）` : ''}</td></tr>
+                <tr><td class="muted">随车司机</td><td>${esc(S.d['t4'].driver || '未预约')}</td></tr>
+                <tr><td class="muted">路线</td><td>${S.d['t4'].routed ? '已规划，全程 12.6 km，预计 23 分钟' : '未规划'}</td></tr>
+            </tbody></table>
+        </div>
+
+        <div class="rep-block">
+            <h3>四、外场信号覆盖测试</h3>
+            <table class="dt">
+                <thead><tr><th>采样点</th><th>RSRP (dBm)</th><th>SINR (dB)</th><th>判定</th></tr></thead>
+                <tbody>${ptRows}</tbody>
+            </table>
+            <p class="small muted" style="margin-top:10px">覆盖达标率：<b class="pass">${filledPts ? Math.round(okPts / filledPts * 100) : 0}%</b>（${okPts}/${filledPts} 点达标，门限 RSRP ≥ ${RSRP_MIN} dBm 且 SINR ≥ ${SINR_MIN} dB）</p>
+        </div>
+
+        <div class="rep-block">
+            <h3>五、业务性能测试</h3>
+            <table class="dt"><tbody>
+                <tr><td class="muted">语音接通率 / 掉话率</td><td>${ar}% / ${dr}%</td></tr>
+                <tr><td class="muted">视频时延 / MOS</td><td>${S.d['t6'].video ? S.d['t6'].video.delay + ' ms / ' + S.d['t6'].video.mos : '未测试'}</td></tr>
+                <tr><td class="muted">下行 / 上行速率</td><td>${S.d['t6'].data ? S.d['t6'].data.dl + ' / ' + S.d['t6'].data.ul + ' Mbps' : '未测试'}</td></tr>
+            </tbody></table>
+        </div>
+
+        <div class="rep-block">
+            <h3>六、邻区关系验证</h3>
+            <table class="dt">
+                <thead><tr><th>邻区</th><th>标识</th><th>切换结果</th></tr></thead>
+                <tbody>${cellRows}</tbody>
+            </table>
+            <p class="small muted" style="margin-top:10px">切换成功率：<b class="${verified && okCells === verified ? 'pass' : 'fail'}">${verified ? Math.round(okCells / verified * 100) : 0}%</b>（${okCells}/${verified}）</p>
+        </div>
+
+        <div class="rep-block">
+            <h3>七、验证结论</h3>
+            <p class="small" style="line-height:2">
+                本次单站验证覆盖设备状态、信号覆盖、业务性能、邻区关系四项内容。
+                设备状态${devOk ? '正常，无未清除告警' : '存在异常项，需现场处理'}；
+                外场覆盖达标率 ${filledPts ? Math.round(okPts / filledPts * 100) : 0}%${okPts < filledPts ? '，边缘点位 RSRP 低于门限，建议结合天馈调整或补点规划' : '，各采样点均达标'}；
+                语音接通率 ${ar}%，掉话率 ${dr}%；
+                邻区切换成功率 ${verified ? Math.round(okCells / verified * 100) : 0}%。
+            </p>
+        </div>
+
+        <div style="display:flex;gap:10px;justify-content:center;margin-top:22px">
+            <button class="btn" onclick="exportReport()">导出实训报告</button>
+            <button class="btn ghost" onclick="window.print()">打印 / 另存 PDF</button>
+        </div>
+    </div>`;
+}
+
+function bindTask(i) {
+    if (i === 7) {
+        const el = document.getElementById('repTime');
+        if (el) el.textContent = new Date().toLocaleString('zh-CN');
+    }
+}
+
+/* ---------------- 提交与计分 ---------------- */
+function submitTask() {
+    const i = S.step;
+
+    if (i === 7) { exportReport(); return; }
+    if (S.done[i]) { go(i + 1); return; }
+
+    let sc = 0;
+    let msg = '';
+
+    if (i === 0) {
+        if ((S.d['t1'].checked || []).length < KEY_PARAMS.length) { toast('请先完成全部 6 项关键参数核对', 'err'); return; }
+        if (!S.d['t1'].agreed) { toast('请先点击下方「已阅读任务通知」确认框完成阅读确认', 'err'); return; }
+        sc = 0;
+        msg = '任务通知已接收，参数核对完成';
+    }
+
+    if (i === 1) {
+        const d = S.d['t2'];
+        if (!d.alarms.every(Boolean)) { toast('仍有未清除告警，请先确认处理', 'err'); return; }
+        if (!d.dev.main || !d.dev.ant || !d.dev.trans) { toast('请完整填写设备状态检查表', 'err'); return; }
+        const allOk = ['main', 'ant', 'trans'].every(k => d.dev[k] === '正常');
+        sc = allOk ? 10 : 4;
+        msg = allOk ? '设备状态检查通过，得 10 分' : '检查表存在异常项，得 4 分';
+    }
+
+    if (i === 2) {
+        const d = S.d['t3'];
+        const sel = d.tools || [];
+        const wrong = sel.filter(t => TOOL_MAP[t] === false);
+        const miss = TOOL_OK.filter(t => sel.indexOf(t) < 0);
+
+        /* 规则 2：勾选任意 1 个错误选项即判定答题错误 */
+        if (wrong.length) {
+            d.penalty = Math.min(10, (d.penalty || 0) + 2);
+            d.lastErr = wrong;
+            save();
+            document.getElementById('body').innerHTML = renderTask(2);
+            bindTask(2);
+            toast('存在错误选型，' + wrong.join('/') + ' 不属于本次外场单站验证所需工具，请重新选择。', 'err');
+            return;
         }
 
-        /* ---- 工程设计 ---- */
-        function renderDesign(step, content) {
-            designSel = new Array(step.groups.length).fill(-1);
-            designDone = false;
-            content.innerHTML = `<div class="opt-intro">${step.intro}</div>` +
-                step.groups.map((g, gi) => `
-                    <div class="opt-step-label">${gi + 1}. ${g.q}</div>
-                    <div class="opt-grid design-g" data-g="${gi}" style="grid-template-columns:repeat(${Math.min((g.options || []).length, 4)},1fr)">${g.options.map((o, oi) => optCardHtml(o, oi, false)).join('')}</div>`
-                ).join('') +
-                `<div class="design-result" id="designResult"></div>`;
-            content.querySelectorAll('.design-g').forEach(grid => {
-                bindSingleSel(grid, (idx) => { designSel[parseInt(grid.dataset.g)] = idx; });
-            });
-        }
-        function submitDesign(step) {
-            let got = 0;
-            const rows = step.groups.map((g, gi) => {
-                const ok = designSel[gi] === g.correct;
-                if (ok) got++;
-                const pick = o => (typeof o === 'string' ? o : (o && o.name) || '');
-                return `<div>· <b>${g.q}</b>：${pick(g.options[designSel[gi]])} ${ok ? '✅' : '❌（建议：' + pick(g.options[g.correct]) + '）'}</div>`;
-            }).join('');
-            addScore(got);
-            designDone = true;
-            step._scored = true;
-            const res = document.getElementById('designResult');
-            res.innerHTML = rows + `<div style="margin-top:8px;color:#5eff9b">🎯 ${step.result}</div>`;
-            res.classList.add('show');
-            updateNextBtn(step);
-        }
+        /* 规则 1：必须勾选全部 6 个正确选项 */
+        if (miss.length) { toast('仍有 ' + miss.length + ' 项必需工具未勾选：' + miss.join('、'), 'err'); return; }
 
-        // ============ 下一步（按步骤类型校验） ============
-        function nextStep() {
-            const step = steps[currentStep];
-            const content = document.getElementById('dialogContent');
-            switch (step.type) {
-                case 'choice':
-                    if (choiceSel < 0) { alert('请先做出选择后继续'); return; }
-                    break;
-                case 'quiz': {
-                    const wantHeat = step.heatmap === true;
-                    const legacyHeat = step.heatmap === undefined;
-                    if (quizHeatOn(step)) break;
-                    const sub = step.subSteps[quizIdx];
-                    const locked = step._qlock && step._qlock[quizIdx];
-                    if (!locked) {
-                        // 首次点"下一步"：多选在此判定；单选点选时已即时判定
-                        if (sub.multi) {
-                            if (!quizSel.length) { alert('请先选择后继续'); return; }
-                            revealQuiz(step, sub,
-                                content.querySelector('#quizGrid'),
-                                content.querySelector('#quizFb'));
-                            return; // 先揭示对错与解析，再点一次进入下一题
-                        }
-                        if (quizSel.length !== 1) { alert('请先完成本题选择'); return; }
-                        revealQuiz(step, sub,
-                            content.querySelector('#quizGrid'),
-                            content.querySelector('#quizFb'));
-                        return;
-                    }
-                    if (quizIdx < step.subSteps.length - 1) {
-                        quizIdx++;
-                        step._qidx = quizIdx;
-                        renderQuiz(step, content);
-                        updateNextBtn(step);
-                        return;
-                    }
-                    if (wantHeat && !step._heatDrawn) {
-                        step._heatDrawn = true;
-                        renderHeatmap(content);
-                        updateNextBtn(step);
-                        return;
-                    }
-                    if (legacyHeat && !mapShown) {
-                        mapShown = true;
-                        renderHeatmap(content);
-                        updateNextBtn(step);
-                        return;
-                    }
-                    break;
-                }
-                case 'siteselect':
-                    if (!siteConfirmed) { alert('请查看各位置选址分析，确认理想站址后继续'); return; }
-                    break;
-                case 'survey': {
-                    collectSurveyVals(content, step);
-                    const unfilled = countUnfilled(step);
-                    if (unfilled > 0 && !confirm(`还有 ${unfilled} 项未填写（可通过"工程规划"参考或设备测量获得），确认跳过继续吗？`)) return;
-                    break;
-                }
-                case 'design':
-                    if (!designDone) {
-                        if (designSel.some(v => v < 0)) { alert(`请完成全部 ${step.groups.length} 项决策选择`); return; }
-                        submitDesign(step);
-                        return;
-                    }
-                    break;
-            }
-            if (currentStep < steps.length - 1) {
-                goToStep(currentStep + 1);
-            } else {
-                showEndScreen();
-            }
-        }
+        d.passed = true;
+        d.lastErr = [];
+        sc = Math.max(0, 10 - (d.penalty || 0));
+        msg = d.penalty ? `工具选择无误，可以准备出发！解锁下一任务，因误选扣 ${d.penalty} 分，本项得 ${sc} 分` : '工具选择无误，可以准备出发！解锁下一任务，本项得 10 分';
+    }
 
-        // ============ 跳过对话 ============
-        function skipDialog() {
-            nextStep();
-        }
+    if (i === 3) {
+        const d = S.d['t4'];
+        if (!d.routed) { toast('请先生成导航路线', 'err'); return; }
+        sc = 10;
+        msg = '路线规划完成，得 10 分';
+    }
 
-        // ============ 显示结束画面 ============
-        function showEndScreen() {
-            const pct = scoreMax ? Math.round(score / scoreMax * 100) : 100;
-            const stars = pct >= 90 ? 5 : pct >= 75 ? 4 : pct >= 60 ? 3 : pct >= 40 ? 2 : 1;
-            const comment = pct >= 90 ? '优秀！你就是王牌传输线路设计工程师！' :
-                pct >= 75 ? '良好！离专家只差一点点！' :
-                pct >= 60 ? '合格！继续加油！' : '再接再厉，回看流程再来一次！';
-            document.getElementById('scoreBox').innerHTML = `
-                <div class="score-num">${score}<span> / ${scoreMax}</span></div>
-                <div class="score-stars">${'⭐'.repeat(stars)}${'☆'.repeat(5 - stars)}</div>
-                <div class="score-cmt">${comment}</div>`;
-            document.getElementById('endScreen').classList.add('show');
-        }
+    if (i === 4) {
+        const pts = S.d['t5'].pts;
+        if (pts.filter(p => p && p.rsrp != null && p.sinr != null).length < 5) { toast('请完成全部 5 个采样点的指标采集', 'err'); return; }
+        const ok = pts.filter(p => p.rsrp >= RSRP_MIN && p.sinr >= SINR_MIN).length;
+        sc = Math.round(30 * ok / 5);
+        msg = `覆盖测试完成，${ok}/5 点达标，得 ${sc} 分`;
+    }
 
-        // ============ 重新开始 ============
-        function restart() {
-            score = 0; quizIdx = 0; quizSel = []; quizDone = false; mapShown = false;
-            choiceSel = -1; siteSel = -1; siteConfirmed = false; surveyTab = 0;
-            surveyMeasured = new Set(); designSel = new Array((steps.find(s => s.type === 'design') || { groups: [] }).groups.length || 4).fill(-1); designDone = false;
-            steps.forEach(s => {
-                s._scored = undefined; s._qlock = undefined;
-                s._qidx = 0; s._heatDrawn = false; s._tab = 0;
-                s.fields && s.fields.forEach(f => { f._val = ''; f._measured = false; });
-            });
-            document.getElementById('endScreen').classList.remove('show');
-            goToStep(0);
-        }
+    if (i === 5) {
+        const d = S.d['t6'];
+        if (!d.voice || !d.video || !d.data) { toast('请完成语音、视频、数据三项业务拨测', 'err'); return; }
+        const ar = d.voice.calls ? d.voice.connected / d.voice.calls * 100 : 0;
+        const dr = d.voice.calls ? d.voice.dropped / d.voice.calls * 100 : 100;
+        let s = 20;
+        if (ar < 95) s -= 8;
+        if (dr > 3) s -= 6;
+        if (!(d.video.mos >= 3.5)) s -= 3;
+        if (!(d.data.dl >= 500)) s -= 3;
+        sc = Math.max(0, s);
+        msg = `业务测试完成，得 ${sc} 分`;
+    }
 
-        // ============ 返回主菜单 ============
-        function goBack() {
-            window.location.href = '/';
-        }
+    if (i === 6) {
+        const cells = S.d['t7'].cells;
+        if (cells.some(c => c.ok === null)) { toast('仍有邻区未完成切换验证', 'err'); return; }
+        const ok = cells.filter(c => c.ok).length;
+        if (ok < cells.length) { toast('存在切换失败邻区，请补配邻区关系后重新验证', 'err'); return; }
+        sc = 20;
+        msg = '邻区切换全部成功，得 20 分';
+    }
 
-        // ============ 时钟 ============
-        function updateClock() {
-            const now = new Date();
-            const pad = n => String(n).padStart(2, '0');
-            document.getElementById('clockDate').textContent =
-                `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
-            document.getElementById('clockTime').textContent =
-                `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-        }
+    S.done[i] = true;
+    S.score[i] = sc;
+    save();
+    toast(msg, 'ok');
 
-        // ============ AI生成实训 ============
-        function showGenPanel() {
-            document.getElementById('genMask').classList.add('show');
-            document.getElementById('genForm').style.display = 'block';
-            document.getElementById('genLoading').classList.remove('show');
-            document.getElementById('genBtn').disabled = false;
-        }
-        function hideGenPanel() {
-            document.getElementById('genMask').classList.remove('show');
-        }
-        let genTimer = null;
-        function startGenLoading() {
-            const lines = [
-                '正在梳理"接报→研判→现场→处置→验收"工程全流程…',
-                '正在编写告警研判与诊断推理题目…',
-                '正在设计仪表实测数据与判定门限…',
-                '正在布置误判陷阱与安全红线考点…',
-                '正在生成处置方案、验收标准与复盘总结…'
-            ];
-            let sec = 0, li = 0;
-            document.getElementById('genLoadSub').textContent = lines[0];
-            document.getElementById('genLoadSec').textContent = '0';
-            stopGenLoading();
-            genTimer = setInterval(() => {
-                sec++;
-                document.getElementById('genLoadSec').textContent = sec;
-                if (sec % 8 === 0) { li = (li + 1) % lines.length; document.getElementById('genLoadSub').textContent = lines[li]; }
-            }, 1000);
-        }
-        function stopGenLoading() {
-            if (genTimer) { clearInterval(genTimer); genTimer = null; }
-        }
-        function backToGenForm() {
-            stopGenLoading();
-            document.getElementById('genForm').style.display = 'block';
-            document.getElementById('genLoading').classList.remove('show');
-            document.getElementById('genBtn').disabled = false;
-        }
-        async function generateScenario() {
-            const topic = document.getElementById('genTopic').value.trim();
-            const question = document.getElementById('genQuestion').value.trim();
-            if (!topic) { alert('请输入场景主题'); return; }
+    if (i < 7) {
+        S.step = i + 1;
+        save();
+        render();
+        document.getElementById('body').scrollTop = 0;
+    } else {
+        render();
+    }
+}
 
-            // 切换到加载状态
-            document.getElementById('genForm').style.display = 'none';
-            document.getElementById('genLoading').classList.add('show');
-            document.getElementById('genBtn').disabled = true;
-            startGenLoading();
+/* ---------------- 报告导出 ---------------- */
+function exportReport() {
+    const total = S.score.reduce((a, b) => a + b, 0);
+    const now = new Date().toLocaleString('zh-CN');
+    const pts = S.d['t5'].pts;
+    const v = S.d['t6'].video || {}, dt = S.d['t6'].data || {}, vo = S.d['t6'].voice || {};
 
-            // 前端 500 秒超时保护（略大于后端 480 秒墙钟）
-            const ctrl = new AbortController();
-            const timeoutId = setTimeout(() => ctrl.abort(), 500000);
-            try {
-                const resp = await fetch('/api/scenario/generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ topic, question }),
-                    signal: ctrl.signal
-                });
-                clearTimeout(timeoutId);
-                const data = await resp.json();
-                if (!resp.ok) {
-                    alert('生成失败：' + (data.error || '未知错误'));
-                    backToGenForm();
-                    return;
-                }
-                // 成功：替换steps并重新初始化
-                stopGenLoading();
-                hideGenPanel();
-                loadNewScenario(data.steps, data.scoreMax, topic);
-            } catch (e) {
-                clearTimeout(timeoutId);
-                const aborted = e.name === 'AbortError';
-                alert(aborted
-                    ? '生成超时（已等待约8分钟），AI 当前排队较忙，请点击"生成实训"重试一次'
-                    : '请求失败：' + e.message);
-                backToGenForm();
-            }
-        }
+    const row = (a, b) => `<tr><td style="color:#666;width:180px">${a}</td><td>${esc(b)}</td></tr>`;
+    const paramRows = Object.keys(PARAM_LABEL).map(k => {
+        const val = k === 'lng' ? STATION.lng : k === 'lat' ? STATION.lat : STATION[k];
+        return row(PARAM_LABEL[k], val);
+    }).join('');
+    const ptRows = POINTS.map((p, i) => {
+        const x = pts[i];
+        return `<tr><td>${p.n}</td><td>${x ? x.rsrp : '--'}</td><td>${x ? x.sinr : '--'}</td><td>${x ? (x.rsrp >= RSRP_MIN && x.sinr >= SINR_MIN ? '达标' : '不达标') : '未采样'}</td></tr>`;
+    }).join('');
 
-        function loadNewScenario(newSteps, newScoreMax, topic) {
-            // 重置所有状态
-            currentStep = 0; score = 0; quizIdx = 0; quizSel = []; quizDone = false; mapShown = false;
-            choiceSel = -1; siteSel = -1; siteConfirmed = false; surveyTab = 0;
-            surveyMeasured = new Set(); designSel = []; designDone = false;
+    const html = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">
+<title>5G基站单站验证实训报告 - ${esc(STATION.name)}</title>
+<style>
+body{font-family:"Microsoft YaHei",sans-serif;max-width:820px;margin:36px auto;padding:0 24px;color:#222;line-height:1.8}
+h1{font-size:22px;text-align:center;margin-bottom:6px}
+.sub{text-align:center;color:#666;font-size:13px;margin-bottom:6px}
+.score{text-align:center;font-size:30px;color:#0a7ac0;font-weight:700;margin:16px 0 26px}
+h2{font-size:15px;border-left:4px solid #0a7ac0;padding-left:10px;margin:24px 0 10px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+td,th{border:1px solid #ddd;padding:7px 10px;text-align:left}
+th{background:#f5f8fa;font-weight:600}
+</style></head><body>
+<h1>5G 基站单站验证实训报告</h1>
+<div class="sub">${esc(STATION.name)} · 基站标识 ${esc(STATION.code)}</div>
+<div class="sub">生成时间：${now}</div>
+<div class="score">${total} / 100 分</div>
+<h2>一、基站基础信息</h2><table>${paramRows}</table>
+<h2>二、设备状态检查</h2><table>
+${row('主设备运行状态', S.d['t2'].dev.main || '未填写')}
+${row('天馈链路状态', S.d['t2'].dev.ant || '未填写')}
+${row('传输链路状态', S.d['t2'].dev.trans || '未填写')}
+${row('告警处理', S.d['t2'].alarms.every(Boolean) ? '全部告警已清除' : '存在未清除告警')}
+</table>
+<h2>三、测试工具与路线</h2><table>
+${row('工具选型', (S.d['t3'].tools || []).join('、') || '未选择')}
+${row('选型判定', (S.d['t3'].passed ? '全选正确，无错误选型' : '未通过') + (S.d['t3'].penalty ? `（误选扣 ${S.d['t3'].penalty} 分）` : ''))}
+${row('随车司机', S.d['t4'].driver || '未预约')}
+${row('路线', S.d['t4'].routed ? '已规划，全程 12.6 km，预计 23 分钟' : '未规划')}
+</table>
+<h2>四、外场信号覆盖测试</h2>
+<table><thead><tr><th>采样点</th><th>RSRP (dBm)</th><th>SINR (dB)</th><th>判定</th></tr></thead><tbody>${ptRows}</tbody></table>
+<h2>五、业务性能测试</h2><table>
+${row('语音接通率 / 掉话率', vo.calls ? (vo.connected / vo.calls * 100).toFixed(1) + '% / ' + (vo.dropped / vo.calls * 100).toFixed(1) + '%' : '未测试')}
+${row('视频时延 / MOS', v.delay != null ? v.delay + ' ms / ' + v.mos : '未测试')}
+${row('下行 / 上行速率', dt.dl != null ? dt.dl + ' / ' + dt.ul + ' Mbps' : '未测试')}
+</table>
+<h2>六、邻区关系验证</h2><table>
+${S.d['t7'].cells.map((c, i) => row('邻区 ' + (i + 1) + '（PCI ' + c.pci + '）', c.ok ? '切换成功' : (c.ok === false ? '切换失败' : '未验证'))).join('')}
+</table>
+<h2>七、验证结论</h2>
+<p>本次单站验证共完成 8 项任务，实训得分 ${total} 分。测试数据均来自本次实训采集，可用于教学存档。</p>
+</body></html>`;
 
-            // AI 返回数据轻度规范化（防御缺失字段导致渲染崩溃）
-            newSteps.forEach(s => {
-                if (s.type === 'survey') {
-                    if (!Array.isArray(s.tabs) || !s.tabs.length) s.tabs = ['现场记录'];
-                    if (!Array.isArray(s.plan) || s.plan.length !== s.tabs.length) {
-                        s.plan = s.tabs.map(() => []);
-                    }
-                }
-                if (s.type === 'quiz' && !Array.isArray(s.subSteps)) s.subSteps = [];
-                if (s.type === 'design' && !Array.isArray(s.groups)) s.groups = [];
-            });
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `5G基站单站验证实训报告_${STATION.code}_${new Date().toISOString().slice(0, 10)}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 
-            // 替换steps数据和满分
-            steps = newSteps;
-            scoreMax = newScoreMax || 12;
-            steps.forEach(s => {
-                s._scored = undefined; s._qlock = undefined;
-                s._qidx = 0; s._heatDrawn = false; s._tab = 0;
-                s.fields && s.fields.forEach(f => { f._val = ''; f._measured = false; });
-            });
+    if (!S.done[7]) {
+        S.done[7] = true;
+        S.score[7] = 0;
+        save();
+        render();
+    }
+    submitScenarioResult();
+    toast('报告已导出到下载目录', 'ok');
+}
 
-            // 更新页面标题
-            const titleEl = document.getElementById('sceneTitle');
-            if (titleEl) titleEl.textContent = topic + ' · 虚拟仿真实训';
-            const topTitle = document.querySelector('.top-bar .title');
-            if (topTitle) topTitle.textContent = topic + ' 虚拟仿真实训平台';
+/* ---------------- 成绩回传（接入能力画像） ---------------- */
+function submitScenarioResult() {
+    if (S._reported) return;
+    S._reported = true;
+    save();
+    try {
+        fetch('/api/scenario-result', { method: 'POST', credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ scene_id: 'ssv', scene_name: '5G 单站验证',
+                score: S.score.reduce((a, b) => a + b, 0), score_max: 100 }) }).catch(() => {});
+    } catch (e) {}
+}
 
-            // 隐藏结束画面
-            document.getElementById('endScreen').classList.remove('show');
-            // 显示AI生成内容标识（合规要求）
-            const genBadge = document.getElementById('aiGenBadge');
-            if (genBadge) genBadge.style.display = 'block';
-            // 重新初始化
-            init();
-        }
+/* ---------------- 时钟 ---------------- */
+function tick() {
+    const el = document.getElementById('clock');
+    if (el) el.textContent = new Date().toLocaleString('zh-CN', { hour12: false });
+}
+setInterval(tick, 1000);
 
-        // 启动
-        init();
-    </script>
-
-    <!-- 全局桌宠 Desktop Pet -->
-    <link rel="stylesheet" href="/static/desktop_pet.css">
-    <script src="/static/desktop_pet.js" defer></script>
+/* ---------------- 启动 ---------------- */
+tick();
+render();
+if (S.done[7]) submitScenarioResult();   // 历史已完成的实训，补传一次成绩
+</script>
 </body>
 </html>

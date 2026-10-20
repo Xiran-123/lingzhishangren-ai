@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, Response, session, send_from_directory, redirect
+from flask import Flask, render_template, request, jsonify, Response, session, send_from_directory, redirect, url_for
 import requests
 import base64
 import re
@@ -62,7 +62,9 @@ def _load_siliconflow_key():
 
 API_KEY = _load_siliconflow_key()
 API_URL = "https://api.siliconflow.cn/v1/chat/completions"
-MODEL_NAME = "Pro/moonshotai/Kimi-K2.6"
+MODEL_KIMI  = "Pro/moonshotai/Kimi-K2.6"
+MODEL_FLASH = "deepseek-ai/DeepSeek-V4.1-Flash"
+MODEL_NAME  = MODEL_FLASH  # 默认走 Flash，只有剧情 AI 对话 (is_scenario=True) 保留 Kimi
 
 # ====================== 访问密码配置 ======================
 ACCESS_PASSWORD = "tongxin2024"  # 可以改成你想要的密码
@@ -2410,7 +2412,7 @@ def build_student_analysis_prompt(student: Dict):
 def analysis_sse_generator(system_content: str, prompt: str, max_tokens: int = 1200, temperature: float = 0.7):
     """通用AI分析流式生成器（SSE）：data: {"content": "..."}，结束发送 [DONE]"""
     payload = {
-        "model": MODEL_NAME,
+        "model": MODEL_FLASH,
         "messages": [
             {"role": "system", "content": system_content},
             {"role": "user", "content": prompt}
@@ -3028,6 +3030,40 @@ def serve_avatar(filename):
     return send_from_directory(AVATAR_DIR, filename)
 
 
+@app.route('/api/update-class', methods=['POST'])
+def update_my_class():
+    """学生自主修改所在班级（仅限已创建的班级）"""
+    if not session.get('authenticated') or session.get('role') != 'student':
+        return jsonify({'error': '仅学生可修改班级'}), 403
+    data = request.get_json(silent=True) or {}
+    class_name = str(data.get('class_name', '')).strip()
+    if not class_name:
+        return jsonify({'error': '请选择班级'}), 400
+    if len(class_name) > 30:
+        return jsonify({'error': '班级名称过长'}), 400
+    valid_names = {c.get('name') for c in load_classes() if c.get('name')}
+    if valid_names and class_name not in valid_names:
+        return jsonify({'error': '班级不存在，请从列表中选择'}), 400
+    student_no = str(session.get('student_no') or '')
+    student_name = session.get('student_name', '')
+    students = load_students()
+    target = next((s for s in students
+                   if (student_no and s.get('student_no') == student_no)
+                   or (not student_no and s.get('name') == student_name)), None)
+    if target is None:
+        return jsonify({'error': '未找到学生档案，请联系老师'}), 404
+    old = target.get('class_name', '')
+    target['class_name'] = class_name
+    save_students(students)
+    session['class_name'] = class_name
+    try:
+        security.audit('class_self_update', target=class_name,
+                       detail=f'学生 {student_name}({student_no}) 修改班级: {old or "未分班"} -> {class_name}')
+    except Exception:
+        pass
+    return jsonify({'success': True, 'class_name': class_name})
+
+
 # ====================== 班级管理API ======================
 @app.route('/api/classes', methods=['GET'])
 def get_classes():
@@ -3541,10 +3577,14 @@ def chat_endpoint():
         if current_role == 'student' and (current_student_no or current_student_name) and persona != 'pet':
             update_student_profile(current_student_no or current_student_name, user_message, True)
         
+        # 选择模型：剧情 AI (is_scenario=True) 保留 Kimi 质量，其余全部走 Flash 提速省费
+        model_choice = MODEL_KIMI if (is_scenario and not persona) else MODEL_FLASH
+
         if stream:
             # 流式输出 - 记录所有对话到日志
             return Response(
-                stream_generator(headers, messages, temperature, max_tokens, user_message),
+                stream_generator(headers, messages, temperature, max_tokens, user_message,
+                                 model_name=model_choice),
                 content_type='text/event-stream',
                 headers={
                     'Cache-Control': 'no-cache, no-transform',
@@ -3554,7 +3594,7 @@ def chat_endpoint():
         else:
             # 非流式输出
             payload = {
-                "model": MODEL_NAME,
+                "model": model_choice,
                 "messages": messages,
                 "temperature": temperature,
                 "max_tokens": max_tokens,
@@ -3730,9 +3770,9 @@ def api_add_conv_message(cid):
     return jsonify({'ok': True, 'summary': conv_summary(conv)})
 
 
-def stream_generator(headers, messages, temperature, max_tokens, search_query=None):
+def stream_generator(headers, messages, temperature, max_tokens, search_query=None, model_name=None):
     payload = {
-        "model": MODEL_NAME,
+        "model": model_name or MODEL_FLASH,
         "messages": messages,
         "temperature": temperature,
         "max_tokens": max_tokens,
@@ -5225,6 +5265,170 @@ def get_learning_curve():
     })
 
 
+@app.route('/api/today-progress', methods=['GET'])
+def api_today_progress():
+    """今日学习进度（日期口径与学习记录写入保持一致）"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+
+    student_name = session.get('student_name', '')
+    today = datetime.now().strftime('%Y-%m-%d')
+    records = load_learning_records().get(student_name, [])
+    todays = [r for r in records if r.get('date') == today]
+
+    done = len(todays)
+    wrong = sum(1 for r in todays if r.get('activity_type') == 'wrong_question')
+    scores = [r.get('score') for r in todays if r.get('score') is not None]
+    goal = 10
+    percent = min(100, int(round(done * 100.0 / goal))) if goal else 0
+    accuracy = round((1 - wrong / float(done)) * 100, 1) if done else 0.0
+
+    return jsonify({
+        'success': True,
+        'date': today,
+        'done': done,
+        'goal': goal,
+        'percent': percent,
+        'wrong': wrong,
+        'accuracy': accuracy,
+        'avg_score': round(sum(scores) / len(scores), 1) if scores else 0
+    })
+
+
+# ====================== 剧情实训成绩回传（接入学生能力画像） ======================
+
+# 固定副本未携带题型明细时的默认能力维度映射
+SCENE_DEFAULT_DIMS = {
+    'ssv': ['equipment_operation', 'rf_engineering', 'troubleshooting'],
+    'cluster': ['equipment_operation', 'rf_engineering', 'safety_awareness', 'troubleshooting'],
+    'grid': ['equipment_operation', 'rf_engineering', 'safety_awareness', 'troubleshooting'],
+}
+VALID_DIM_IDS = {a['id'] for a in COMPETENCE_AREAS}
+
+
+def _aggregate_scenario_dims(details, scene_id, rate):
+    """按能力维度聚合得分率：优先用前端上报的题型明细，缺省回退到副本默认映射"""
+    dim_rates = {}
+    for d in details[:20]:
+        if not isinstance(d, dict):
+            continue
+        dim, got, mx = d.get('dim'), d.get('got', 0), d.get('max', 0)
+        if dim not in VALID_DIM_IDS:
+            continue
+        if not isinstance(got, (int, float)) or isinstance(got, bool) or \
+           not isinstance(mx, (int, float)) or isinstance(mx, bool) or mx <= 0:
+            continue
+        dim_rates.setdefault(dim, []).append(min(100.0, max(0.0, got / mx * 100)))
+
+    if dim_rates:
+        return {dim: sum(rs) / len(rs) for dim, rs in dim_rates.items()}
+    # 无明细：整体得分率平均计入该副本的默认维度
+    return {dim: rate for dim in SCENE_DEFAULT_DIMS.get(scene_id, [])}
+
+
+@app.route('/api/scenario-result', methods=['POST'])
+def api_scenario_result():
+    """剧情实训成绩回传：反哺能力画像 + 学习活动 + 成绩历史存档"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'student':
+        return jsonify({'error': '仅记录学生成绩'}), 403
+
+    data = request.get_json(silent=True) or {}
+    scene_id = str(data.get('scene_id', ''))[:40]
+    scene_name = str(data.get('scene_name', ''))[:60]
+    score, score_max = data.get('score'), data.get('score_max')
+    details = data.get('details') if isinstance(data.get('details'), list) else []
+
+    if not scene_id or not scene_name:
+        return jsonify({'error': '缺少副本标识'}), 400
+    if not isinstance(score, (int, float)) or isinstance(score, bool) or \
+       not isinstance(score_max, (int, float)) or isinstance(score_max, bool) or score_max <= 0:
+        return jsonify({'error': '分数格式错误'}), 400
+    score = max(0.0, min(float(score), float(score_max)))
+    rate = round(score / float(score_max) * 100, 1)
+
+    students = load_students()
+    student = next((s for s in students if s.get('student_no') == session.get('student_no')), None)
+    if not student:
+        return jsonify({'error': '学生档案不存在'}), 404
+
+    # 1) 反哺能力画像（与作业反哺同口径：得分率加权平均）
+    dim_scores = _aggregate_scenario_dims(details, scene_id, rate)
+    if dim_scores:
+        # 兼容老档案：字段缺失或为空字典时补全全部维度键
+        if not isinstance(student.get('competence_analysis'), dict) or not student['competence_analysis']:
+            student['competence_analysis'] = {a['id']: {'count': 0, 'score': 0.0} for a in COMPETENCE_AREAS}
+        for dim, dscore in dim_scores.items():
+            if dim not in student['competence_analysis']:
+                student['competence_analysis'][dim] = {'count': 0, 'score': 0.0}
+            area = student['competence_analysis'][dim]
+            area['count'] += 1
+            area['score'] = round((area['score'] * (area['count'] - 1) + dscore) / area['count'], 2)
+
+    # 2) 记录学习活动（驱动学习曲线与今日进度环）
+    record_learning_activity(student.get('name', ''), 'scenario',
+                             knowledge_point=scene_name, score=rate)
+
+    # 3) 存档成绩历史（每人保留最近 50 次）
+    history = student.setdefault('scenario_results', [])
+    history.append({
+        'scene_id': scene_id,
+        'scene_name': scene_name,
+        'score': round(score, 1),
+        'score_max': round(float(score_max), 1),
+        'rate': rate,
+        'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    })
+    if len(history) > 50:
+        student['scenario_results'] = history[-50:]
+
+    save_students(students)
+    return jsonify({'success': True, 'rate': rate, 'dims': sorted(dim_scores.keys())})
+
+
+@app.route('/api/scenario-results', methods=['GET'])
+def api_scenario_results():
+    """查询本人剧情实训成绩历史"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    students = load_students()
+    student = next((s for s in students if s.get('student_no') == session.get('student_no')), None)
+    return jsonify({'success': True, 'results': (student or {}).get('scenario_results', [])})
+
+
+@app.route('/api/teacher-files', methods=['GET'])
+def api_teacher_files():
+    """老师共享文件：上传历史里非学生身份上传的文件（老师登录时 uploader 存老师名）"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+
+    try:
+        student_names = {s.get('name') for s in load_students() if s.get('name')}
+    except Exception:
+        student_names = set()
+
+    files = []
+    for h in load_upload_history():
+        if not h.get('download_name'):
+            continue  # 源文件已删除的孤儿记录不展示
+        uploader = h.get('uploader') or ''
+        if uploader in student_names:
+            continue  # 学生上传的不算老师共享
+        files.append({
+            'filename': h.get('filename'),
+            'download_name': h.get('download_name'),
+            'file_ext': (h.get('file_ext') or '').lower(),
+            'upload_time': h.get('upload_time'),
+            'uploader': uploader,
+            'preview_ready': bool(h.get('preview_ready')),
+            'page_count': h.get('page_count', 0),
+            'preview_dir': h.get('preview_dir', '')
+        })
+    files.sort(key=lambda x: x.get('upload_time') or '', reverse=True)
+    return jsonify({'success': True, 'files': files[:20]})
+
+
 @app.route('/api/job-match', methods=['GET'])
 def get_job_match():
     """获取岗位匹配度"""
@@ -5462,6 +5666,30 @@ def scenario_template_c():
     return render_template('scenario_template_c.html')
 
 
+@app.route('/scenario-cluster')
+def scenario_cluster():
+    """剧情演练副本二：5G 簇优化（簇2）十步实训"""
+    if not session.get('authenticated'):
+        return redirect('/')
+    return render_template('scenario_cluster.html')
+
+
+@app.route('/scenario-grid')
+def scenario_grid():
+    """剧情演练副本三：5G 网格优化（网格1）十步实训"""
+    if not session.get('authenticated'):
+        return redirect('/')
+    return render_template('scenario_grid.html')
+
+
+@app.route('/scenario-ai')
+def scenario_ai():
+    """AI 自定义剧情：任意主题自动生成实训剧本"""
+    if not session.get('authenticated'):
+        return redirect('/')
+    return render_template('scenario_ai.html')
+
+
 # ====================== AI 自动生成场景实训 ======================
 
 SCENARIO_GEN_PROMPT = """你是通信与电子信息工程领域的资深实训专家，擅长把真实工程项目设计成"沉浸式、强交互、有陷阱"的虚拟仿真训练剧本。请根据用户提供的场景主题与要求，生成一套【长流程、高保真】的交互式实训。
@@ -5495,6 +5723,8 @@ SCENARIO_GEN_PROMPT = """你是通信与电子信息工程领域的资深实训�
 5. 工程约束：体现时间压力、人手/备件/预算受限、多专业协同、客户沟通等真实约束。
 6. 文案有现场感：像真实工单和师傅带教，简洁有力；feedback每条1-2句，先判定再讲原理，避免长篇大论。
 7. 内容用<b>加粗</b>关键词、<br>换行；所有文本字段值内严禁出现英文双引号(")和反斜杠(\)，引用话语一律用中文引号「」，也不要写裸换行符（用<br>代替）；不要出现"AI/模型/本剧本"等穿帮词。
+8. 仪表-物理量必须匹配（硬性铁律）：measure的device只能测对应物理量——laser=长度/高度/距离/挂高，infrared=温度/温差，multimeter=低压(≤1000V)电压/小电流(≤1000A)/通断，ground_tester=接地电阻/土壤电阻率，otdr=光缆长度/衰耗/断点位置，opm=光功率dBm，spectrum=频谱/干扰/场强(dBm)，site_master=天馈电气参数（方位角/下倾角/驻波比/馈损）。严禁错配：功率/负荷/容量/面积/荷载/带宽等无法仪表直读的量不配measure（改select或input）；高压(≥1kV)电压严禁万用表直读（改"查PT柜表计"类input）；移动网络覆盖指标（RSRP/SINR/下载速率）必须用路测终端而非频谱仪/天馈仪，此类字段不配measure、用input（ph提示"路测终端读数"）。
+9. 时间约束符合行业实际：设计周期、建设工期、验收周期要符合真实工程节奏（如数据中心建设以月/年计），不得出现明显失真的"超级工期"；时限压力用"阶段性节点"表达而非整体失真。
 
 ══════════ 三、六种步骤类型的JSON格式（严格遵守） ══════════
 
@@ -5529,7 +5759,7 @@ x∈[5,90]，y∈[15,75]，仅一个 ok:true。
   {"tab":0,"key":"字段名","type":"select","opts":["选项A","选项B","选项C"]},
   {"tab":0,"key":"字段名","type":"input","ph":"点击测量","measure":{"device":"site_master","icon":"📟","name":"仪表名","value":"实测值含单位"}}]}
 - tabs 2-4个；plan 与 tabs 一一对应（参考资料弹窗用）；fields 的 tab 为索引。
-- device 可选：site_master(天馈仪)、otdr(光时域反射仪)、infrared(红外测温)、multimeter(万用表)、ground_tester(接地电阻仪)、opm(光功率计)、laser(激光测距)、spectrum(频谱仪)，按主题选，icon 用合适emoji。
+- device 可选：site_master(天馈仪)、otdr(光时域反射仪)、infrared(红外测温)、multimeter(万用表)、ground_tester(接地电阻仪)、opm(光功率计)、laser(激光测距)、spectrum(频谱仪)，按主题选，icon 用合适emoji；device与物理量的匹配必须遵守高保真要求第8条。
 - measure 测量值必须与后续诊断题数据一致。
 
 6. design 最终方案决策
@@ -5543,6 +5773,86 @@ scoreMax = 所有quiz的subSteps总数（每题1分）+ siteselect个数×2 + �
 
 ══════════ 五、输出前自检 ══════════
 步骤数10-12；题型与字段完整；x/y在范围内；correct/required索引不越界；plan与tabs数量一致；数据前后自洽；JSON可被json.loads直接解析。"""
+
+
+def _sanitize_scenario_steps(steps):
+    """逐题校验 AI 生成的步骤，修复/剔除不可作答的题目：
+    - quiz 小题：单选 correct 必须是合法索引；多选 required 必须是非空合法索引数组，
+      多选 required 非法但 correct 合法时降级为单选，仍非法则剔除该小题
+    - choice：必须存在 good 选项，多个 good 只保留第一个
+    - siteselect：只允许一个 ok:true，无 ok 则剔除整个步骤
+    - design：correct 非法索引的决策组剔除
+    - survey：measure 字段残缺的降级为普通手填项
+    """
+    valid_types = {'text', 'choice', 'quiz', 'siteselect', 'survey', 'design'}
+    list_fields = {'choice': 'options', 'quiz': 'subSteps', 'siteselect': 'spots',
+                   'survey': 'fields', 'design': 'groups'}
+
+    def _valid_idx(v, n):
+        return isinstance(v, int) and not isinstance(v, bool) and 0 <= v < n
+
+    cleaned = []
+    for st in steps:
+        if not isinstance(st, dict) or st.get('type') not in valid_types:
+            break
+        lf = list_fields.get(st['type'])
+        if lf and not isinstance(st.get(lf), list):
+            break
+        t = st['type']
+        if t == 'quiz':
+            subs = []
+            for sub in st.get('subSteps', []):
+                if not isinstance(sub, dict) or not isinstance(sub.get('options'), list) or len(sub['options']) < 2:
+                    continue
+                n = len(sub['options'])
+                if sub.get('multi'):
+                    req = sub.get('required')
+                    if isinstance(req, list) and req and all(_valid_idx(v, n) for v in req):
+                        subs.append(sub)
+                    elif _valid_idx(sub.get('correct'), n):
+                        sub.pop('multi', None); sub.pop('required', None)
+                        subs.append(sub)
+                    # 两个都非法：剔除该小题
+                elif _valid_idx(sub.get('correct'), n):
+                    subs.append(sub)
+            if not subs:
+                break  # 连环题全部小题非法，丢弃该步及后续（视为截断）
+            st['subSteps'] = subs
+        elif t == 'choice':
+            opts = st.get('options', [])
+            goods = [o for o in opts if isinstance(o, dict) and o.get('good')]
+            if not goods:
+                break
+            seen = False
+            for o in opts:
+                if isinstance(o, dict) and o.get('good'):
+                    if seen:
+                        o.pop('good', None)
+                    seen = True
+        elif t == 'siteselect':
+            spots = st.get('spots', [])
+            has_ok = False
+            for sp in spots:
+                if isinstance(sp, dict) and sp.get('ok'):
+                    if has_ok:
+                        sp.pop('ok', None)
+                    has_ok = True
+            if not has_ok:
+                break
+        elif t == 'design':
+            groups = [g for g in st.get('groups', [])
+                      if isinstance(g, dict) and isinstance(g.get('options'), list) and _valid_idx(g.get('correct'), len(g['options']))]
+            if not groups:
+                break
+            st['groups'] = groups
+        elif t == 'survey':
+            for f in st.get('fields', []):
+                if isinstance(f, dict) and f.get('measure'):
+                    m = f['measure']
+                    if not isinstance(m, dict) or not m.get('value') or not m.get('device'):
+                        f.pop('measure', None)
+        cleaned.append(st)
+    return cleaned
 
 
 @app.route('/api/scenario/generate', methods=['POST'])
@@ -5572,7 +5882,7 @@ def api_generate_scenario():
             {"role": "user", "content": user_prompt}
         ]
         payload = {
-            "model": MODEL_NAME,
+            "model": MODEL_FLASH,
             "messages": messages,
             "temperature": 0.7,
             "max_tokens": 12000,
@@ -5690,22 +6000,12 @@ def api_generate_scenario():
         if not steps or not isinstance(steps, list):
             return jsonify({'error': 'AI生成的实训步骤为空或格式错误'}), 500
 
-        # 安全校验：截断补全可能产生残缺尾步（类型被截短、关键列表字段缺失），
-        # 残缺只可能出现在尾部，丢弃尾步保住前面完整步骤，避免整单失败
-        valid_types = {'text', 'choice', 'quiz', 'siteselect', 'survey', 'design'}
-        list_fields = {'choice': 'options', 'quiz': 'subSteps', 'siteselect': 'spots',
-                       'survey': 'fields', 'design': 'groups'}
-        clean_steps = []
-        for st in steps:
-            if not isinstance(st, dict) or st.get('type') not in valid_types:
-                break
-            lf = list_fields.get(st['type'])
-            if lf and not isinstance(st.get(lf), list):
-                break
-            clean_steps.append(st)
-        if len(clean_steps) < len(steps):
-            print(f"[场景生成] 丢弃 {len(steps) - len(clean_steps)} 个残缺尾步（截断挽救）")
-        steps = clean_steps
+        # 逐题校验 + 截断挽救：剔除残缺尾步与不可作答的题目（correct 非法等），
+        # 保证返回给前端的每一道题都有正确答案且可正常计分
+        before = len(steps)
+        steps = _sanitize_scenario_steps(steps)
+        if len(steps) < before:
+            print(f"[场景生成] 校验修复：丢弃 {before - len(steps)} 个残缺/不可作答步骤")
         if not steps:
             return jsonify({'error': 'AI生成的实训步骤为空或格式错误，请重试一次'}), 500
 
@@ -6032,7 +6332,7 @@ def grade_text_answers_by_ai(items: List[Dict]) -> Dict[str, Dict]:
             API_URL,
             headers={"Content-Type": "application/json", "Authorization": f"Bearer {API_KEY}"},
             json={
-                "model": MODEL_NAME,
+                "model": MODEL_FLASH,
                 "messages": [
                     {"role": "system", "content": sys_prompt},
                     {"role": "user", "content": "请批改以下主观题：\n\n" + "\n\n".join(blocks)},
@@ -6563,7 +6863,7 @@ def _parse_job_competence(job_dict: Dict) -> Dict:
             API_URL,
             headers={"Content-Type": "application/json", "Authorization": f"Bearer {API_KEY}"},
             json={
-                "model": MODEL_NAME,
+                "model": MODEL_FLASH,
                 "messages": [
                     {"role": "system", "content": sys_prompt},
                     {"role": "user", "content": user_prompt},
@@ -6924,18 +7224,19 @@ def save_interview_records(records: List[Dict]):
 
 
 def _get_cases_for_interview(company: str, position: str, interview_type: str) -> List[Dict]:
-    """按企业+岗位+面试类型检索相关案例"""
+    """按企业+岗位+面试类型检索相关案例（带随机打散，每次面试拿到的题库顺序不同）"""
+    import random as _r
     cases = load_interview_cases()
     exact = [c for c in cases if c.get('company') == company and c.get('position') == position and c.get('interview_type') == interview_type]
     if exact:
-        return exact[:3]
+        _r.shuffle(exact); return exact[:3]
     company_type = [c for c in cases if c.get('company') == company and c.get('interview_type') == interview_type]
     if company_type:
-        return company_type[:3]
+        _r.shuffle(company_type); return company_type[:3]
     type_only = [c for c in cases if c.get('interview_type') == interview_type]
     if type_only:
-        return type_only[:3]
-    return cases[:3]
+        _r.shuffle(type_only); return type_only[:3]
+    fallback = list(cases); _r.shuffle(fallback); return fallback[:3]
 
 
 def _build_interviewer_system_prompt(student_name, company, position, interview_type, difficulty, competence_vector, student_extras, case_questions):
@@ -6962,10 +7263,16 @@ def _build_interviewer_system_prompt(student_name, company, position, interview_
 
     case_text = ""
     if case_questions:
-        for i, cq in enumerate(case_questions[:10], 1):
-            q = cq.get('question', '')
-            kp = cq.get('key_points', [])
-            case_text += f"\n{i}. {q}\n   考察要点：{', '.join(kp) if kp else '无'}"
+        # 只给考察知识点关键词，绝对不给原题！让 LLM 自己组织问题
+        all_kps = []
+        for cq in case_questions[:10]:
+            kps = cq.get('key_points', [])
+            if kps:
+                all_kps.extend(kps)
+        all_kps = list(dict.fromkeys(all_kps))[:20]  # 去重，最多20个
+        if all_kps:
+            case_text = f"【考察知识点参考】（仅方向参考，绝对不要照搬原题，请根据这些方向自行组织自然的面试官式问题）\n" + \
+                "、".join(all_kps)
 
     if interview_type == 'HR面':
         focus = "请侧重考察综合素质：团队协作、沟通表达、职业规划、抗压能力、责任心等，不涉及具体技术细节。"
@@ -6991,11 +7298,11 @@ def _build_interviewer_system_prompt(student_name, company, position, interview_
 【候选人附加信息】
 {extras_text}
 
-【参考题库】（从知识库检索，可灵活使用但不要照搬）
-{case_text if case_text else "（无参考题库，请根据岗位要求自行出题）"}
+{case_text}
 
 【面试方向引导】
 请根据候选人能力画像，优先考察其薄弱维度相关的知识点，同时验证其优势维度是否名副其实。
+⚠️ 核心原则：你必须自己组织全新的、自然的面试官式问题，绝对不要从参考资料里抄任何现成题目。每场面试的问题都必须不同。
 面试开始时，请先做一个简短的开场介绍（不超过100字），然后提出第一个问题。"""
 
 
@@ -9531,7 +9838,7 @@ def api_troubleshoot(task_id):
     }
 
     payload = {
-        "model": MODEL_NAME,
+        "model": MODEL_FLASH,
         "messages": messages,
         "temperature": 0.6,
         "max_tokens": 1500,
@@ -9741,7 +10048,7 @@ def api_task_evaluation(task_id):
             "Authorization": f"Bearer {API_KEY}"
         }
         payload = {
-            "model": MODEL_NAME,
+            "model": MODEL_FLASH,
             "messages": messages,
             "temperature": 0.5,
             "max_tokens": 1000,
@@ -9904,7 +10211,10 @@ def mock_interview_page():
     """AI模拟面试页面"""
     if not session.get('authenticated'):
         return render_template('login.html')
-    return render_template('mock_interview.html')
+    resp = app.make_response(render_template('mock_interview.html'))
+    resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    resp.headers['Pragma'] = 'no-cache'
+    return resp
 
 
 @app.route('/interview-cases-page')
@@ -10038,15 +10348,15 @@ def api_mock_interview_start():
     """开始面试（SSE流式返回面试官开场白）"""
     if not session.get('authenticated'):
         return jsonify({'error': '请先登录'}), 401
-    if session.get('role') != 'student':
-        return jsonify({'error': '仅学生可参加模拟面试'}), 403
-    student_no = session.get('student_no', '')
-    student_name = session.get('student_name', '')
+    # 允许 teacher/admin 也能参加（便于体验/演示），非 student 角色使用默认占位
+    student_no = session.get('student_no', '') if session.get('role') == 'student' else '0000000000000'
+    student_name = session.get('student_name', '') if session.get('role') == 'student' else session.get('student_name') or '访客'
+    interviewer_is_teacher = session.get('role') != 'student'
     body = request.get_json() or {}
-    company = body.get('company', '自定义企业')
-    position = body.get('position', '通信工程师')
-    interview_type = body.get('interview_type', '技术面')
-    difficulty = body.get('difficulty', '中等')
+    company = body.get('company') or '自定义企业'
+    position = body.get('position') or '通信工程师'
+    interview_type = body.get('interview_type') or '技术面'
+    difficulty = body.get('difficulty') or '中等'
     comp = _get_student_competence_vector(student_no)
     case_list = _get_cases_for_interview(company, position, interview_type)
     case_questions = []
@@ -10072,7 +10382,10 @@ def api_mock_interview_start():
     records.append(record)
     save_interview_records(records)
     messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": "请开始面试。"}]
-    payload = {"model": MODEL_NAME, "messages": messages, "temperature": 0.7, "max_tokens": 800, "stream": True, "enable_thinking": False}
+    import random as _r
+    payload = {"model": MODEL_FLASH, "messages": messages, "temperature": 0.8,
+               "max_tokens": 800, "stream": True, "enable_thinking": False,
+               "seed": _r.randint(0, 999999)}
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {API_KEY}"}
 
     def generate(interview_id=interview_id):
@@ -10126,8 +10439,6 @@ def api_mock_interview_chat():
     """面试对话（SSE流式返回面试官回复）"""
     if not session.get('authenticated'):
         return jsonify({'error': '请先登录'}), 401
-    if session.get('role') != 'student':
-        return jsonify({'error': '仅学生可参加模拟面试'}), 403
     body = request.get_json() or {}
     interview_id = body.get('interview_id', '')
     student_message = body.get('message', '').strip()
@@ -10137,7 +10448,9 @@ def api_mock_interview_chat():
     record = next((r for r in records if r['id'] == interview_id), None)
     if not record:
         return jsonify({'error': '面试记录不存在'}), 404
-    if record['student_no'] != session.get('student_no'):
+    # 老师/访客：允许操作自己 start 的记录（匹配默认占位学号）
+    my_no = session.get('student_no', '') if session.get('role') == 'student' else '0000000000000'
+    if record.get('student_no') != my_no and session.get('role') != 'teacher':
         return jsonify({'error': '无权操作'}), 403
     if record['status'] != 'in_progress':
         return jsonify({'error': '面试已结束'}), 400
@@ -10151,7 +10464,10 @@ def api_mock_interview_chat():
             messages.append({"role": "assistant", "content": msg['content']})
         elif msg['role'] == 'student':
             messages.append({"role": "user", "content": msg['content']})
-    payload = {"model": MODEL_NAME, "messages": messages, "temperature": 0.7, "max_tokens": 800, "stream": True, "enable_thinking": False}
+    import random as _r
+    payload = {"model": MODEL_FLASH, "messages": messages, "temperature": 0.8,
+               "max_tokens": 800, "stream": True, "enable_thinking": False,
+               "seed": _r.randint(0, 999999)}
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {API_KEY}"}
 
     def generate(interview_id=interview_id):
@@ -10204,14 +10520,16 @@ def api_mock_interview_end():
     """结束面试（SSE流式生成评分报告）"""
     if not session.get('authenticated'):
         return jsonify({'error': '请先登录'}), 401
-    if session.get('role') != 'student':
-        return jsonify({'error': '仅学生可参加模拟面试'}), 403
     body = request.get_json() or {}
     interview_id = body.get('interview_id', '')
     records = load_interview_records()
     record = next((r for r in records if r['id'] == interview_id), None)
     if not record:
         return jsonify({'error': '面试记录不存在'}), 404
+    # 老师也能结束
+    my_no = session.get('student_no', '') if session.get('role') == 'student' else '0000000000000'
+    if record.get('student_no') != my_no and session.get('role') != 'teacher':
+        return jsonify({'error': '无权操作'}), 403
     if record['status'] != 'in_progress':
         return jsonify({'error': '面试已结束'}), 400
     record['status'] = 'scoring'
@@ -10220,7 +10538,7 @@ def api_mock_interview_end():
         record['messages'], record['target_company'], record['target_position'],
         record['interview_type'], record.get('case_questions', []),
         _get_student_competence_vector(record['student_no']).get('vector', {}))
-    payload = {"model": MODEL_NAME,
+    payload = {"model": MODEL_FLASH,
                "messages": [{"role": "system", "content": system_prompt}, {"role": "user", "content": user_prompt}],
                "temperature": 0.3, "max_tokens": 1500, "stream": True, "enable_thinking": False}
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {API_KEY}"}
@@ -11243,7 +11561,7 @@ def api_fault_chain_chat():
                      "\n\n✨ 本回答由 AI 生成，仅供参考。")
     messages = [{"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_msg}]
-    payload = {"model": MODEL_NAME, "messages": messages,
+    payload = {"model": MODEL_FLASH, "messages": messages,
                "temperature": 0.6, "max_tokens": 600, "stream": True, "enable_thinking": False}
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {API_KEY}"}
 
