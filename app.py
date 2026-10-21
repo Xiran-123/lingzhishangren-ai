@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, jsonify, Response, session, send_from_directory, redirect, url_for
 import requests
 import base64
+import io
+import csv
 import re
 import json
 import os
@@ -164,6 +166,91 @@ COMPETENCE_KEYWORDS = {
     "innovation": ["创新", "优化", "改进", "方案", "设计", "思路", "新方法"],
     "teamwork": ["协作", "沟通", "团队", "配合", "协调", "分享", "讨论"]
 }
+
+# ====================== 课程 → 能力维度映射 ======================
+# 课程由学生本人在能力画像页维护，老师只能查看；
+# 能力画像只展示「学生所选课程覆盖到」的维度。
+DIMENSION_ICONS = {
+    "signal_system": "📈", "communication_principle": "📶", "digital_signal": "🔢",
+    "network_protocol": "🌐", "modulation": "〰️", "rf_engineering": "🔌",
+    "antenna_design": "📡", "troubleshooting": "🛠", "equipment_operation": "🧰",
+    "safety_awareness": "🛡", "innovation": "💡", "teamwork": "🤝",
+}
+
+COURSE_CATALOG = [
+    {"id": "signals_systems", "name": "信号与系统", "icon": "📈",
+     "dims": ["signal_system", "digital_signal"]},
+    {"id": "comm_principle", "name": "通信原理", "icon": "📶",
+     "dims": ["communication_principle", "modulation"]},
+    {"id": "digital_signal_proc", "name": "数字信号处理", "icon": "🔢",
+     "dims": ["digital_signal", "signal_system"]},
+    {"id": "computer_network", "name": "计算机网络", "icon": "🌐",
+     "dims": ["network_protocol"]},
+    {"id": "mobile_comm", "name": "移动通信（4G/5G）", "icon": "📡",
+     "dims": ["modulation", "antenna_design", "network_protocol"]},
+    {"id": "rf_microwave", "name": "射频电路与微波", "icon": "🔌",
+     "dims": ["rf_engineering", "antenna_design"]},
+    {"id": "optical_comm", "name": "光纤通信", "icon": "💡",
+     "dims": ["network_protocol", "equipment_operation"]},
+    {"id": "comm_practice", "name": "通信工程实训", "icon": "🛠",
+     "dims": ["troubleshooting", "equipment_operation"]},
+    {"id": "safety_ethics", "name": "工程安全与伦理", "icon": "🛡",
+     "dims": ["safety_awareness"]},
+    {"id": "innovation_practice", "name": "创新创业实践", "icon": "🚀",
+     "dims": ["innovation"]},
+    {"id": "project_teamwork", "name": "项目管理与团队协作", "icon": "🤝",
+     "dims": ["teamwork"]},
+    {"id": "antenna_em", "name": "天线与电磁场", "icon": "🗼",
+     "dims": ["antenna_design", "rf_engineering"]},
+]
+
+_COURSE_BY_ID = {c['id']: c for c in COURSE_CATALOG}
+
+
+def _normalize_courses(raw) -> List[str]:
+    """只保留课程目录里存在的 id，去重且保序"""
+    if not raw:
+        return []
+    if isinstance(raw, str):
+        raw = [x for x in re.split(r'[,，;；\s]+', raw) if x]
+    result = []
+    for cid in raw:
+        cid = str(cid).strip()
+        if cid in _COURSE_BY_ID and cid not in result:
+            result.append(cid)
+    return result
+
+
+def _course_names(course_ids) -> List[Dict]:
+    """课程 id -> 课程信息（含图标与覆盖维度）"""
+    return [{
+        'id': cid,
+        'name': _COURSE_BY_ID[cid]['name'],
+        'icon': _COURSE_BY_ID[cid]['icon'],
+        'dims': list(_COURSE_BY_ID[cid]['dims']),
+    } for cid in (course_ids or []) if cid in _COURSE_BY_ID]
+
+
+def _covered_dimensions(course_ids) -> List[str]:
+    """课程覆盖到的能力维度（按 COMPETENCE_AREAS 顺序）。没选课返回空列表。"""
+    covered = set()
+    for cid in (course_ids or []):
+        course = _COURSE_BY_ID.get(cid)
+        if course:
+            covered.update(course['dims'])
+    return [a['id'] for a in COMPETENCE_AREAS if a['id'] in covered]
+
+
+def _dimension_payload(ids=None) -> List[Dict]:
+    """维度清单（带图标），ids 为空表示全部"""
+    keep = set(ids) if ids is not None else None
+    return [{
+        'id': a['id'],
+        'name': a['name'],
+        'category': a['category'],
+        'weight': a['weight'],
+        'icon': DIMENSION_ICONS.get(a['id'], '•'),
+    } for a in COMPETENCE_AREAS if keep is None or a['id'] in keep]
 
 # ====================== 岗位胜任力指标体系 ======================
 # 5大维度：技术能力、沟通协作、项目管理、安全伦理、创新思维
@@ -1907,6 +1994,82 @@ def next_student_id(students: List[Dict]) -> str:
     return str(max_id + 1)
 
 
+# ====================== 学生分层：年级 / 专业 / 学号 ======================
+# 说明：老档案没有年级字段，统一从 13 位学号（前 4 位入学年份）推导，
+# 推导只影响展示与筛选，不修改历史数据；只有保存学生时才写回新字段。
+GRADE_LEVEL_LABELS = ('大一', '大二', '大三', '大四')
+
+
+def _enroll_year_from_no(student_no) -> str:
+    """从 13 位学号取入学年份（前 4 位）。非 13 位或年份不合理时返回空串。"""
+    s = str(student_no or '').strip()
+    if len(s) == 13 and s[:4].isdigit():
+        year = int(s[:4])
+        if 1990 <= year <= 2100:
+            return str(year)
+    return ''
+
+
+def _grade_label(enroll_year) -> str:
+    """入学年份 -> 年级标签：2024 -> '2024级'"""
+    year = str(enroll_year or '').strip()
+    return f'{year}级' if (year.isdigit() and len(year) == 4) else ''
+
+
+def _grade_level(enroll_year) -> str:
+    """按 9 月切换学年推算当前年级（大一~大四）。"""
+    year = str(enroll_year or '').strip()
+    if not (year.isdigit() and len(year) == 4):
+        return ''
+    now = datetime.now()
+    academic_year = now.year if now.month >= 9 else now.year - 1
+    level = academic_year - int(year) + 1
+    if level <= 0:
+        return '未入学'
+    if level <= 4:
+        return GRADE_LEVEL_LABELS[level - 1]
+    return '大四以上'
+
+
+def _student_meta(student: Dict) -> Dict:
+    """统一的年级/专业元数据。老档案缺少字段时按学号推导，不写盘。"""
+    student = student or {}
+    student_no = str(student.get('student_no') or '')
+    enroll_year = str(student.get('enroll_year') or '') or _enroll_year_from_no(student_no)
+    return {
+        'student_no': student_no,
+        'name': student.get('name') or '',
+        'enroll_year': enroll_year,
+        'grade': student.get('grade') or _grade_label(enroll_year),        # 2024级
+        'grade_level': student.get('grade_level') or _grade_level(enroll_year),  # 大三
+        'major': student.get('major') or '',
+        'class_name': student.get('class_name') or '',
+    }
+
+
+def _ensure_student_meta(student: Dict) -> bool:
+    """把推导出的年级信息补写进档案，返回是否有改动（由调用方决定何时落盘）。"""
+    meta = _student_meta(student)
+    changed = False
+    for key in ('enroll_year', 'grade', 'grade_level'):
+        if meta[key] and student.get(key) != meta[key]:
+            student[key] = meta[key]
+            changed = True
+    if 'major' not in student:
+        student['major'] = meta['major']
+        changed = True
+    return changed
+
+
+def _meta_matches(value: str, selected: str, empty_label: str) -> bool:
+    """筛选值匹配：选中「未分班/未标注」时匹配空值，否则精确匹配。"""
+    if not selected:
+        return True
+    if selected == empty_label:
+        return not value
+    return value == selected
+
+
 def load_classes() -> List[Dict]:
     """加载班级数据"""
     try:
@@ -2503,8 +2666,9 @@ def recommend_scenarios(weaknesses: List[Dict]) -> List[Dict]:
     return recommended
 
 
-def add_search_log(query: str, content: str, is_from_kb: bool = False):
-    """添加搜索记录"""
+def add_search_log(query: str, content: str, is_from_kb: bool = False,
+                   student_name: str = '', student_no: str = ''):
+    """添加搜索记录（带上提问学生，便于做知识点排行榜）"""
     logs = load_search_logs()
     log_entry = {
         "id": len(logs) + 1,
@@ -2513,7 +2677,9 @@ def add_search_log(query: str, content: str, is_from_kb: bool = False):
         "is_from_kb": is_from_kb,
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "reviewed": False,
-        "note": ""
+        "note": "",
+        "student_name": student_name or '',
+        "student_no": student_no or '',
     }
     logs.append(log_entry)
     save_search_logs(logs)
@@ -2866,9 +3032,9 @@ def login():
 
         # 如果是学生，存储学生信息并创建/更新学生档案
         if role == 'student' and student_no:
-            # 验证学号必须是13位数字
-            if not student_no.isdigit() or len(student_no) != 13:
-                return jsonify({'success': False, 'message': '学号必须是13位数字'})
+            # 学号：6-20 位数字（兼容各校不同长度的学号，导入名单时同样按此校验）
+            if not re.fullmatch(r'\d{6,20}', student_no):
+                return jsonify({'success': False, 'message': '学号必须是 6-20 位数字'})
 
             session['student_no'] = student_no
             session['student_name'] = student_name
@@ -2895,6 +3061,11 @@ def login():
                     'student_no': student_no,
                     'name': student_name,
                     'class_name': class_name,
+                    'major': '',
+                    # 年级由 13 位学号前 4 位（入学年份）推导，登录即建档分层
+                    'enroll_year': _enroll_year_from_no(student_no),
+                    'grade': _grade_label(_enroll_year_from_no(student_no)),
+                    'grade_level': _grade_level(_enroll_year_from_no(student_no)),
                     'created_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     'last_login': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     'competence_analysis': {area['id']: {'count': 0, 'score': 0.0} for area in COMPETENCE_AREAS},
@@ -2925,6 +3096,11 @@ def login():
                     'student_no': '',
                     'name': student_name,
                     'class_name': class_name,
+                    'major': (data.get('major') or '').strip(),
+                    # 无学号时用登录表单里填的「年级」兜底，取不到就留空（筛选归入未标注）
+                    'enroll_year': re.sub(r'\D', '', str(data.get('grade') or ''))[:4],
+                    'grade': (data.get('grade') or '').strip(),
+                    'grade_level': _grade_level(re.sub(r'\D', '', str(data.get('grade') or ''))[:4]),
                     'created_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     'last_login': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     'competence_analysis': {area['id']: {'count': 0, 'score': 0.0} for area in COMPETENCE_AREAS},
@@ -3623,7 +3799,9 @@ def chat_endpoint():
                     # 记录搜索日志（如果需要）
                     if needs_search:
                         is_kb_content = any(kw in answer for kw in knowledge_content[:200].split()) if knowledge_content else False
-                        add_search_log(user_message, answer, is_kb_content)
+                        add_search_log(user_message, answer, is_kb_content,
+                           student_name=session.get('student_name', ''),
+                           student_no=session.get('student_no', ''))
                     
                     return jsonify({'response': answer})
                 else:
@@ -3855,7 +4033,9 @@ def stream_generator(headers, messages, temperature, max_tokens, search_query=No
                                 response_words = full_response[:500].split()
                                 match_count = sum(1 for kw in kb_keywords if kw in response_words)
                                 is_kb_content = match_count > 2
-                            add_search_log(search_query, full_response, is_kb_content)
+                            add_search_log(search_query, full_response, is_kb_content,
+                           student_name=session.get('student_name', ''),
+                           student_no=session.get('student_no', ''))
                         
                         ppt_recommendation = generate_ppt_recommendation(search_query)
                         if ppt_recommendation:
@@ -4038,7 +4218,8 @@ def analyze_search_logs():
         for log in logs:
             query_lower = log['query'].lower()
             content_lower = log['content'].lower()
-            if any(kw in query_lower or kw in content_lower for kw in keywords):
+            # 关键词统一转小写再比：否则 TCP / FFT / 5G / MIMO 这类大写词永远匹配不到
+            if any(kw.lower() in query_lower or kw.lower() in content_lower for kw in keywords):
                 count += 1
                 category_logs.append({
                     'query': log['query'],
@@ -4297,6 +4478,287 @@ def delete_search_log(log_id):
     save_search_logs(logs)
     
     return jsonify({'success': True})
+
+
+# ====================== 搜索日志：知识点排行榜 + 人工审核入库 ======================
+_TOPIC_QUESTION_PREFIX = (
+    '什么是', '是什么', '请问', '如何', '怎么', '怎样', '为什么', '为啥',
+    '能否', '可以', '帮我', '我想', '想知道', '介绍一下', '解释一下', '说说', '讲讲',
+)
+
+
+def _knowledge_topic_vocab() -> List[str]:
+    """知识点词表：知识库条目标题 + 章节名 + 知识图谱概念/关联词，按长度倒序（长词优先）"""
+    vocab = {}
+
+    def add(name):
+        name = str(name or '').strip().strip('：:')
+        if 2 <= len(name) <= 24 and re.search(r'[\u4e00-\u9fffA-Za-z]', name):
+            vocab[name] = True
+
+    for line in (knowledge_content or '').splitlines():
+        s = line.strip()
+        if not s:
+            continue
+        m = re.match(r'^[【\[](.{2,24})[】\]]\s*$', s)
+        if m:
+            add(m.group(1))
+            continue
+        m = re.match(r'^(?:\d+[.、]\s*)?([^：:，。；、\s]{2,24})[：:]', s)
+        if m:
+            add(m.group(1))
+
+    for name, info in KNOWLEDGE_GRAPH.items():
+        add(name)
+        for rel in (info.get('related') or []):
+            add(rel)
+
+    return sorted(vocab.keys(), key=len, reverse=True)
+
+
+def _topic_key(text) -> str:
+    return re.sub(r'\s+', '', str(text or ''))
+
+
+def _topic_of_query(query: str, vocab: List[str]) -> str:
+    """从提问里识别知识点：先命中词表（长词优先），否则退化为去掉疑问词后的短标题"""
+    q = _topic_key(query)
+    if not q:
+        return ''
+    q_low = q.lower()
+    for term in vocab:
+        t = _topic_key(term)
+        if len(t) >= 2 and t.lower() in q_low:
+            return term
+    fallback = q
+    for p in _TOPIC_QUESTION_PREFIX:
+        if fallback.startswith(p):
+            fallback = fallback[len(p):]
+            break
+    fallback = re.sub(r'(有哪些|是什么|是什么意思|怎么样|怎么用|怎么办|吗|呢|呀|啊)$', '', fallback)
+    fallback = fallback.strip('的了吗呢啊?？。，,')
+    return fallback[:12]
+
+
+def _build_topic_ranking(logs: List[Dict]):
+    """按搜索次数聚合知识点，返回 (排行列表, 未归类条数)"""
+    vocab = _knowledge_topic_vocab()
+    kb_text = _topic_key(knowledge_content or '').lower()
+    buckets: Dict[str, Dict] = {}
+    unmatched = 0
+
+    for log in logs:
+        query = log.get('query') or ''
+        topic = _topic_of_query(query, vocab)
+        if not topic:
+            unmatched += 1
+            continue
+        item = buckets.setdefault(topic, {
+            'topic': topic, 'count': 0, 'queries': set(), 'students': set(),
+            'log_ids': [], 'last_time': '', 'samples': [],
+        })
+        item['count'] += 1
+        item['queries'].add(query)
+        item['log_ids'].append(log.get('id'))
+        ts = log.get('timestamp') or ''
+        if ts > item['last_time']:
+            item['last_time'] = ts
+        student = log.get('student_name') or ''
+        if student:
+            item['students'].add(student)
+        if len(item['samples']) < 3 and query not in item['samples']:
+            item['samples'].append(query)
+
+    ranking = []
+    for item in buckets.values():
+        ranking.append({
+            'topic': item['topic'],
+            'count': item['count'],
+            'unique_queries': len(item['queries']),
+            'students': len(item['students']),
+            'last_time': item['last_time'],
+            'in_kb': bool(kb_text) and _topic_key(item['topic']).lower() in kb_text,
+            'samples': item['samples'],
+            'log_ids': item['log_ids'][-80:],
+        })
+
+    ranking.sort(key=lambda x: (x['count'], x['last_time']), reverse=True)
+    return ranking, unmatched
+
+
+def _logs_of_topic(logs: List[Dict], topic: str) -> List[Dict]:
+    vocab = _knowledge_topic_vocab()
+    return [l for l in logs if _topic_of_query(l.get('query') or '', vocab) == topic]
+
+
+@app.route('/api/search-logs/topic-ranking', methods=['GET'])
+def api_topic_ranking():
+    """学生搜索知识点频率排行榜"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+
+    try:
+        limit = int(request.args.get('limit', 20))
+    except ValueError:
+        limit = 20
+    limit = min(100, max(1, limit))
+
+    logs = load_search_logs()
+    ranking, unmatched = _build_topic_ranking(logs)
+
+    return jsonify({
+        'success': True,
+        'total_logs': len(logs),
+        'unmatched': unmatched,
+        'matched_logs': len(logs) - unmatched,
+        'topic_count': len(ranking),
+        'pending_count': len([t for t in ranking if not t['in_kb']]),
+        'topics': ranking[:limit],
+    })
+
+
+@app.route('/api/search-logs/topic-logs', methods=['GET'])
+def api_topic_logs():
+    """某个知识点下的原始提问（供人工审核）"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+
+    topic = (request.args.get('topic') or '').strip()
+    if not topic:
+        return jsonify({'error': '缺少知识点名称'}), 400
+
+    logs = _logs_of_topic(load_search_logs(), topic)
+    logs.sort(key=lambda l: l.get('timestamp') or '', reverse=True)
+
+    # 起草内容：取信息最全（最长）的一条回答
+    draft = ''
+    for log in logs:
+        content = log.get('content') or ''
+        if len(content) > len(draft):
+            draft = content
+    if len(draft) > 1500:
+        draft = draft[:1500] + '…'
+
+    kb_text = _topic_key(knowledge_content or '').lower()
+    return jsonify({
+        'success': True,
+        'topic': topic,
+        'count': len(logs),
+        'in_kb': bool(kb_text) and _topic_key(topic).lower() in kb_text,
+        'draft': draft,
+        'logs': [{
+            'id': log.get('id'),
+            'query': log.get('query') or '',
+            'content': (log.get('content') or '')[:800],
+            'timestamp': log.get('timestamp') or '',
+            'student_name': log.get('student_name') or '',
+            'reviewed': bool(log.get('reviewed')),
+            'added_to_kb': bool(log.get('added_to_kb')),
+        } for log in logs[:50]],
+    })
+
+
+@app.route('/api/search-logs/topic/add-to-kb', methods=['POST'])
+def api_topic_add_to_kb():
+    """人工审核后把知识点写入知识库（可先修改内容），并标记相关日志已处理"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'teacher':
+        return jsonify({'error': '只有老师才能审核入库'}), 403
+
+    body = request.get_json() or {}
+    topic = (body.get('topic') or '').strip()
+    content = (body.get('content') or '').strip()
+    log_ids = body.get('log_ids') or []
+
+    if not topic:
+        return jsonify({'error': '缺少知识点名称'}), 400
+    if not content:
+        return jsonify({'error': '知识内容不能为空'}), 400
+    if len(content) > 8000:
+        return jsonify({'error': '内容过长（最多 8000 字），请精简后再入库'}), 400
+
+    entry = ("\n\n" + "=" * 50 + f"\n【新增知识】{topic}\n" + "=" * 50 +
+             f"\n{content}\n（来源：学生搜索日志人工审核 · "
+             f"{datetime.now().strftime('%Y-%m-%d %H:%M')}）\n")
+
+    try:
+        with open(KNOWLEDGE_FILE, "a", encoding="utf-8") as f:
+            f.write(entry)
+        update_system_prompt()   # 重新加载知识库 + 重建 RAG 索引
+    except Exception as exc:  # noqa: BLE001
+        print(f'[知识点入库] 写入失败: {exc}')
+        return jsonify({'error': f'写入知识库失败：{exc}'}), 500
+
+    # 标记相关日志：已审核 + 已入库
+    marked = 0
+    try:
+        logs = load_search_logs()
+        ids = set()
+        for v in log_ids:
+            try:
+                ids.add(int(v))
+            except (TypeError, ValueError):
+                continue
+        for log in logs:
+            if log.get('id') in ids:
+                log['reviewed'] = True
+                log['added_to_kb'] = True
+                note = (log.get('note') or '').strip()
+                if '已入库' not in note:
+                    log['note'] = (note + ' ' if note else '') + f'知识点「{topic}」已入库'
+                marked += 1
+        if marked:
+            save_search_logs(logs)
+    except Exception as exc:  # noqa: BLE001
+        print(f'[知识点入库] 标记日志失败: {exc}')
+
+    if SECURITY_MODULE_AVAILABLE:
+        security.audit('knowledge_append', target=topic,
+                       detail=f'由搜索日志人工审核入库，关联日志 {marked} 条',
+                       after={'topic': topic, 'length': len(content)})
+
+    return jsonify({
+        'success': True,
+        'message': f'「{topic}」已加入知识库',
+        'marked_logs': marked,
+    })
+
+
+@app.route('/api/search-logs/topic/dismiss', methods=['POST'])
+def api_topic_dismiss():
+    """人工审核后判定「不需要入库」：只把相关日志标记为已处理"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'teacher':
+        return jsonify({'error': '只有老师才能审核'}), 403
+
+    body = request.get_json() or {}
+    topic = (body.get('topic') or '').strip()
+    log_ids = body.get('log_ids') or []
+    if not topic:
+        return jsonify({'error': '缺少知识点名称'}), 400
+
+    logs = load_search_logs()
+    ids = set()
+    for v in log_ids:
+        try:
+            ids.add(int(v))
+        except (TypeError, ValueError):
+            continue
+
+    marked = 0
+    for log in logs:
+        if log.get('id') in ids:
+            log['reviewed'] = True
+            note = (log.get('note') or '').strip()
+            if '无需入库' not in note:
+                log['note'] = (note + ' ' if note else '') + f'知识点「{topic}」审核后无需入库'
+            marked += 1
+    if marked:
+        save_search_logs(logs)
+
+    return jsonify({'success': True, 'message': f'「{topic}」已标记为无需入库', 'marked_logs': marked})
 
 
 @app.route('/search-logs-page')
@@ -5540,7 +6002,8 @@ def get_competence_radar():
             'success': True,
             'radar_data': [],
             'category_summary': {},
-            'total_questions': 0
+            'total_questions': 0,
+            'course_scope': {'mode': 'all', 'courses': [], 'covered_count': 0, 'hidden_count': 0},
         })
 
     # 累计提问数：新字段优先；旧档案没有该字段时，用对话历史中的提问数兜底
@@ -5552,8 +6015,15 @@ def get_competence_radar():
 
     radar_data = []
     category_summary = {}
-    
-    for area in COMPETENCE_AREAS:
+
+    # ?course_aware=1：只看学生所选课程覆盖到的维度（学生没选课时退回全部 12 维）
+    course_ids = _normalize_courses(student.get('courses'))
+    covered = _covered_dimensions(course_ids)
+    course_aware = bool(request.args.get('course_aware')) and bool(covered)
+    areas = ([a for a in COMPETENCE_AREAS if a['id'] in covered]
+             if course_aware else COMPETENCE_AREAS)
+
+    for area in areas:
         area_id = area['id']
         score_data = student.get('competence_analysis', {}).get(area_id, {'count': 0, 'score': 0})
         score = score_data.get('score', 0)
@@ -5566,7 +6036,8 @@ def get_competence_radar():
             'category': area['category'],
             'score': score_pct,
             'count': count,
-            'weight': area['weight']
+            'weight': area['weight'],
+            'icon': DIMENSION_ICONS.get(area_id, '•')
         })
         
         # 按类别汇总
@@ -5582,7 +6053,17 @@ def get_competence_radar():
         'student_name': student_name,
         'radar_data': radar_data,
         'category_summary': category_summary,
-        'total_questions': total_questions
+        'total_questions': total_questions,
+        # 课程口径说明：mode=course 表示已按课程收窄维度
+        'course_scope': {
+            'mode': 'course' if course_aware else 'all',
+            'courses': _course_names(course_ids),
+            'covered_count': len(covered),
+            'hidden_count': (len(COMPETENCE_AREAS) - len(covered)) if course_aware else 0,
+        },
+        # 可选：?with_class_avg=1 时附带同班平均分，用于雷达图对比（不传则与旧版完全一致）
+        'class_avg': _class_avg_radar(students, _student_meta(student).get('class_name', ''))
+                     if request.args.get('with_class_avg') else []
     })
 
 
@@ -6153,7 +6634,10 @@ def create_student():
     student_no = data.get('student_no', '')
     class_name = data.get('class_name', '')
     avatar = data.get('avatar', None)
-    
+    major = (data.get('major') or '').strip()
+    grade = (data.get('grade') or '').strip()          # 形如「2024级」，可留空由学号推导
+    enroll_year = str(data.get('enroll_year') or '').strip()
+
     if not name:
         return jsonify({'error': '请输入学生姓名'}), 400
     
@@ -6161,20 +6645,30 @@ def create_student():
     
     # 如果提供了学号，检查学号是否已存在
     if student_no:
-        if not student_no.isdigit() or len(student_no) != 13:
-            return jsonify({'error': '学号必须是13位数字'}), 400
+        if not re.fullmatch(r'\d{6,20}', student_no):
+            return jsonify({'error': '学号必须是 6-20 位数字'}), 400
         existing = next((s for s in students if s.get('student_no') == student_no), None)
         if existing:
             return jsonify({'error': '该学号已存在，一个学号只能注册一个账号'}), 400
     
     # 生成唯一ID（取现有最大ID+1，避免删除学生后撞号）
     new_id = next_student_id(students)
+
+    # 年级：优先用显式传入的「2024级」，其次用入学年份，最后从学号推导
+    if not enroll_year:
+        enroll_year = _enroll_year_from_no(student_no) or re.sub(r'\D', '', grade)[:4]
+    if not grade:
+        grade = _grade_label(enroll_year)
     
     new_student = {
         'id': new_id,
         'student_no': student_no,
         'name': name,
         'class_name': class_name,
+        'major': major,
+        'grade': grade,
+        'grade_level': _grade_level(enroll_year),
+        'enroll_year': enroll_year,
         'avatar': avatar,
         'created_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         'competence_analysis': {area['id']: {'count': 0, 'score': 0.0} for area in COMPETENCE_AREAS},
@@ -6206,6 +6700,22 @@ def update_student(student_id):
         student['class_name'] = data['class_name']
     if 'avatar' in data:
         student['avatar'] = data['avatar']
+    if 'major' in data:
+        student['major'] = (data.get('major') or '').strip()
+    # 年级：显式传「年级」或「入学年份」都可以，改年级后层次自动重算
+    if 'enroll_year' in data:
+        student['enroll_year'] = str(data.get('enroll_year') or '').strip()
+        student['grade'] = _grade_label(student['enroll_year'])
+        student['grade_level'] = _grade_level(student['enroll_year'])
+    elif 'grade' in data:
+        grade_val = (data.get('grade') or '').strip()
+        student['grade'] = grade_val
+        enroll_year = re.sub(r'\D', '', grade_val)[:4]
+        if len(enroll_year) == 4:
+            student['enroll_year'] = enroll_year
+            student['grade_level'] = _grade_level(enroll_year)
+        else:
+            student['grade_level'] = ''
     
     save_students(students)
     return jsonify({'success': True, 'student': student})
@@ -6242,6 +6752,1133 @@ def delete_student(student_id):
             save_learning_records(records)
 
     return jsonify({'success': True, 'deleted': name})
+
+
+# ====================== 班级管理：名单导入（Excel / CSV） ======================
+# 面向「学习通」等平台导出的学生名单：表头常带合并单元格、标题行，
+# 因此先在前 20 行里找最像表头的一行，再用别名做列映射，最后逐行取值。
+try:
+    import openpyxl  # 读取 .xlsx / .xlsm
+except ImportError:  # 没装也不影响其它功能，只是 xlsx 导入会给出提示
+    openpyxl = None
+
+ROSTER_HEADER_ALIASES = {
+    'student_no': ['学号', '学生学号', '学号/工号', '工号', '学生编号'],
+    'name': ['姓名', '学生姓名', '名字'],
+    'class_name': ['班级', '班级名称', '行政班', '教学班', '所在班级'],
+    'grade': ['年级', '所在年级'],
+    'major': ['专业', '专业名称', '所在专业'],
+    'college': ['院系', '学院', '系别', '院系名称', '学院名称'],
+    'phone': ['手机号', '手机', '联系电话', '手机号码'],
+}
+
+ROSTER_COLUMN_LABELS = {
+    'student_no': '学号', 'name': '姓名', 'class_name': '班级',
+    'grade': '年级', 'major': '专业', 'college': '院系', 'phone': '手机号',
+}
+
+
+def _norm_header(text) -> str:
+    s = str(text if text is not None else '').strip()
+    s = s.replace('\u3000', ' ').replace('\n', ' ').replace('\r', ' ')
+    s = re.sub(r'\s+', '', s)
+    s = s.replace('（', '(').replace('）', ')')
+    return s
+
+
+def _match_column(header_text):
+    """表头单元格 -> 内部字段名；匹配不上返回 None"""
+    h = _norm_header(header_text)
+    if not h:
+        return None
+    for key, aliases in ROSTER_HEADER_ALIASES.items():
+        for alias in aliases:
+            if h == _norm_header(alias):
+                return key
+    for key, aliases in ROSTER_HEADER_ALIASES.items():
+        for alias in aliases:
+            if _norm_header(alias) in h:
+                return key
+    return None
+
+
+def _cell_text(value) -> str:
+    """单元格 -> 干净文本（Excel 里数字常被读成 2024001001001.0）"""
+    if value is None:
+        return ''
+    if isinstance(value, bool):
+        return ''
+    if isinstance(value, float):
+        if value.is_integer():
+            return str(int(value))
+        return ('%f' % value).rstrip('0').rstrip('.')
+    if isinstance(value, int):
+        return str(value)
+    text = str(value).replace('\u3000', ' ').strip()
+    # 学习通导出偶尔带不可见字符 / 两端引号
+    return text.strip('\'"').strip()
+
+
+def _map_header_row(row) -> Dict[str, int]:
+    mapping = {}
+    for idx, cell in enumerate(row):
+        key = _match_column(cell)
+        if key and key not in mapping:
+            mapping[key] = idx
+    return mapping
+
+
+def _find_header(rows):
+    """在前 20 行里找最像表头的一行，要求至少能识别出「姓名」列"""
+    best_idx, best_map, best_score = -1, {}, 0
+    for i, row in enumerate(rows[:20]):
+        mapping = _map_header_row(row)
+        if 'name' not in mapping:
+            continue
+        if len(mapping) > best_score:
+            best_idx, best_map, best_score = i, mapping, len(mapping)
+    return best_idx, best_map
+
+
+def _read_roster_workbook(data: bytes, filename: str):
+    """返回 (sheet_name, rows)。rows 为二维文本列表。"""
+    ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
+
+    if ext == 'csv':
+        text = None
+        for enc in ('utf-8-sig', 'utf-8', 'gb18030', 'gbk'):
+            try:
+                text = data.decode(enc)
+                break
+            except UnicodeDecodeError:
+                continue
+        if text is None:
+            raise ValueError('CSV 编码无法识别，请用 Excel 另存为「CSV UTF-8」后再导入')
+        rows = [[_cell_text(c) for c in row] for row in csv.reader(io.StringIO(text))]
+        return 'CSV', rows
+
+    if ext in ('xlsx', 'xlsm'):
+        if openpyxl is None:
+            raise ValueError('服务器未安装 openpyxl，无法解析 xlsx。请执行 pip install openpyxl，'
+                             '或把名单另存为 CSV 后导入')
+        wb = openpyxl.load_workbook(io.BytesIO(data), read_only=True, data_only=True)
+        try:
+            best_name, best_rows, best_score = None, [], -1
+            for name in wb.sheetnames:
+                ws = wb[name]
+                rows = []
+                for raw in ws.iter_rows(values_only=True):
+                    rows.append([_cell_text(v) for v in raw])
+                    if len(rows) > 5000:   # 名单不会这么大，防异常文件
+                        break
+                score = max((len(_map_header_row(r)) for r in rows[:20]), default=0)
+                if score > best_score:
+                    best_name, best_rows, best_score = name, rows, score
+                if score >= 3:
+                    break
+            return best_name or (wb.sheetnames[0] if wb.sheetnames else ''), best_rows
+        finally:
+            wb.close()
+
+    if ext == 'xls':
+        raise ValueError('暂不支持旧版 .xls 文件。请在 Excel/WPS 里「另存为」.xlsx 或 .csv 后再导入')
+
+    raise ValueError('不支持的文件类型，请上传 .xlsx / .xlsm / .csv（学习通导出的名单可直接用）')
+
+
+def _build_roster(rows, header_idx, mapping, defaults: Dict[str, str]):
+    """把表格行转成学生列表 + 问题清单"""
+    students, issues, warnings = [], [], []
+    seen_no, seen_name = set(), set()
+
+    for offset, row in enumerate(rows[header_idx + 1:], start=header_idx + 2):
+        def cell(key):
+            idx = mapping.get(key)
+            if idx is None or idx >= len(row):
+                return ''
+            return _cell_text(row[idx])
+
+        name = cell('name')
+        student_no = re.sub(r'\s+', '', cell('student_no'))
+
+        if not name and not student_no:
+            continue                      # 空行直接跳过
+        if not name:
+            issues.append(f'第 {offset} 行缺少姓名，已跳过')
+            continue
+
+        class_name = cell('class_name') or defaults.get('class_name', '')
+        grade = cell('grade') or defaults.get('grade', '')
+        major = cell('major') or defaults.get('major', '')
+
+        enroll_year = _enroll_year_from_no(student_no)
+        if not grade:
+            grade = _grade_label(enroll_year)
+
+        if student_no and not re.fullmatch(r'\d{6,20}', student_no):
+            warnings.append(f'第 {offset} 行学号「{student_no}」不是 6-20 位数字，登录时可能无法识别')
+
+        key_no = student_no
+        key_name = (name, class_name)
+        if key_no and key_no in seen_no:
+            issues.append(f'第 {offset} 行学号 {key_no} 在文件内重复，已跳过')
+            continue
+        if not key_no and key_name in seen_name:
+            issues.append(f'第 {offset} 行「{name}」在文件内重复，已跳过')
+            continue
+
+        if key_no:
+            seen_no.add(key_no)
+        seen_name.add(key_name)
+
+        students.append({
+            'student_no': student_no,
+            'name': name,
+            'class_name': class_name,
+            'grade': grade,
+            'grade_level': _grade_level(enroll_year),
+            'enroll_year': enroll_year,
+            'major': major,
+            'college': cell('college'),
+            'phone': cell('phone'),
+        })
+
+    return students, issues, warnings
+
+
+@app.route('/api/students/import/preview', methods=['POST'])
+def api_students_import_preview():
+    """解析上传的名单（不落库），返回预览行与识别结果"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'teacher':
+        return jsonify({'error': '只有老师才能导入班级名单'}), 403
+
+    file = request.files.get('file')
+    if not file or not file.filename:
+        return jsonify({'error': '请选择要导入的名单文件'}), 400
+
+    filename = file.filename
+    try:
+        data = file.read()
+        if not data:
+            return jsonify({'error': '文件是空的'}), 400
+        if len(data) > 20 * 1024 * 1024:
+            return jsonify({'error': '文件超过 20MB，请拆分后导入'}), 400
+
+        sheet_name, rows = _read_roster_workbook(data, filename)
+        header_idx, mapping = _find_header(rows)
+        if header_idx < 0:
+            return jsonify({
+                'error': '没找到表头：请确认表格里有「姓名」「学号」这一行'
+                         '（学习通导出的原始文件可以直接传）'
+            }), 400
+
+        defaults = {
+            'class_name': (request.form.get('class_name') or '').strip(),
+            'grade': (request.form.get('grade') or '').strip(),
+            'major': (request.form.get('major') or '').strip(),
+        }
+        students, issues, warnings = _build_roster(rows, header_idx, mapping, defaults)
+
+        # 与现有档案比对，标出已存在的人
+        existing = load_students()
+        existing_nos = {str(s.get('student_no')) for s in existing if s.get('student_no')}
+        existing_name_class = {(s.get('name'), s.get('class_name') or '')
+                               for s in existing if s.get('name')}
+
+        new_count = 0
+        for item in students:
+            if item['student_no'] and item['student_no'] in existing_nos:
+                item['status'] = 'duplicate'
+                item['status_text'] = '学号已存在'
+            elif not item['student_no'] and (item['name'], item['class_name']) in existing_name_class:
+                item['status'] = 'duplicate'
+                item['status_text'] = '同名同班已存在'
+            else:
+                item['status'] = 'new'
+                item['status_text'] = '新增'
+                new_count += 1
+
+        detected_classes = sorted({s['class_name'] for s in students if s['class_name']})
+
+        return jsonify({
+            'success': True,
+            'filename': filename,
+            'sheet': sheet_name,
+            'header_row': header_idx + 1,
+            'mapping': {k: ROSTER_COLUMN_LABELS.get(k, k) for k in mapping},
+            'mapping_detail': {k: v for k, v in mapping.items()},
+            'header_preview': [c for c in rows[header_idx] if _cell_text(c)][:12],
+            'total': len(students),
+            'new_count': new_count,
+            'duplicate_count': len(students) - new_count,
+            'invalid_count': len(issues),
+            'issues': issues[:30],
+            'warnings': warnings[:20],
+            'detected_classes': detected_classes,
+            'detected_grade': (students[0]['grade'] if students else ''),
+            'students': students[:600],
+        })
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
+    except Exception as exc:  # noqa: BLE001 - 解析失败要给出可读信息
+        print(f'[名单导入] 解析失败: {exc}')
+        return jsonify({'error': f'解析文件失败：{exc}'}), 400
+
+
+@app.route('/api/students/import/confirm', methods=['POST'])
+def api_students_import_confirm():
+    """把预览确认后的学生写入档案，并自动建/补班级"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'teacher':
+        return jsonify({'error': '只有老师才能导入班级名单'}), 403
+
+    body = request.get_json() or {}
+    rows = body.get('students') or []
+    if not isinstance(rows, list) or not rows:
+        return jsonify({'error': '没有可导入的学生数据'}), 400
+
+    default_class = (body.get('class_name') or '').strip()
+    default_grade = (body.get('grade') or '').strip()
+    default_major = (body.get('major') or '').strip()
+
+    students = load_students()
+    existing_nos = {str(s.get('student_no')) for s in students if s.get('student_no')}
+    existing_name_class = {(s.get('name'), s.get('class_name') or '')
+                           for s in students if s.get('name')}
+
+    created, skipped = [], []
+    for item in rows[:800]:
+        name = _cell_text(item.get('name'))
+        if not name:
+            skipped.append({'name': '', 'reason': '缺少姓名'})
+            continue
+
+        student_no = re.sub(r'\s+', '', _cell_text(item.get('student_no')))
+        class_name = _cell_text(item.get('class_name')) or default_class
+        grade = _cell_text(item.get('grade')) or default_grade or _grade_label(_enroll_year_from_no(student_no))
+        major = _cell_text(item.get('major')) or default_major
+
+        if student_no and student_no in existing_nos:
+            skipped.append({'name': name, 'student_no': student_no, 'reason': '学号已存在'})
+            continue
+        if not student_no and (name, class_name) in existing_name_class:
+            skipped.append({'name': name, 'reason': '同名同班已存在'})
+            continue
+
+        enroll_year = _enroll_year_from_no(student_no)
+        student = {
+            'id': next_student_id(students),
+            'student_no': student_no,
+            'name': name,
+            'class_name': class_name,
+            'major': major,
+            'college': _cell_text(item.get('college')),
+            'phone': _cell_text(item.get('phone')),
+            'grade': grade,
+            'grade_level': _grade_level(enroll_year),
+            'enroll_year': enroll_year,
+            'avatar': None,
+            'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'last_login': '',
+            'competence_analysis': {area['id']: {'count': 0, 'score': 0.0}
+                                    for area in COMPETENCE_AREAS},
+            'conversation_history': []
+        }
+        students.append(student)
+        created.append(student)
+        if student_no:
+            existing_nos.add(student_no)
+        existing_name_class.add((name, class_name))
+
+    if created:
+        save_students(students)
+
+        # 班级表同步：缺的班补建，人数重算
+        classes = load_classes()
+        existing_names = {c.get('name') for c in classes}
+        class_created = []
+        for cname in sorted({s['class_name'] for s in created if s['class_name']}):
+            if cname not in existing_names:
+                classes.append({
+                    'id': (max([c.get('id', 0) for c in classes] + [0]) + 1),
+                    'name': cname,
+                    'grade': next((s.get('grade', '') for s in created
+                                   if s['class_name'] == cname and s.get('grade')), ''),
+                    'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                    'student_count': 0,
+                })
+                class_created.append(cname)
+        for c in classes:
+            c['student_count'] = len([s for s in students if s.get('class_name') == c.get('name')])
+        save_classes(classes)
+
+        if SECURITY_MODULE_AVAILABLE:
+            security.audit('student_import', target=default_class or '按表格班级',
+                           detail=f'导入学生 {len(created)} 人，跳过 {len(skipped)} 人',
+                           after={'created': len(created), 'skipped': len(skipped)})
+    else:
+        class_created = []
+
+    return jsonify({
+        'success': True,
+        'created': len(created),
+        'skipped': len(skipped),
+        'class_created': class_created,
+        'skipped_detail': skipped[:30],
+    })
+
+
+@app.route('/api/classes/<int:class_id>', methods=['GET'])
+def api_class_detail(class_id):
+    """班级详情：成员名单（供班级管理面板查看）"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'teacher':
+        return jsonify({'error': '权限不足：该操作仅限老师'}), 403
+
+    class_obj = next((c for c in load_classes() if c.get('id') == class_id), None)
+    if not class_obj:
+        return jsonify({'error': '班级不存在'}), 404
+
+    members = [s for s in load_students() if s.get('class_name') == class_obj.get('name')]
+    return jsonify({
+        'success': True,
+        'class': class_obj,
+        'count': len(members),
+        'students': [{
+            'id': s.get('id', ''),
+            'name': s.get('name', ''),
+            'student_no': s.get('student_no', ''),
+            'grade': _student_meta(s).get('grade', ''),
+            'major': _student_meta(s).get('major', ''),
+        } for s in members],
+    })
+
+
+# ====================== 学生课程（学生自填，老师只读） ======================
+
+def _find_student_record(student_id):
+    return next((s for s in load_students() if str(s.get('id')) == str(student_id)), None)
+
+
+def _courses_payload(student, editable: bool) -> Dict:
+    course_ids = _normalize_courses(student.get('courses'))
+    covered = _covered_dimensions(course_ids)
+    all_dims = _dimension_payload()
+    covered_dims = _dimension_payload(covered)
+    return {
+        'success': True,
+        'student': {
+            'id': student.get('id', ''),
+            'name': student.get('name', ''),
+            'student_no': student.get('student_no', ''),
+        },
+        'courses': _course_names(course_ids),
+        'course_ids': course_ids,
+        'dimensions': covered_dims,
+        'all_dimensions': all_dims,
+        'mode': 'course' if covered else 'all',
+        'covered_count': len(covered_dims),
+        'hidden_count': (len(all_dims) - len(covered_dims)) if covered else 0,
+        'editable': editable,
+    }
+
+
+@app.route('/api/courses/catalog', methods=['GET'])
+def api_course_catalog():
+    """课程目录 + 维度图标（供选课面板使用）"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    return jsonify({
+        'success': True,
+        'courses': [dict(c) for c in COURSE_CATALOG],
+        'dimensions': _dimension_payload(),
+    })
+
+
+@app.route('/api/students/<string:student_id>/courses', methods=['GET'])
+def api_student_courses(student_id):
+    """查看某学生的课程：学生只能看自己，老师只读查看任意学生"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+
+    student = _find_student_record(student_id)
+    if not student:
+        return jsonify({'error': '学生不存在'}), 404
+
+    is_teacher = session.get('role') == 'teacher'
+    is_self = _student_belongs_to_session(student)
+    if not is_teacher and not is_self:
+        return jsonify({'error': '无权查看其他学生的课程'}), 403
+
+    # 只有学生本人可以修改；老师只读
+    return jsonify(_courses_payload(student, editable=is_self and not is_teacher))
+
+
+@app.route('/api/student/courses', methods=['PUT'])
+def api_save_my_courses():
+    """学生保存自己的课程（老师不能代选）"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'student':
+        return jsonify({'error': '课程由学生本人设置，老师只能查看'}), 403
+
+    body = request.get_json() or {}
+    raw = body.get('courses')
+    if raw is None:
+        return jsonify({'error': '缺少课程数据'}), 400
+    if not isinstance(raw, list):
+        return jsonify({'error': '课程格式不正确'}), 400
+
+    course_ids = _normalize_courses(raw)
+    students = load_students()
+    me = next((s for s in students if _student_belongs_to_session(s)), None)
+    if not me:
+        return jsonify({'error': '未找到你的档案，请重新登录'}), 404
+
+    before = _normalize_courses(me.get('courses'))
+    me['courses'] = course_ids
+    me['courses_updated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    save_students(students)
+
+    if SECURITY_MODULE_AVAILABLE:
+        security.audit('course_update', target=f"student:{me.get('name', '')}",
+                       detail=f'课程 {len(before)} → {len(course_ids)} 门',
+                       before={'courses': before}, after={'courses': course_ids})
+
+    return jsonify(_courses_payload(me, editable=True))
+
+
+# ====================== 学生分类 / 总览 / 深度分析 ======================
+# 说明：以下接口全部为新增，不改变原有 /students、/api/competence-radar 等接口行为。
+
+def _student_avg_score_pct(student: Dict) -> float:
+    """12 维能力平均分（0-100）"""
+    comp = student.get('competence_analysis') or {}
+    scores = []
+    for area in COMPETENCE_AREAS:
+        item = comp.get(area['id']) or {}
+        if isinstance(item, dict):
+            try:
+                scores.append(float(item.get('score', 0) or 0))
+            except (TypeError, ValueError):
+                scores.append(0.0)
+    return round(sum(scores) / len(scores) * 100, 1) if scores else 0.0
+
+
+def _student_weekly_stats(student: Dict) -> Dict:
+    """周任务完成情况"""
+    weeks = student.get('weekly_tasks') or {}
+    total = done = 0
+    for week_data in weeks.values():
+        for task in (week_data or {}).get('tasks', []):
+            total += 1
+            if task.get('completed'):
+                done += 1
+    return {
+        'weeks': len(weeks),
+        'total': total,
+        'completed': done,
+        'rate': round(done / total * 100, 1) if total else 0.0,
+    }
+
+
+def _student_wrong_stats(student_name: str) -> Dict:
+    """错题本统计"""
+    try:
+        questions = [q for q in load_wrong_questions() if q.get('student_name') == student_name]
+    except Exception as exc:  # noqa: BLE001 - 统计失败不影响主流程
+        print(f"[学生分析] 错题读取失败: {exc}")
+        questions = []
+
+    mastered = sum(1 for q in questions if q.get('mastered'))
+    by_point = {}
+    for q in questions:
+        point = (q.get('knowledge_point') or q.get('category') or '未分类').strip() or '未分类'
+        item = by_point.setdefault(point, {'knowledge_point': point, 'total': 0, 'mastered': 0})
+        item['total'] += 1
+        if q.get('mastered'):
+            item['mastered'] += 1
+    by_point_list = sorted(by_point.values(), key=lambda x: x['total'], reverse=True)
+
+    recent = sorted(questions, key=lambda q: q.get('last_wrong_time') or q.get('created_at') or '',
+                    reverse=True)[:5]
+    return {
+        'total': len(questions),
+        'mastered': mastered,
+        'unmastered': len(questions) - mastered,
+        'mastered_rate': round(mastered / len(questions) * 100, 1) if questions else 0.0,
+        'by_knowledge_point': by_point_list,
+        'recent': [{
+            'question': (q.get('question') or '')[:80],
+            'knowledge_point': q.get('knowledge_point') or q.get('category') or '',
+            'count': q.get('count', 1),
+            'mastered': bool(q.get('mastered')),
+            'last_wrong_time': q.get('last_wrong_time') or q.get('created_at') or '',
+        } for q in recent],
+    }
+
+
+def _student_learning_stats(student_name: str, days: int = 30) -> Dict:
+    """学习行为统计：近 N 天提问/错题/掌握 + 活跃天数 + 最近活动时间线"""
+    try:
+        records = (load_learning_records() or {}).get(student_name, [])
+    except Exception as exc:  # noqa: BLE001
+        print(f"[学生分析] 学习记录读取失败: {exc}")
+        records = []
+
+    cutoff = (datetime.now() - timedelta(days=days)).strftime('%Y-%m-%d')
+    recent = [r for r in records if (r.get('date') or '') >= cutoff]
+
+    active_dates = {r.get('date') for r in recent if r.get('date')}
+    scores = []
+    for r in recent:
+        try:
+            if r.get('score') is not None:
+                scores.append(float(r['score']))
+        except (TypeError, ValueError):
+            continue
+
+    wrong = sum(1 for r in recent if r.get('activity_type') == 'wrong_question')
+    mastered = sum(1 for r in recent if r.get('activity_type') == 'mastered')
+
+    timeline = sorted(records, key=lambda r: r.get('timestamp') or '', reverse=True)[:10]
+
+    return {
+        'days': days,
+        'total_records': len(records),
+        'recent_records': len(recent),
+        'active_days': len(active_dates),
+        'wrong_in_window': wrong,
+        'mastered_in_window': mastered,
+        'avg_score': round(sum(scores) / len(scores), 1) if scores else 0.0,
+        'accuracy': round((1 - wrong / len(recent)) * 100, 1) if recent else 0.0,
+        'timeline': [{
+            'type': r.get('activity_type') or '',
+            'knowledge_point': r.get('knowledge_point') or '',
+            'score': r.get('score'),
+            'timestamp': r.get('timestamp') or '',
+        } for r in timeline],
+    }
+
+
+def _student_homework_stats(student_no: str, student_name: str) -> Dict:
+    """作业提交统计"""
+    try:
+        submissions = load_homework_submissions() or []
+    except Exception as exc:  # noqa: BLE001
+        print(f"[学生分析] 作业数据读取失败: {exc}")
+        submissions = []
+
+    mine = [s for s in submissions
+            if (student_no and s.get('student_no') == student_no)
+            or (student_name and s.get('student_name') == student_name)]
+    scores = []
+    for s in mine:
+        score = s.get('teacher_score_override')
+        if score is None:
+            score = s.get('ai_score_total')
+        try:
+            if score is not None:
+                scores.append(float(score))
+        except (TypeError, ValueError):
+            continue
+
+    return {
+        'submitted': len(mine),
+        'late': sum(1 for s in mine if s.get('late')),
+        'avg_score': round(sum(scores) / len(scores), 1) if scores else 0.0,
+        'pending_comment': sum(1 for s in mine if not s.get('teacher_comment')),
+        'recent': [{
+            'homework_id': s.get('homework_id'),
+            'submitted_at': s.get('submitted_at') or '',
+            'score': (s.get('teacher_score_override')
+                      if s.get('teacher_score_override') is not None
+                      else s.get('ai_score_total')),
+            'late': bool(s.get('late')),
+        } for s in sorted(mine, key=lambda x: x.get('submitted_at') or '', reverse=True)[:5]],
+    }
+
+
+def _student_interview_stats(student_no: str, student_name: str) -> Dict:
+    """模拟面试统计"""
+    try:
+        records = load_interview_records() or []
+    except Exception as exc:  # noqa: BLE001
+        print(f"[学生分析] 面试记录读取失败: {exc}")
+        records = []
+
+    mine = [r for r in records
+            if (student_no and r.get('student_no') == student_no)
+            or (student_name and r.get('student_name') == student_name)]
+    done = [r for r in mine if r.get('status') == 'completed']
+    scores = []
+    for r in done:
+        try:
+            if r.get('score') is not None:
+                scores.append(float(r['score']))
+        except (TypeError, ValueError):
+            continue
+
+    return {
+        'total': len(mine),
+        'completed': len(done),
+        'avg_score': round(sum(scores) / len(scores), 1) if scores else 0.0,
+        'recent': [{
+            'company': r.get('target_company') or '',
+            'position': r.get('target_position') or '',
+            'type': r.get('interview_type') or '',
+            'score': r.get('score'),
+            'status': r.get('status') or '',
+            'completed_at': r.get('completed_at') or '',
+        } for r in sorted(done, key=lambda x: x.get('completed_at') or '', reverse=True)[:5]],
+    }
+
+
+def _student_credential_stats(student_no: str) -> Dict:
+    """哈希链成长档案统计（模块未加载时返回空结构，不报错）"""
+    empty = {'available': False, 'records': 0, 'certificates': 0, 'chain_valid': None}
+    if not CREDENTIAL_MODULE_AVAILABLE or not student_no:
+        return empty
+    try:
+        summary = credential_chain.get_chain_summary(student_no) or {}
+        certify = credential_chain.get_student_certificates(student_no) or []
+        return {
+            'available': True,
+            'records': summary.get('record_count', summary.get('records', 0)),
+            'certificates': len(certify),
+            'chain_valid': bool(summary.get('valid', True)),
+        }
+    except Exception as exc:  # noqa: BLE001
+        print(f"[学生分析] 成长档案读取失败: {exc}")
+        return empty
+
+
+def _student_risk(student: Dict, learning: Dict, weekly: Dict, wrong: Dict) -> Dict:
+    """学习风险评级（规则型，可解释）"""
+    reasons = []
+    level = 'low'
+
+    # 新加入（7 天内建档）的学生不按「不活跃」计风险，避免一进来就报警
+    created_days = None
+    if student.get('created_at'):
+        try:
+            created_days = (datetime.now()
+                            - datetime.strptime(str(student['created_at'])[:19], '%Y-%m-%d %H:%M:%S')).days
+        except (ValueError, TypeError):
+            created_days = None
+    is_new = created_days is not None and created_days <= 7
+
+    last_login = student.get('last_login') or ''
+    inactive_days = None
+    if last_login:
+        try:
+            inactive_days = (datetime.now() - datetime.strptime(last_login[:19], '%Y-%m-%d %H:%M:%S')).days
+        except (ValueError, TypeError):
+            inactive_days = None
+
+    if inactive_days is not None and inactive_days >= 21:
+        level = 'high'
+        reasons.append(f'已 {inactive_days} 天未登录')
+    elif inactive_days is not None and inactive_days >= 7:
+        level = 'mid'
+        reasons.append(f'已 {inactive_days} 天未登录')
+
+    if learning['recent_records'] == 0:
+        if is_new:
+            reasons.append('新加入学生，暂无学习记录')
+        else:
+            reasons.append(f"近 {learning['days']} 天无学习记录")
+            if level == 'low':
+                level = 'mid'
+    if weekly['total'] and weekly['rate'] < 50:
+        reasons.append(f"周任务完成率仅 {weekly['rate']}%")
+        if level == 'low':
+            level = 'mid'
+    if wrong['unmastered'] >= 10:
+        reasons.append(f"未掌握错题 {wrong['unmastered']} 道")
+        if level == 'low':
+            level = 'mid'
+    if not reasons:
+        reasons.append('学习状态正常')
+
+    return {
+        'level': level,
+        'label': {'high': '高', 'mid': '中', 'low': '低'}[level],
+        'color': {'high': '#ff6b6b', 'mid': '#ffa94d', 'low': '#51cf66'}[level],
+        'reasons': reasons,
+    }
+
+
+def _student_rank(student: Dict, all_students: List[Dict], field: str) -> Dict:
+    """同班/同年级按综合能力排名（0 分学生也参与，避免空班除零）"""
+    info = _student_meta(student)
+    target = info.get(field) or ''
+    if not target:
+        return {'rank': None, 'total': 0, 'percentile': None}
+
+    peers = [s for s in all_students if (_student_meta(s).get(field) or '') == target]
+    if not peers:
+        return {'rank': None, 'total': 0, 'percentile': None}
+
+    scored = sorted(
+        ((_student_avg_score_pct(s), str(s.get('id', ''))) for s in peers),
+        key=lambda x: x[0], reverse=True
+    )
+    my_score = _student_avg_score_pct(student)
+    my_id = str(student.get('id', ''))
+    rank = next((i + 1 for i, (_, sid) in enumerate(scored) if sid == my_id), None)
+    if rank is None:
+        rank = sum(1 for score, _ in scored if score > my_score) + 1
+    percentile = round((1 - (rank - 1) / len(scored)) * 100, 1) if scored else None
+    return {'rank': rank, 'total': len(scored), 'percentile': percentile}
+
+
+def _student_advice(student: Dict, weaknesses: List[Dict], weekly: Dict, wrong: Dict) -> List[Dict]:
+    """规则型学习建议（与 AI 分析互补，秒出结果）"""
+    advice = []
+    for w in weaknesses[:3]:
+        advice.append({
+            'type': '能力补强',
+            'target': w['name'],
+            'text': generate_suggestion(w['name']),
+        })
+    if wrong['unmastered'] > 0:
+        top = wrong['by_knowledge_point'][0]['knowledge_point'] if wrong['by_knowledge_point'] else '错题'
+        advice.append({
+            'type': '错题复盘',
+            'target': top,
+            'text': f"还有 {wrong['unmastered']} 道错题未掌握，建议先集中复盘「{top}」相关题目，再标记已掌握。",
+        })
+    if weekly['total'] and weekly['rate'] < 100:
+        advice.append({
+            'type': '任务推进',
+            'target': '周任务',
+            'text': f"本周任务完成 {weekly['completed']}/{weekly['total']}，建议按任务清单逐项推进并及时提交。",
+        })
+    if not advice:
+        advice.append({
+            'type': '保持节奏',
+            'target': '综合',
+            'text': '当前学习状态良好，建议继续保持练习频率，并尝试更高难度的实训场景。',
+        })
+    return advice
+
+
+def _student_brief_row(student: Dict, wrong_map: Dict, hw_map: Dict) -> Dict:
+    """总览列表用的精简行（不含对话历史，避免接口过大）"""
+    meta = _student_meta(student)
+    name = meta['name']
+    wrong = wrong_map.get(name, {'total': 0, 'unmastered': 0})
+    weekly = _student_weekly_stats(student)
+    return {
+        'id': student.get('id', ''),
+        'name': name,
+        'student_no': meta['student_no'],
+        'grade': meta['grade'],
+        'grade_level': meta['grade_level'],
+        'major': meta['major'],
+        'class_name': meta['class_name'],
+        'avg_score': _student_avg_score_pct(student),
+        'total_questions': student.get('total_questions', 0),
+        'weekly_rate': weekly['rate'],
+        'wrong_total': wrong['total'],
+        'wrong_unmastered': wrong['unmastered'],
+        'homework_count': hw_map.get(name, 0),
+        'last_login': student.get('last_login', ''),
+        'created_at': student.get('created_at', ''),
+    }
+
+
+@app.route('/api/students/filters', methods=['GET'])
+def api_student_filters():
+    """学生分类维度：年级 / 年级层次 / 班级 / 专业 + 各维度人数（仅老师）"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'teacher':
+        return jsonify({'error': '权限不足：该操作仅限老师'}), 403
+
+    students = load_students()
+
+    grade_counter, level_counter, class_counter, major_counter = {}, {}, {}, {}
+    for s in students:
+        meta = _student_meta(s)
+        grade = meta['grade'] or '未标注年级'
+        level = meta['grade_level'] or '未标注'
+        class_name = meta['class_name'] or '未分班'
+        major = meta['major'] or '未标注专业'
+        grade_counter[grade] = grade_counter.get(grade, 0) + 1
+        level_counter[level] = level_counter.get(level, 0) + 1
+        class_counter[class_name] = class_counter.get(class_name, 0) + 1
+        major_counter[major] = major_counter.get(major, 0) + 1
+
+    # 已创建但暂无学生的班级也要能选到
+    for c in load_classes():
+        cname = c.get('name') or ''
+        if cname and cname not in class_counter:
+            class_counter[cname] = 0
+
+    def _pack(counter):
+        return [{'value': k, 'label': k, 'count': v}
+                for k, v in sorted(counter.items(), key=lambda kv: (-kv[1], kv[0]))]
+
+    return jsonify({
+        'success': True,
+        'total': len(students),
+        'grades': _pack(grade_counter),
+        'grade_levels': _pack(level_counter),
+        'classes': _pack(class_counter),
+        'majors': _pack(major_counter),
+    })
+
+
+@app.route('/api/students/overview', methods=['GET'])
+def api_students_overview():
+    """学生总览（老师端）：年级/层次/班级/专业/关键字 多条件筛选 + 排序 + 分页 + 分组统计"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+    if session.get('role') != 'teacher':
+        return jsonify({'error': '权限不足：该操作仅限老师'}), 403
+
+    grade = (request.args.get('grade') or '').strip()
+    grade_level = (request.args.get('grade_level') or '').strip()
+    class_name = (request.args.get('class_name') or '').strip()
+    major = (request.args.get('major') or '').strip()
+    keyword = (request.args.get('keyword') or '').strip().lower()
+    sort = (request.args.get('sort') or 'score_desc').strip()
+
+    try:
+        page = max(1, int(request.args.get('page', 1) or 1))
+    except ValueError:
+        page = 1
+    try:
+        page_size = int(request.args.get('page_size', 60) or 60)
+    except ValueError:
+        page_size = 60
+    page_size = min(200, max(1, page_size))
+
+    all_students = load_students()
+
+    # 错题 / 作业数量一次性汇总，避免逐人读文件
+    wrong_map = {}
+    try:
+        for q in load_wrong_questions():
+            name = q.get('student_name') or ''
+            item = wrong_map.setdefault(name, {'total': 0, 'unmastered': 0})
+            item['total'] += 1
+            if not q.get('mastered'):
+                item['unmastered'] += 1
+    except Exception as exc:  # noqa: BLE001
+        print(f"[学生总览] 错题汇总失败: {exc}")
+
+    hw_map = {}
+    try:
+        for sub in load_homework_submissions():
+            name = sub.get('student_name') or ''
+            hw_map[name] = hw_map.get(name, 0) + 1
+    except Exception as exc:  # noqa: BLE001
+        print(f"[学生总览] 作业汇总失败: {exc}")
+
+    rows = [_student_brief_row(s, wrong_map, hw_map) for s in all_students]
+
+    # 逐条件筛选（任一条件为空则忽略该维度）
+    filtered = []
+    for row in rows:
+        if not _meta_matches(row['grade'], grade, '未标注年级'):
+            continue
+        if not _meta_matches(row['grade_level'], grade_level, '未标注'):
+            continue
+        if not _meta_matches(row['class_name'], class_name, '未分班'):
+            continue
+        if not _meta_matches(row['major'], major, '未标注专业'):
+            continue
+        if keyword:
+            hay = f"{row['name']} {row['student_no']} {row['class_name']} {row['major']}".lower()
+            if keyword not in hay:
+                continue
+        filtered.append(row)
+
+    sorters = {
+        'score_desc': lambda r: (-r['avg_score'], r['student_no'] or 'zzz'),
+        'score_asc': lambda r: (r['avg_score'], r['student_no'] or 'zzz'),
+        'questions_desc': lambda r: (-r['total_questions'], r['name']),
+        'wrong_desc': lambda r: (-r['wrong_unmastered'], r['name']),
+        'name_asc': lambda r: (r['name'], r['student_no']),
+        'student_no_asc': lambda r: (r['student_no'] or 'zzzz', r['name']),
+        'last_login_desc': lambda r: (r['last_login'] or '', r['name']),
+    }
+    filtered.sort(key=sorters.get(sort, sorters['score_desc']))
+
+    total = len(filtered)
+    pages = max(1, (total + page_size - 1) // page_size)
+    page = min(page, pages)
+    start = (page - 1) * page_size
+    page_rows = filtered[start:start + page_size]
+
+    def _group(rows_in, key, empty_label):
+        counter = {}
+        for r in rows_in:
+            value = r.get(key) or empty_label
+            counter[value] = counter.get(value, 0) + 1
+        return [{'value': k, 'count': v}
+                for k, v in sorted(counter.items(), key=lambda kv: (-kv[1], kv[0]))]
+
+    summary = {
+        'student_count': total,
+        'all_count': len(rows),
+        'active_count': sum(1 for r in filtered if r['total_questions'] > 0),
+        'avg_score': round(sum(r['avg_score'] for r in filtered) / total, 1) if total else 0.0,
+        'avg_questions': round(sum(r['total_questions'] for r in filtered) / total, 1) if total else 0.0,
+        'wrong_unmastered': sum(r['wrong_unmastered'] for r in filtered),
+        'class_count': len({r['class_name'] for r in filtered if r['class_name']}),
+        'grade_count': len({r['grade'] for r in filtered if r['grade']}),
+    }
+
+    return jsonify({
+        'success': True,
+        'summary': summary,
+        'groups': {
+            'by_grade': _group(filtered, 'grade', '未标注年级'),
+            'by_grade_level': _group(filtered, 'grade_level', '未标注'),
+            'by_class': _group(filtered, 'class_name', '未分班'),
+            'by_major': _group(filtered, 'major', '未标注专业'),
+        },
+        'students': page_rows,
+        'page': page,
+        'page_size': page_size,
+        'pages': pages,
+        'total': total,
+        'filters': {
+            'grade': grade, 'grade_level': grade_level, 'class_name': class_name,
+            'major': major, 'keyword': keyword, 'sort': sort,
+        },
+    })
+
+
+@app.route('/api/students/<string:student_id>/analysis', methods=['GET'])
+def api_student_analysis_detail(student_id):
+    """学生深度分析：能力 / 行为 / 错题 / 作业 / 面试 / 周任务 / 证书 / 位次 / 风险 / 建议"""
+    if not session.get('authenticated'):
+        return jsonify({'error': '请先登录'}), 401
+
+    students = load_students()
+    student = next((s for s in students if str(s.get('id')) == str(student_id)), None)
+    if not student:
+        return jsonify({'error': '学生不存在'}), 404
+    if session.get('role') != 'teacher' and not _student_belongs_to_session(student):
+        return jsonify({'error': '无权查看其他学生的分析'}), 403
+
+    meta = _student_meta(student)
+    name = meta['name']
+
+    # 12 维能力 + 5 大类
+    comp = student.get('competence_analysis') or {}
+    radar, category = [], {}
+    for area in COMPETENCE_AREAS:
+        item = comp.get(area['id']) or {}
+        score = float(item.get('score', 0) or 0) if isinstance(item, dict) else 0.0
+        radar.append({
+            'id': area['id'], 'name': area['name'], 'category': area['category'],
+            'score': round(score * 100, 1), 'count': item.get('count', 0) if isinstance(item, dict) else 0,
+            'weight': area['weight'],
+        })
+        cat = area['category']
+        category.setdefault(cat, {'total_score': 0.0, 'count': 0, 'max': 0.0})
+        category[cat]['total_score'] += score * 100 * area['weight']
+        category[cat]['count'] += 1
+        category[cat]['max'] += 100 * area['weight']
+
+    interacted = [r for r in radar if r['score'] > 0]
+    weaknesses = sorted(interacted, key=lambda x: x['score'])[:3]
+    strengths = sorted(interacted, key=lambda x: x['score'], reverse=True)[:3]
+
+    weekly = _student_weekly_stats(student)
+    wrong = _student_wrong_stats(name)
+    learning = _student_learning_stats(name, days=30)
+    homework = _student_homework_stats(meta['student_no'], name)
+    interview = _student_interview_stats(meta['student_no'], name)
+    credential = _student_credential_stats(meta['student_no'])
+
+    if 'total_questions' in student:
+        total_questions = student.get('total_questions', 0)
+    else:
+        total_questions = sum(1 for m in (student.get('conversation_history') or [])
+                              if m.get('is_question', True))
+
+    avg_score = _student_avg_score_pct(student)
+
+    return jsonify({
+        'success': True,
+        'student': {
+            'id': student.get('id', ''),
+            'name': name,
+            'student_no': meta['student_no'],
+            'grade': meta['grade'],
+            'grade_level': meta['grade_level'],
+            'major': meta['major'],
+            'class_name': meta['class_name'],
+            'created_at': student.get('created_at', ''),
+            'last_login': student.get('last_login', ''),
+        },
+        'overview': {
+            'avg_score': avg_score,
+            'total_questions': total_questions,
+            'interacted_dimensions': len(interacted),
+            'top_dimension': strengths[0]['name'] if strengths else '-',
+            'weakest_dimension': weaknesses[0]['name'] if weaknesses else '-',
+        },
+        'radar': radar,
+        'category_summary': category,
+        'weaknesses': weaknesses,
+        'strengths': strengths,
+        'weekly': weekly,
+        'wrong': wrong,
+        'learning': learning,
+        'homework': homework,
+        'interview': interview,
+        'credential': credential,
+        'rank': {
+            'class': _student_rank(student, students, 'class_name'),
+            'grade': _student_rank(student, students, 'grade'),
+        },
+        'risk': _student_risk(student, learning, weekly, wrong),
+        'advice': _student_advice(student, weaknesses, weekly, wrong),
+        # 课程（学生自填，老师看得到）：报告页据此展示，并说明能力维度的口径
+        'courses': _course_names(_normalize_courses(student.get('courses'))),
+        'course_dimensions': _dimension_payload(
+            _covered_dimensions(_normalize_courses(student.get('courses')))),
+        'class_avg': _class_avg_radar(students, meta['class_name']) if meta['class_name'] else [],
+    })
+
+
+def _class_avg_radar(students: List[Dict], class_name: str) -> List[Dict]:
+    """班级 12 维平均分（仅统计有互动的学生，避免被 0 分拉低）"""
+    if not class_name:
+        return []
+    members = [s for s in students if (_student_meta(s).get('class_name') or '') == class_name]
+    if not members:
+        return []
+    out = []
+    for area in COMPETENCE_AREAS:
+        scores = []
+        for s in members:
+            item = (s.get('competence_analysis') or {}).get(area['id']) or {}
+            if isinstance(item, dict) and item.get('count', 0) > 0:
+                try:
+                    scores.append(float(item.get('score', 0) or 0))
+                except (TypeError, ValueError):
+                    continue
+        out.append({
+            'id': area['id'],
+            'name': area['name'],
+            'score': round(sum(scores) / len(scores) * 100, 1) if scores else 0.0,
+            'interacted': len(scores),
+            'total': len(members),
+        })
+    return out
 
 
 @app.route('/students/<string:student_id>/report', methods=['GET'])

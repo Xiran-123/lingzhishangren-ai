@@ -15,12 +15,13 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 0;
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
+            padding: 18px 20px 40px;
         }
 
         .header {
@@ -662,6 +663,262 @@
             transition: width 0.3s;
         }
 
+        /* ===== 新增：学生分类筛选条 ===== */
+        .filter-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            align-items: end;
+            background: #f8f9fc;
+            border: 1px solid #e9ecf7;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 18px;
+        }
+        .filter-field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+        .filter-field label { font-size: 12px; font-weight: 600; color: #7a8199; }
+        .filter-field select, .filter-field input {
+            padding: 8px 12px;
+            border: 2px solid #e4e8f4;
+            border-radius: 9px;
+            font-size: 13px;
+            background: #fff;
+            color: #333;
+            width: 100%;
+        }
+        .filter-field select:focus, .filter-field input:focus { outline: none; border-color: #667eea; }
+        .filter-actions { display: flex; gap: 8px; }
+        .f-btn {
+            padding: 9px 16px;
+            border-radius: 9px;
+            border: none;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .f-btn.primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; }
+        .f-btn.ghost { background: #eef1f9; color: #5563a8; border: 1.5px solid #dfe4f2; }
+        .f-btn.ghost:hover { border-color: #667eea; color: #667eea; }
+        .filter-stat {
+            grid-column: 1 / -1;
+            font-size: 12px;
+            color: #667eea;
+            background: rgba(102,126,234,.07);
+            border-radius: 8px;
+            padding: 7px 12px;
+        }
+        .chip-row { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 7px; }
+        .f-chip {
+            padding: 4px 11px;
+            border-radius: 14px;
+            background: #fff;
+            border: 1px solid #e4e8f6;
+            color: #5563a8;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .f-chip:hover { background: rgba(102,126,234,.1); }
+        .f-chip.active { background: linear-gradient(135deg,#667eea,#764ba2); color:#fff; border-color: transparent; }
+
+        /* ===== 新增：深度分析区 ===== */
+        .deep-sub { margin-bottom: 20px; }
+        .deep-sub:last-child { margin-bottom: 0; }
+        .deep-sub h4 {
+            font-size: 14px;
+            color: #4a55a2;
+            margin-bottom: 10px;
+            padding-left: 9px;
+            border-left: 3px solid #667eea;
+        }
+        .deep-mini { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .deep-mini .m {
+            background: #f8f9fc;
+            border-radius: 10px;
+            padding: 12px;
+            border-left: 3px solid #667eea;
+        }
+        .deep-mini .m .n { font-size: 19px; font-weight: 700; color: #4a55a2; }
+        .deep-mini .m .c { font-size: 11px; color: #8a90a6; margin-top: 3px; }
+        .deep-mini .m .s { font-size: 11px; color: #a8aec0; margin-top: 5px; }
+        .risk-pill {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 14px;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .deep-advice {
+            background: #f8f9fc;
+            border-left: 3px solid #667eea;
+            border-radius: 9px;
+            padding: 11px 14px;
+            margin-bottom: 9px;
+            font-size: 13px;
+            line-height: 1.65;
+            color: #3c4257;
+        }
+        .deep-tag {
+            display: inline-block;
+            background: rgba(102,126,234,.12);
+            color: #5a67c4;
+            border-radius: 10px;
+            padding: 1px 8px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-right: 6px;
+        }
+        .deep-kv {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px dashed #eef0f7;
+            font-size: 13px;
+        }
+        .deep-kv:last-child { border-bottom: none; }
+        .deep-kv .k { color: #667; }
+        .deep-kv .v { color: #333; font-weight: 600; }
+        .deep-empty { color: #9aa2b8; font-size: 13px; padding: 10px 0; text-align: center; }
+
+        /* ===== 新增：分组组头 ===== */
+        .group-head {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 6px 0 -4px;
+            padding: 9px 14px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(102,126,234,.12), rgba(118,75,162,.10));
+            border-left: 4px solid #667eea;
+            font-size: 14px;
+            font-weight: 700;
+            color: #4a55a2;
+        }
+        .group-head .group-count {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6d76a8;
+            background: rgba(255,255,255,.7);
+            border-radius: 12px;
+            padding: 3px 10px;
+        }
+
+        /* ===== 左侧学生分类导航 + 右侧报告（双栏） ===== */
+        .pz-wrap {
+            display: grid;
+            grid-template-columns: 272px minmax(0, 1fr);
+            gap: 18px;
+            max-width: 1560px;
+            margin: 0 auto;
+            padding: 16px 20px 44px;
+            align-items: start;
+        }
+        .pz-wrap.solo { grid-template-columns: minmax(0, 1fr); }
+        .pz-side {
+            background: white;
+            border-radius: 15px;
+            padding: 14px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 74px;
+            max-height: calc(100vh - 92px);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .pz-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .pz-headtitle {
+            display: flex; align-items: center; gap: 7px;
+            font-size: 15px; font-weight: 700; color: #333;
+        }
+        .pz-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: #667eea; box-shadow: 0 0 8px #667eea; flex: 0 0 auto;
+        }
+        .pz-mini {
+            padding: 4px 12px; border-radius: 14px;
+            border: 1px solid #e4e8f6; background: #f7f8fc;
+            color: #5563a8; font-size: 12px; cursor: pointer; font-family: inherit;
+        }
+        .pz-mini:hover { border-color: #667eea; color: #667eea; }
+        .pz-filters { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+        .pz-filters select, .pz-filters input {
+            width: 100%; padding: 6px 8px; font-size: 12px;
+            border: 1.5px solid #e4e8f4; border-radius: 8px;
+            background: #fff; color: #333;
+        }
+        .pz-filters select:focus, .pz-filters input:focus { outline: none; border-color: #667eea; }
+        .pz-filters .full { grid-column: 1 / -1; }
+        .pz-summary {
+            font-size: 11.5px; line-height: 1.55; color: #5a67c4;
+            background: rgba(102,126,234,.08); border-radius: 8px;
+            padding: 6px 10px; display: none;
+        }
+        .pz-summary b { color: #4a55a2; }
+        .pz-list {
+            overflow-y: auto; flex: 1; min-height: 60px;
+            margin: 0 -4px; padding: 0 4px 6px;
+        }
+        .pz-glabel {
+            display: flex; align-items: center; justify-content: space-between;
+            font-size: 11px; font-weight: 700; letter-spacing: .5px; color: #7a8199;
+            padding: 9px 6px 4px; position: sticky; top: 0; background: #fff; z-index: 1;
+        }
+        .pz-glabel b { color: #667eea; font-size: 11px; }
+        .pz-gsub { font-size: 11px; color: #9aa2b8; padding: 2px 6px 4px; }
+        .pz-item {
+            display: flex; align-items: center; gap: 9px;
+            padding: 7px 9px; border-radius: 10px; cursor: pointer;
+            transition: .18s; margin-bottom: 2px;
+        }
+        .pz-item:hover { background: #f4f6fd; transform: translateX(2px); }
+        .pz-item.on {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            box-shadow: 0 4px 14px rgba(102,126,234,.35);
+            transform: none;
+        }
+        .pz-av {
+            width: 26px; height: 26px; border-radius: 50%;
+            background: #eef1fb; color: #5a67c4;
+            display: grid; place-items: center;
+            font-size: 12px; font-weight: 700; flex: 0 0 auto;
+        }
+        .pz-item.on .pz-av { background: rgba(255,255,255,.25); color: #fff; }
+        .pz-info { min-width: 0; flex: 1; display: flex; flex-direction: column; line-height: 1.25; }
+        .pz-name {
+            font-size: 13px; font-weight: 600; color: #333;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .pz-no {
+            font-size: 10.5px; color: #9aa2b8;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .pz-item.on .pz-name { color: #fff; }
+        .pz-item.on .pz-no { color: rgba(255,255,255,.75); }
+        .pz-score {
+            flex: 0 0 auto; font-size: 11.5px; font-weight: 700;
+            color: #667eea; background: #eef1fb; border-radius: 10px; padding: 2px 7px;
+        }
+        .pz-item.on .pz-score { background: rgba(255,255,255,.22); color: #fff; }
+        .pz-empty { text-align: center; color: #9aa2b8; font-size: 12.5px; padding: 26px 8px; }
+        .pz-main { max-width: none; margin: 0; padding: 0; min-width: 0; }
+        .pz-titlebar {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 12px; flex-wrap: wrap; margin-bottom: 16px;
+        }
+        .pz-titlebar .an-pagetitle { margin: 0; }
+
+        /* 右侧报告容器本身不加全局光效，发光只交给内部卡片 */
+        .report-section {
+            border: none !important;
+            box-shadow: none !important;
+            -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
+        }
+
         @media (max-width: 768px) {
             .report-section {
                 grid-template-columns: 1fr;
@@ -684,8 +941,13 @@
 
         /* ===== 移动端适配（新增补充） ===== */
         @media (max-width: 768px) {
-            body { padding: 8px !important; }
-            .title { font-size: 22px; }
+            body { padding: 0 !important; }
+            .container { padding: 12px 8px 30px !important; }
+            .title { font-size: 19px !important; }
+            .pz-wrap { grid-template-columns: 1fr !important; padding: 12px 8px 30px !important; }
+            .pz-main { padding: 0 !important; }
+            .pz-side { position: static !important; max-height: none !important; }
+            .pz-list { max-height: 240px !important; }
             .header-right { flex-wrap: wrap; }
             .students-section { padding: 16px; }
             .report-card { padding: 16px; }
@@ -700,60 +962,79 @@
             .item-name { min-width: 0; word-break: break-all; }
             .radar-container { padding: 10px; }
             .modal { width: 94%; padding: 18px; max-height: 85vh; overflow-y: auto; }
+            .filter-bar { grid-template-columns: 1fr 1fr !important; padding: 10px; }
+            .deep-mini { grid-template-columns: 1fr 1fr !important; }
+            .filter-actions { flex-wrap: wrap; }
             .modal-actions { flex-wrap: wrap; }
             .empty-state { padding: 40px 12px; }
         }
         @media (max-width: 480px) {
-            body { padding: 6px !important; }
+            body { padding: 0 !important; }
+            .container { padding: 10px 6px 26px !important; }
             .students-grid { grid-template-columns: 1fr; }
-            .title { font-size: 20px; }
+            .title { font-size: 18px !important; }
         }
     </style>
     <!-- 全局按钮美化 -->
     <link rel="stylesheet" href="/static/global_buttons.css">
-<link rel="stylesheet" href="/static/global_pages.css">
+    <link rel="stylesheet" href="/static/global_pages.css">
+    <!-- 全站顶部导航栏（与首页同一套视觉） -->
+    <link rel="stylesheet" href="/static/app_nav.css">
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="header-left">
-                <a href="/" target="_top" class="back-btn">← 返回</a>
-                <h1 class="title" id="pageTitle">📊 学生分析报告</h1>
+    <div id="appNav"></div>
+    <div class="pz-wrap" id="pzWrap">
+        <!-- ===== 左侧：学生分类导航 ===== -->
+        <aside class="pz-side" id="pzSide">
+            <div class="pz-head">
+                <span class="pz-headtitle"><span class="pz-dot"></span>学生分类</span>
+                <span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+                    <button class="pz-mini" onclick="showAddModal()">+ 添加</button>
+                    <button class="pz-mini" id="pzFilterBtn" onclick="toggleFilterPanel()">收起</button>
+                </span>
             </div>
-            <div class="header-right">
-                <button class="nav-btn logout-btn" onclick="doLogout()">🔓 退出登录</button>
-            </div>
-        </div>
 
-        <!-- 学生列表（仅老师可见） -->
-        <div class="students-section" id="studentsSection">
-            <div class="section-title">
-                👥 学生列表
-                <button class="add-btn" onclick="showAddModal()">+ 添加学生</button>
+            <div class="pz-filters" id="pzFilters">
+                <select id="fGrade" onchange="reloadStudents()"><option value="">全部年级</option></select>
+                <select id="fLevel" onchange="reloadStudents()"><option value="">全部层次</option></select>
+                <select id="fClass" onchange="reloadStudents()"><option value="">全部班级</option></select>
+                <select id="fMajor" onchange="reloadStudents()"><option value="">全部专业</option></select>
+                <select id="fSort" class="full" onchange="reloadStudents()">
+                    <option value="score_desc">按综合能力 高→低</option>
+                    <option value="score_asc">按综合能力 低→高</option>
+                    <option value="questions_desc">按提问数 多→少</option>
+                    <option value="wrong_desc">按未掌握错题 多→少</option>
+                    <option value="name_asc">按姓名</option>
+                    <option value="student_no_asc">按学号</option>
+                    <option value="last_login_desc">按最近登录</option>
+                </select>
+                <input id="fKeyword" class="full" type="text" placeholder="搜索姓名 / 学号，回车" autocomplete="off">
             </div>
-            <div class="students-grid" id="studentsGrid">
-                <div class="empty-state">
-                    <div class="empty-state-icon">📝</div>
-                    <div class="empty-state-text">暂无学生，请添加</div>
+
+            <div class="pz-summary" id="filterStat"></div>
+            <div class="pz-list" id="studentNav">
+                <div class="pz-empty">加载中…</div>
+            </div>
+        </aside>
+
+        <!-- ===== 右侧：该学生分析报告 ===== -->
+        <main class="container pz-main">
+            <div class="pz-titlebar an-nav-title">
+                <div class="an-pagetitle an-nav-title">
+                    <h1 class="title" id="pageTitle">📊 学生分析报告</h1>
+                    <span class="an-sub">按年级 / 层次 / 班级 / 专业分类 · 深度学情分析</span>
                 </div>
-            </div>
-        </div>
-
-        <!-- 学生报告弹窗 -->
-        <div class="report-modal-overlay" id="reportModalOverlay">
-            <div class="report-modal">
-                <div class="report-modal-head">
-                    <div class="report-modal-avatar" id="modalAvatar">学</div>
-                    <div>
-                        <div class="report-modal-name" id="modalStudentName">--</div>
-                        <div class="report-modal-meta" id="modalStudentMeta">--</div>
-                    </div>
+                <div style="display:flex; gap:8px;">
                     <button class="ai-analysis-btn" id="aiAnalysisBtn" onclick="runAiAnalysis()">🤖 AI个性化分析</button>
-                    <button class="report-modal-close" onclick="closeReportModal()" title="关闭">✕</button>
+                    <span id="pzTeacherActions" style="display:flex; gap:8px;">
+                        <button class="btn-primary" onclick="reloadStudents()">刷新</button>
+                        <button class="btn-ghost" onclick="deleteSelectedStudent()">🗑 删除</button>
+                    </span>
                 </div>
-                <div class="report-modal-body">
-                    <!-- 分析报告 -->
-                    <div class="report-section" id="reportSection" style="display: none;">
+            </div>
+
+        <!-- 分析报告 -->
+        <div class="report-section" id="reportSection" style="display: none;">
             <div class="report-card full-width">
                 <div class="report-title">🎯 学生概览</div>
                 <div style="display: flex; gap: 30px; flex-wrap: wrap; align-items: center;">
@@ -804,11 +1085,21 @@
                     </div>
                 </div>
             </div>
-                    </div><!-- /report-modal-body -->
-                </div><!-- /report-modal -->
-            </div><!-- /report-modal-overlay -->
+
+            <!-- 新增：深度分析（学习行为 / 错题 / 过程性数据 / 学情诊断） -->
+            <div class="report-card full-width">
+                <div class="report-title">🔬 深度分析</div>
+                <div id="deepBody">
+                    <div class="deep-empty">选择学生后加载…</div>
+                </div>
+            </div>
         </div><!-- /reportSection -->
-    </div><!-- /container -->
+
+            <div class="deep-empty" id="emptyHint" style="display:none; padding:60px 10px;">
+                👈 请在左侧选择学生，或先「+ 添加」学生
+            </div>
+        </main>
+    </div><!-- /pz-wrap -->
 
     <!-- AI个性化分析弹窗 -->
     <div class="ai-analysis-overlay" id="aiAnalysisOverlay">
@@ -848,6 +1139,16 @@
                 <label>班级（可选）</label>
                 <input type="text" id="classNameInput" placeholder="请输入班级">
             </div>
+            <div class="form-group">
+                <label>年级（可选）</label>
+                <select id="gradeInput">
+                    <option value="">自动识别（按学号前 4 位）</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>专业（可选）</label>
+                <input type="text" id="majorInput" placeholder="如：通信工程">
+            </div>
             <div class="modal-actions">
                 <button class="modal-btn cancel" onclick="hideAddModal()">取消</button>
                 <button class="modal-btn confirm" onclick="addStudent()">添加</button>
@@ -857,6 +1158,7 @@
 
     <script>
         let selectedStudentId = null;
+        let selectedSeq = 0;   // 切人序号：丢弃过期请求，避免慢响应覆盖新学生数据
         let currentUser = { role: 'student', student_name: '' };
 
         // 退出登录
@@ -899,9 +1201,12 @@
         // 初始化页面
         async function initializePage() {
             if (currentUser.role === 'student') {
-                // 学生端：隐藏学生列表，直接显示自己的报告
-                document.getElementById('studentsSection').style.display = 'none';
+                // 学生端：隐藏左侧分类导航，右侧直接显示自己的报告
+                document.getElementById('pzSide').style.display = 'none';
+                document.getElementById('pzWrap').classList.add('solo');
                 document.getElementById('pageTitle').textContent = '📊 我的学习报告';
+                const ta = document.getElementById('pzTeacherActions');
+                if (ta) ta.style.display = 'none';
                 
                 // 从URL参数获取姓名，或者使用session中的姓名
                 const urlParams = new URLSearchParams(window.location.search);
@@ -912,9 +1217,9 @@
                     await loadStudentReportByName(studentName);
                 }
             } else {
-                // 老师端：显示学生列表
-                document.getElementById('studentsSection').style.display = 'block';
+                // 老师端：左侧学生分类导航 + 右侧报告
                 document.getElementById('pageTitle').textContent = '📊 学生分析报告';
+                await loadFilterOptions();
                 loadStudents();
             }
         }
@@ -963,103 +1268,336 @@
                 const student = data.students.find(s => s.name === studentName);
                 
                 if (student) {
-                    selectedStudentId = student.id;
-                    const reportResponse = await fetch(`/students/${student.id}/report`);
-                    const reportData = await reportResponse.json();
-                    renderReport(reportData);
-                    openReportModal(student);
+                    // 复用 selectStudent：带请求序号，避免快速切换时数据串号
+                    await selectStudent(student.id);
+                    document.getElementById('reportSection').style.display = 'grid';
                 } else {
-                    document.getElementById('reportSection').style.display = 'block';
+                    document.getElementById('reportSection').style.display = 'grid';
                     document.getElementById('studentName').textContent = studentName;
                     document.getElementById('totalConversations').textContent = '0';
                     document.getElementById('weaknessList').innerHTML = '<li style="text-align: center; padding: 20px; color: #999;">暂无学习数据，请先进行对话</li>';
                     document.getElementById('strengthList').innerHTML = '<li style="text-align: center; padding: 20px; color: #999;">需要更多互动才能分析优势</li>';
                     document.getElementById('suggestionList').innerHTML = '<li style="text-align: center; padding: 20px; color: #999;">暂无建议</li>';
                     document.getElementById('scenarioList').innerHTML = '<div class="empty-state"><div class="empty-state-icon">🎭</div><div class="empty-state-text">暂无推荐场景</div></div>';
-                    openReportModal({ name: studentName });
+                    document.getElementById('radarWrap').style.display = 'none';
+                    document.getElementById('deepBody').innerHTML = '<div class="deep-empty">暂无学习数据，暂无法生成深度分析</div>';
                 }
             } catch (error) {
                 console.error('获取报告失败:', error);
             }
         }
 
-        // 加载学生列表（老师端）
+        // 加载学生列表（老师端）：左侧分类导航 + 右侧报告
         async function loadStudents() {
             try {
-                const response = await fetch('/students');
-                const data = await response.json();
-                renderStudents(data.students || []);
+                // 1) 全量档案（拿头像等展示字段）
+                const baseResp = await fetch('/students');
+                const baseData = await baseResp.json();
+                const baseMap = {};
+                (baseData.students || []).forEach(s => { baseMap[String(s.id)] = s; });
+
+                // 2) 带筛选条件与指标的总览
+                const f = currentStudentFilters();
+                const qs = new URLSearchParams({ ...f, page: 1, page_size: 300 }).toString();
+                const resp = await fetch('/api/students/overview?' + qs);
+                const data = await resp.json();
+
+                if (!resp.ok) throw new Error(data.error || '加载失败');
+
+                const rows = (data.students || []).map(row => {
+                    const base = baseMap[String(row.id)] || {};
+                    return { ...base, ...row, avatar: base.avatar || row.avatar || null };
+                });
+
+                window._studentsCache = rows;
+                renderFilterStat(data.summary || {});
+                renderStudentNav(rows);
+
+                const hint = document.getElementById('emptyHint');
+                if (!rows.length) {
+                    document.getElementById('reportSection').style.display = 'none';
+                    if (hint) hint.style.display = 'block';
+                    return;
+                }
+                if (hint) hint.style.display = 'none';
+
+                // 保持原选择，否则默认选中第一位
+                const keep = rows.find(s => String(s.id) === String(selectedStudentId));
+                selectStudent((keep || rows[0]).id);
             } catch (error) {
                 console.error('加载学生失败:', error);
+                // 兜底：退回旧接口，保证页面不至于空白
+                try {
+                    const response = await fetch('/students');
+                    const data = await response.json();
+                    const rows = data.students || [];
+                    window._studentsCache = rows;
+                    renderStudentNav(rows);
+                    if (rows.length) selectStudent(rows[0].id);
+                } catch (e) { /* 忽略 */ }
             }
         }
 
-        // 渲染学生列表
-        function renderStudents(students) {
-            window._studentsCache = students; // 缓存供弹窗读取学号/班级
-            const grid = document.getElementById('studentsGrid');
-            
-            if (students.length === 0) {
-                grid.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📝</div>
-                        <div class="empty-state-text">暂无学生，请添加</div>
-                    </div>
-                `;
+        /* ===== 分类筛选（年级 / 层次 / 班级 / 专业 / 关键字） ===== */
+        function currentStudentFilters() {
+            return {
+                grade: (document.getElementById('fGrade') || {}).value || '',
+                grade_level: (document.getElementById('fLevel') || {}).value || '',
+                class_name: (document.getElementById('fClass') || {}).value || '',
+                major: (document.getElementById('fMajor') || {}).value || '',
+                keyword: ((document.getElementById('fKeyword') || {}).value || '').trim(),
+                sort: (document.getElementById('fSort') || {}).value || 'score_desc',
+            };
+        }
+
+        async function loadFilterOptions() {
+            try {
+                const resp = await fetch('/api/students/filters');
+                const d = await resp.json();
+                if (!resp.ok) return;
+                fillFilterSelect('fGrade', d.grades || [], '全部年级');
+                fillFilterSelect('fLevel', d.grade_levels || [], '全部层次');
+                fillFilterSelect('fClass', d.classes || [], '全部班级');
+                fillFilterSelect('fMajor', d.majors || [], '全部专业');
+            } catch (e) { console.error('筛选选项加载失败', e); }
+        }
+
+        function fillFilterSelect(id, items, allLabel) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const cur = el.value;
+            el.innerHTML = `<option value="">${allLabel}</option>` +
+                items.map(i => `<option value="${i.value}">${i.label}（${i.count}）</option>`).join('');
+            if (cur && items.some(i => i.value === cur)) el.value = cur;
+        }
+
+        function renderFilterStat(summary) {
+            const stat = document.getElementById('filterStat');
+            if (!stat) return;
+            stat.style.display = 'block';
+            stat.innerHTML =
+                `共 <b>${summary.student_count || 0}</b> 人` +
+                (summary.all_count && summary.all_count !== summary.student_count
+                    ? `（全校 ${summary.all_count}）` : '') +
+                ` · 均分 <b>${summary.avg_score || 0}</b><br>活跃 ${summary.active_count || 0} 人` +
+                ` · 未掌握错题 ${summary.wrong_unmastered || 0} 道`;
+        }
+
+        /* 左侧学生导航：年级(层次) → 班级 → 学生 */
+        function renderStudentNav(students) {
+            const box = document.getElementById('studentNav');
+            if (!box) return;
+            if (!students || !students.length) {
+                box.innerHTML = '<div class="pz-empty">当前条件下暂无学生</div>';
                 return;
             }
 
-            grid.innerHTML = students.map(student => {
-                const convCount = student.conversation_history ? student.conversation_history.length : 0;
-                const avatarSrc = student.avatar ? `data:image/png;base64,${student.avatar}` : '';
-                const avatarLetter = student.name ? student.name.charAt(0) : '?';
-                const studentNo = student.student_no ? student.student_no : '暂无学号';
-                return `
-                    <div class="student-card" data-id="${student.id}" onclick="selectStudent('${student.id}')">
-                        <button class="card-delete-btn" title="删除学生" onclick="deleteStudent(event, '${student.id}')">✕</button>
-                        ${avatarSrc ? 
-                            `<img class="student-avatar" src="${avatarSrc}" alt="${student.name}">` : 
-                            `<div class="student-avatar">${avatarLetter}</div>`
-                        }
-                        <div class="student-name">${student.name}</div>
-                        <div class="student-class" style="font-size: 11px; color: #888;">🎓 ${studentNo}</div>
-                        <div class="student-class">${student.class_name || '未指定班级'}</div>
-                        <div class="student-stats">
-                            <span class="stat-item">💬 ${convCount}</span>
-                            <span class="stat-item">📅 ${student.created_at?.split(' ')[0] || '-'}</span>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+            const byGrade = new Map();
+            students.forEach(s => {
+                const g = [s.grade || '未标注年级', s.grade_level || ''].filter(Boolean).join(' · ');
+                const c = s.class_name || '未分班';
+                if (!byGrade.has(g)) byGrade.set(g, new Map());
+                const cls = byGrade.get(g);
+                if (!cls.has(c)) cls.set(c, []);
+                cls.get(c).push(s);
+            });
+
+            let html = '';
+            byGrade.forEach((classes, gradeLabel) => {
+                let total = 0;
+                classes.forEach(arr => total += arr.length);
+                html += `<div class="pz-glabel"><span>${gradeLabel}</span><b>${total}人</b></div>`;
+                classes.forEach((arr, className) => {
+                    html += `<div class="pz-gsub">📁 ${className} · ${arr.length}人</div>`;
+                    html += arr.map(s => {
+                        const on = String(s.id) === String(selectedStudentId) ? ' on' : '';
+                        return `<div class="pz-item${on}" data-id="${s.id}" onclick="selectStudent('${s.id}')"
+                                     title="${s.name} ${s.student_no || ''}">
+                            <span class="pz-av">${(s.name || '?').charAt(0)}</span>
+                            <span class="pz-info">
+                                <span class="pz-name">${s.name}</span>
+                                <span class="pz-no">${s.student_no || '未填学号'}</span>
+                            </span>
+                            <span class="pz-score">${s.avg_score}</span>
+                        </div>`;
+                    }).join('');
+                });
+            });
+            box.innerHTML = html;
         }
 
-        // 选择学生
-        async function selectStudent(studentId) {
-            // 更新选中状态
-            document.querySelectorAll('.student-card').forEach(card => {
-                card.classList.remove('selected');
+        function reloadStudents() { loadStudents(); }
+
+        function resetStudentFilters() {
+            ['fGrade', 'fLevel', 'fClass', 'fMajor'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
             });
-            document.querySelector(`[data-id="${studentId}"]`).classList.add('selected');
-            
+            const kw = document.getElementById('fKeyword');
+            if (kw) kw.value = '';
+            const sort = document.getElementById('fSort');
+            if (sort) sort.value = 'score_desc';
+            loadStudents();
+        }
+
+        // 收起/展开筛选条件
+        function toggleFilterPanel() {
+            const el = document.getElementById('pzFilters');
+            if (!el) return;
+            const hidden = el.style.display === 'none';
+            el.style.display = hidden ? 'grid' : 'none';
+            const btn = document.getElementById('pzFilterBtn');
+            if (btn) btn.textContent = hidden ? '收起' : '筛选';
+        }
+
+        // 选择学生：右侧直接渲染该学生报告
+        async function selectStudent(studentId) {
             selectedStudentId = studentId;
-            
-            // 获取报告
+            const seq = ++selectedSeq;
+            document.querySelectorAll('.pz-item').forEach(el => {
+                el.classList.toggle('on', String(el.dataset.id) === String(studentId));
+            });
+
             try {
                 const response = await fetch(`/students/${studentId}/report`);
                 const data = await response.json();
+                if (seq !== selectedSeq) return;   // 已切换学生，丢弃旧响应
                 renderReport(data);
-                // 弹出报告弹窗（含学生信息 + 能力雷达图 + 优缺点）
-                const info = (window._studentsCache || []).find(s => String(s.id) === String(studentId)) || {};
-                openReportModal(info);
+                loadDeepAnalysis(studentId, seq);
             } catch (error) {
                 console.error('获取报告失败:', error);
             }
         }
 
+        /* ===== 新增：深度分析（学习行为 / 错题 / 过程数据 / 学情诊断） ===== */
+        async function loadDeepAnalysis(studentId, seq) {
+            const box = document.getElementById('deepBody');
+            if (!box) return;
+            box.innerHTML = '<div class="deep-empty">正在加载深度分析…</div>';
+            try {
+                const resp = await fetch(`/api/students/${encodeURIComponent(studentId)}/analysis`);
+                const d = await resp.json();
+                if (seq !== undefined && seq !== selectedSeq) return;   // 已切换学生，丢弃旧响应
+                if (!resp.ok) throw new Error(d.error || '加载失败');
+                box.innerHTML = renderDeep(d);
+            } catch (e) {
+                box.innerHTML = `<div class="deep-empty">深度分析加载失败：${e.message}</div>`;
+            }
+        }
+
+        function renderDeep(d) {
+            const ov = d.overview || {};
+            const wk = d.weekly || {};
+            const hw = d.homework || {};
+            const it = d.interview || {};
+            const cr = d.credential || {};
+            const lr = d.learning || {};
+            const wr = d.wrong || {};
+            const rk = d.rank || {};
+            const risk = d.risk || {};
+
+            const mini = (items) => `<div class="deep-mini">${items.map(([n, c, s]) => `
+                <div class="m"><div class="n">${n}</div><div class="c">${c}</div>
+                ${s ? `<div class="s">${s}</div>` : ''}</div>`).join('')}</div>`;
+
+            // 1) 学习行为
+            const behavior = `
+                <div class="deep-sub">
+                    <h4>⏱️ 近 30 天学习行为</h4>
+                    ${mini([
+                        [lr.active_days ?? 0, '活跃天数', `近 ${lr.days || 30} 天`],
+                        [lr.recent_records ?? 0, '学习记录', `累计 ${lr.total_records ?? 0} 条`],
+                        [lr.avg_score ?? 0, '平均得分', '按记录计分'],
+                        [(lr.accuracy ?? 0) + '%', '正确率', `错题 ${lr.wrong_in_window ?? 0} 道`],
+                    ])}
+                </div>`;
+
+            // 2) 过程性数据
+            const process = `
+                <div class="deep-sub">
+                    <h4>🗂️ 任务与过程性数据</h4>
+                    ${mini([
+                        [`${wk.completed || 0}/${wk.total || 0}`, '周任务', `完成率 ${wk.rate || 0}%`],
+                        [hw.submitted ?? 0, '作业提交', `均分 ${hw.avg_score ?? 0}`],
+                        [`${it.completed || 0}/${it.total || 0}`, '模拟面试', it.avg_score ? `均分 ${it.avg_score}` : '暂无评分'],
+                        [cr.available ? (cr.records ?? 0) : '未启用', '成长档案', cr.available ? `证书 ${cr.certificates || 0} 张` : '模块未加载'],
+                    ])}
+                </div>`;
+
+            // 3) 错题分布
+            const pts = (wr.by_knowledge_point || []).slice(0, 6);
+            const maxP = pts.length ? Math.max(...pts.map(p => p.total)) : 1;
+            const wrongBlock = `
+                <div class="deep-sub">
+                    <h4>📕 错题分布（共 ${wr.total || 0} 道，已掌握 ${wr.mastered || 0} 道）</h4>
+                    ${pts.length ? pts.map(p => `
+                        <div style="margin-bottom:10px;">
+                            <div style="display:flex;justify-content:space-between;font-size:13px;color:#444;margin-bottom:4px;">
+                                <span>${p.knowledge_point}</span>
+                                <span style="color:#667eea;font-weight:700;">${p.total} 道</span>
+                            </div>
+                            <div style="height:8px;background:#f0f0f5;border-radius:4px;overflow:hidden;">
+                                <div style="height:100%;width:${(p.total / maxP * 100).toFixed(0)}%;
+                                    background:linear-gradient(90deg,#ff6b6b,#ffa94d);border-radius:4px;"></div>
+                            </div>
+                        </div>`).join('') : '<div class="deep-empty">暂无错题记录 🎉</div>'}
+                </div>`;
+
+            // 4) 位次
+            const cls = rk.class || {}, grd = rk.grade || {};
+            const rankBlock = `
+                <div class="deep-sub">
+                    <h4>🏅 位次对比</h4>
+                    <div class="deep-kv"><span class="k">班级排名</span>
+                        <span class="v">${cls.rank ? `${cls.rank} / ${cls.total}（超过 ${cls.percentile}%）` : '未分班'}</span></div>
+                    <div class="deep-kv"><span class="k">年级排名</span>
+                        <span class="v">${grd.rank ? `${grd.rank} / ${grd.total}（超过 ${grd.percentile}%）` : '未标注年级'}</span></div>
+                    <div class="deep-kv"><span class="k">综合能力 / 累计提问</span>
+                        <span class="v">${ov.avg_score ?? 0} 分 / ${ov.total_questions ?? 0} 次</span></div>
+                    <div class="deep-kv"><span class="k">最强 / 最弱维度</span>
+                        <span class="v">${ov.top_dimension || '-'} / ${ov.weakest_dimension || '-'}</span></div>
+                </div>`;
+
+            // 5) 已修课程（学生自填，老师只读）
+            const courseList = d.courses || [];
+            const courseDims = d.course_dimensions || [];
+            const courseBlock = `
+                <div class="deep-sub">
+                    <h4>📚 已修课程（学生本人填写）</h4>
+                    ${courseList.length
+                        ? `<div style="display:flex;flex-wrap:wrap;gap:7px;">
+                               ${courseList.map(c => `<span class="deep-tag" style="margin:0;padding:3px 10px;">${c.icon || '📘'} ${c.name}</span>`).join('')}
+                           </div>
+                           <div style="font-size:12px;color:#9aa2b8;margin-top:8px;">
+                               能力维度按这些课程计算，当前覆盖 ${courseDims.length} 个维度${courseDims.length ? '：' + courseDims.map(x => x.name).join('、') : ''}
+                           </div>`
+                        : '<div class="deep-empty">该学生还没有填写课程，暂按全部 12 维展示</div>'}
+                </div>`;
+
+            // 6) 学情诊断与建议
+            const advice = (d.advice || []).map(a => `
+                <div class="deep-advice">
+                    <span class="deep-tag">${a.type || '建议'}</span>
+                    <strong style="color:#4a55a2;">${a.target || ''}</strong>
+                    <div style="margin-top:5px;">${a.text || ''}</div>
+                </div>`).join('') || '<div class="deep-empty">暂无建议</div>';
+
+            const diagnosis = `
+                <div class="deep-sub">
+                    <h4>💡 学情诊断与学习建议</h4>
+                    <div style="margin-bottom:10px;">
+                        <span class="risk-pill" style="background:${risk.color || '#cdd3e2'};">风险 ${risk.label || '-'}</span>
+                        <span style="font-size:12px;color:#667;margin-left:8px;">${(risk.reasons || []).join('；')}</span>
+                    </div>
+                    ${advice}
+                </div>`;
+
+            return behavior + process + courseBlock + wrongBlock + rankBlock + diagnosis;
+        }
+
         /* ===== 删除学生 ===== */
         async function deleteStudent(event, studentId) {
-            // 阻止冒泡，避免同时触发卡片点击（打开报告弹窗）
-            event.stopPropagation();
+            if (event && event.stopPropagation) event.stopPropagation();
             const info = (window._studentsCache || []).find(s => String(s.id) === String(studentId)) || {};
             const name = info.name || '该学生';
             if (!confirm(`确定要删除学生「${name}」吗？\n删除后将同时清除其错题本和学习记录，此操作不可恢复！`)) {
@@ -1080,34 +1618,15 @@
             }
         }
 
-        /* ===== 报告弹窗开关 ===== */
-        function openReportModal(info) {
-            info = info || {};
-            const overlay = document.getElementById('reportModalOverlay');
-            document.getElementById('modalStudentName').textContent = info.name || document.getElementById('studentName').textContent || '--';
-            document.getElementById('modalAvatar').textContent = (info.name || '学').charAt(0);
-            const meta = [];
-            if (info.student_no) meta.push('🎓 ' + info.student_no);
-            if (info.class_name) meta.push('📁 ' + info.class_name);
-            document.getElementById('modalStudentMeta').textContent = meta.length ? meta.join(' · ') : '暂无学号/班级信息';
-            overlay.classList.add('show');
-            document.body.style.overflow = 'hidden'; // 弹窗打开时锁定背景滚动
+        // 删除当前选中的学生（右侧标题栏按钮）
+        function deleteSelectedStudent() {
+            if (!selectedStudentId) { alert('请先在左侧选择学生'); return; }
+            deleteStudent(null, selectedStudentId);
         }
-        function closeReportModal() {
-            document.getElementById('reportModalOverlay').classList.remove('show');
-            document.body.style.overflow = '';
-            // 学生端：关闭报告弹窗后直接返回首页，避免页面变空白
-            if (currentUser.role === 'student') {
-                window.location.href = '/';
-            }
-        }
-        // 点遮罩空白处关闭（点在弹窗卡片内不关）
-        document.getElementById('reportModalOverlay').addEventListener('click', (e) => {
-            if (e.target.id === 'reportModalOverlay') closeReportModal();
-        });
-        // ESC 关闭
+
+        // ESC 关闭 AI 分析弹窗
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') { closeReportModal(); closeAiAnalysis(); }
+            if (e.key === 'Escape') closeAiAnalysis();
         });
 
         /* ===== AI 个性化分析 ===== */
@@ -1303,6 +1822,10 @@
             const name = document.getElementById('studentNameInput').value.trim();
             const studentNo = document.getElementById('studentNoInput').value.trim();
             const className = document.getElementById('classNameInput').value.trim();
+            const gradeEl = document.getElementById('gradeInput');
+            const majorEl = document.getElementById('majorInput');
+            const grade = gradeEl ? gradeEl.value : '';
+            const major = majorEl ? majorEl.value.trim() : '';
             const avatarPreview = document.getElementById('avatarPreview');
             const avatar = avatarPreview.src ? avatarPreview.src.split(',')[1] : null;
             
@@ -1320,7 +1843,10 @@
                 const response = await fetch('/students', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, student_no: studentNo, class_name: className, avatar: avatar })
+                    body: JSON.stringify({
+                        name, student_no: studentNo, class_name: className,
+                        grade, major, avatar,
+                    })
                 });
                 
                 const data = await response.json();
@@ -1356,6 +1882,10 @@
             document.getElementById('studentNameInput').value = '';
             document.getElementById('studentNoInput').value = '';
             document.getElementById('classNameInput').value = '';
+            const gradeEl = document.getElementById('gradeInput');
+            if (gradeEl) gradeEl.value = '';
+            const majorEl = document.getElementById('majorInput');
+            if (majorEl) majorEl.value = '';
             document.getElementById('avatarUpload').value = '';
         }
 
@@ -1364,13 +1894,40 @@
             document.getElementById('studentNameInput').value = '';
             document.getElementById('studentNoInput').value = '';
             document.getElementById('classNameInput').value = '';
+            const gradeEl = document.getElementById('gradeInput');
+            if (gradeEl) gradeEl.value = '';
+            const majorEl = document.getElementById('majorInput');
+            if (majorEl) majorEl.value = '';
             document.getElementById('avatarPreview').src = '';
             document.getElementById('avatarUpload').value = '';
         }
 
+        // 年级下拉：近 8 个入学年份
+        function initGradeOptions() {
+            const el = document.getElementById('gradeInput');
+            if (!el) return;
+            const now = new Date();
+            const startYear = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
+            let html = '<option value="">自动识别（按学号前 4 位）</option>';
+            for (let i = 0; i < 8; i++) {
+                const y = startYear - i;
+                html += `<option value="${y}级">${y}级</option>`;
+            }
+            el.innerHTML = html;
+        }
+
+        // 关键字筛选：回车即搜
+        document.getElementById('fKeyword').addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') reloadStudents();
+        });
+
         // 初始化
+        initGradeOptions();
         loadCurrentUser();
     </script>
+
+    <!-- 全站顶部导航栏 -->
+    <script src="/static/app_nav.js" defer></script>
 
     <!-- 全局桌宠 Desktop Pet -->
     <link rel="stylesheet" href="/static/desktop_pet.css">

@@ -820,6 +820,8 @@
     <!-- 全局按钮美化 -->
     <link rel="stylesheet" href="/static/global_buttons.css">
 <link rel="stylesheet" href="/static/global_pages.css">
+<!-- 班级名单导入面板（Excel） -->
+<link rel="stylesheet" href="/static/class_import.css">
 </head>
 <body>
     <div class="container">
@@ -852,6 +854,9 @@
                 <div class="class-form">
                     <input type="text" id="classNameInput" class="input" placeholder="输入新班级名称...">
                     <button class="btn btn-primary" onclick="createClass()">➕ 创建班级</button>
+                    <button class="btn btn-primary" onclick="openClassManager()"
+                            style="background: linear-gradient(135deg, #52c41a, #13c2c2); white-space: nowrap;"
+                            title="从学习通等平台导出的 Excel / CSV 名单批量导入学生">📥 导入学生名单</button>
                 </div>
 
                 <div id="classList" class="class-grid"></div>
@@ -1607,9 +1612,18 @@
         }
 
         loadCurrentUser();
+
+        // 名单导入完成 → 刷新班级列表（人数/新建的班级）与通知页的班级选择
+        window.addEventListener('roster-imported', function () {
+            if (typeof loadClasses === 'function') loadClasses();
+            if (typeof loadClassesForNotification === 'function') loadClassesForNotification();
+        });
     </script>
 
     <!-- 全局桌宠 Desktop Pet -->
+    <!-- 班级名单导入面板 -->
+    <script src="/static/class_import.js" defer></script>
+
     <link rel="stylesheet" href="/static/desktop_pet.css">
     <script src="/static/desktop_pet.js" defer></script>
 </body>

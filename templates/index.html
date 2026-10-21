@@ -4995,6 +4995,20 @@
         </div>
     </div>
 
+    <!-- 支持从其他页面通过 ?tab=train|study|res|grow|chat 直接打开首页对应视图 -->
+    <script>
+        (function () {
+            try {
+                var tab = new URLSearchParams(location.search).get('tab');
+                if (!tab) return;
+                var el = (tab === 'chat')
+                    ? document.querySelector('.hx-tab[data-view="chat"]')
+                    : document.querySelector('.hx-tab[data-center="' + tab + '"]');
+                if (el && typeof hxTab === 'function') hxTab(el);
+            } catch (e) { /* 参数异常时按默认首页展示 */ }
+        })();
+    </script>
+
     <!-- 全局桌宠 Desktop Pet -->
     <link rel="stylesheet" href="/static/desktop_pet.css">
     <script src="/static/desktop_pet.js" defer></script>
