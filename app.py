@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify, Response, session, send_from_directory, redirect, url_for
 import requests
 import base64
+import copy
 import io
 import csv
 import re
@@ -1960,23 +1961,43 @@ def save_search_logs(logs: List[Dict]):
 
 
 # ====================== 学生档案管理 ======================
+# 学生档案内存缓存：避免高频请求反复读盘+解析大JSON（138KB+）
+_students_cache = None            # type: list[dict] | None
+_students_cache_mtime = -1.0
+_students_cache_lock = threading.Lock()
+
+
 def load_students() -> List[Dict]:
-    """加载学生档案"""
+    """加载学生档案（带 mtime 缓存：文件未变化时直接返回内存副本）"""
+    global _students_cache, _students_cache_mtime
     try:
-        if os.path.exists(STUDENTS_FILE):
-            with open(STUDENTS_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        else:
+        if not os.path.exists(STUDENTS_FILE):
             return []
+        mtime = os.path.getmtime(STUDENTS_FILE)
+        if _students_cache is not None and mtime == _students_cache_mtime:
+            return copy.deepcopy(_students_cache)
+        with open(STUDENTS_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        with _students_cache_lock:
+            _students_cache = data
+            _students_cache_mtime = mtime
+        return copy.deepcopy(data)
     except Exception as e:
         print(f"学生档案加载失败: {e}")
         return []
 
 
 def save_students(students: List[Dict]):
-    """保存学生档案"""
+    """保存学生档案（写盘后同步刷新缓存与 mtime）"""
+    global _students_cache, _students_cache_mtime
     try:
         atomic_save_json(STUDENTS_FILE, students)
+        with _students_cache_lock:
+            _students_cache = copy.deepcopy(students)
+            try:
+                _students_cache_mtime = os.path.getmtime(STUDENTS_FILE)
+            except OSError:
+                _students_cache_mtime = -1.0
     except Exception as e:
         print(f"学生档案保存失败: {e}")
 
