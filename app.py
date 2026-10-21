@@ -43,6 +43,14 @@ app.secret_key = os.environ.get('SECRET_KEY', 'lingzhishangren-fixed-secret-key-
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.jinja_env.auto_reload = True
 
+# gzip 压缩：首页等模板 280KB → 约 50KB，缓解服务器上行带宽瓶颈（实测带宽仅 0.4-0.6 MB/s）
+# 默认压缩类型不含 text/event-stream，SSE 流式接口不受影响
+try:
+    from flask_compress import Compress
+    Compress(app)
+except ImportError:
+    pass
+
 # ====================== SiliconFlow API 配置 ======================
 def _load_siliconflow_key():
     """密钥读取优先级：环境变量 SILICONFLOW_API_KEY > api_key.local 文件 > 硬编码默认值。"""
@@ -1565,7 +1573,8 @@ SCENARIOS = [
 
 def atomic_save_json(filepath: str, data):
     """原子写入JSON：先写临时文件再重命名，防止并发写入损坏"""
-    tmp_path = filepath + ".tmp"
+    # tmp 名加随机后缀：多线程/多worker并发保存同文件时互不踩踏（原固定名会报 tmp 不存在）
+    tmp_path = f"{filepath}.{uuid.uuid4().hex[:8]}.tmp"
     with open(tmp_path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
     os.replace(tmp_path, filepath)
