@@ -807,7 +807,7 @@ const GRID = {
 const KPI = { rsrp: -105, sinr: -3, ratio: 90, dl: 500, ul: 40, access: 98, drop: 4, ho: 95, anchor: 95 };
 
 const TASKS = [
-    { t: '接收网格优化任务通知', s: '确认范围与 KPI 门限' },
+    { t: '接收网格优化任务通知', s: '阅读通知与 KPI 门限' },
     { t: '任务工单解读，明确验证项', s: '覆盖 · 业务 · 4/5G 协同' },
     { t: '核对 DT 路测设备清单', s: '终端与采集硬件清点' },
     { t: '设备上电与预调试', s: '硬件状态自检' },
@@ -827,7 +827,7 @@ const DEFAULT = () => ({
     done: new Array(N).fill(false),
     score: new Array(N).fill(0),
     d: {
-        t1: { checked: [], agreed: false },
+        t1: { agreed: false },
         t2: { read: [], quiz: null },
         t3: { ue: '', nb: '', aux: [] },
         t4: { st: {}, drv: false },
@@ -849,7 +849,7 @@ function load() {
         const o = JSON.parse(raw);
         const base = DEFAULT();
         const m = Object.assign(base, o, { d: Object.assign(base.d, o.d || {}) });
-        m.d.t1 = Object.assign({ checked: [], agreed: false }, m.d.t1 || {});
+        m.d.t1 = Object.assign({ agreed: false }, m.d.t1 || {});
         m.d.t2 = Object.assign({ read: [], quiz: null }, m.d.t2 || {});
         m.d.t3 = Object.assign({ ue: '', nb: '', aux: [] }, m.d.t3 || {});
         m.d.t4 = Object.assign({ st: {}, drv: false }, m.d.t4 || {});
@@ -1027,27 +1027,23 @@ const T1_VAL = {
 };
 
 function t1() {
-    const ck = S.d.t1.checked || [];
-    const allDone = ck.length >= T1_KEYS.length;
     const agreed = !!S.d.t1.agreed;
-    const boxCls = agreed ? 'on' : (allDone ? 'ready' : 'locked');
+    const boxCls = agreed ? 'on' : 'ready';
     const boxTxt = agreed
-        ? '已阅读任务通知，网格范围与 KPI 门限核对无误'
-        : (allDone ? '点击确认：已阅读任务通知，工单要素核对无误' : '请先完成上方 5 项工单要素核对');
+        ? '已阅读任务通知，知悉网格范围与 KPI 门限'
+        : '点击确认：我已阅读任务通知，知悉上述工单要素';
 
     const rows = T1_KEYS.map(k => {
-        const on = ck.indexOf(k) >= 0;
-        return `<div class="kv-item ${on ? 'ok' : ''}">
+        return `<div class="kv-item">
             <span style="min-width:104px">${T1_LABEL[k]}</span>
             <b style="flex:1;min-width:0;line-height:1.6;text-align:left">${esc(T1_VAL[k])}</b>
-            <button class="btn sm ${on ? '' : 'ghost'}" style="margin-left:6px;white-space:nowrap" onclick="t1check('${k}')">${on ? '已核对' : '核对'}</button>
         </div>`;
     }).join('');
 
     return head('任务 1 · 接收网格优化任务通知',
         `<p><b>任务描述：</b>你收到网格优化正式工作通知，本次任务为 <b>网格1（石家庄市某区）5G 网格路测优化验证</b>。</p>
-         <p><b>操作动作：</b>阅读通知，确认测试网格范围、夜间测试时间窗口、KPI 指标阈值、任务对接人信息，确认任务工单生效。</p>
-         <p><b>完成判定：</b>5 项工单要素全部核对，并确认工单生效。</p>`) +
+         <p><b>操作动作：</b>通读通知，了解测试网格范围、夜间测试时间窗口、KPI 指标阈值与任务对接人信息。</p>
+         <p><b>完成判定：</b>完成阅读并点击「已阅读」确认框，提交即进入下一任务。</p>`) +
     `<div class="card">
         <div class="card-head"><h2><em>工单</em>网格优化任务通知</h2><span class="small muted">${esc(GRID.ticket)}</span></div>
         <div class="grid3" style="margin-bottom:14px">
@@ -1058,7 +1054,7 @@ function t1() {
         <p class="small muted" style="line-height:1.9">请于 <b style="color:var(--text)">${esc(GRID.window)}</b> 时间窗口内，完成 ${esc(GRID.name)} 区域（${GRID.sites} 个基站）的 5G 覆盖、业务、4/5G 协同验证，采集网格路测数据并输出网格优化报告。</p>
     </div>
     <div class="card">
-        <div class="card-head"><h2><em>要素</em>工单关键信息</h2><span class="small muted">点击「核对」逐项确认</span></div>
+        <div class="card-head"><h2><em>要素</em>工单关键信息</h2><span class="small muted">工单随附资料，通读即可</span></div>
         <div class="kv" style="grid-template-columns:1fr">${rows}</div>
     </div>
     <div class="card" style="display:flex;align-items:center;gap:12px">
@@ -1068,19 +1064,7 @@ function t1() {
     </div>`;
 }
 
-function t1check(k) {
-    const arr = S.d.t1.checked || [];
-    if (arr.indexOf(k) < 0) arr.push(k);
-    S.d.t1.checked = arr;
-    save();
-    rerender();
-}
-
 function t1agree() {
-    if ((S.d.t1.checked || []).length < T1_KEYS.length) {
-        toast('请先完成全部 5 项工单要素核对', 'err');
-        return;
-    }
     S.d.t1.agreed = !S.d.t1.agreed;
     save();
     rerender();
@@ -1713,8 +1697,7 @@ function submitTask() {
     let sc = 0, msg = '';
 
     if (i === 0) {
-        if ((S.d.t1.checked || []).length < T1_KEYS.length) { toast('请先完成全部 5 项工单要素核对', 'err'); return; }
-        if (!S.d.t1.agreed) { toast('请先点击下方「已阅读任务通知」确认框完成阅读确认', 'err'); return; }
+        if (!S.d.t1.agreed) { toast('请先点击下方「我已阅读任务通知」确认框', 'err'); return; }
         sc = 10; msg = '工单已接收，要素核对完成，得 10 分';
     }
 
