@@ -140,6 +140,16 @@
         .message-content pre { background: #0a0e1a; color: #e8e8e8; padding: 12px; border-radius: 8px; overflow-x: auto; margin: 10px 0; font-family: 'SF Mono', Consolas, Monaco, 'Courier New', monospace; font-size: 13px; }
         .message-content code { font-family: 'SF Mono', Consolas, Monaco, 'Courier New', monospace; }
 
+        .message-actions { display: flex; gap: 8px; margin-top: 12px; opacity: 0; transition: opacity 0.2s; }
+        .message:hover .message-actions { opacity: 1; }
+        .action-btn { padding: 6px 14px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; font-size: 13px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; color: #8fa3c7; }
+        .action-btn svg { display: block; flex-shrink: 0; }
+        .action-btn:hover { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: white; border-color: transparent; }
+        .action-btn:hover svg { stroke: #fff; }
+        .action-btn-copied { background: rgba(16,185,129,0.18) !important; border-color: rgba(16,185,129,0.45) !important; color: #34d399 !important; }
+        .action-btn-copied:hover { background: rgba(16,185,129,0.28) !important; border-color: rgba(16,185,129,0.6) !important; color: #6ee7b7 !important; }
+        .action-btn-copied svg { stroke: #34d399 !important; }
+
         .typing-dots { display: flex; gap: 5px; }
         .typing-dots span { width: 7px; height: 7px; background: var(--cyan); border-radius: 50%; animation: bounce 1.4s infinite; }
         .typing-dots span:nth-child(2){animation-delay:.2s;} .typing-dots span:nth-child(3){animation-delay:.4s;}
@@ -583,21 +593,11 @@
             // AI消息操作按钮（追问/复制）
             if (!isUser && content) {
                 const actionsDiv = document.createElement('div');
-                actionsDiv.style.display = 'flex';
-                actionsDiv.style.gap = '8px';
-                actionsDiv.style.marginTop = '12px';
-                actionsDiv.style.opacity = '0';
-                actionsDiv.style.transition = 'opacity 0.2s';
+                actionsDiv.className = 'message-actions';
+
                 const followBtn = document.createElement('button');
-                followBtn.style.padding = '6px 14px';
-                followBtn.style.background = 'rgba(255,255,255,0.1)';
-                followBtn.style.border = '1px solid rgba(255,255,255,0.15)';
-                followBtn.style.borderRadius = '16px';
-                followBtn.style.fontSize = '13px';
-                followBtn.style.cursor = 'pointer';
-                followBtn.style.color = '#8fa3c7';
-                followBtn.style.transition = 'all 0.2s';
-                followBtn.innerHTML = '🔄 追问';
+                followBtn.className = 'action-btn';
+                followBtn.innerHTML = '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3 H5.5 a2 2 0 0 0 -2 2 v6 a2 2 0 0 0 2 2 H8 l4 3 v-3"/><path d="M6 6.5 h5 M6 9.5 h3.5"/></svg>追问';
                 followBtn.onclick = function() {
                     const userInput = document.getElementById('userInput');
                     userInput.value = `针对你的回答，我想追问：${content.substring(0, 50)}...`;
@@ -606,21 +606,19 @@
                     userInput.focus();
                     userInput.scrollTop = userInput.scrollHeight;
                 };
-                followBtn.addEventListener('mouseenter', () => { followBtn.style.background = 'linear-gradient(135deg, #667eea, #764ba2)'; followBtn.style.color = 'white'; followBtn.style.border = 'none'; });
-                followBtn.addEventListener('mouseleave', () => { followBtn.style.background = 'rgba(255,255,255,0.1)'; followBtn.style.color = '#8fa3c7'; followBtn.style.border = '1px solid rgba(255,255,255,0.15)'; });
 
                 const copyBtn = document.createElement('button');
-                copyBtn.style.padding = '6px 14px';
-                copyBtn.style.background = 'rgba(255,255,255,0.1)';
-                copyBtn.style.border = '1px solid rgba(255,255,255,0.15)';
-                copyBtn.style.borderRadius = '16px';
-                copyBtn.style.fontSize = '13px';
-                copyBtn.style.cursor = 'pointer';
-                copyBtn.style.color = '#8fa3c7';
-                copyBtn.style.transition = 'all 0.2s';
-                copyBtn.innerHTML = '📋 复制';
+                copyBtn.className = 'action-btn';
+                copyBtn.innerHTML = '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="8" height="9" rx="1.5"/><path d="M7 4 V2.5 a1 1 0 0 1 1 -1 h5 a1.5 1.5 0 0 1 1.5 1.5 v8 a1.5 1.5 0 0 1 -1.5 1.5 H12"/></svg>复制';
                 copyBtn.onclick = function() {
-                    const done = () => { copyBtn.innerHTML = '✓ 已复制'; setTimeout(() => { copyBtn.innerHTML = '📋 复制'; }, 2000); };
+                    const done = () => {
+                        copyBtn.className = 'action-btn action-btn-copied';
+                        copyBtn.innerHTML = '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7 L5.5 10.5 L11 3.5"/></svg>已复制';
+                        setTimeout(() => {
+                            copyBtn.className = 'action-btn';
+                            copyBtn.innerHTML = '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="8" height="9" rx="1.5"/><path d="M7 4 V2.5 a1 1 0 0 1 1 -1 h5 a1.5 1.5 0 0 1 1.5 1.5 v8 a1.5 1.5 0 0 1 -1.5 1.5 H12"/></svg>复制';
+                        }, 2000);
+                    };
                     if (navigator.clipboard && window.isSecureContext) {
                         navigator.clipboard.writeText(content).then(done);
                     } else {
@@ -631,14 +629,10 @@
                         document.body.removeChild(ta); done();
                     }
                 };
-                copyBtn.addEventListener('mouseenter', () => { copyBtn.style.background = 'linear-gradient(135deg, #667eea, #764ba2)'; copyBtn.style.color = 'white'; copyBtn.style.border = 'none'; });
-                copyBtn.addEventListener('mouseleave', () => { copyBtn.style.background = 'rgba(255,255,255,0.1)'; copyBtn.style.color = '#8fa3c7'; copyBtn.style.border = '1px solid rgba(255,255,255,0.15)'; });
 
                 actionsDiv.appendChild(followBtn);
                 actionsDiv.appendChild(copyBtn);
                 contentDiv.appendChild(actionsDiv);
-                messageDiv.addEventListener('mouseenter', () => { actionsDiv.style.opacity = '1'; });
-                messageDiv.addEventListener('mouseleave', () => { actionsDiv.style.opacity = '0'; });
             }
             messageDiv.appendChild(avatar);
             messageDiv.appendChild(contentDiv);
