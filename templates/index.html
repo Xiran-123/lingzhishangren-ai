@@ -1931,7 +1931,7 @@
               <div class="hx-fic" style="background:rgba(42,223,180,.14)">✏️</div><h3>互动练习</h3><p>智能出题 · 即时批改 · 薄弱点追踪</p></a>
             <a class="hx-fcard hx-glass" href="/wrong-questions-page"><span class="hx-farr">→</span>
               <div class="hx-fic" style="background:rgba(255,107,157,.14)">📝</div><h3>错题本</h3><p>自动归集 · 变式重练 · 掌握度分析</p></a>
-            <a class="hx-fcard hx-glass" href="/knowledge-graph-page"><span class="hx-farr">→</span>
+            <a class="hx-fcard hx-glass" href="/job-knowledge-map"><span class="hx-farr">→</span>
               <div class="hx-fic" style="background:rgba(61,123,255,.16)">🕸</div><h3>知识图谱</h3><p>知识关联 · 学习路径 · 缺口定位</p></a>
             <a class="hx-fcard hx-glass" href="/rag-console"><span class="hx-farr">→</span>
               <div class="hx-fic" style="background:rgba(110,75,255,.16)">🔎</div><h3>知识检索</h3><p>RAG 问答 · 教材溯源 · 权威引用</p></a>
@@ -1946,7 +1946,7 @@
               <a class="hx-qitem hx-glass" data-cat="all" href="/fault-chain"><div class="hx-qic" style="background:rgba(235,51,73,.13)">🧬</div><span>因果故障链</span></a>
               <a class="hx-qitem hx-glass" data-cat="study" href="/exercise-page"><div class="hx-qic" style="background:rgba(42,223,180,.13)">✏️</div><span>互动练习</span></a>
               <a class="hx-qitem hx-glass" data-cat="study" href="/wrong-questions-page"><div class="hx-qic" style="background:rgba(255,107,157,.13)">📝</div><span>错题本</span></a>
-              <a class="hx-qitem hx-glass" data-cat="study" href="/knowledge-graph-page"><div class="hx-qic" style="background:rgba(42,82,152,.2)">🕸</div><span>知识图谱</span></a>
+              <a class="hx-qitem hx-glass" data-cat="study" href="/job-knowledge-map"><div class="hx-qic" style="background:rgba(42,82,152,.2)">🕸</div><span>知识图谱</span></a>
               <a class="hx-qitem hx-glass" data-cat="res" href="/ppt-resources-page"><div class="hx-qic" style="background:rgba(123,47,247,.15)">📚</div><span>课件中心</span></a>
               <a class="hx-qitem hx-glass" data-cat="res" href="/frontier-update-page"><div class="hx-qic" style="background:rgba(79,172,254,.13)">🚀</div><span>前沿动态</span></a>
               <a class="hx-qitem hx-glass" data-cat="res" href="/interview-cases-page"><div class="hx-qic" style="background:rgba(24,144,255,.13)">📚</div><span>面试案例</span></a>
@@ -2210,7 +2210,7 @@
                 html += G('学 习',
                     A('/exercise-page', '✏️', '互动练习') +
                     A('/wrong-questions-page', '📝', '错题本') +
-                    A('/knowledge-graph-page', '🕸', '知识图谱') +
+                    A('/job-knowledge-map', '🕸', '知识图谱') +
                     A('/rag-console', '🔎', '知识检索') +
                     A('/ppt-resources-page', '📚', '课件中心'));
                 html += G('成 长',
@@ -2232,7 +2232,7 @@
                     A('/multi-fault-page', '🚨', '多故障应急') +
                     A('/fault-chain', '🧬', '因果故障链') +
                     A('/exercise-page', '✏️', '互动练习') +
-                    A('/knowledge-graph-page', '🕸', '知识图谱') +
+                    A('/job-knowledge-map', '🕸', '知识图谱') +
                     A('/rag-console', '🔎', '知识检索') +
                     A('/frontier-update-page', '🚀', '前沿知识更新') +
                     A('/credential-chain', '🎖', '可信成长档案'));
@@ -2370,7 +2370,7 @@
                 items: [
                     ['/exercise-page', '✏️', '互动练习', '智能出题 · 即时批改'],
                     ['/wrong-questions-page', '📝', '错题本', '自动归集 · 变式重练'],
-                    ['/knowledge-graph-page', '🕸', '知识图谱', '知识关联 · 缺口定位'],
+                    ['/job-knowledge-map', '🕸', '知识图谱', '知识关联 · 缺口定位'],
                     ['/weekly-tasks-page', '📋', '每周任务', '本周学习计划与进度'],
                     ['/homework-page', '📒', '我的作业', '提交作业 · 查看批改']
                 ]
@@ -2445,6 +2445,10 @@
             const showHomeParts = (mode === 'home');
             // 首页专属元素：只有 home 模式才显示，page/center 模式全部隐藏
             home.querySelectorAll(':scope > .hx-aurora, :scope > header.hx-topbar, :scope > .hx-notice, :scope > .hx-layout').forEach(el => {
+                el.style.display = showHomeParts ? '' : 'none';
+            });
+            // 桌宠是 fixed 定位，会盖住内嵌页面右下角的按钮，进入内嵌页时暂时隐藏
+            document.querySelectorAll('.global-desktop-pet').forEach(el => {
                 el.style.display = showHomeParts ? '' : 'none';
             });
             const cv = document.getElementById('hxCenterView');
