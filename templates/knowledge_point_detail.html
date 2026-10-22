@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ node.name }} · 知识点详情</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='knowledge_map.css') }}">
+</head>
+<body>
+  {% set q = ('?student_no=' ~ student_no) if is_teacher and student_no else '' %}
+  <header class="brandbar">
+    <a class="back" href="{{ url_for('job_mindmap_page', job_id=job_id) }}{{ q }}">← 返回知识地图</a>
+    <span class="title">知识图谱 · 知识点详情</span>
+    <span class="info">{{ graph.name }}</span>
+  </header>
+
+  <main class="detail-main">
+    <div class="card detail-content">
+      <div class="crumb">
+        <a href="{{ url_for('job_mindmap_page', job_id=job_id) }}{{ q }}">知识地图</a> › {{ category.name }} › {{ node.name }}
+      </div>
+      <div class="title-row">
+        <h1>{{ node.name }}</h1>
+        {% if node.status == 'learned' %}
+        <span class="badge done">已学会</span>
+        {% elif node.status == 'learning' %}
+        <span class="badge">学习中</span>
+        {% else %}
+        <span class="badge todo">未学习</span>
+        {% endif %}
+        <span class="diff">难度 {{ '★' * (node.difficulty|int) }}{{ '☆' * (5 - node.difficulty|int) }}</span>
+      </div>
+      <div class="meta">
+        <span class="tag">所属模块：{{ category.name }}</span>
+        <span class="tag">{{ node.quiz_count }} 道练习题</span>
+        {% if node.applications %}<span class="tag">应用：{{ node.applications[0] }}</span>{% endif %}
+      </div>
+
+      {% if node.description %}
+      <div class="section">
+        <h2>📖 知识点概述</h2>
+        <p>{{ node.description }}</p>
+      </div>
+      {% endif %}
+
+      {% if node.key_points %}
+      <div class="section">
+        <h2>🔑 核心要点</h2>
+        <ul>
+          {% for kp in node.key_points %}
+          <li>{{ kp }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      {% if node.formula %}
+      <div class="section">
+        <h2>📐 关键公式</h2>
+        <div class="formula">{{ node.formula }}</div>
+      </div>
+      {% endif %}
+
+      {% if node.prerequisites %}
+      <div class="section">
+        <h2>🧩 前置知识</h2>
+        <div class="concept-row">
+          {% for p in node.prerequisites %}
+          <div class="concept">
+            <b>{{ p.name }}</b>
+            {% if p.id %}
+            <a href="{{ url_for('job_knowledge_point_page', job_id=job_id, node_id=p.id) }}{{ q }}">去学习 →</a>
+            {% else %}
+            <span style="color:#94a3b8;">（暂无对应知识点）</span>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      {% if node.applications %}
+      <div class="section">
+        <h2>🛠️ 应用场景</h2>
+        <div class="related">
+          {% for a in node.applications %}
+          <span class="chip">{{ a }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      {% if node.hints %}
+      <div class="section">
+        <h2>⚠️ 易错提示</h2>
+        {% for h in node.hints %}
+        <div class="warn">{{ h }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if node.related %}
+      <div class="section" style="margin-bottom:0;">
+        <h2>🔗 关联知识</h2>
+        <div class="related">
+          {% for r in node.related %}
+          <a class="chip {{ 'done' if r.status == 'learned' else ('todo' if r.status == 'todo' else '') }}"
+             href="{{ url_for('job_knowledge_point_page', job_id=job_id, node_id=r.id) }}{{ q }}">{{ r.name }}</a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <aside class="detail-side">
+      <div class="card side-card mastery">
+        <div class="h">📊 掌握度</div>
+        <div class="row"><span>当前掌握</span><span><b>{{ node.mastery }}%</b>（{{ node.correct }} / {{ node.quiz_count }} 题）</span></div>
+        <div class="bar"><div class="{{ 'full' if node.mastery >= 100 else '' }}" style="width: {{ node.mastery }}%"></div></div>
+        <div class="sub">{{ '已完成学习，可随时复习' if node.status == 'learned' else '完成全部练习题并答对后可标记为已学会' }}</div>
+      </div>
+
+      <div class="card side-card">
+        <div class="h">✏️ 练习题</div>
+        <div class="quiz-box">
+          {% if node.quiz_count > 0 %}
+          <div class="t">{{ node.name }} · 专项练习</div>
+          <div class="d">共 {{ node.quiz_count }} 题 · 已答 {{ node.answered }} 题</div>
+          <div class="bar"><div style="width: {{ (node.answered * 100 / node.quiz_count)|round(0, 'floor') }}%"></div></div>
+          <a class="go" href="{{ url_for('job_knowledge_quiz_page', job_id=job_id, node_id=node.id) }}{{ q }}">{{ '再练一次 →' if node.status == 'learned' else '继续练习 →' }}</a>
+          {% else %}
+          <div class="empty">该知识点暂无练习题，可直接标记为已学会</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card side-card pre-list">
+        <div class="h">📚 学习路径</div>
+        {% for p in node.prerequisites %}
+        <div class="item">
+          <span>{{ p.name }}</span>
+          {% if p.status == 'learned' %}<span class="ok">✓ 已学会</span>
+          {% elif p.id %}<a class="go" href="{{ url_for('job_knowledge_point_page', job_id=job_id, node_id=p.id) }}{{ q }}">去学习 →</a>
+          {% else %}<span class="go">暂无</span>{% endif %}
+        </div>
+        {% endfor %}
+        <div class="item"><span>{{ node.name }}（当前）</span><span class="go">{{ '已学会' if node.status == 'learned' else ('学习中' if node.status == 'learning' else '未学习') }}</span></div>
+        {% if node.next_node %}
+        <div class="item">
+          <span>下一个：{{ node.next_node.name }}</span>
+          <a class="go" href="{{ url_for('job_knowledge_point_page', job_id=job_id, node_id=node.next_node.id) }}{{ q }}">去学习 →</a>
+        </div>
+        {% endif %}
+      </div>
+
+      {% if is_teacher %}
+      <div class="teacher-note">教师为只读模式，不能修改学生学习进度</div>
+      {% else %}
+      <button class="learn-btn" id="learnBtn" onclick="kmMarkLearned()" {% if not node.can_mark_learned %}disabled{% endif %}>✅ 标记为已学会</button>
+      <div class="learn-hint" id="learnHint">
+        {% if node.status == 'learned' %}已学会，可随时重新练习
+        {% elif node.can_mark_learned %}练习题已全部答对，可以标记为已学会
+        {% else %}完成并答对全部练习题后即可标记{% endif %}
+      </div>
+      {% endif %}
+    </aside>
+  </main>
+
+  <script>
+    async function kmMarkLearned() {
+      const btn = document.getElementById('learnBtn');
+      if (!btn || btn.disabled) return;
+      btn.disabled = true;
+      btn.textContent = '正在标记…';
+      try {
+        const resp = await fetch('/api/job-knowledge-map/learn', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ job_id: {{ job_id|tojson }}, node_id: {{ node.id|tojson }} })
+        });
+        const data = await resp.json();
+        if (resp.ok && data.success) {
+          location.href = data.redirect;
+          return;
+        }
+        alert(data.error || '操作失败，请稍后重试');
+      } catch (e) {
+        alert('操作失败，请检查网络后重试');
+      }
+      btn.disabled = false;
+      btn.textContent = '✅ 标记为已学会';
+    }
+  </script>
+</body>
+</html>

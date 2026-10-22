@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>知识图谱 · 岗位知识地图</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='knowledge_map.css') }}">
+</head>
+<body>
+  <header class="brandbar">
+    <a class="back" id="backHome" href="/">← 返回</a>
+    <span class="title">知识图谱 · 岗位知识地图</span>
+    <span class="info">{% if role == 'teacher' %}教师端 · 只读查看{% else %}学生端{% endif %}</span>
+  </header>
+
+  {% if error %}
+  <main class="km-empty">{{ error }}</main>
+  {% else %}
+  {% set q = ('?student_no=' ~ student_no) if role == 'teacher' and student_no else '' %}
+  <main class="km-page">
+    <div class="km-head">
+      <h1>选择你的目标岗位</h1>
+      <p>知识地图会按岗位所需能力生成，学习进度按岗位分别记录</p>
+    </div>
+
+    {% if role == 'teacher' %}
+    <div class="teacher-bar">
+      <form method="get" action="{{ url_for('job_knowledge_map_page') }}" style="display:flex;align-items:center;gap:10px;">
+        <label for="studentSelect">查看学生：</label>
+        <select id="studentSelect" name="student_no" onchange="this.form.submit()">
+          <option value="">请选择学生</option>
+          {% for s in students %}
+          <option value="{{ s.student_no }}" {% if s.student_no == selected_student %}selected{% endif %}>{{ s.name }}（{{ s.student_no }}）{% if s.class_name %} · {{ s.class_name }}{% endif %}</option>
+          {% endfor %}
+        </select>
+      </form>
+      <span class="note">教师为只读模式，不会修改学生进度</span>
+    </div>
+    {% endif %}
+
+    <div class="km-grid">
+      {% for job in jobs %}
+      <div class="job-card {% if loop.first %}selected{% endif %}" data-job-id="{{ job.id }}"
+           data-href="{{ url_for('job_mindmap_page', job_id=job.id) }}{{ q }}" tabindex="0" role="button"
+           aria-label="选择岗位 {{ job.name }}">
+        <span class="check">✓</span>
+        <span class="icon">{{ job.modules[0].icon if job.modules else '📚' }}</span>
+        <h3>{{ job.name }}</h3>
+        <p class="desc">{{ job.description }}</p>
+        <div class="tags">
+          <span class="tag">{{ job.category_count }} 个知识模块</span>
+          <span class="tag">{{ job.node_count }} 个知识点</span>
+          <span class="tag">{{ job.quiz_count }} 道练习题</span>
+        </div>
+        <div class="foot">
+          <div class="row"><span>已学会</span><span>{{ job.learned }} / {{ job.node_count }}</span></div>
+          <div class="bar"><div style="width: {{ job.progress_percent }}%"></div></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="footer-bar">
+      <div>
+        <span class="sel">已选择：<b id="selName">{{ jobs[0].name if jobs else '' }}</b></span>
+        <span class="hint">点击岗位卡片直接进入 · 切换岗位不影响已学会的知识点</span>
+      </div>
+      <a class="enter-btn" id="enterBtn" href="{{ url_for('job_mindmap_page', job_id=jobs[0].id) }}{{ q if jobs else '' }}">进入知识地图 →</a>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      const back = document.getElementById('backHome');
+      if (back) {
+        back.addEventListener('click', function (e) {
+          if (window.self !== window.top && window.parent && typeof window.parent.hxClosePage === 'function') {
+            e.preventDefault();
+            window.parent.hxClosePage();
+          }
+        });
+      }
+      const cards = Array.from(document.querySelectorAll('.job-card'));
+      const enter = document.getElementById('enterBtn');
+      const selName = document.getElementById('selName');
+      if (!cards.length) return;
+
+      function select(card, save) {
+        cards.forEach(function (c) { c.classList.toggle('selected', c === card); });
+        enter.href = card.dataset.href;
+        selName.textContent = card.querySelector('h3').textContent;
+        if (save) localStorage.setItem('km_last_job', card.dataset.jobId);
+      }
+
+      cards.forEach(function (card) {
+        card.addEventListener('click', function () {
+          select(card, true);
+          location.href = card.dataset.href;
+        });
+        card.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            select(card, true);
+            location.href = card.dataset.href;
+          }
+        });
+      });
+
+      const saved = localStorage.getItem('km_last_job');
+      let initial = cards.find(function (c) { return c.dataset.jobId === saved; });
+      if (!initial) initial = document.querySelector('.job-card.selected') || cards[0];
+      select(initial, false);
+    })();
+  </script>
+  {% endif %}
+</body>
+</html>
