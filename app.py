@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify, Response, session, send_from_directory, redirect, url_for
 import requests
 import base64
+import copy
 import io
 import csv
 import re
@@ -41,6 +42,14 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'lingzhishangren-fixed-secret-key-2024')
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.jinja_env.auto_reload = True
+
+# gzip 压缩：首页等模板 280KB → 约 50KB，缓解服务器上行带宽瓶颈
+# 默认压缩类型不含 text/event-stream，SSE 流式接口不受影响
+try:
+    from flask_compress import Compress
+    Compress(app)
+except ImportError:
+    pass
 
 # ====================== SiliconFlow API 配置 ======================
 def _load_siliconflow_key():
@@ -1564,7 +1573,8 @@ SCENARIOS = [
 
 def atomic_save_json(filepath: str, data):
     """原子写入JSON：先写临时文件再重命名，防止并发写入损坏"""
-    tmp_path = filepath + ".tmp"
+    # tmp 名加随机后缀：多线程/多worker并发保存同文件时互不踩踏（原固定名会报 tmp 不存在）
+    tmp_path = f"{filepath}.{uuid.uuid4().hex[:8]}.tmp"
     with open(tmp_path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
     os.replace(tmp_path, filepath)
@@ -1960,23 +1970,43 @@ def save_search_logs(logs: List[Dict]):
 
 
 # ====================== 学生档案管理 ======================
+# 学生档案内存缓存：避免高频请求反复读盘+解析大JSON（138KB+）
+_students_cache = None            # type: list[dict] | None
+_students_cache_mtime = -1.0
+_students_cache_lock = threading.Lock()
+
+
 def load_students() -> List[Dict]:
-    """加载学生档案"""
+    """加载学生档案（带 mtime 缓存：文件未变化时直接返回内存副本）"""
+    global _students_cache, _students_cache_mtime
     try:
-        if os.path.exists(STUDENTS_FILE):
-            with open(STUDENTS_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        else:
+        if not os.path.exists(STUDENTS_FILE):
             return []
+        mtime = os.path.getmtime(STUDENTS_FILE)
+        if _students_cache is not None and mtime == _students_cache_mtime:
+            return copy.deepcopy(_students_cache)
+        with open(STUDENTS_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        with _students_cache_lock:
+            _students_cache = data
+            _students_cache_mtime = mtime
+        return copy.deepcopy(data)
     except Exception as e:
         print(f"学生档案加载失败: {e}")
         return []
 
 
 def save_students(students: List[Dict]):
-    """保存学生档案"""
+    """保存学生档案（写盘后同步刷新缓存与 mtime）"""
+    global _students_cache, _students_cache_mtime
     try:
         atomic_save_json(STUDENTS_FILE, students)
+        with _students_cache_lock:
+            _students_cache = copy.deepcopy(students)
+            try:
+                _students_cache_mtime = os.path.getmtime(STUDENTS_FILE)
+            except OSError:
+                _students_cache_mtime = -1.0
     except Exception as e:
         print(f"学生档案保存失败: {e}")
 
