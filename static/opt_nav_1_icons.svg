@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 140" width="480" height="140">
+  <rect width="480" height="140" fill="#0a0e1a" rx="12"/>
+  <text x="24" y="28" fill="#E5E5E5" font-family="system-ui,'PingFang SC',sans-serif" font-size="15" font-weight="500">方案 1 · 统一线性 SVG 图标</text>
+  <text x="24" y="46" fill="#6b7a99" font-family="system-ui,'PingFang SC',sans-serif" font-size="11">只换图标不动按钮样式，三个图标同一套线性语言</text>
+  <!-- 按钮1 清除记录 -->
+  <rect x="24" y="64" width="112" height="34" rx="8" fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.15)"/>
+  <g transform="translate(38,73)" stroke="#e0ecff" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 4 h12"/><path d="M5.5 4 V2.5 h5 V4"/><rect x="3" y="4" width="10" height="11" rx="1.5"/><line x1="6" y1="7.5" x2="6" y2="12"/><line x1="10" y1="7.5" x2="10" y2="12"/>
+  </g>
+  <text x="60" y="85" fill="#e0ecff" font-family="system-ui,'PingFang SC',sans-serif" font-size="12">清除记录</text>
+  <!-- 按钮2 退出登录 -->
+  <rect x="148" y="64" width="112" height="34" rx="8" fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.15)"/>
+  <g transform="translate(162,73)" stroke="#e0ecff" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 2 H3.5 a1.5 1.5 0 0 0 -1.5 1.5 v9 a1.5 1.5 0 0 0 1.5 1.5 H9"/><path d="M12 5 L15.5 8 L12 11"/><line x1="6.5" y1="8" x2="15" y2="8"/>
+  </g>
+  <text x="184" y="85" fill="#e0ecff" font-family="system-ui,'PingFang SC',sans-serif" font-size="12">退出登录</text>
+  <!-- 按钮3 返回首页 -->
+  <rect x="272" y="64" width="112" height="34" rx="8" fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.15)"/>
+  <g transform="translate(286,73)" stroke="#e0ecff" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10 3 L4 8 L10 13"/><line x1="4.5" y1="8" x2="15" y2="8"/>
+  </g>
+  <text x="308" y="85" fill="#e0ecff" font-family="system-ui,'PingFang SC',sans-serif" font-size="12">返回首页</text>
+  <text x="24" y="122" fill="#3d4d6e" font-family="system-ui,'PingFang SC',sans-serif" font-size="10">改动最小，任何系统渲染一致；保留现有悬停渐变</text>
+</svg>

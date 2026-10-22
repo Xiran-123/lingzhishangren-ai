@@ -1,0 +1,1941 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5G网格优化验证 - 灵智尚人</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #071521;
+            --bg2: #0b2233;
+            --panel: rgba(13, 33, 52, .92);
+            --panel2: rgba(18, 43, 66, .96);
+            --line: rgba(77, 216, 255, .16);
+            --line2: rgba(77, 216, 255, .34);
+            --cyan: #4dd8ff;
+            --cyan2: #00c8ff;
+            --text: #e6f3ff;
+            --muted: #7ea6c6;
+            --green: #4ade80;
+            --gold: #ffd66b;
+            --red: #ff6b6b;
+            --radius: 12px;
+        }
+
+        html, body {
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+        }
+
+        .app {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            height: 100vh;
+            background:
+                radial-gradient(1100px 620px at 78% -12%, rgba(0, 160, 255, .16), transparent 62%),
+                radial-gradient(760px 520px at 4% 104%, rgba(0, 200, 190, .1), transparent 60%),
+                var(--bg);
+        }
+
+        /* ============ 左侧任务清单 ============ */
+        .side {
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--line);
+            background: rgba(8, 24, 38, .72);
+            backdrop-filter: blur(10px);
+            min-height: 0;
+        }
+
+        .brand {
+            padding: 20px 20px 16px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .brand a {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 12px;
+            margin-bottom: 12px;
+            transition: color .2s;
+        }
+
+        .brand a:hover { color: var(--cyan); }
+
+        .brand h1 {
+            font-size: 17px;
+            font-weight: 600;
+            letter-spacing: .5px;
+            line-height: 1.45;
+        }
+
+        .brand h1 span {
+            display: block;
+            font-size: 11px;
+            font-weight: 400;
+            color: var(--muted);
+            letter-spacing: 2px;
+            margin-top: 4px;
+        }
+
+        .stat-row {
+            display: flex;
+            gap: 10px;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .stat {
+            flex: 1;
+            background: rgba(0, 200, 255, .05);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 9px 10px;
+            text-align: center;
+        }
+
+        .stat b {
+            display: block;
+            font-size: 18px;
+            color: var(--cyan);
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .stat span { font-size: 11px; color: var(--muted); }
+
+        .task-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 12px 8px;
+            min-height: 0;
+        }
+
+        .task-list::-webkit-scrollbar { width: 5px; }
+        .task-list::-webkit-scrollbar-thumb { background: rgba(77, 216, 255, .22); border-radius: 3px; }
+
+        .titem {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 11px 12px;
+            border-radius: 10px;
+            border: 1px solid transparent;
+            margin-bottom: 4px;
+            cursor: pointer;
+            transition: background .18s, border-color .18s;
+        }
+
+        .titem:hover:not(.locked) { background: rgba(77, 216, 255, .06); }
+
+        .titem.active {
+            background: rgba(77, 216, 255, .1);
+            border-color: var(--line2);
+        }
+
+        .titem.locked { cursor: not-allowed; opacity: .42; }
+
+        .tnum {
+            flex: 0 0 24px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-size: 11px;
+            font-weight: 600;
+            background: rgba(126, 166, 198, .16);
+            color: var(--muted);
+            margin-top: 1px;
+        }
+
+        .titem.active .tnum { background: var(--cyan); color: #062032; }
+        .titem.done .tnum { background: rgba(74, 222, 128, .18); color: var(--green); }
+
+        .tinfo { min-width: 0; flex: 1; }
+        .tinfo b {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            line-height: 1.4;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .tinfo i {
+            display: block;
+            font-style: normal;
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 3px;
+        }
+
+        .side-foot {
+            padding: 12px 16px 16px;
+            border-top: 1px solid var(--line);
+        }
+
+        /* ============ 右侧主区 ============ */
+        .main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+
+        .top {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 28px;
+            border-bottom: 1px solid var(--line);
+            background: rgba(8, 24, 38, .55);
+        }
+
+        .top-title { font-size: 14px; font-weight: 500; }
+        .top-title small {
+            display: block;
+            font-size: 11px;
+            color: var(--muted);
+            font-weight: 400;
+            margin-top: 3px;
+        }
+
+        .bar {
+            flex: 1;
+            height: 6px;
+            background: rgba(126, 166, 198, .16);
+            border-radius: 99px;
+            overflow: hidden;
+            min-width: 80px;
+        }
+
+        .bar i {
+            display: block;
+            height: 100%;
+            width: 0;
+            border-radius: 99px;
+            background: linear-gradient(90deg, var(--cyan2), var(--green));
+            transition: width .45s cubic-bezier(.2, .8, .2, 1);
+        }
+
+        .clock {
+            font-size: 12px;
+            color: var(--muted);
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        .body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 28px 12px;
+            min-height: 0;
+        }
+
+        .body::-webkit-scrollbar { width: 7px; }
+        .body::-webkit-scrollbar-thumb { background: rgba(77, 216, 255, .2); border-radius: 4px; }
+
+        .foot {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 28px;
+            border-top: 1px solid var(--line);
+            background: rgba(8, 24, 38, .72);
+        }
+
+        .foot-tip { font-size: 12px; color: var(--muted); flex: 1; }
+        .foot-tip.warn { color: var(--gold); }
+
+        /* ============ 通用组件 ============ */
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 18px 20px;
+            margin-bottom: 16px;
+        }
+
+        .card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .card-head h2 {
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: .3px;
+        }
+
+        .card-head h2 em {
+            font-style: normal;
+            color: var(--cyan);
+            margin-right: 8px;
+        }
+
+        .muted { color: var(--muted); }
+        .small { font-size: 12px; }
+
+        .task-desc {
+            background: rgba(0, 200, 255, .045);
+            border: 1px solid var(--line);
+            border-left: 3px solid var(--cyan);
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-bottom: 18px;
+            font-size: 13px;
+            line-height: 1.85;
+        }
+
+        .task-desc p { margin-bottom: 6px; }
+        .task-desc p:last-child { margin-bottom: 0; }
+        .task-desc b { color: var(--cyan); font-weight: 500; }
+
+        .kv {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(228px, 1fr));
+            gap: 10px;
+        }
+
+        .kv-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 13px;
+            background: rgba(255, 255, 255, .025);
+            border: 1px solid rgba(77, 216, 255, .1);
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .kv-item span { color: var(--muted); white-space: nowrap; }
+        .kv-item b { font-weight: 500; font-variant-numeric: tabular-nums; }
+        .kv-item.ok { border-color: rgba(74, 222, 128, .4); background: rgba(74, 222, 128, .06); }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 9px 20px;
+            border-radius: 8px;
+            border: 1px solid var(--line2);
+            background: rgba(77, 216, 255, .08);
+            color: var(--cyan);
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all .18s;
+            white-space: nowrap;
+        }
+
+        .btn:hover:not(:disabled) { background: rgba(77, 216, 255, .16); border-color: var(--cyan); }
+        .btn:disabled { opacity: .38; cursor: not-allowed; }
+
+        .btn.primary {
+            background: linear-gradient(135deg, #00a8e8, #00c8ff);
+            border-color: transparent;
+            color: #03202f;
+            font-weight: 600;
+            box-shadow: 0 6px 18px rgba(0, 180, 255, .22);
+        }
+
+        .btn.primary:hover:not(:disabled) { filter: brightness(1.08); }
+        .btn.ghost { background: transparent; border-color: var(--line); color: var(--muted); }
+        .btn.ghost:hover:not(:disabled) { color: var(--cyan); border-color: var(--line2); background: rgba(77, 216, 255, .06); }
+        .btn.sm { padding: 6px 12px; font-size: 12px; }
+
+        .field { margin-bottom: 14px; }
+        .field label {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(4, 16, 26, .8);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color .18s;
+            font-variant-numeric: tabular-nums;
+        }
+
+        input:focus, select:focus { border-color: var(--cyan); }
+        input::placeholder { color: rgba(126, 166, 198, .5); }
+        select option { background: #0b2233; }
+
+        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+
+        /* ============ 设备卡片 ============ */
+        .dev-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+        .dev {
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 15px;
+            background: rgba(255, 255, 255, .02);
+            cursor: pointer;
+            transition: all .18s;
+        }
+
+        .dev:hover { border-color: var(--line2); background: rgba(77, 216, 255, .05); }
+        .dev.open { border-color: var(--line2); background: rgba(77, 216, 255, .07); }
+
+        .dev-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .dev-name { font-size: 13px; font-weight: 500; }
+
+        .dot {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            color: var(--green);
+        }
+
+        .dot i {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 8px var(--green);
+        }
+
+        .dot.bad { color: var(--red); }
+        .dot.bad i { background: var(--red); box-shadow: 0 0 8px var(--red); }
+
+        .dev-body {
+            display: none;
+            border-top: 1px dashed rgba(77, 216, 255, .16);
+            margin-top: 10px;
+            padding-top: 10px;
+        }
+
+        .dev.open .dev-body { display: block; }
+
+        .dev-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            padding: 4px 0;
+            color: var(--muted);
+        }
+
+        .dev-row b { color: var(--text); font-weight: 500; }
+
+        /* ============ 告警列表 ============ */
+        .alarm {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(77, 216, 255, .1);
+            background: rgba(255, 255, 255, .02);
+            margin-bottom: 8px;
+            font-size: 12.5px;
+        }
+
+        .alarm.active { border-color: rgba(255, 107, 107, .38); background: rgba(255, 107, 107, .07); }
+
+        .alarm-time { color: var(--muted); font-variant-numeric: tabular-nums; }
+        .alarm-name { flex: 1; }
+        .alarm-state { font-size: 11px; color: var(--green); }
+        .alarm.active .alarm-state { color: var(--red); }
+
+        /* ============ 工具清单 ============ */
+        .tool-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+
+        .tool {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 13px 14px;
+            border: 1px solid var(--line);
+            border-radius: 9px;
+            background: rgba(255, 255, 255, .02);
+            cursor: pointer;
+            transition: all .16s;
+            font-size: 13px;
+        }
+
+        .tool:hover { border-color: var(--line2); }
+
+        .tool.on {
+            border-color: rgba(74, 222, 128, .45);
+            background: rgba(74, 222, 128, .07);
+        }
+
+        .tick {
+            flex: 0 0 18px;
+            width: 18px;
+            height: 18px;
+            border-radius: 5px;
+            border: 1.5px solid rgba(126, 166, 198, .45);
+            display: grid;
+            place-items: center;
+            font-size: 11px;
+            color: transparent;
+            transition: all .16s;
+        }
+
+        .tool.on .tick {
+            background: var(--green);
+            border-color: var(--green);
+            color: #052b16;
+            font-weight: 700;
+        }
+
+        /* 待确认（参数已核对完，但尚未勾选阅读确认） */
+        .tool.ready {
+            border-color: rgba(77, 216, 255, .55);
+            background: rgba(77, 216, 255, .06);
+            animation: readyPulse 1.9s ease-in-out infinite;
+        }
+
+        .tool.ready .tick { border-color: var(--cyan); }
+
+        .tool.locked { opacity: .5; }
+
+        @keyframes readyPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(77, 216, 255, 0); }
+            50% { box-shadow: 0 0 0 3px rgba(77, 216, 255, .12); }
+        }
+
+        /* 错误选型 */
+        .tool.bad {
+            border-color: rgba(255, 107, 107, .55);
+            background: rgba(255, 107, 107, .08);
+        }
+
+        .tool.bad .tick {
+            background: var(--red);
+            border-color: var(--red);
+            color: #2b0505;
+            font-weight: 700;
+        }
+
+        .sel-tip {
+            font-size: 12px;
+            line-height: 1.7;
+            color: var(--muted);
+            background: rgba(77, 216, 255, .05);
+            border-left: 3px solid rgba(77, 216, 255, .35);
+            border-radius: 6px;
+            padding: 9px 12px;
+            margin-bottom: 12px;
+        }
+
+        .sel-err {
+            font-size: 12px;
+            line-height: 1.7;
+            color: #ffc9c9;
+            background: rgba(255, 107, 107, .09);
+            border: 1px solid rgba(255, 107, 107, .35);
+            border-radius: 6px;
+            padding: 9px 12px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .sel-err b { color: var(--red); }
+
+        .sel-err .pen {
+            margin-left: auto;
+            font-weight: 700;
+            color: var(--red);
+            white-space: nowrap;
+        }
+
+        /* ============ 地图 ============ */
+        .map-wrap {
+            position: relative;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            overflow: hidden;
+            background:
+                linear-gradient(rgba(77, 216, 255, .05) 1px, transparent 1px) 0 0 / 100% 34px,
+                linear-gradient(90deg, rgba(77, 216, 255, .05) 1px, transparent 1px) 0 0 / 34px 100%,
+                #061320;
+            height: 260px;
+        }
+
+        .map-svg { width: 100%; height: 100%; display: block; }
+
+        .route-line {
+            stroke: var(--cyan);
+            stroke-width: 2.5;
+            fill: none;
+            stroke-dasharray: 8 6;
+            stroke-dashoffset: 420;
+            transition: stroke-dashoffset 1.4s ease;
+        }
+
+        .route-line.show { stroke-dashoffset: 0; }
+
+        .map-meta {
+            position: absolute;
+            right: 12px;
+            bottom: 12px;
+            background: rgba(4, 16, 26, .88);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 11.5px;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        .map-meta b { color: var(--cyan); }
+
+        /* ============ 数据表 ============ */
+        table.dt {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12.5px;
+        }
+
+        table.dt th {
+            text-align: left;
+            font-weight: 500;
+            color: var(--muted);
+            font-size: 11.5px;
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--line);
+            white-space: nowrap;
+        }
+
+        table.dt td {
+            padding: 7px 10px;
+            border-bottom: 1px solid rgba(77, 216, 255, .07);
+            vertical-align: middle;
+        }
+
+        table.dt tr:last-child td { border-bottom: none; }
+
+        table.dt input {
+            padding: 7px 9px;
+            font-size: 12.5px;
+            text-align: right;
+        }
+
+        .pass { color: var(--green); }
+        .fail { color: var(--red); }
+        .wait { color: var(--muted); }
+
+        /* ============ 切换信令 ============ */
+        .sig {
+            font-family: 'SFMono-Regular', Consolas, monospace;
+            font-size: 12px;
+            line-height: 2;
+            background: rgba(4, 16, 26, .75);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 12px 14px;
+            color: var(--muted);
+            max-height: 168px;
+            overflow-y: auto;
+        }
+
+        .sig div { opacity: 0; animation: fadeIn .3s forwards; }
+        .sig div b { color: var(--cyan); font-weight: 500; }
+        .sig div.ok { color: var(--green); }
+
+        @keyframes fadeIn { to { opacity: 1; } }
+
+        /* ============ 报告 ============ */
+        .rep-head {
+            text-align: center;
+            padding: 22px 0 16px;
+            border-bottom: 1px solid var(--line);
+            margin-bottom: 18px;
+        }
+
+        .rep-head h2 { font-size: 19px; font-weight: 600; letter-spacing: 1px; }
+        .rep-head p { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+        .rep-score {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 14px;
+        }
+
+        .rep-score b {
+            font-size: 42px;
+            font-weight: 600;
+            color: var(--cyan);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .rep-score span { font-size: 13px; color: var(--muted); }
+
+        .rep-block { margin-bottom: 20px; }
+
+        .rep-block h3 {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--cyan);
+            margin-bottom: 10px;
+            padding-left: 9px;
+            border-left: 3px solid var(--cyan);
+        }
+
+        /* ============ 提示条 ============ */
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 88px;
+            transform: translate(-50%, 14px);
+            background: rgba(8, 26, 40, .97);
+            border: 1px solid var(--line2);
+            border-radius: 9px;
+            padding: 11px 20px;
+            font-size: 13px;
+            color: var(--text);
+            opacity: 0;
+            pointer-events: none;
+            transition: all .25s;
+            z-index: 99;
+            max-width: 80vw;
+            text-align: center;
+        }
+
+        .toast.show { opacity: 1; transform: translate(-50%, 0); }
+        .toast.err { border-color: rgba(255, 107, 107, .5); color: #ffc9c9; }
+        .toast.ok { border-color: rgba(74, 222, 128, .5); color: #c6f8d8; }
+
+        .empty { text-align: center; padding: 40px 0; color: var(--muted); font-size: 13px; }
+
+        @media (max-width: 980px) {
+            .app { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+            .side { flex-direction: row; align-items: center; border-right: none; border-bottom: 1px solid var(--line); overflow-x: auto; }
+            .brand, .stat-row, .side-foot { border: none; padding: 12px 16px; }
+            .brand h1 span { display: none; }
+            .task-list { display: flex; gap: 6px; padding: 8px 12px; overflow-x: auto; }
+            .titem { margin-bottom: 0; white-space: nowrap; }
+            .tinfo i { display: none; }
+            .grid3, .dev-grid { grid-template-columns: 1fr; }
+            .grid2 { grid-template-columns: 1fr; }
+            .body { padding: 16px; }
+            .top, .foot { padding: 12px 16px; }
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <aside class="side">
+        <div class="brand">
+            <a href="/" target="_top">&#8592; 返回首页</a>
+            <h1>5G 网格优化验证<span>GRID OPTIMIZATION</span></h1>
+        </div>
+        <div class="stat-row">
+            <div class="stat"><b id="statDone">0/10</b><span>任务完成</span></div>
+            <div class="stat"><b id="statScore">0</b><span>实训得分</span></div>
+        </div>
+        <div class="task-list" id="taskList"></div>
+        <div class="side-foot">
+            <button class="btn ghost sm" style="width:100%" onclick="resetAll()">重新开始实训</button>
+        </div>
+    </aside>
+
+    <main class="main">
+        <div class="top">
+            <div class="top-title">
+                石家庄市某区 · 网格1
+                <small id="topSub">网格优化任务清单</small>
+            </div>
+            <div class="bar"><i id="barFill"></i></div>
+            <div class="clock" id="clock"></div>
+        </div>
+        <div class="body" id="body"></div>
+        <div class="foot">
+            <div class="foot-tip" id="footTip"></div>
+            <button class="btn ghost" id="btnPrev" onclick="prevStep()">上一任务</button>
+            <button class="btn primary" id="btnNext" onclick="submitTask()">提交并解锁下一任务</button>
+        </div>
+    </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<link rel="stylesheet" href="/static/desktop_pet.css">
+<script src="/static/desktop_pet.js" defer></script>
+
+<script>
+/* =========================================================
+   5G 网格优化（网格1）实训 —— 十步任务状态机
+   ========================================================= */
+
+const GRID = {
+    name: '石家庄市某区 · 网格1',
+    id: 'GRID-1-SJZ',
+    type: '车载 DT 路测（夜间）',
+    window: '2026-10-19 23:03:31 ~ 2026-10-20 07:03:31',
+    owner: '刘工（网格优化组）',
+    ticket: 'GRID-1-SJZ-20261019',
+    lng: 114.5216,
+    lat: 38.0385,
+    sites: 18
+};
+
+const KPI = { rsrp: -105, sinr: -3, ratio: 90, dl: 500, ul: 40, access: 98, drop: 4, ho: 95, anchor: 95 };
+
+const TASKS = [
+    { t: '接收网格优化任务通知', s: '确认范围与 KPI 门限' },
+    { t: '任务工单解读，明确验证项', s: '覆盖 · 业务 · 4/5G 协同' },
+    { t: '核对 DT 路测设备清单', s: '终端与采集硬件清点' },
+    { t: '设备上电与预调试', s: '硬件状态自检' },
+    { t: '配套资料与安全工具准备', s: '工参资料与防护用品' },
+    { t: '预约车辆，规划 DT 路测路线', s: '网格轨迹与点位标记' },
+    { t: '抵达区域，现场安全评估', s: '危险源与作业条件判定' },
+    { t: '车载 DT 路测，采集实测数据', s: '3 路段 10 点位采样' },
+    { t: '测试结束，设备与现场收尾', s: 'log 留存与设备清点' },
+    { t: '数据后处理，生成优化报告', s: 'KPI 统计与问题定位' }
+];
+
+const KEY = 'lsr_grid_v1';
+const N = TASKS.length;
+
+const DEFAULT = () => ({
+    step: 0,
+    done: new Array(N).fill(false),
+    score: new Array(N).fill(0),
+    d: {
+        t1: { checked: [], agreed: false },
+        t2: { read: [], quiz: null },
+        t3: { ue: '', nb: '', aux: [] },
+        t4: { st: {}, drv: false },
+        t5: { picked: [] },
+        t6: { driver: '', lng: '', lat: '', routed: false, mark: [] },
+        t7: { hazards: [], weather: '', ppe: false },
+        t8: { pts: new Array(10).fill(null), access: '', drop: '', ho: '', anchor: '' },
+        t9: { checked: [], logs: '' },
+        t10: { exported: false }
+    }
+});
+
+let S = load();
+
+function load() {
+    try {
+        const raw = localStorage.getItem(KEY);
+        if (!raw) return DEFAULT();
+        const o = JSON.parse(raw);
+        const base = DEFAULT();
+        const m = Object.assign(base, o, { d: Object.assign(base.d, o.d || {}) });
+        m.d.t1 = Object.assign({ checked: [], agreed: false }, m.d.t1 || {});
+        m.d.t2 = Object.assign({ read: [], quiz: null }, m.d.t2 || {});
+        m.d.t3 = Object.assign({ ue: '', nb: '', aux: [] }, m.d.t3 || {});
+        m.d.t4 = Object.assign({ st: {}, drv: false }, m.d.t4 || {});
+        m.d.t5 = Object.assign({ picked: [] }, m.d.t5 || {});
+        m.d.t6 = Object.assign({ driver: '', lng: '', lat: '', routed: false, mark: [] }, m.d.t6 || {});
+        m.d.t7 = Object.assign({ hazards: [], weather: '', ppe: false }, m.d.t7 || {});
+        m.d.t8 = Object.assign({ pts: new Array(10).fill(null), access: '', drop: '', ho: '', anchor: '' }, m.d.t8 || {});
+        m.d.t9 = Object.assign({ checked: [], logs: '' }, m.d.t9 || {});
+        m.d.t10 = Object.assign({ exported: false }, m.d.t10 || {});
+        if (!Array.isArray(m.d.t8.pts) || m.d.t8.pts.length !== 10) m.d.t8.pts = new Array(10).fill(null);
+        if (!Array.isArray(m.done) || m.done.length !== N) m.done = new Array(N).fill(false);
+        if (!Array.isArray(m.score) || m.score.length !== N) m.score = new Array(N).fill(0);
+        return m;
+    } catch (e) { return DEFAULT(); }
+}
+
+function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
+}
+
+/* ---------------- 通用工具 ---------------- */
+function esc(v) {
+    return String(v == null ? '' : v).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+
+function toast(msg, type) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast show' + (type ? ' ' + type : '');
+    clearTimeout(el._t);
+    el._t = setTimeout(() => { el.className = 'toast'; }, 2600);
+}
+
+function unlocked(i) { return i === 0 || S.done[i - 1]; }
+
+function go(step) {
+    if (step < 0 || step > N - 1) return;
+    if (!unlocked(step)) { toast('请先完成上一个任务', 'err'); return; }
+    S.step = step;
+    save();
+    render();
+    document.getElementById('body').scrollTop = 0;
+}
+
+function prevStep() { go(S.step - 1); }
+
+function resetAll() {
+    if (!confirm('确定要清空本次网格优化实训的全部记录并重新开始吗？')) return;
+    S = DEFAULT();
+    save();
+    render();
+    toast('已重置实训进度', 'ok');
+}
+
+function head(title, desc) {
+    return `<div class="task-desc"><h3 style="font-size:14px;margin-bottom:8px;color:var(--cyan);font-weight:600">${title}</h3>${desc}</div>`;
+}
+
+function rerender() {
+    document.getElementById('body').innerHTML = renderTask(S.step);
+    renderList();
+    renderBar();
+    bindTask(S.step);
+}
+
+/* ---------------- 渲染 ---------------- */
+function render() {
+    renderList();
+    renderBar();
+    document.getElementById('body').innerHTML = renderTask(S.step);
+    bindTask(S.step);
+    renderFoot();
+}
+
+function renderList() {
+    const box = document.getElementById('taskList');
+    box.innerHTML = TASKS.map((tk, i) => {
+        const cls = ['titem'];
+        if (i === S.step) cls.push('active');
+        if (S.done[i]) cls.push('done');
+        if (!unlocked(i)) cls.push('locked');
+        const num = S.done[i] ? '&#10003;' : (i + 1);
+        return `<div class="${cls.join(' ')}" onclick="go(${i})">
+            <div class="tnum">${num}</div>
+            <div class="tinfo"><b>${esc(tk.t)}</b><i>${esc(tk.s)}</i></div>
+        </div>`;
+    }).join('');
+
+    document.getElementById('statDone').textContent = S.done.filter(Boolean).length + '/' + N;
+    document.getElementById('statScore').textContent = S.score.reduce((a, b) => a + b, 0);
+}
+
+function renderBar() {
+    const doneCount = S.done.filter(Boolean).length;
+    document.getElementById('barFill').style.width = Math.round(doneCount / N * 100) + '%';
+    document.getElementById('topSub').textContent =
+        S.done[N - 1] ? '实训已完成，可导出报告' : '第 ' + (S.step + 1) + ' / ' + N + ' 项任务 · ' + TASKS[S.step].t;
+}
+
+function renderFoot() {
+    const tip = document.getElementById('footTip');
+    const next = document.getElementById('btnNext');
+    const prev = document.getElementById('btnPrev');
+    prev.disabled = S.step === 0;
+    tip.className = 'foot-tip';
+    if (S.done[S.step]) {
+        tip.textContent = '本任务已完成';
+        tip.classList.add('pass');
+        next.textContent = S.step === N - 1 ? '重新生成报告' : '进入下一任务';
+    } else {
+        tip.textContent = '完成判定条件后即可提交';
+        next.textContent = S.step === N - 1 ? '生成并导出报告' : '提交并解锁下一任务';
+    }
+    next.disabled = false;
+}
+
+function renderTask(i) {
+    switch (i) {
+        case 0: return t1();
+        case 1: return t2();
+        case 2: return t3();
+        case 3: return t4();
+        case 4: return t5();
+        case 5: return t6();
+        case 6: return t7();
+        case 7: return t8();
+        case 8: return t9();
+        case 9: return t10();
+    }
+    return '';
+}
+
+function bindTask(i) {
+    if (i === 2) {
+        const u = document.getElementById('ueIn');
+        if (u) u.value = S.d.t3.ue || '';
+        const nb = document.getElementById('nbIn');
+        if (nb) nb.value = S.d.t3.nb || '';
+    }
+    if (i === 5) {
+        const lg = document.getElementById('lngIn');
+        if (lg) lg.value = S.d.t6.lng || '';
+        const lt = document.getElementById('latIn');
+        if (lt) lt.value = S.d.t6.lat || '';
+    }
+    if (i === 7) {
+        [['accIn', 'access'], ['dropIn', 'drop'], ['hoIn', 'ho'], ['anchIn', 'anchor']].forEach(([id, k]) => {
+            const el = document.getElementById(id);
+            if (el) el.value = S.d.t8[k] || '';
+        });
+    }
+    if (i === 8) {
+        const a = document.getElementById('logNum');
+        if (a) a.value = S.d.t9.logs || '';
+    }
+}
+
+/* =========================================================
+   任务 1：接收网格优化任务通知
+   ========================================================= */
+const T1_KEYS = ['grid', 'window', 'kpi', 'owner', 'ticket'];
+const T1_LABEL = {
+    grid: '测试网格',
+    window: '夜间测试窗口',
+    kpi: 'KPI 指标阈值',
+    owner: '任务对接人',
+    ticket: '工单编号'
+};
+const T1_VAL = {
+    grid: GRID.name,
+    window: GRID.window,
+    kpi: `RSRP ≥ ${KPI.rsrp} dBm · SINR ≥ ${KPI.sinr} dB 占比 ≥ ${KPI.ratio}% · 下行 ≥ ${KPI.dl} Mbps`,
+    owner: GRID.owner,
+    ticket: GRID.ticket
+};
+
+function t1() {
+    const ck = S.d.t1.checked || [];
+    const allDone = ck.length >= T1_KEYS.length;
+    const agreed = !!S.d.t1.agreed;
+    const boxCls = agreed ? 'on' : (allDone ? 'ready' : 'locked');
+    const boxTxt = agreed
+        ? '已阅读任务通知，网格范围与 KPI 门限核对无误'
+        : (allDone ? '点击确认：已阅读任务通知，工单要素核对无误' : '请先完成上方 5 项工单要素核对');
+
+    const rows = T1_KEYS.map(k => {
+        const on = ck.indexOf(k) >= 0;
+        return `<div class="kv-item ${on ? 'ok' : ''}">
+            <span style="min-width:104px">${T1_LABEL[k]}</span>
+            <b style="flex:1;min-width:0;line-height:1.6;text-align:left">${esc(T1_VAL[k])}</b>
+            <button class="btn sm ${on ? '' : 'ghost'}" style="margin-left:6px;white-space:nowrap" onclick="t1check('${k}')">${on ? '已核对' : '核对'}</button>
+        </div>`;
+    }).join('');
+
+    return head('任务 1 · 接收网格优化任务通知',
+        `<p><b>任务描述：</b>你收到网格优化正式工作通知，本次任务为 <b>网格1（石家庄市某区）5G 网格路测优化验证</b>。</p>
+         <p><b>操作动作：</b>阅读通知，确认测试网格范围、夜间测试时间窗口、KPI 指标阈值、任务对接人信息，确认任务工单生效。</p>
+         <p><b>完成判定：</b>5 项工单要素全部核对，并确认工单生效。</p>`) +
+    `<div class="card">
+        <div class="card-head"><h2><em>工单</em>网格优化任务通知</h2><span class="small muted">${esc(GRID.ticket)}</span></div>
+        <div class="grid3" style="margin-bottom:14px">
+            <div class="kv-item"><span>下发单位</span><b>网络优化中心</b></div>
+            <div class="kv-item"><span>执行角色</span><b>测试工程师</b></div>
+            <div class="kv-item"><span>测试方式</span><b>车载 DT 夜间路测</b></div>
+        </div>
+        <p class="small muted" style="line-height:1.9">请于 <b style="color:var(--text)">${esc(GRID.window)}</b> 时间窗口内，完成 ${esc(GRID.name)} 区域（${GRID.sites} 个基站）的 5G 覆盖、业务、4/5G 协同验证，采集网格路测数据并输出网格优化报告。</p>
+    </div>
+    <div class="card">
+        <div class="card-head"><h2><em>要素</em>工单关键信息</h2><span class="small muted">点击「核对」逐项确认</span></div>
+        <div class="kv" style="grid-template-columns:1fr">${rows}</div>
+    </div>
+    <div class="card" style="display:flex;align-items:center;gap:12px">
+        <span class="tool ${boxCls}" style="flex:1" onclick="t1agree()">
+            <span class="tick">&#10003;</span><span>${boxTxt}</span>
+        </span>
+    </div>`;
+}
+
+function t1check(k) {
+    const arr = S.d.t1.checked || [];
+    if (arr.indexOf(k) < 0) arr.push(k);
+    S.d.t1.checked = arr;
+    save();
+    rerender();
+}
+
+function t1agree() {
+    if ((S.d.t1.checked || []).length < T1_KEYS.length) {
+        toast('请先完成全部 5 项工单要素核对', 'err');
+        return;
+    }
+    S.d.t1.agreed = !S.d.t1.agreed;
+    save();
+    rerender();
+}
+
+/* =========================================================
+   任务 2：任务工单解读，明确验证项
+   ========================================================= */
+const MODULES = [
+    {
+        k: 'cover', ic: '📶', name: '覆盖性能验证',
+        desc: '沿网格内主干道采集 SS-RSRP、SS-SINR 采样指标，评估网格弱覆盖与干扰分布',
+        kpi: `SS-RSRP ≥ ${KPI.rsrp} dBm，SS-SINR ≥ ${KPI.sinr} dB 的采样占比 ≥ ${KPI.ratio}%`
+    },
+    {
+        k: 'biz', ic: '🚀', name: '业务性能验证',
+        desc: '上下行吞吐率、RRC 接入成功率、无线掉线率',
+        kpi: `下行 ≥ ${KPI.dl} Mbps，上行 ≥ ${KPI.ul} Mbps，接入成功率 ≥ ${KPI.access}%，掉线率 ≤ ${KPI.drop}%`
+    },
+    {
+        k: 'lte', ic: '🔗', name: '4/5G 协同验证',
+        desc: '5G 锚点优先驻留、邻区关系优化、切换成功率',
+        kpi: `5G 切换成功率 ≥ ${KPI.ho}%，锚点驻留占比 ≥ ${KPI.anchor}%`
+    }
+];
+
+const QUIZ = {
+    q: '本次网格优化的 SS-RSRP 覆盖验收门限是多少？',
+    opts: [`≥ ${KPI.rsrp} dBm`, '≥ -95 dBm', '≥ -85 dBm'],
+    a: 0,
+    why: '网格级门限为 SS-RSRP ≥ -105 dBm，比单站/簇级宽松；-95 与 -85 dBm 是常见的簇级、单站级门限。'
+};
+
+function t2() {
+    const read = S.d.t2.read || [];
+    const quiz = S.d.t2.quiz;
+
+    const cards = MODULES.map(m => {
+        const on = read.indexOf(m.k) >= 0;
+        return `<div class="card" style="margin-bottom:12px">
+            <div class="card-head"><h2><em>${m.ic}</em>${m.name}</h2>
+                <button class="btn sm ${on ? '' : 'ghost'}" onclick="t2read('${m.k}')">${on ? '已解读' : '标记已解读'}</button></div>
+            <p class="small muted" style="line-height:1.8">${m.desc}</p>
+            <p class="small" style="margin-top:8px;color:var(--gold)">验收标准：${m.kpi}</p>
+        </div>`;
+    }).join('');
+
+    const opts = QUIZ.opts.map((o, i) => {
+        const sel = quiz === i;
+        const cls = sel ? (i === QUIZ.a ? 'on' : 'bad') : '';
+        return `<div class="tool ${cls}" onclick="t2quiz(${i})"><span class="tick">&#10003;</span><span>${o}</span></div>`;
+    }).join('');
+
+    const hint = quiz !== null && quiz !== QUIZ.a
+        ? `<div class="sel-err"><b>判断有误：</b>${QUIZ.why}</div>`
+        : (quiz === QUIZ.a ? `<div class="sel-tip" style="border-left-color:rgba(74,222,128,.6)">回答正确：SS-RSRP 网格门限为 ≥ ${KPI.rsrp} dBm。</div>` : '');
+
+    return head('任务 2 · 任务工单解读，明确验证项',
+        `<p><b>任务描述：</b>解读本次网格优化三大验证模块，熟悉全部 KPI 验收标准。</p>
+         <p><b>操作动作：</b>逐张阅读模块卡片并标记已解读，完成门限判断题。</p>
+         <p><b>完成判定：</b>3 个模块全部解读完成，判断题回答正确。</p>`) +
+    cards +
+    `<div class="card">
+        <div class="card-head"><h2><em>判断</em>门限确认</h2><span class="small muted">单选题</span></div>
+        <p class="small" style="margin-bottom:10px">${QUIZ.q}</p>
+        <div class="tool-grid" style="grid-template-columns:repeat(3,1fr)">${opts}</div>
+        ${hint}
+    </div>`;
+}
+
+function t2read(k) {
+    const arr = S.d.t2.read || [];
+    const i = arr.indexOf(k);
+    if (i >= 0) arr.splice(i, 1); else arr.push(k);
+    S.d.t2.read = arr;
+    save();
+    rerender();
+}
+
+function t2quiz(i) {
+    S.d.t2.quiz = i;
+    save();
+    rerender();
+}
+
+/* =========================================================
+   任务 3：核对 DT 路测设备清单
+   ========================================================= */
+const AUX = ['备用电池', '充电适配器', '车载电源', 'USB 数据线', 'GPS 外置天线'];
+
+function t3() {
+    const d = S.d.t3;
+    const aux = d.aux || [];
+    const grid = AUX.map(a => `
+        <div class="tool ${aux.indexOf(a) >= 0 ? 'on' : ''}" onclick="t3aux('${a}')">
+            <span class="tick">&#10003;</span><span>${a}</span>
+        </div>`).join('');
+
+    return head('任务 3 · 核对 DT 路测设备清单',
+        `<p><b>任务描述：</b>清点本次 DT 路测硬件，对照工单设备清单逐项核对。</p>
+         <p><b>操作动作：</b>填写 5G NR 测试终端与路测分析笔记本数量，勾选全部辅助外设。</p>
+         <p><b>完成判定：</b>5G 测试终端 4 台、路测分析笔记本 1 台，辅助外设 5 项全部到位。</p>`) +
+    `<div class="card">
+        <div class="card-head"><h2><em>主设备</em>数量核对</h2><span class="small muted">按工单标准填写</span></div>
+        <div class="grid3">
+            <div class="kv-item" style="flex-direction:column;align-items:flex-start;gap:8px">
+                <span>5G NR 测试终端（台）</span>
+                <input class="inp" id="ueIn" type="number" min="0" max="9" placeholder="填写台数" value="${esc(S.d.t3.ue)}" oninput="t3num('ue', this.value)">
+            </div>
+            <div class="kv-item" style="flex-direction:column;align-items:flex-start;gap:8px">
+                <span>路测分析笔记本（台）</span>
+                <input class="inp" id="nbIn" type="number" min="0" max="9" placeholder="填写台数" value="${esc(S.d.t3.nb)}" oninput="t3num('nb', this.value)">
+            </div>
+            <div class="kv-item"><span>工单标准</span><b style="color:var(--gold)">终端 4 台 / 笔记本 1 台</b></div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-head"><h2><em>外设</em>辅助设备勾选</h2>
+            <span class="small ${aux.length === AUX.length ? 'pass' : 'wait'}">已备 ${aux.length} / ${AUX.length}</span></div>
+        <div class="sel-tip">提示：夜间路测续航是第一风险，备用电池与车载电源必须双备份；GPS 外置天线用于高架与楼宇密集区补强定位。</div>
+        <div class="tool-grid">${grid}</div>
+    </div>`;
+}
+
+function t3num(k, v) {
+    S.d.t3[k] = v;
+    save();
+}
+
+function t3aux(a) {
+    const arr = S.d.t3.aux || [];
+    const i = arr.indexOf(a);
+    if (i >= 0) arr.splice(i, 1); else arr.push(a);
+    S.d.t3.aux = arr;
+    save();
+    rerender();
+}
+
+/* =========================================================
+   任务 4：设备上电与预调试，硬件状态自检
+   ========================================================= */
+const SELF = [
+    { k: 'rf', n: '终端射频功能', d: '发射功率、驻波比、NR 频段支持' },
+    { k: 'sw', n: '采集软件与驱动', d: '启动是否闪退、驱动是否正常识别终端', needFix: true },
+    { k: 'gps', n: 'GPS 定位模块', d: '搜星数量与轨迹打点精度' },
+    { k: 'link', n: '数据采集链路', d: '终端与笔记本的连接与丢包率' },
+    { k: 'bat', n: '设备剩余电量', d: '是否满足整夜路测时长' }
+];
+
+function t4() {
+    const st = S.d.t4.st || {};
+    const rows = SELF.map(it => {
+        const v = st[it.k];
+        const cls = v === 'ok' ? 'pass' : (v === 'fail' ? 'fail' : 'wait');
+        const txt = v === 'ok' ? '自检通过' : (v === 'fail' ? '异常待处理' : '未自检');
+        const btn = v === 'ok'
+            ? `<span class="small pass">✓ ${txt}</span>`
+            : (it.needFix && v === 'fail'
+                ? `<button class="btn sm" onclick="t4fix()">重装驱动并重启</button>`
+                : `<button class="btn sm ghost" onclick="t4run('${it.k}')">开始自检</button>`);
+        return `<div class="kv-item ${v === 'ok' ? 'ok' : ''}" style="justify-content:space-between">
+            <span>${it.n}</span>
+            <b class="small muted" style="flex:1;margin:0 12px">${it.d}</b>
+            <span class="small ${cls}">${txt}</span>
+            ${btn}
+        </div>`;
+    }).join('');
+
+    const tip = st.sw === 'fail'
+        ? `<div class="sel-err"><b>采集软件闪退：</b>终端驱动未正确加载，采集进程启动即退出。请点击「重装驱动并重启」处理后重新自检。</div>`
+        : '';
+
+    return head('任务 4 · 设备上电与预调试，硬件状态自检',
+        `<p><b>任务描述：</b>对全部测试终端、笔记本上电，启动路测采集软件，校验终端射频功能、GPS 定位模块与数据采集链路。</p>
+         <p><b>操作动作：</b>逐项执行自检，遇到软件闪退、驱动异常等故障先处理再重测。</p>
+         <p><b>完成判定：</b>5 项自检全部通过，设备满足整夜路测条件。</p>`) +
+    `<div class="card">
+        <div class="card-head"><h2><em>自检</em>硬件与软件状态</h2>
+            <span class="small ${SELF.every(x => st[x.k] === 'ok') ? 'pass' : 'wait'}">通过 ${SELF.filter(x => st[x.k] === 'ok').length} / 5</span></div>
+        ${tip}
+        <div class="kv">${rows}</div>
+    </div>`;
+}
+
+function t4run(k) {
+    const st = S.d.t4.st || {};
+    if (k === 'sw' && !S.d.t4.drv) {
+        st.sw = 'fail';
+        S.d.t4.st = st;
+        save();
+        toast('采集软件启动后闪退，驱动加载失败', 'err');
+    } else {
+        st[k] = 'ok';
+        S.d.t4.st = st;
+        save();
+        toast('自检通过', 'ok');
+    }
+    rerender();
+}
+
+function t4fix() {
+    const st = S.d.t4.st || {};
+    S.d.t4.drv = true;
+    st.sw = 'ok';
+    S.d.t4.st = st;
+    save();
+    rerender();
+    toast('驱动已重装，采集软件正常启动', 'ok');
+}
+
+/* =========================================================
+   任务 5：配套资料与安全工具准备
+   ========================================================= */
+const KIT = ['网格基站工参表', 'DT 路测轨迹记录表', '测试日志模板', '网格1 数据存储目录', '现场工作证件', '反光背心与警示灯', '安全帽'];
+
+function t5() {
+    const p = S.d.t5.picked || [];
+    const grid = KIT.map(k => `
+        <div class="tool ${p.indexOf(k) >= 0 ? 'on' : ''}" onclick="t5pick('${k}')">
+            <span class="tick">&#10003;</span><span>${k}</span>
+        </div>`).join('');
+
+    return head('任务 5 · 配套资料与安全工具准备',
+        `<p><b>任务描述：</b>准备网格基站工参表、路测轨迹记录表、现场工作证件与安全防护用品，整理测试日志模板，提前建好数据存储目录。</p>
+         <p><b>操作动作：</b>对照清单逐项勾选，确认资料与防护用品齐备。</p>
+         <p><b>完成判定：</b>7 项资料与安全用品全部到位。</p>`) +
+    `<div class="card">
+        <div class="card-head"><h2><em>清单</em>资料与安全用品</h2>
+            <span class="small ${p.length === KIT.length ? 'pass' : 'wait'}">已备 ${p.length} / ${KIT.length}</span></div>
+        <div class="sel-tip">提示：网格路测要跨多个基站，工参表必须随身；夜间作业需佩戴反光背心与警示灯，进入高空与电力区域前先确认防护到位。</div>
+        <div class="tool-grid">${grid}</div>
+    </div>`;
+}
+
+function t5pick(k) {
+    const arr = S.d.t5.picked || [];
+    const i = arr.indexOf(k);
+    if (i >= 0) arr.splice(i, 1); else arr.push(k);
+    S.d.t5.picked = arr;
+    save();
+    rerender();
+}
+
+/* =========================================================
+   任务 6：预约车辆，规划 DT 路测路线
+   ========================================================= */
+const DRIVERS = ['李师傅 · 夜班长途经验', '张师傅 · 白班市区', '王师傅 · 待确认'];
+const MARKS = [
+    { k: 'site', n: '基站点位标记', d: '网格内 18 个基站位置已落图' },
+    { k: 'break', n: '道路断点标记', d: '施工围挡、禁行路段已标注绕行' },
+    { k: 'noise', n: '高干扰区域标记', d: '历史高干扰路段已标注，测试时重点观察' }
+];
+
+function t6() {
+    const d = S.d.t6;
+    const opts = DRIVERS.map(x => `
+        <div class="tool ${d.driver === x ? 'on' : ''}" onclick="t6driver('${x}')">
+            <span class="tick">&#10003;</span><span>${x}</span>
+        </div>`).join('');
+
+    const markBox = (d.mark || []);
+    const marks = MARKS.map(m => `
+        <div class="tool ${markBox.indexOf(m.k) >= 0 ? 'on' : ''}" onclick="t6mark('${m.k}')">
+            <span class="tick">&#10003;</span><span>${m.n}</span>
+        </div>`).join('');
+
+    const map = d.routed ? `
+        <div class="map-wrap" style="margin-top:14px;height:290px">
+            <svg class="map-svg" viewBox="0 0 900 290" preserveAspectRatio="xMidYMid meet">
+                <g stroke="rgba(77,216,255,.10)" stroke-width="1">
+                    <path d="M0,58 H900 M0,116 H900 M0,174 H900 M0,232 H900" />
+                    <path d="M100,0 V290 M220,0 V290 M340,0 V290 M460,0 V290 M580,0 V290 M700,0 V290 M820,0 V290" />
+                </g>
+                <g font-size="11" fill="var(--muted)">
+                    <circle cx="16" cy="20" r="4" fill="var(--cyan)" />
+                    <text x="28" y="24">基站点位</text>
+                    <polygon points="84,10 94,26 74,26" fill="var(--gold)" />
+                    <text x="102" y="24">道路断点</text>
+                    <circle cx="182" cy="20" r="7" fill="none" stroke="var(--red)" stroke-width="2" />
+                    <text x="196" y="24">高干扰区域</text>
+                </g>
+                <polyline class="route-line show" points="60,230 190,230 190,150 400,150 400,70 660,70 660,190 830,190" />
+                <g fill="var(--cyan)">
+                    <circle cx="110" cy="230" r="4" /><circle cx="265" cy="150" r="4" />
+                    <circle cx="410" cy="112" r="4" /><circle cx="560" cy="70" r="4" />
+                    <circle cx="700" cy="190" r="4" /><circle cx="800" cy="230" r="4" />
+                </g>
+                <g fill="var(--gold)">
+                    <polygon points="336,144 346,162 326,162" /><polygon points="736,184 746,202 726,202" />
+                </g>
+                <g fill="none" stroke="var(--red)" stroke-width="2">
+                    <circle cx="410" cy="94" r="9" /><circle cx="660" cy="140" r="9" />
+                </g>
+            </svg>
+            <div class="map-meta">
+                网格1 · 规划轨迹<br>
+                主干道 <b>28.6 km</b> · 18 个基站<br>
+                预计 <b>3 小时 40 分</b>（含 10 个采样点）
+            </div>
+        </div>` : '';
+
+    return head('任务 6 · 预约车辆，规划 DT 路测路线',
+        `<p><b>任务描述：</b>预约司机，规划车载 DT（Drive Test）路测路线，覆盖网格1全部目标测试区域。</p>
+         <p><b>操作动作：</b>填写网格中心经纬度、选择司机、生成路线，再逐项确认基站点位、道路断点、高干扰区域已标记。</p>
+         <p><b>完成判定：</b>坐标与网格中心偏差 ≤ 0.02，已选择司机、生成路线，3 类标记全部确认。</p>`) +
+    `<div class="card">
+        <div class="card-head"><h2><em>定位</em>网格中心坐标</h2><span class="small muted">目标 ${GRID.lng}，${GRID.lat}</span></div>
+        <div class="grid3">
+            <div class="kv-item" style="flex-direction:column;align-items:flex-start;gap:8px">
+                <span>经度</span><input class="inp" id="lngIn" placeholder="如 114.5216" value="${esc(S.d.t6.lng)}" oninput="t6set('lng', this.value)">
+            </div>
+            <div class="kv-item" style="flex-direction:column;align-items:flex-start;gap:8px">
+                <span>纬度</span><input class="inp" id="latIn" placeholder="如 38.0385" value="${esc(S.d.t6.lat)}" oninput="t6set('lat', this.value)">
+            </div>
+            <div class="kv-item" style="align-items:center">
+                <button class="btn primary" style="width:100%" onclick="t6route()">生成导航路线</button>
+            </div>
+        </div>
+        ${map}
+    </div>
+    <div class="card">
+        <div class="card-head"><h2><em>标记</em>路线要素确认</h2>
+            <span class="small ${markBox.length === MARKS.length ? 'pass' : 'wait'}">已确认 ${markBox.length} / ${MARKS.length}</span></div>
+        <div class="tool-grid" style="grid-template-columns:repeat(3,1fr)">${marks}</div>
+        <p class="small muted" style="margin-top:10px;line-height:1.8">${d.routed ? '路线已生成，请核对上图三类标记是否与工参一致。' : '请先生成路线，再确认路线要素标记。'}</p>
+    </div>
+    <div class="card">
+        <div class="card-head"><h2><em>司机</em>预约车辆</h2><span class="small muted">夜间路测请选择熟悉市区路况的司机</span></div>
+        <div class="tool-grid" style="grid-template-columns:repeat(3,1fr)">${opts}</div>
+    </div>`;
+}
+
+function t6set(k, v) { S.d.t6[k] = v; save(); }
+
+function t6driver(x) {
+    S.d.t6.driver = x;
+    save();
+    rerender();
+}
+
+function t6mark(k) {
+    if (!S.d.t6.routed) { toast('请先生成导航路线', 'err'); return; }
+    const arr = S.d.t6.mark || [];
+    const i = arr.indexOf(k);
+    if (i >= 0) arr.splice(i, 1); else arr.push(k);
+    S.d.t6.mark = arr;
+    save();
+    rerender();
+}
+
+function t6route() {
+    const d = S.d.t6;
+    const lng = parseFloat(d.lng), lat = parseFloat(d.lat);
+    if (!isFinite(lng) || !isFinite(lat)) { toast('请先填写有效经纬度', 'err'); return; }
+    if (Math.abs(lng - GRID.lng) > 0.02 || Math.abs(lat - GRID.lat) > 0.02) {
+        toast('坐标与网格中心偏差过大，请核对工参', 'err');
+        return;
+    }
+    d.routed = true;
+    save();
+    rerender();
+    toast('路线已生成，覆盖 18 个基站 · 28.6 km', 'ok');
+}
+
+/* =========================================================
+   任务 7：抵达区域，现场安全风险评估
+   ========================================================= */
+const HAZARDS = ['高压线路走廊', '楼顶高空作业', '夜间照明不足', '道路临时施工'];
+const FAKE_HAZARDS = ['机房精密空调', '备品备件仓库'];
+const WEATHERS = [
+    { t: '晴间多云，可正常作业', ok: true },
+    { t: '小雨，无需报备可继续', ok: false, why: '小雨会显著抬升路面风险与设备进水风险，需报备后由对接人确认是否继续。' },
+    { t: '暴雨大风，触发延期报备', ok: false, why: '恶劣天气应触发任务延期报备流程，不得强行开展夜间路测。' }
+];
+
+function t7() {
+    const d = S.d.t7;
+    const all = HAZARDS.concat(FAKE_HAZARDS);
+    const grid = all.map(h => `
+        <div class="tool ${(d.hazards || []).indexOf(h) >= 0 ? 'on' : ''}" onclick="t7hazard('${h}')">
+            <span class="tick">&#10003;</span><span>${h}</span>
+        </div>`).join('');
+
+    const wopts = WEATHERS.map(w => `
+        <div class="tool ${d.weather === w.t ? 'on' : ''}" onclick="t7weather('${w.t}')">
+            <span class="tick">&#10003;</span><span>${w.t}</span>
+        </div>`).join('');
+
+    const cur = WEATHERS.filter(w => w.t === d.weather)[0];
+    const wTip = cur && !cur.ok
+        ? `<div class="sel-err"><b>作业条件判定有误：</b>${cur.why}</div>`
+        : (cur && cur.ok ? `<div class="sel-tip" style="border-left-color:rgba(74,222,128,.6)">作业条件确认：当前天气满足夜间路测要求，可继续作业。</div>` : '');
+
+    return head('任务 7 · 抵达测试区域，现场安全风险评估',
+        `<p><b>任务描述：</b>已到达网格1测试区域，佩戴工作证件。现场勘查，识别高压设备、高空作业等危险源，落实安全防护措施。</p>
+         <p><b>操作动作：</b>勾选真实存在的危险源（不要勾选无关项），确认防护用品已穿戴，判断是否满足作业天气条件。</p>
+         <p><b>完成判定：</b>4 项危险源全部识别、无错选，天气判断正确且已确认防护。</p>`) +
+    `<div class="card">
+        <div class="card-head"><h2><em>风险</em>危险源识别</h2><span class="small muted">多选</span></div>
+        <div class="sel-tip">提示：现场风险来自道路环境、电力设施与作业高度；机房内部设备不属于本次外场风险源。</div>
+        <div class="tool-grid">${grid}</div>
+    </div>
+    <div class="card">
+        <div class="card-head"><h2><em>天气</em>作业条件判定</h2><span class="small muted">单选</span></div>
+        <div class="tool-grid" style="grid-template-columns:repeat(3,1fr)">${wopts}</div>
+        ${wTip}
+    </div>
+    <div class="card" style="display:flex;align-items:center;gap:12px">
+        <span class="tool ${d.ppe ? 'on' : ''}" style="flex:1" onclick="t7ppe()">
+            <span class="tick">&#10003;</span><span>已穿戴反光背心与安全帽，防护到位</span>
+        </span>
+    </div>`;
+}
+
+function t7hazard(h) {
+    const arr = S.d.t7.hazards || [];
+    const i = arr.indexOf(h);
+    if (i >= 0) arr.splice(i, 1); else arr.push(h);
+    S.d.t7.hazards = arr;
+    save();
+    rerender();
+}
+
+function t7weather(w) { S.d.t7.weather = w; save(); rerender(); }
+
+function t7ppe() { S.d.t7.ppe = !S.d.t7.ppe; save(); rerender(); }
+
+/* =========================================================
+   任务 8：车载 DT 路测，采集 5G 网格实测数据
+   ========================================================= */
+const POINTS = [
+    { n: 'A1 裕华路东段', seg: 'A 段', base: [-99, 2] },
+    { n: 'A2 裕华路中段', seg: 'A 段', base: [-102, 1] },
+    { n: 'A3 裕华路西段', seg: 'A 段', base: [-97, 4] },
+    { n: 'A4 建设大街南口', seg: 'A 段', base: [-101, -3] },
+    { n: 'B1 槐安路东段', seg: 'B 段', base: [-96, 3] },
+    { n: 'B2 槐安路高架', seg: 'B 段', base: [-108, -6] },
+    { n: 'B3 体育大街北', seg: 'B 段', base: [-100, 0] },
+    { n: 'B4 中华大街口', seg: 'B 段', base: [-94, 5] },
+    { n: 'C1 和平路东延', seg: 'C 段', base: [-103, -2] },
+    { n: 'C2 和平路西段', seg: 'C 段', base: [-98, 3] }
+];
+
+function t8() {
+    const pts = S.d.t8.pts || [];
+    const done = pts.filter(Boolean).length;
+
+    const rows = POINTS.map((p, i) => {
+        const x = pts[i];
+        const ok = x && x.rsrp >= KPI.rsrp && x.sinr >= KPI.sinr;
+        const judge = !x ? '<span class="small wait">未采集</span>'
+            : (ok ? '<span class="small pass">达标</span>' : '<span class="small fail">不达标</span>');
+        return `<tr>
+            <td>${p.n}</td>
+            <td class="muted">${p.seg}</td>
+            <td>${x ? x.rsrp : '--'}</td>
+            <td>${x ? x.sinr : '--'}</td>
+            <td>${x ? x.dl : '--'}</td>
+            <td>${x ? x.ul : '--'}</td>
+            <td>${judge}</td>
+            <td>${x ? `<button class="btn sm ghost" onclick="t8one(${i})">重采</button>` : `<button class="btn sm" onclick="t8one(${i})">采集</button>`}</td>
+        </tr>`;
+    }).join('');
+
+    const rate = done ? Math.round(pts.filter(x => x && x.rsrp >= KPI.rsrp && x.sinr >= KPI.sinr).length / done * 100) : 0;
+
+    return head('任务 8 · 车载 DT 路测，采集 5G 网格实测数据',
+        `<p><b>任务描述：</b>启动路测采集任务，沿规划路线持续采集 SS-RSRP、SS-SINR、上下行吞吐率、RRC 接入成功率、无线掉线率、4/5G 互操作切换成功率等测量样本。</p>
+         <p><b>操作动作：</b>按 A/B/C 三个路段逐个采样点采集，实时监控指标，同步保存原始测量日志。</p>
+         <p><b>完成判定：</b>10 个采样点全部采集完成，四项网格级指标填写完整。覆盖率 ≥ ${KPI.ratio}% 可拿满分。</p>`) +
+    `<div class="card">
+        <div class="card-head"><h2><em>采样</em>网格路测数据采集</h2>
+            <span class="small ${done === POINTS.length ? 'pass' : 'wait'}">已采集 ${done} / ${POINTS.length} · 覆盖率 ${rate}%</span></div>
+        <div style="margin-bottom:10px">
+            <button class="btn sm" onclick="t8all()">沿路线连续采集剩余点位</button>
+        </div>
+        <table class="dt">
+            <thead><tr><th>采样点</th><th>路段</th><th>SS-RSRP<br>(dBm)</th><th>SS-SINR<br>(dB)</th><th>下行<br>(Mbps)</th><th>上行<br>(Mbps)</th><th>判定</th><th>操作</th></tr></thead>
+            <tbody>${rows}</tbody>
+        </table>
+    </div>
+    <div class="card">
+        <div class="card-head"><h2><em>网格级</em>KPI 指标填报</h2>
+            <span class="small muted">门限：接入 ≥ ${KPI.access}% · 掉线 ≤ ${KPI.drop}% · 切换 ≥ ${KPI.ho}% · 锚点驻留 ≥ ${KPI.anchor}%</span></div>
+        <div class="grid3" style="grid-template-columns:repeat(2,1fr)">
+            <div class="kv-item" style="flex-direction:column;align-items:flex-start;gap:8px">
+                <span>RRC 接入成功率（%）</span>
+                <input class="inp" id="accIn" type="number" step="0.1" placeholder="如 99.2" value="${esc(S.d.t8.access)}" oninput="t8kpi('access', this.value)">
+            </div>
+            <div class="kv-item" style="flex-direction:column;align-items:flex-start;gap:8px">
+                <span>无线掉线率（%）</span>
+                <input class="inp" id="dropIn" type="number" step="0.1" placeholder="如 1.8" value="${esc(S.d.t8.drop)}" oninput="t8kpi('drop', this.value)">
+            </div>
+            <div class="kv-item" style="flex-direction:column;align-items:flex-start;gap:8px">
+                <span>5G 切换成功率（%）</span>
+                <input class="inp" id="hoIn" type="number" step="0.1" placeholder="如 97.5" value="${esc(S.d.t8.ho)}" oninput="t8kpi('ho', this.value)">
+            </div>
+            <div class="kv-item" style="flex-direction:column;align-items:flex-start;gap:8px">
+                <span>4/5G 锚点驻留占比（%）</span>
+                <input class="inp" id="anchIn" type="number" step="0.1" placeholder="如 96.4" value="${esc(S.d.t8.anchor)}" oninput="t8kpi('anchor', this.value)">
+            </div>
+        </div>
+    </div>`;
+}
+
+function t8one(i) {
+    sample(i);
+    save();
+    rerender();
+}
+
+function t8all() {
+    POINTS.forEach((p, i) => { if (!S.d.t8.pts[i]) sample(i); });
+    save();
+    rerender();
+    toast('已完成全部剩余点位采集', 'ok');
+}
+
+function sample(i) {
+    const p = POINTS[i];
+    const jit = (n) => (Math.random() - 0.5) * n;
+    S.d.t8.pts[i] = {
+        rsrp: Math.round(p.base[0] + jit(4)),
+        sinr: Math.round((p.base[1] + jit(3)) * 10) / 10,
+        dl: Math.round(380 + Math.random() * 320),
+        ul: Math.round(28 + Math.random() * 26)
+    };
+}
+
+function t8kpi(k, v) { S.d.t8[k] = v; save(); }
+
+/* =========================================================
+   任务 9：测试结束，设备与现场收尾
+   ========================================================= */
+const CLOSE = ['停止路测软件并保存原始 log', '关闭测试终端与笔记本电源', '清点设备数量与工具', '清理现场垃圾与临时物品', '向对接人报备撤离'];
+
+function t9() {
+    const p = S.d.t9.checked || [];
+    const grid = CLOSE.map(k => `
+        <div class="tool ${p.indexOf(k) >= 0 ? 'on' : ''}" onclick="t9pick('${k}')">
+            <span class="tick">&#10003;</span><span>${k}</span>
+        </div>`).join('');
+
+    return head('任务 9 · 现场测试结束，设备与现场收尾',
+        `<p><b>任务描述：</b>完成网格区域全部采样点采集，停止路测软件，保存原始 log 日志，关闭设备，清点工具并撤离。</p>
+         <p><b>操作动作：</b>逐项确认收尾动作，填写本次生成的 log 文件数量。</p>
+         <p><b>完成判定：</b>5 项收尾动作全部确认，且 log 文件数量大于 0。</p>`) +
+    `<div class="card">
+        <div class="card-head"><h2><em>收尾</em>设备与现场</h2>
+            <span class="small ${p.length === CLOSE.length ? 'pass' : 'wait'}">已确认 ${p.length} / ${CLOSE.length}</span></div>
+        <div class="tool-grid">${grid}</div>
+    </div>
+    <div class="card">
+        <div class="card-head"><h2><em>日志</em>原始文件留存</h2><span class="small muted">用于后处理分析</span></div>
+        <div class="grid3">
+            <div class="kv-item" style="flex-direction:column;align-items:flex-start;gap:8px">
+                <span>本次生成 log 文件数</span>
+                <input class="inp" id="logNum" type="number" min="0" placeholder="如 10" value="${esc(S.d.t9.logs)}" oninput="t9log(this.value)">
+            </div>
+            <div class="kv-item"><span>存放位置</span><b>网格1 任务目录 / log</b></div>
+            <div class="kv-item"><span>备份要求</span><b>现场另存一份</b></div>
+        </div>
+    </div>`;
+}
+
+function t9pick(k) {
+    const arr = S.d.t9.checked || [];
+    const i = arr.indexOf(k);
+    if (i >= 0) arr.splice(i, 1); else arr.push(k);
+    S.d.t9.checked = arr;
+    save();
+    rerender();
+}
+
+function t9log(v) { S.d.t9.logs = v; save(); }
+
+/* =========================================================
+   任务 10：数据后处理，生成网格优化测试报告
+   ========================================================= */
+function t10() {
+    const done = S.done[9];
+    return head('任务 10 · 数据后处理，生成网格优化测试报告',
+        `<p><b>任务描述：</b>将路测原始日志导入分析软件，进行数据清洗与统计分析，核对各项 KPI 达标情况；定位弱覆盖、干扰、切换异常等网络问题，撰写网格优化测试报告并提交，完成工单闭环。</p>
+         <p><b>操作动作：</b>预览 KPI 汇总结果，一键导出网格优化测试报告。</p>
+         <p><b>完成判定：</b>报告生成并导出即完成本次实训。</p>`) +
+    `<div class="card">
+        <div class="card-head"><h2><em>汇总</em>KPI 达标情况</h2>
+            <span class="small muted">生成时间：<span id="repTime">--</span></span></div>
+        ${kpiSummary()}
+        <div style="margin-top:14px;display:flex;gap:10px">
+            <button class="btn primary" onclick="exportReport()">一键导出网格优化测试报告</button>
+            <button class="btn ghost" onclick="window.print()">打印 / 存为 PDF</button>
+        </div>
+        ${done ? `<p class="small pass" style="margin-top:12px">报告已导出，实训完成。</p>` : ''}
+    </div>`;
+}
+
+function coverage() {
+    const got = (S.d.t8.pts || []).filter(Boolean);
+    const okN = got.filter(x => x.rsrp >= KPI.rsrp && x.sinr >= KPI.sinr).length;
+    return { got: got, okN: okN, rate: got.length ? okN / got.length * 100 : 0 };
+}
+
+function kpiSummary() {
+    const cv = coverage();
+    const acc = parseFloat(S.d.t8.access), drop = parseFloat(S.d.t8.drop);
+    const ho = parseFloat(S.d.t8.ho), anch = parseFloat(S.d.t8.anchor);
+    const row = (n, v, ok, std) => `<tr>
+        <td class="muted">${n}</td><td>${v}</td><td class="muted">${std}</td>
+        <td>${ok == null ? '<span class="small wait">未填报</span>' : (ok ? '<span class="small pass">达标</span>' : '<span class="small fail">不达标</span>')}</td></tr>`;
+
+    return `<table class="dt">
+        <thead><tr><th>指标</th><th>实测</th><th>门限</th><th>判定</th></tr></thead>
+        <tbody>
+            ${row('覆盖达标率（RSRP/SINR 双门限）', cv.got.length ? cv.rate.toFixed(1) + '%' : '--', cv.got.length ? cv.rate >= KPI.ratio : null, '≥ ' + KPI.ratio + '%')}
+            ${row('RRC 接入成功率', isFinite(acc) ? acc + '%' : '--', isFinite(acc) ? acc >= KPI.access : null, '≥ ' + KPI.access + '%')}
+            ${row('无线掉线率', isFinite(drop) ? drop + '%' : '--', isFinite(drop) ? drop <= KPI.drop : null, '≤ ' + KPI.drop + '%')}
+            ${row('5G 切换成功率', isFinite(ho) ? ho + '%' : '--', isFinite(ho) ? ho >= KPI.ho : null, '≥ ' + KPI.ho + '%')}
+            ${row('4/5G 锚点驻留占比', isFinite(anch) ? anch + '%' : '--', isFinite(anch) ? anch >= KPI.anchor : null, '≥ ' + KPI.anchor + '%')}
+        </tbody></table>`;
+}
+
+/* ---------------- 提交与计分 ---------------- */
+function submitTask() {
+    const i = S.step;
+
+    if (i === 9) { exportReport(); return; }
+    if (S.done[i]) { go(i + 1); return; }
+
+    let sc = 0, msg = '';
+
+    if (i === 0) {
+        if ((S.d.t1.checked || []).length < T1_KEYS.length) { toast('请先完成全部 5 项工单要素核对', 'err'); return; }
+        if (!S.d.t1.agreed) { toast('请先点击下方「已阅读任务通知」确认框完成阅读确认', 'err'); return; }
+        sc = 10; msg = '工单已接收，要素核对完成，得 10 分';
+    }
+
+    if (i === 1) {
+        const d = S.d.t2;
+        if ((d.read || []).length < MODULES.length) { toast('请先完成三大验证模块的解读', 'err'); return; }
+        if (d.quiz === null) { toast('请完成门限判断题', 'err'); return; }
+        if (d.quiz !== QUIZ.a) { toast(`判断有误：SS-RSRP 网格门限为 ≥ ${KPI.rsrp} dBm，请重新选择`, 'err'); return; }
+        sc = 10; msg = '验证项解读完成，KPI 门限掌握正确，得 10 分';
+    }
+
+    if (i === 2) {
+        const d = S.d.t3;
+        if (parseInt(d.ue, 10) !== 4) { toast('5G NR 测试终端数量应为 4 台', 'err'); return; }
+        if (parseInt(d.nb, 10) !== 1) { toast('路测分析笔记本数量应为 1 台', 'err'); return; }
+        if ((d.aux || []).length < AUX.length) { toast('辅助外设还有未勾选项', 'err'); return; }
+        sc = 10; msg = '设备清单核对无误，得 10 分';
+    }
+
+    if (i === 3) {
+        const st = S.d.t4.st || {};
+        if (!SELF.every(x => st[x.k] === 'ok')) { toast('仍有自检项未通过，请先处理异常', 'err'); return; }
+        sc = 10; msg = '设备自检全部通过，得 10 分';
+    }
+
+    if (i === 4) {
+        if ((S.d.t5.picked || []).length < KIT.length) { toast('资料与安全用品尚未备齐', 'err'); return; }
+        sc = 10; msg = '资料与安全用品齐备，得 10 分';
+    }
+
+    if (i === 5) {
+        const d = S.d.t6;
+        if (!d.routed) { toast('请先生成导航路线', 'err'); return; }
+        if ((d.mark || []).length < MARKS.length) { toast('路线要素标记尚未全部确认', 'err'); return; }
+        if (!d.driver) { toast('请选择随车司机', 'err'); return; }
+        sc = 10; msg = '路线规划与点位标记完成，得 10 分';
+    }
+
+    if (i === 6) {
+        const d = S.d.t7;
+        const hz = d.hazards || [];
+        const wrong = hz.filter(x => FAKE_HAZARDS.indexOf(x) >= 0);
+        if (wrong.length) { toast('存在误判：' + wrong.join('、') + ' 不属于本次外场风险源', 'err'); return; }
+        const miss = HAZARDS.filter(x => hz.indexOf(x) < 0);
+        if (miss.length) { toast('仍有危险源未识别：' + miss.join('、'), 'err'); return; }
+        if (!d.weather) { toast('请判断当前天气是否满足作业条件', 'err'); return; }
+        if (d.weather !== WEATHERS[0].t) { toast('作业条件判定有误，当前天气满足作业要求', 'err'); return; }
+        if (!d.ppe) { toast('请确认防护用品已穿戴', 'err'); return; }
+        sc = 10; msg = '安全风险评估完成，得 10 分';
+    }
+
+    if (i === 7) {
+        const d = S.d.t8;
+        const done = (d.pts || []).filter(Boolean).length;
+        if (done < POINTS.length) { toast('还有 ' + (POINTS.length - done) + ' 个采样点未采集', 'err'); return; }
+        const acc = parseFloat(d.access), dr = parseFloat(d.drop), ho = parseFloat(d.ho), anch = parseFloat(d.anchor);
+        if (!isFinite(acc) || !isFinite(dr) || !isFinite(ho) || !isFinite(anch)) { toast('请填写完整的网格级 KPI 指标', 'err'); return; }
+        const cv = coverage();
+        let s = 20;
+        if (cv.rate < KPI.ratio) s -= 8;
+        if (acc < KPI.access) s -= 3;
+        if (dr > KPI.drop) s -= 3;
+        if (ho < KPI.ho) s -= 3;
+        if (anch < KPI.anchor) s -= 3;
+        sc = Math.max(0, s);
+        msg = `路测完成，覆盖率 ${cv.rate.toFixed(0)}%，得 ${sc} 分`;
+    }
+
+    if (i === 8) {
+        const d = S.d.t9;
+        if ((d.checked || []).length < CLOSE.length) { toast('请确认全部收尾动作', 'err'); return; }
+        if (!(parseInt(d.logs, 10) > 0)) { toast('请填写本次生成的 log 文件数量', 'err'); return; }
+        sc = 5; msg = '设备与现场收尾完成，得 5 分';
+    }
+
+    S.done[i] = true;
+    S.score[i] = sc;
+    save();
+    toast(msg, 'ok');
+
+    if (i < N - 1) {
+        S.step = i + 1;
+        save();
+        render();
+        document.getElementById('body').scrollTop = 0;
+    } else {
+        render();
+    }
+}
+
+/* ---------------- 报告导出 ---------------- */
+function exportReport() {
+    const total = S.score.reduce((a, b) => a + b, 0);
+    const now = new Date().toLocaleString('zh-CN');
+    const cv = coverage();
+    const coverRate = cv.got.length ? cv.rate.toFixed(1) : '--';
+
+    const row = (a, b) => `<tr><td style="color:#666;width:210px">${a}</td><td>${esc(b)}</td></tr>`;
+    const ptRows = POINTS.map((p, i) => {
+        const x = (S.d.t8.pts || [])[i];
+        const ok = x && x.rsrp >= KPI.rsrp && x.sinr >= KPI.sinr;
+        return `<tr><td>${p.n}</td><td>${p.seg}</td><td>${x ? x.rsrp : '--'}</td><td>${x ? x.sinr : '--'}</td><td>${x ? x.dl : '--'}</td><td>${x ? x.ul : '--'}</td><td>${x ? (ok ? '达标' : '不达标') : '未采集'}</td></tr>`;
+    }).join('');
+
+    const weak = (S.d.t8.pts || []).map((x, i) => ({ x: x, p: POINTS[i] }))
+        .filter(o => o.x && (o.x.rsrp < KPI.rsrp || o.x.sinr < KPI.sinr))
+        .map(o => o.p.n);
+
+    const html = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">
+<title>5G网格优化测试报告 - ${esc(GRID.name)}</title>
+<style>
+body{font-family:"Microsoft YaHei",sans-serif;max-width:880px;margin:36px auto;padding:0 24px;color:#222;line-height:1.8}
+h1{font-size:22px;text-align:center;margin-bottom:6px}
+.sub{text-align:center;color:#666;font-size:13px;margin-bottom:6px}
+.score{text-align:center;font-size:30px;color:#0a7ac0;font-weight:700;margin:16px 0 26px}
+h2{font-size:15px;border-left:4px solid #0a7ac0;padding-left:10px;margin:24px 0 10px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+td,th{border:1px solid #ddd;padding:7px 10px;text-align:left}
+th{background:#f5f8fb}
+</style></head><body>
+<h1>5G 网格优化测试报告</h1>
+<div class="sub">测试网格：${esc(GRID.name)}　工单编号：${esc(GRID.ticket)}</div>
+<div class="sub">测试窗口：${esc(GRID.window)}</div>
+<div class="sub">测试方式：${esc(GRID.type)}　执行角色：测试工程师</div>
+<div class="sub">生成时间：${now}</div>
+<div class="score">${total} / 100 分</div>
+
+<h2>一、任务基本信息</h2><table>
+${row('测试网格', GRID.name)}
+${row('覆盖基站数', GRID.sites + ' 个')}
+${row('任务对接人', GRID.owner)}
+${row('工单编号', GRID.ticket)}
+${row('数据存储目录', '网格1 任务目录 / log')}
+</table>
+
+<h2>二、验证模块与验收标准</h2><table>
+${row('覆盖性能', `SS-RSRP ≥ ${KPI.rsrp} dBm，SS-SINR ≥ ${KPI.sinr} dB 采样占比 ≥ ${KPI.ratio}%`)}
+${row('业务性能', `下行 ≥ ${KPI.dl} Mbps，上行 ≥ ${KPI.ul} Mbps`)}
+${row('接入与保持', `RRC 接入成功率 ≥ ${KPI.access}%，无线掉线率 ≤ ${KPI.drop}%`)}
+${row('4/5G 协同', `5G 切换成功率 ≥ ${KPI.ho}%，锚点驻留占比 ≥ ${KPI.anchor}%`)}
+</table>
+
+<h2>三、设备与资料准备</h2><table>
+${row('5G NR 测试终端', (S.d.t3.ue || '--') + ' 台')}
+${row('路测分析笔记本', (S.d.t3.nb || '--') + ' 台')}
+${row('辅助外设', (S.d.t3.aux || []).join('、') || '--')}
+${row('资料与安全用品', (S.d.t5.picked || []).join('、') || '--')}
+${row('路线要素标记', (S.d.t6.mark || []).map(k => (MARKS.filter(m => m.k === k)[0] || {}).n).filter(Boolean).join('、') || '--')}
+${row('随车司机', S.d.t6.driver || '--')}
+${row('log 文件数', (S.d.t9.logs || '--') + ' 个')}
+</table>
+
+<h2>四、路测采样明细</h2>
+<table><thead><tr><th>采样点</th><th>路段</th><th>SS-RSRP (dBm)</th><th>SS-SINR (dB)</th><th>下行 (Mbps)</th><th>上行 (Mbps)</th><th>判定</th></tr></thead>
+<tbody>${ptRows}</tbody></table>
+
+<h2>五、KPI 达标汇总</h2><table>
+${row('覆盖达标率', coverRate + '%（门限 ≥ ' + KPI.ratio + '%）')}
+${row('RRC 接入成功率', (S.d.t8.access || '--') + '%（门限 ≥ ' + KPI.access + '%）')}
+${row('无线掉线率', (S.d.t8.drop || '--') + '%（门限 ≤ ' + KPI.drop + '%）')}
+${row('5G 切换成功率', (S.d.t8.ho || '--') + '%（门限 ≥ ' + KPI.ho + '%）')}
+${row('4/5G 锚点驻留占比', (S.d.t8.anchor || '--') + '%（门限 ≥ ' + KPI.anchor + '%）')}
+</table>
+
+<h2>六、问题定位与优化建议</h2>
+<p>1. 弱覆盖点位：${weak.length ? esc(weak.join('、')) : '本轮采样未发现低于 ' + KPI.rsrp + ' dBm 的点位'}。建议核查周边站点方位角、下倾角与功率配置，必要时补点或调整覆盖方向。</p>
+<p>2. 干扰分析：槐安路高架、和平路东延一带 SS-SINR 偏低，存在重叠覆盖与导频污染可能，建议复核 PCI 规划与重叠覆盖度，优化天馈与切换参数。</p>
+<p>3. 4/5G 协同：建议复核锚点优先驻留策略与切换门限，减少不必要的重定向与乒乓切换；对网格边缘小区补充邻区关系。</p>
+<p>4. 后续动作：将本轮弱覆盖与高干扰路段纳入下一轮优化清单，优化完成后按同一路线复测对比。</p>
+
+<h2>七、结论</h2>
+<p>本次网格1 路测任务已完成，共采集 ${cv.got.length} 个采样点，覆盖达标率 ${coverRate}%。结合业务性能与 4/5G 协同指标，网格内整体覆盖与业务能力${cv.rate >= KPI.ratio ? '基本满足' : '尚未完全满足'}验收要求，${weak.length ? '弱覆盖与干扰路段需在本轮优化中重点处理。' : '建议持续跟踪边缘路段指标波动。'}</p>
+
+</body></html>`;
+
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `5G网格优化测试报告_${GRID.id}_${new Date().toISOString().slice(0, 10)}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+
+    if (!S.done[N - 1]) {
+        S.done[N - 1] = true;
+        S.score[N - 1] = 5;
+        save();
+        render();
+    }
+    submitScenarioResult();
+    toast('报告已导出到下载目录', 'ok');
+}
+
+/* ---------------- 成绩回传（接入能力画像） ---------------- */
+function submitScenarioResult() {
+    if (S._reported) return;
+    S._reported = true;
+    save();
+    try {
+        fetch('/api/scenario-result', { method: 'POST', credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ scene_id: 'grid', scene_name: '5G 网格优化',
+                score: S.score.reduce((a, b) => a + b, 0), score_max: 100 }) }).catch(() => {});
+    } catch (e) {}
+}
+
+/* ---------------- 时钟 ---------------- */
+function tick() {
+    const el = document.getElementById('clock');
+    if (el) el.textContent = new Date().toLocaleString('zh-CN', { hour12: false });
+    const rt = document.getElementById('repTime');
+    if (rt) rt.textContent = new Date().toLocaleString('zh-CN');
+}
+setInterval(tick, 1000);
+
+/* ---------------- 启动 ---------------- */
+tick();
+render();
+if (S.done[N - 1]) submitScenarioResult();   // 历史已完成的实训，补传一次成绩
+
+</script>
+</body>
+</html>

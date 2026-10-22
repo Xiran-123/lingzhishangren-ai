@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧬 因果故障链 · 灵智尚人</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+        background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf7 100%);
+        min-height: 100vh; color: #2d3748; padding-bottom: 40px;
+    }
+    .topbar {
+        background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        color: #fff; padding: 18px 28px; display: flex; align-items: center; gap: 16px;
+        box-shadow: 0 4px 16px rgba(235,51,73,0.25); position: sticky; top: 0; z-index: 50;
+    }
+    .topbar h1 { font-size: 19px; font-weight: 600; letter-spacing: .5px; }
+    .topbar .sub { font-size: 12px; opacity: .85; margin-top: 2px; }
+    .back-btn {
+        background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.35);
+        color: #fff; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px;
+        transition: .2s; white-space: nowrap; text-decoration: none;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.3); }
+    .wrap { max-width: 1280px; margin: 24px auto; padding: 0 20px; }
+    .card {
+        background: #fff; border-radius: 14px; padding: 22px 24px; margin-bottom: 20px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06); border: 1px solid #edf1f7;
+    }
+    .card-title { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+    .hint { font-size: 12px; color: #718096; line-height: 1.7; }
+    .btn {
+        border: none; border-radius: 9px; padding: 9px 18px; cursor: pointer; font-size: 13px;
+        background: linear-gradient(135deg, #eb3349, #f45c43); color: #fff; transition: .2s; font-weight: 500;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(235,51,73,0.35); }
+    .btn:disabled { opacity: .55; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn.ghost { background: #fff; color: #4a5568; border: 1px solid #d7def0; }
+    .btn.small { padding: 6px 12px; font-size: 12px; }
+    .tag {
+        display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px;
+        background: #fff5f5; color: #c53030; font-weight: 600;
+    }
+    .tag.blue { background: #ebf4ff; color: #2b6cb0; }
+    .tag.green { background: #f0fdf4; color: #15803d; }
+    .tag.gray { background: #f1f5f9; color: #64748b; }
+    .tag.purple { background: #faf5ff; color: #6b46c1; }
+
+    /* 场景选择 */
+    .domain-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+    .domain-card {
+        background: #fff; border: 1px solid #edf1f7; border-radius: 13px; padding: 18px 20px;
+        cursor: pointer; transition: .2s; position: relative;
+    }
+    .domain-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(235,51,73,0.12); border-color: #f45c43; }
+    .domain-card .t { font-weight: 600; font-size: 15px; margin: 8px 0 6px; }
+    .domain-card .a { font-size: 12px; color: #718096; line-height: 1.6; }
+
+    /* 工作台布局 */
+    .bench { display: grid; grid-template-columns: 340px 1fr 340px; gap: 18px; align-items: start; }
+    @media (max-width: 1100px) { .bench { grid-template-columns: 1fr; } }
+    .symptom-box { background: linear-gradient(135deg, #fff5f5, #fff); border: 1px solid #fed7d7; border-radius: 12px; padding: 16px 18px; }
+    .symptom-box .alarm { font-size: 13px; font-weight: 600; color: #c53030; line-height: 1.7; }
+    .symptom-box .scene { font-size: 13px; color: #4a5568; margin-top: 8px; line-height: 1.7; }
+    .symptom-box .known { font-size: 12px; color: #718096; margin-top: 8px; line-height: 1.7; border-top: 1px dashed #fed7d7; padding-top: 8px; }
+
+    /* 因果树 */
+    .chain-node {
+        border: 1.5px solid #e2e8f0; border-radius: 11px; padding: 13px 15px; margin-bottom: 12px;
+        background: #fff; transition: .2s;
+    }
+    .chain-node.active { border-color: #f45c43; background: linear-gradient(135deg, #fff5f5, #fff); }
+    .chain-node.confirmed { border-color: #48bb78; background: #f0fdf4; }
+    .chain-node.pruned { border-color: #e2e8f0; background: #f8fafc; opacity: .62; }
+    .chain-node.root { border-color: #d53f8c; background: #fff5f7; }
+    .chain-node .nt { font-size: 13.5px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .chain-node .nd { font-size: 12px; color: #718096; margin-top: 5px; line-height: 1.6; }
+    .chain-node .nh { font-size: 12px; color: #2b6cb0; margin-top: 6px; background: #ebf4ff; border-radius: 7px; padding: 6px 10px; line-height: 1.6; }
+    .test-btn {
+        margin-top: 8px; display: inline-block; border: none; border-radius: 8px; cursor: pointer;
+        padding: 7px 13px; font-size: 12px; font-weight: 500; transition: .2s; margin-right: 8px;
+        background: linear-gradient(135deg, #667eea, #764ba2); color: #fff;
+    }
+    .test-btn:hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(102,126,234,0.4); }
+    .test-btn.decoy { background: linear-gradient(135deg, #a0aec0, #718096); }
+    .test-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+    .arrow-down { text-align: center; color: #cbd5e0; font-size: 16px; margin: -6px 0 6px; }
+
+    /* 测试日志 */
+    .log-item { font-size: 12px; line-height: 1.7; padding: 9px 12px; border-radius: 9px; margin-bottom: 8px; border-left: 3px solid #e2e8f0; background: #f8fafc; }
+    .log-item.confirm { border-left-color: #48bb78; background: #f0fdf4; }
+    .log-item.reject { border-left-color: #a0aec0; }
+    .log-item.noise { border-left-color: #ed8936; background: #fffaf0; }
+    .log-item .lr { font-weight: 600; }
+
+    /* 导师对话 */
+    .chat-box { height: 320px; overflow-y: auto; border: 1px solid #edf1f7; border-radius: 10px; padding: 12px; background: #f8fafc; }
+    .msg { margin-bottom: 10px; display: flex; }
+    .msg.me { justify-content: flex-end; }
+    .msg .b { max-width: 88%; padding: 8px 12px; border-radius: 10px; font-size: 12.5px; line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
+    .msg.me .b { background: linear-gradient(135deg, #eb3349, #f45c43); color: #fff; }
+    .msg.ai .b { background: #fff; border: 1px solid #e2e8f0; }
+    .msg.ai .b .ai-flag { display: block; font-size: 10px; color: #b794f4; margin-top: 4px; }
+    .chat-input { display: flex; gap: 8px; margin-top: 10px; }
+    .chat-input input { flex: 1; border: 1px solid #d7def0; border-radius: 9px; padding: 9px 12px; font-size: 13px; outline: none; }
+    .chat-input input:focus { border-color: #f45c43; }
+
+    /* 倒计时 */
+    .countdown { font-size: 22px; font-weight: 700; color: #c53030; font-variant-numeric: tabular-nums; }
+
+    /* 弹窗 */
+    .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+    .modal-mask.show { display: flex; }
+    .modal { background: #fff; border-radius: 15px; padding: 26px 28px; max-width: 640px; width: 100%; max-height: 86vh; overflow-y: auto; }
+    .modal h3 { font-size: 17px; margin-bottom: 14px; }
+    .pick-root { border: 1.5px solid #e2e8f0; border-radius: 11px; padding: 13px 15px; margin-bottom: 12px; cursor: pointer; transition: .15s; }
+    .pick-root:hover { border-color: #f45c43; }
+    .pick-root.picked { border-color: #d53f8c; background: #fff5f7; }
+    .pick-root .pt { font-weight: 600; font-size: 13.5px; }
+    .fix-opt { display: block; font-size: 12.5px; padding: 8px 11px; border: 1px solid #e2e8f0; border-radius: 8px; margin-top: 7px; cursor: pointer; line-height: 1.6; }
+    .fix-opt:hover { border-color: #667eea; }
+    .fix-opt.picked { border-color: #667eea; background: #ebf4ff; }
+    .score-big { font-size: 54px; font-weight: 800; text-align: center; background: linear-gradient(135deg, #eb3349, #f45c43); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .score-row { display: flex; justify-content: space-between; font-size: 13px; padding: 8px 4px; border-bottom: 1px dashed #edf1f7; }
+    .reveal-box { background: #f8fafc; border: 1px solid #edf1f7; border-radius: 10px; padding: 13px 15px; margin-top: 12px; font-size: 12.5px; line-height: 1.8; }
+    .reveal-box .ok-fix { color: #15803d; font-weight: 600; }
+    .reveal-box .bad-fix { color: #b91c1c; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    th, td { padding: 9px 10px; text-align: left; border-bottom: 1px solid #edf1f7; }
+    th { background: #f8fafc; font-weight: 600; color: #4a5568; }
+    .morph-banner { background: linear-gradient(135deg, #faf5ff, #fff); border: 1px solid #e9d8fd; border-radius: 10px; padding: 12px 16px; font-size: 13px; color: #6b46c1; margin-top: 12px; line-height: 1.7; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; }
+    .metric { background: #f8fafc; border: 1px solid #edf1f7; border-radius: 11px; padding: 14px 16px; }
+    .metric .k { font-size: 12px; color: #718096; margin-bottom: 6px; }
+    .metric .v { font-size: 20px; font-weight: 700; color: #c53030; }
+</style>
+</head>
+<body>
+<div class="topbar">
+    <a href="/" target="_top" class="back-btn">← 返回首页</a>
+    <div style="flex:1">
+        <h1>🧬 因果故障链排查实训</h1>
+        <div class="sub">注入故障表象 · 动态展开因果链 · 难度随表现自适应变形</div>
+    </div>
+    <span id="levelBadge" class="tag" style="background:rgba(255,255,255,.2);color:#fff;font-size:13px;"></span>
+</div>
+
+<div class="wrap">
+
+    <!-- ================= 场景选择 ================= -->
+    <div id="pickerView">
+        <div class="card">
+            <div class="card-title">🎯 选择故障场景 <span class="hint" style="font-weight:400">（每个场景记录你的自适应难度，表现好自动升级解锁挑战，连续误诊自动降级帮扶）</span></div>
+            <div class="domain-grid" id="domainGrid"></div>
+        </div>
+        <div class="card" id="historyCard" style="display:none">
+            <div class="card-title">📜 我的排查成绩</div>
+            <div id="historyBox"><span class="hint">加载中…</span></div>
+        </div>
+        <div class="card" id="teacherCard" style="display:none">
+            <div class="card-title">🎛 教师看板 · 班级排查概览</div>
+            <div class="grid" id="teacherMetrics"></div>
+            <div id="teacherTable" style="margin-top:16px"></div>
+        </div>
+    </div>
+
+    <!-- ================= 排查工作台 ================= -->
+    <div id="benchView" style="display:none">
+        <div class="bench">
+            <!-- 左栏：症状 + 测试日志 -->
+            <div>
+                <div class="card">
+                    <div class="card-title">🚨 现场症状</div>
+                    <div class="symptom-box">
+                        <div class="alarm" id="symAlarm"></div>
+                        <div class="scene" id="symScene"></div>
+                        <div class="known" id="symKnown"></div>
+                    </div>
+                    <div id="timerBox" style="display:none;margin-top:14px;text-align:center">
+                        <div class="hint">⏱ 专家限时</div>
+                        <div class="countdown" id="countdown">10:00</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">🧪 排查记录 <span class="hint" id="testCount" style="font-weight:400"></span></div>
+                    <div id="logBox"><span class="hint">尚未执行测试动作</span></div>
+                </div>
+            </div>
+
+            <!-- 中栏：因果链 -->
+            <div>
+                <div class="card">
+                    <div class="card-title">🌿 因果链动态展开</div>
+                    <div class="hint" style="margin-bottom:14px">执行「鉴别测试」确认或排除原因分支：确认的分支会展开下一层子原因，排除的分支被剪除。沿链找到根因后点「提交诊断」。</div>
+                    <div id="pathBox"></div>
+                    <div id="treeBox"></div>
+                </div>
+            </div>
+
+            <!-- 右栏：操作 + 导师 -->
+            <div>
+                <div class="card">
+                    <div class="card-title">🎮 操作台</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:9px">
+                        <button class="btn" id="diagnoseBtn" onclick="openDiagnose()" disabled>🩺 提交根因诊断</button>
+                        <button class="btn ghost" id="hintBtn" onclick="askHint()">💡 申请提示</button>
+                        <button class="btn ghost" onclick="abandon()">🏳 放弃本局</button>
+                    </div>
+                    <div id="morphBox"></div>
+                </div>
+                <div class="card">
+                    <div class="card-title">👨‍🏫 AI 带教导师</div>
+                    <div class="chat-box" id="chatBox">
+                        <div class="msg ai"><div class="b">我是现场带教师傅。排查卡住了可以问我方法论，但我不会直接告诉你答案——自己推出来才算本事。<span class="ai-flag">✨ AI 生成内容，仅供参考</span></div></div>
+                    </div>
+                    <div class="chat-input">
+                        <input id="chatInput" placeholder="向导师提问…" onkeydown="if(event.key==='Enter')sendChat()">
+                        <button class="btn small" id="chatSendBtn" onclick="sendChat()">发送</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= 诊断弹窗 ================= -->
+<div class="modal-mask" id="diagnoseMask">
+    <div class="modal">
+        <h3>🩺 提交根因诊断</h3>
+        <div class="hint" id="diagHint" style="margin-bottom:14px"></div>
+        <div id="rootPickBox"></div>
+        <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end">
+            <button class="btn ghost" onclick="closeDiagnose()">再想想</button>
+            <button class="btn" onclick="submitDiagnose()">确认提交</button>
+        </div>
+    </div>
+</div>
+
+<!-- ================= 评分弹窗 ================= -->
+<div class="modal-mask" id="scoreMask">
+    <div class="modal">
+        <h3 id="scoreTitle">📊 诊断评分</h3>
+        <div class="score-big" id="scoreBig">0</div>
+        <div style="text-align:center;margin-bottom:14px"><span class="tag purple" id="scoreGrade" style="font-size:14px"></span></div>
+        <div id="scoreRows"></div>
+        <div id="revealBox"></div>
+        <div id="morphResult"></div>
+        <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end">
+            <button class="btn ghost" id="continueBtn" onclick="closeScore()" style="display:none">继续排查</button>
+            <button class="btn" onclick="backToPicker()">返回场景列表</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const ROLE = {{ role | tojson }};
+let SESSION = null;
+let countdownTimer = null;
+
+// ================= 场景选择 =================
+async function loadDomains() {
+    const r = await fetch('/api/fault-chain/domains');
+    const d = await r.json();
+    if (!d.success) return;
+    const grid = document.getElementById('domainGrid');
+    grid.innerHTML = '';
+    d.domains.forEach(dom => {
+        const el = document.createElement('div');
+        el.className = 'domain-card';
+        el.innerHTML = `
+            <span class="tag blue">${dom.label}</span>
+            <span class="tag ${dom.level===3?'':'purple'}" style="float:right">难度：${dom.level_label}</span>
+            <div class="t">${dom.title}</div>
+            <div class="a">${dom.symptom_brief}</div>
+            <div class="a" style="margin-top:8px;color:#b794f4">📐 ${dom.level_rules.desc}</div>
+            <div style="margin-top:12px"><button class="btn small">开始排查 →</button></div>`;
+        el.onclick = () => startSession(dom.domain);
+        grid.appendChild(el);
+    });
+    loadHistory();
+}
+
+async function loadHistory() {
+    const r = await fetch('/api/fault-chain/history');
+    const d = await r.json();
+    if (!d.success) return;
+    if (ROLE === 'teacher' && d.overview) {
+        document.getElementById('teacherCard').style.display = '';
+        const o = d.overview;
+        document.getElementById('teacherMetrics').innerHTML = `
+            <div class="metric"><div class="k">总会话</div><div class="v">${o.total_sessions}</div></div>
+            <div class="metric"><div class="k">完成诊断</div><div class="v">${o.completed}</div></div>
+            <div class="metric"><div class="k">平均分</div><div class="v">${o.avg_score}</div></div>
+            <div class="metric"><div class="k">升级 / 降级</div><div class="v">${o.upgrades} / ${o.downgrades}</div></div>
+            <div class="metric"><div class="k">进行中</div><div class="v">${o.active_sessions}</div></div>`;
+        let rows = (d.history||[]).map(h => `<tr>
+            <td>${h.student_name||h.student_no}</td><td>${h.domain}</td><td>${h.level===1?'入门':h.level===2?'工程师':'专家'}</td>
+            <td><b>${h.score}</b>（${h.grade}）</td><td>${h.misdiagnoses}</td><td>${h.tests}/${h.par}</td>
+            <td>${h.morph==='upgrade'?'⬆ 升级':h.morph==='downgrade'?'⬇ 降级':h.morph==='abandoned'?'放弃':'—'}</td>
+            <td style="color:#a0aec0">${h.finished_at||''}</td></tr>`).join('');
+        document.getElementById('teacherTable').innerHTML = `<table><thead><tr>
+            <th>学生</th><th>场景</th><th>难度</th><th>得分</th><th>误诊</th><th>测试/最优</th><th>变形</th><th>时间</th>
+            </tr></thead><tbody>${rows||'<tr><td colspan="8" class="hint">暂无记录</td></tr>'}</tbody></table>`;
+    } else if (ROLE === 'student') {
+        document.getElementById('historyCard').style.display = '';
+        const rows = (d.history||[]).map(h => `<tr>
+            <td>${h.domain}</td><td>${h.level===1?'入门':h.level===2?'工程师':'专家'}</td>
+            <td><b>${h.score}</b>（${h.grade}）</td><td>${h.misdiagnoses}</td><td>${h.tests}/${h.par}</td>
+            <td>${h.morph==='upgrade'?'⬆ 下局升级':h.morph==='downgrade'?'⬇ 下局降级':h.morph==='abandoned'?'放弃':'—'}</td>
+            <td style="color:#a0aec0">${h.finished_at||''}</td></tr>`).join('');
+        document.getElementById('historyBox').innerHTML = `<table><thead><tr>
+            <th>场景</th><th>难度</th><th>得分</th><th>误诊</th><th>测试/最优</th><th>变形</th><th>时间</th>
+            </tr></thead><tbody>${rows||'<tr><td colspan="7" class="hint">还没有成绩，选个场景开始第一次排查吧</td></tr>'}</tbody></table>`;
+    }
+}
+
+// ================= 会话 =================
+async function startSession(domain) {
+    const r = await fetch('/api/fault-chain/start', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({domain})});
+    const d = await r.json();
+    if (!d.success) { alert(d.error || '开局失败'); return; }
+    SESSION = d.session;
+    document.getElementById('pickerView').style.display = 'none';
+    document.getElementById('benchView').style.display = '';
+    renderSession();
+    if (d.resumed) addLog('system', '已恢复你进行中的排查会话');
+}
+
+function renderSession() {
+    const s = SESSION;
+    document.getElementById('levelBadge').textContent = `${s.domain_label} · ${s.level_label}`;
+    document.getElementById('symAlarm').textContent = s.symptom.alarm;
+    document.getElementById('symScene').textContent = s.symptom.scene;
+    document.getElementById('symKnown').textContent = '📋 已知：' + s.symptom.known;
+
+    // 倒计时
+    clearInterval(countdownTimer);
+    if (s.time_limit_sec && s.status === 'active') {
+        document.getElementById('timerBox').style.display = '';
+        tick();
+        countdownTimer = setInterval(tick, 1000);
+    } else {
+        document.getElementById('timerBox').style.display = 'none';
+    }
+
+    // 已确认路径
+    const pathBox = document.getElementById('pathBox');
+    if (s.confirmed_path.length) {
+        pathBox.innerHTML = '<div class="hint" style="margin-bottom:8px">🔗 已确认链路：</div>' +
+            s.confirmed_path.map(p => `<div class="chain-node confirmed"><div class="nt">✅ ${p.label}</div></div><div class="arrow-down">↓</div>`).join('');
+    } else pathBox.innerHTML = '';
+
+    // 当前候选分支
+    const tree = document.getElementById('treeBox');
+    tree.innerHTML = '';
+    if (s.visible.length === 0 && s.status === 'active') {
+        tree.innerHTML = '<div class="hint">所有分支均已排除或确认——如果还没找到根因，可以提交诊断试试。</div>';
+    }
+    s.visible.forEach(n => {
+        const el = document.createElement('div');
+        el.className = 'chain-node active' + (n.is_root ? ' root' : '');
+        let inner = `<div class="nt">${n.is_root?'🧬':'🌿'} ${n.label} ${n.is_root?'<span class="tag" style="background:#fce7f3;color:#be185d">疑似根因</span>':''}</div>
+                     <div class="nd">${n.desc}</div>`;
+        if (n.hint) inner += `<div class="nh">💡 ${n.hint}</div>`;
+        if (n.test) inner += `<button class="test-btn" onclick="doTest('${n.test.id}')">🧪 ${n.test.name}（${n.test.tool}）</button>`;
+        if (n.decoy_test) inner += `<button class="test-btn decoy" onclick="doTest('${n.decoy_test.id}')">📎 ${n.decoy_test.name}</button>`;
+        el.innerHTML = inner;
+        tree.appendChild(el);
+    });
+
+    // 已剪除
+    if (s.pruned.length) {
+        tree.innerHTML += '<div class="hint" style="margin:10px 0 8px">✂ 已剪除分支：</div>' +
+            s.pruned.map(p => `<div class="chain-node pruned"><div class="nt">❌ ${p.label}</div></div>`).join('');
+    }
+
+    // 日志
+    const logBox = document.getElementById('logBox');
+    if (s.tests_done.length) {
+        logBox.innerHTML = s.tests_done.map(t => `<div class="log-item ${t.result}">
+            <span class="lr">${t.result==='confirm'?'✅ 确认':t.result==='reject'?'❌ 排除':'⚡ 干扰'} · ${t.name}</span><br>${t.text}</div>`).reverse().join('');
+    } else logBox.innerHTML = '<span class="hint">尚未执行测试动作</span>';
+    document.getElementById('testCount').textContent = `（${s.tests_done.length} 次测试 · 误诊 ${s.misdiagnoses} 次）`;
+
+    // 诊断按钮：出现疑似根因节点时可点
+    document.getElementById('diagnoseBtn').disabled = !s.visible.some(n => n.is_root) || s.status !== 'active';
+    document.getElementById('hintBtn').style.display = s.level_rules.hints ? '' : 'none';
+
+    // 变形事件横幅
+    const mb = document.getElementById('morphBox');
+    mb.innerHTML = s.morph_events.filter(e => e.type === 'inject_noise')
+        .map(e => `<div class="morph-banner">${e.text}</div>`).join('');
+}
+
+function tick() {
+    if (!SESSION || SESSION.remaining_sec == null) return;
+    SESSION.remaining_sec = Math.max(0, SESSION.remaining_sec - 1);
+    const m = String(Math.floor(SESSION.remaining_sec / 60)).padStart(2,'0');
+    const sec = String(SESSION.remaining_sec % 60).padStart(2,'0');
+    document.getElementById('countdown').textContent = `${m}:${sec}`;
+    if (SESSION.remaining_sec <= 0) {
+        clearInterval(countdownTimer);
+        addLog('system', '⏱ 时间到！本次诊断效率分清零并扣分，请尽快提交诊断。');
+    }
+}
+
+async function doTest(testId) {
+    const r = await fetch('/api/fault-chain/test', {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({session_id: SESSION.session_id, test_id: testId})});
+    const d = await r.json();
+    if (!d.success) { alert(d.error || '操作失败'); return; }
+    SESSION = d.session;
+    renderSession();
+}
+
+async function askHint() {
+    const r = await fetch('/api/fault-chain/hint', {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({session_id: SESSION.session_id})});
+    const d = await r.json();
+    if (!d.success) { alert(d.error || '无法获取提示'); return; }
+    SESSION = d.session;
+    renderSession();
+    const txt = d.hints.map(h => `【${h.label}】${h.hint}`).join('\n') || '当前没有可用提示';
+    addChatMsg('ai', `💡 提示（本次${d.penalty_each ? `扣 ${d.penalty_each} 分` : '免费'}）：\n${txt}`);
+}
+
+// ================= 诊断 =================
+function openDiagnose() {
+    const s = SESSION;
+    const roots = s.visible.filter(n => n.is_root);
+    const need = s.roots_required;
+    document.getElementById('diagHint').textContent =
+        need > 1 ? `⚠ 专家难度：本场景存在 ${need} 个并发根因，全部找出并选对处置才能拿满分。误诊会扣分。`
+                 : '选择你认定的根因，并选出正确处置方案。误诊会扣分，确认前再核对一遍证据链。';
+    const box = document.getElementById('rootPickBox');
+    box.innerHTML = '';
+    roots.forEach(n => {
+        const el = document.createElement('div');
+        el.className = 'pick-root';
+        el.dataset.rid = n.id;
+        let inner = `<div class="pt"><input type="checkbox" style="margin-right:6px">🧬 ${n.label}</div>
+                     <div class="nd" style="margin:5px 0 3px">${n.cause_preview || ''}</div>
+                     <div class="fix-list" style="display:none">
+                        <div class="hint" style="margin:6px 0 2px">选择处置方案：</div>
+                        ${(n.fixes||[]).map(f => `<span class="fix-opt" data-fid="${f.id}">${f.name}</span>`).join('')}
+                     </div>`;
+        el.innerHTML = inner;
+        el.onclick = (e) => {
+            if (e.target.classList.contains('fix-opt')) {
+                el.querySelectorAll('.fix-opt').forEach(x => x.classList.remove('picked'));
+                e.target.classList.add('picked');
+                return;
+            }
+            const cb = el.querySelector('input');
+            cb.checked = !cb.checked;
+            el.classList.toggle('picked', cb.checked);
+            el.querySelector('.fix-list').style.display = cb.checked ? '' : 'none';
+        };
+        box.appendChild(el);
+    });
+    if (!roots.length) box.innerHTML = '<div class="hint">当前没有可见的疑似根因节点，先沿因果链做测试展开。</div>';
+    document.getElementById('diagnoseMask').classList.add('show');
+}
+function closeDiagnose() { document.getElementById('diagnoseMask').classList.remove('show'); }
+
+async function submitDiagnose() {
+    const roots = [], fixes = [];
+    document.querySelectorAll('#rootPickBox .pick-root.picked').forEach(el => {
+        roots.push(el.dataset.rid);
+        const f = el.querySelector('.fix-opt.picked');
+        if (f) fixes.push(f.dataset.fid);
+    });
+    if (!roots.length) { alert('请先勾选至少一个根因'); return; }
+    closeDiagnose();
+    const r = await fetch('/api/fault-chain/diagnose', {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({session_id: SESSION.session_id, root_ids: roots, fix_ids: fixes})});
+    const d = await r.json();
+    if (!d.success) { alert(d.error || '提交失败'); return; }
+    SESSION = d.session;
+    renderSession();
+    showScore(d);
+}
+
+function showScore(d) {
+    const v = d.verdict;
+    document.getElementById('scoreBig').textContent = d.score;
+    document.getElementById('scoreGrade').textContent = `评级 ${d.grade}`;
+    document.getElementById('scoreRows').innerHTML = `
+        <div class="score-row"><span>🧬 根因诊断（${v.correct_roots.length}/${(v.correct_roots.length+v.missed_roots.length)||1} 正确${v.wrong_roots.length?'，误指 '+v.wrong_roots.length+' 个':''}）</span><b>${v.root_score} 分</b></div>
+        <div class="score-row"><span>🔧 处置方案</span><b>${v.fix_score} 分</b></div>
+        <div class="score-row"><span>⚡ 排查效率（最优 ${v.par_tests} 次 / 实际 ${v.actual_tests} 次${v.timed_out?'，已超时':''}）</span><b>${v.eff_score} 分</b></div>
+        <div class="score-row"><span>🏅 零误诊加分</span><b>${v.bonus} 分</b></div>
+        <div class="score-row"><span>💢 扣分（误诊 ${SESSION.misdiagnoses} 次 · 提示 ${SESSION.hints_used} 次${v.timed_out?' · 超时':''}）</span><b style="color:#b91c1c">已扣</b></div>`;
+    document.getElementById('revealBox').innerHTML = (v.reveal||[]).map(rv => `
+        <div class="reveal-box">
+            <b>${rv.found?'✅':'❌'} ${rv.label}</b><br>📖 真相：${rv.cause}<br>
+            ${rv.fixes.map(f => `<div class="${f.ok?'ok-fix':'bad-fix'}">${f.ok?'✔ 正确处置':'✘'} ${f.name}——${f.note}</div>`).join('')}
+        </div>`).join('');
+    const sug = SESSION.suggestion;
+    document.getElementById('morphResult').innerHTML = sug ? `<div class="morph-banner">🔄 难度自适应：${sug.text}</div>` : '';
+    document.getElementById('continueBtn').style.display = v.continue ? '' : 'none';
+    document.getElementById('scoreTitle').textContent = v.full_correct ? '🎉 诊断成功！' : (v.continue ? '🩺 诊断不完整' : '📊 诊断评分');
+    document.getElementById('scoreMask').classList.add('show');
+    if (!v.continue) clearInterval(countdownTimer);
+}
+function closeScore() { document.getElementById('scoreMask').classList.remove('show'); }
+function backToPicker() {
+    closeScore();
+    document.getElementById('benchView').style.display = 'none';
+    document.getElementById('pickerView').style.display = '';
+    SESSION = null;
+    loadDomains();
+}
+
+async function abandon() {
+    if (!confirm('确定放弃本局？本次成绩记 0 分。')) return;
+    await fetch('/api/fault-chain/abandon', {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({session_id: SESSION.session_id})});
+    backToPicker();
+}
+
+// ================= AI 导师（SSE） =================
+function addChatMsg(who, text) {
+    const box = document.getElementById('chatBox');
+    const el = document.createElement('div');
+    el.className = 'msg ' + who;
+    el.innerHTML = `<div class="b"></div>`;
+    el.querySelector('.b').textContent = text;
+    if (who === 'ai') {
+        const flag = document.createElement('span');
+        flag.className = 'ai-flag';
+        flag.textContent = '✨ AI 生成内容，仅供参考';
+        el.querySelector('.b').appendChild(flag);
+    }
+    box.appendChild(el);
+    box.scrollTop = box.scrollHeight;
+    return el.querySelector('.b');
+}
+function addLog(who, text) { addChatMsg('ai', text); }
+
+async function sendChat() {
+    const input = document.getElementById('chatInput');
+    const msg = input.value.trim();
+    if (!msg || !SESSION) return;
+    input.value = '';
+    addChatMsg('me', msg);
+    const bubble = addChatMsg('ai', '…');
+    document.getElementById('chatSendBtn').disabled = true;
+    try {
+        const r = await fetch('/api/fault-chain/chat', {method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({session_id: SESSION.session_id, message: msg})});
+        const reader = r.body.getReader();
+        const decoder = new TextDecoder();
+        let buf = '', full = '';
+        bubble.textContent = '';
+        while (true) {
+            const {done, value} = await reader.read();
+            if (done) break;
+            buf += decoder.decode(value, {stream: true});
+            const parts = buf.split('\n\n');
+            buf = parts.pop();
+            for (const p of parts) {
+                if (!p.startsWith('data: ')) continue;
+                const payload = p.slice(6);
+                if (payload === '[DONE]') break;
+                try {
+                    const j = JSON.parse(payload);
+                    if (j.content) { full += j.content; bubble.textContent = full; }
+                    if (j.error) bubble.textContent = '⚠ ' + j.error;
+                } catch(e) {}
+            }
+            document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
+        }
+        if (!bubble.textContent) bubble.textContent = '（导师暂时没想好，换个问法试试）';
+        const flag = document.createElement('span');
+        flag.className = 'ai-flag'; flag.textContent = '✨ AI 生成内容，仅供参考';
+        bubble.appendChild(flag);
+    } catch(e) {
+        bubble.textContent = '⚠ 网络异常：' + e.message;
+    }
+    document.getElementById('chatSendBtn').disabled = false;
+}
+
+loadDomains();
+</script>
+</body>
+</html>

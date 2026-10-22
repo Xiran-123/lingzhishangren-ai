@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- 背景圆 -->
+  <circle cx="100" cy="100" r="96" fill="#EAF3FF"/>
+  <!-- 外圈装饰环 -->
+  <circle cx="100" cy="100" r="82" fill="none" stroke="#D6E5FA" stroke-width="2" stroke-dasharray="4 6"/>
+  <circle cx="100" cy="100" r="70" fill="none" stroke="#BED4F2" stroke-width="1" opacity=".6"/>
+  <!-- 外斑点 -->
+  <circle cx="100" cy="22" r="4" fill="#5B9BF5"/>
+  <circle cx="168" cy="55" r="3.5" fill="#7CAEFA"/>
+  <circle cx="168" cy="145" r="3.5" fill="#7CAEFA"/>
+  <circle cx="100" cy="178" r="4" fill="#5B9BF5"/>
+  <circle cx="32" cy="145" r="3.5" fill="#7CAEFA"/>
+  <circle cx="32" cy="55" r="3.5" fill="#7CAEFA"/>
+  <circle cx="178" cy="100" r="3" fill="#9BBFFB"/>
+  <circle cx="22" cy="100" r="3" fill="#9BBFFB"/>
+  <!-- 双耳 -->
+  <rect x="42" y="82" width="16" height="36" rx="6" fill="#D6E5FA"/>
+  <rect x="142" y="82" width="16" height="36" rx="6" fill="#D6E5FA"/>
+  <!-- 头部 -->
+  <rect x="48" y="48" width="104" height="104" rx="38" fill="#FFFFFF" stroke="#3D7BFF" stroke-width="4"/>
+  <!-- 脸屏 -->
+  <rect x="62" y="70" width="76" height="56" rx="22" fill="#1A3A6E"/>
+  <!-- 左眼 -->
+  <rect x="74" y="86" width="16" height="22" rx="7" fill="#3FD3E8"/>
+  <rect x="77" y="89" width="5" height="9" rx="2" fill="#FFFFFF" opacity=".8"/>
+  <!-- 右眼 -->
+  <rect x="110" y="86" width="16" height="22" rx="7" fill="#3FD3E8"/>
+  <rect x="113" y="89" width="5" height="9" rx="2" fill="#FFFFFF" opacity=".8"/>
+  <!-- 微笑 -->
+  <path d="M85 118 Q100 130 115 118" fill="none" stroke="#3D7BFF" stroke-width="4" stroke-linecap="round"/>
+  <!-- 下巴小三角 -->
+  <path d="M92 148 L100 164 L108 148 Z" fill="#3D7BFF"/>
+</svg>

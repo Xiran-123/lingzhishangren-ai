@@ -1,0 +1,1848 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5G基站单站验证 - 灵智尚人</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #071521;
+            --bg2: #0b2233;
+            --panel: rgba(13, 33, 52, .92);
+            --panel2: rgba(18, 43, 66, .96);
+            --line: rgba(77, 216, 255, .16);
+            --line2: rgba(77, 216, 255, .34);
+            --cyan: #4dd8ff;
+            --cyan2: #00c8ff;
+            --text: #e6f3ff;
+            --muted: #7ea6c6;
+            --green: #4ade80;
+            --gold: #ffd66b;
+            --red: #ff6b6b;
+            --radius: 12px;
+        }
+
+        html, body {
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+        }
+
+        .app {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            height: 100vh;
+            background:
+                radial-gradient(1100px 620px at 78% -12%, rgba(0, 160, 255, .16), transparent 62%),
+                radial-gradient(760px 520px at 4% 104%, rgba(0, 200, 190, .1), transparent 60%),
+                var(--bg);
+        }
+
+        /* ============ 左侧任务清单 ============ */
+        .side {
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--line);
+            background: rgba(8, 24, 38, .72);
+            backdrop-filter: blur(10px);
+            min-height: 0;
+        }
+
+        .brand {
+            padding: 20px 20px 16px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .brand a {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 12px;
+            margin-bottom: 12px;
+            transition: color .2s;
+        }
+
+        .brand a:hover { color: var(--cyan); }
+
+        .brand h1 {
+            font-size: 17px;
+            font-weight: 600;
+            letter-spacing: .5px;
+            line-height: 1.45;
+        }
+
+        .brand h1 span {
+            display: block;
+            font-size: 11px;
+            font-weight: 400;
+            color: var(--muted);
+            letter-spacing: 2px;
+            margin-top: 4px;
+        }
+
+        .stat-row {
+            display: flex;
+            gap: 10px;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .stat {
+            flex: 1;
+            background: rgba(0, 200, 255, .05);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 9px 10px;
+            text-align: center;
+        }
+
+        .stat b {
+            display: block;
+            font-size: 18px;
+            color: var(--cyan);
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .stat span { font-size: 11px; color: var(--muted); }
+
+        .task-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 12px 8px;
+            min-height: 0;
+        }
+
+        .task-list::-webkit-scrollbar { width: 5px; }
+        .task-list::-webkit-scrollbar-thumb { background: rgba(77, 216, 255, .22); border-radius: 3px; }
+
+        .titem {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 11px 12px;
+            border-radius: 10px;
+            border: 1px solid transparent;
+            margin-bottom: 4px;
+            cursor: pointer;
+            transition: background .18s, border-color .18s;
+        }
+
+        .titem:hover:not(.locked) { background: rgba(77, 216, 255, .06); }
+
+        .titem.active {
+            background: rgba(77, 216, 255, .1);
+            border-color: var(--line2);
+        }
+
+        .titem.locked { cursor: not-allowed; opacity: .42; }
+
+        .tnum {
+            flex: 0 0 24px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-size: 11px;
+            font-weight: 600;
+            background: rgba(126, 166, 198, .16);
+            color: var(--muted);
+            margin-top: 1px;
+        }
+
+        .titem.active .tnum { background: var(--cyan); color: #062032; }
+        .titem.done .tnum { background: rgba(74, 222, 128, .18); color: var(--green); }
+
+        .tinfo { min-width: 0; flex: 1; }
+        .tinfo b {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            line-height: 1.4;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .tinfo i {
+            display: block;
+            font-style: normal;
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 3px;
+        }
+
+        .side-foot {
+            padding: 12px 16px 16px;
+            border-top: 1px solid var(--line);
+        }
+
+        /* ============ 右侧主区 ============ */
+        .main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+
+        .top {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 28px;
+            border-bottom: 1px solid var(--line);
+            background: rgba(8, 24, 38, .55);
+        }
+
+        .top-title { font-size: 14px; font-weight: 500; }
+        .top-title small {
+            display: block;
+            font-size: 11px;
+            color: var(--muted);
+            font-weight: 400;
+            margin-top: 3px;
+        }
+
+        .bar {
+            flex: 1;
+            height: 6px;
+            background: rgba(126, 166, 198, .16);
+            border-radius: 99px;
+            overflow: hidden;
+            min-width: 80px;
+        }
+
+        .bar i {
+            display: block;
+            height: 100%;
+            width: 0;
+            border-radius: 99px;
+            background: linear-gradient(90deg, var(--cyan2), var(--green));
+            transition: width .45s cubic-bezier(.2, .8, .2, 1);
+        }
+
+        .clock {
+            font-size: 12px;
+            color: var(--muted);
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        .body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 28px 12px;
+            min-height: 0;
+        }
+
+        .body::-webkit-scrollbar { width: 7px; }
+        .body::-webkit-scrollbar-thumb { background: rgba(77, 216, 255, .2); border-radius: 4px; }
+
+        .foot {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 28px;
+            border-top: 1px solid var(--line);
+            background: rgba(8, 24, 38, .72);
+        }
+
+        .foot-tip { font-size: 12px; color: var(--muted); flex: 1; }
+        .foot-tip.warn { color: var(--gold); }
+
+        /* ============ 通用组件 ============ */
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 18px 20px;
+            margin-bottom: 16px;
+        }
+
+        .card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .card-head h2 {
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: .3px;
+        }
+
+        .card-head h2 em {
+            font-style: normal;
+            color: var(--cyan);
+            margin-right: 8px;
+        }
+
+        .muted { color: var(--muted); }
+        .small { font-size: 12px; }
+
+        .task-desc {
+            background: rgba(0, 200, 255, .045);
+            border: 1px solid var(--line);
+            border-left: 3px solid var(--cyan);
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-bottom: 18px;
+            font-size: 13px;
+            line-height: 1.85;
+        }
+
+        .task-desc p { margin-bottom: 6px; }
+        .task-desc p:last-child { margin-bottom: 0; }
+        .task-desc b { color: var(--cyan); font-weight: 500; }
+
+        .kv {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(228px, 1fr));
+            gap: 10px;
+        }
+
+        .kv-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 13px;
+            background: rgba(255, 255, 255, .025);
+            border: 1px solid rgba(77, 216, 255, .1);
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .kv-item span { color: var(--muted); white-space: nowrap; }
+        .kv-item b { font-weight: 500; font-variant-numeric: tabular-nums; }
+        .kv-item.ok { border-color: rgba(74, 222, 128, .4); background: rgba(74, 222, 128, .06); }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 9px 20px;
+            border-radius: 8px;
+            border: 1px solid var(--line2);
+            background: rgba(77, 216, 255, .08);
+            color: var(--cyan);
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all .18s;
+            white-space: nowrap;
+        }
+
+        .btn:hover:not(:disabled) { background: rgba(77, 216, 255, .16); border-color: var(--cyan); }
+        .btn:disabled { opacity: .38; cursor: not-allowed; }
+
+        .btn.primary {
+            background: linear-gradient(135deg, #00a8e8, #00c8ff);
+            border-color: transparent;
+            color: #03202f;
+            font-weight: 600;
+            box-shadow: 0 6px 18px rgba(0, 180, 255, .22);
+        }
+
+        .btn.primary:hover:not(:disabled) { filter: brightness(1.08); }
+        .btn.ghost { background: transparent; border-color: var(--line); color: var(--muted); }
+        .btn.ghost:hover:not(:disabled) { color: var(--cyan); border-color: var(--line2); background: rgba(77, 216, 255, .06); }
+        .btn.sm { padding: 6px 12px; font-size: 12px; }
+
+        .field { margin-bottom: 14px; }
+        .field label {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(4, 16, 26, .8);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color .18s;
+            font-variant-numeric: tabular-nums;
+        }
+
+        input:focus, select:focus { border-color: var(--cyan); }
+        input::placeholder { color: rgba(126, 166, 198, .5); }
+        select option { background: #0b2233; }
+
+        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+
+        /* ============ 设备卡片 ============ */
+        .dev-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+        .dev {
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 15px;
+            background: rgba(255, 255, 255, .02);
+            cursor: pointer;
+            transition: all .18s;
+        }
+
+        .dev:hover { border-color: var(--line2); background: rgba(77, 216, 255, .05); }
+        .dev.open { border-color: var(--line2); background: rgba(77, 216, 255, .07); }
+
+        .dev-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .dev-name { font-size: 13px; font-weight: 500; }
+
+        .dot {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            color: var(--green);
+        }
+
+        .dot i {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 8px var(--green);
+        }
+
+        .dot.bad { color: var(--red); }
+        .dot.bad i { background: var(--red); box-shadow: 0 0 8px var(--red); }
+
+        .dev-body {
+            display: none;
+            border-top: 1px dashed rgba(77, 216, 255, .16);
+            margin-top: 10px;
+            padding-top: 10px;
+        }
+
+        .dev.open .dev-body { display: block; }
+
+        .dev-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            padding: 4px 0;
+            color: var(--muted);
+        }
+
+        .dev-row b { color: var(--text); font-weight: 500; }
+
+        /* ============ 告警列表 ============ */
+        .alarm {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(77, 216, 255, .1);
+            background: rgba(255, 255, 255, .02);
+            margin-bottom: 8px;
+            font-size: 12.5px;
+        }
+
+        .alarm.active { border-color: rgba(255, 107, 107, .38); background: rgba(255, 107, 107, .07); }
+
+        .alarm-time { color: var(--muted); font-variant-numeric: tabular-nums; }
+        .alarm-name { flex: 1; }
+        .alarm-state { font-size: 11px; color: var(--green); }
+        .alarm.active .alarm-state { color: var(--red); }
+
+        /* ============ 工具清单 ============ */
+        .tool-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+
+        .tool {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 13px 14px;
+            border: 1px solid var(--line);
+            border-radius: 9px;
+            background: rgba(255, 255, 255, .02);
+            cursor: pointer;
+            transition: all .16s;
+            font-size: 13px;
+        }
+
+        .tool:hover { border-color: var(--line2); }
+
+        .tool.on {
+            border-color: rgba(74, 222, 128, .45);
+            background: rgba(74, 222, 128, .07);
+        }
+
+        .tick {
+            flex: 0 0 18px;
+            width: 18px;
+            height: 18px;
+            border-radius: 5px;
+            border: 1.5px solid rgba(126, 166, 198, .45);
+            display: grid;
+            place-items: center;
+            font-size: 11px;
+            color: transparent;
+            transition: all .16s;
+        }
+
+        .tool.on .tick {
+            background: var(--green);
+            border-color: var(--green);
+            color: #052b16;
+            font-weight: 700;
+        }
+
+        /* 待确认（参数已核对完，但尚未勾选阅读确认） */
+        .tool.ready {
+            border-color: rgba(77, 216, 255, .55);
+            background: rgba(77, 216, 255, .06);
+            animation: readyPulse 1.9s ease-in-out infinite;
+        }
+
+        .tool.ready .tick { border-color: var(--cyan); }
+
+        .tool.locked { opacity: .5; }
+
+        @keyframes readyPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(77, 216, 255, 0); }
+            50% { box-shadow: 0 0 0 3px rgba(77, 216, 255, .12); }
+        }
+
+        /* 错误选型 */
+        .tool.bad {
+            border-color: rgba(255, 107, 107, .55);
+            background: rgba(255, 107, 107, .08);
+        }
+
+        .tool.bad .tick {
+            background: var(--red);
+            border-color: var(--red);
+            color: #2b0505;
+            font-weight: 700;
+        }
+
+        .sel-tip {
+            font-size: 12px;
+            line-height: 1.7;
+            color: var(--muted);
+            background: rgba(77, 216, 255, .05);
+            border-left: 3px solid rgba(77, 216, 255, .35);
+            border-radius: 6px;
+            padding: 9px 12px;
+            margin-bottom: 12px;
+        }
+
+        .sel-err {
+            font-size: 12px;
+            line-height: 1.7;
+            color: #ffc9c9;
+            background: rgba(255, 107, 107, .09);
+            border: 1px solid rgba(255, 107, 107, .35);
+            border-radius: 6px;
+            padding: 9px 12px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .sel-err b { color: var(--red); }
+
+        .sel-err .pen {
+            margin-left: auto;
+            font-weight: 700;
+            color: var(--red);
+            white-space: nowrap;
+        }
+
+        /* ============ 地图 ============ */
+        .map-wrap {
+            position: relative;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            overflow: hidden;
+            background:
+                linear-gradient(rgba(77, 216, 255, .05) 1px, transparent 1px) 0 0 / 100% 34px,
+                linear-gradient(90deg, rgba(77, 216, 255, .05) 1px, transparent 1px) 0 0 / 34px 100%,
+                #061320;
+            height: 260px;
+        }
+
+        .map-svg { width: 100%; height: 100%; display: block; }
+
+        .route-line {
+            stroke: var(--cyan);
+            stroke-width: 2.5;
+            fill: none;
+            stroke-dasharray: 8 6;
+            stroke-dashoffset: 420;
+            transition: stroke-dashoffset 1.4s ease;
+        }
+
+        .route-line.show { stroke-dashoffset: 0; }
+
+        .map-meta {
+            position: absolute;
+            right: 12px;
+            bottom: 12px;
+            background: rgba(4, 16, 26, .88);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 11.5px;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        .map-meta b { color: var(--cyan); }
+
+        /* ============ 数据表 ============ */
+        table.dt {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12.5px;
+        }
+
+        table.dt th {
+            text-align: left;
+            font-weight: 500;
+            color: var(--muted);
+            font-size: 11.5px;
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--line);
+            white-space: nowrap;
+        }
+
+        table.dt td {
+            padding: 7px 10px;
+            border-bottom: 1px solid rgba(77, 216, 255, .07);
+            vertical-align: middle;
+        }
+
+        table.dt tr:last-child td { border-bottom: none; }
+
+        table.dt input {
+            padding: 7px 9px;
+            font-size: 12.5px;
+            text-align: right;
+        }
+
+        .pass { color: var(--green); }
+        .fail { color: var(--red); }
+        .wait { color: var(--muted); }
+
+        /* ============ 切换信令 ============ */
+        .sig {
+            font-family: 'SFMono-Regular', Consolas, monospace;
+            font-size: 12px;
+            line-height: 2;
+            background: rgba(4, 16, 26, .75);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 12px 14px;
+            color: var(--muted);
+            max-height: 168px;
+            overflow-y: auto;
+        }
+
+        .sig div { opacity: 0; animation: fadeIn .3s forwards; }
+        .sig div b { color: var(--cyan); font-weight: 500; }
+        .sig div.ok { color: var(--green); }
+
+        @keyframes fadeIn { to { opacity: 1; } }
+
+        /* ============ 报告 ============ */
+        .rep-head {
+            text-align: center;
+            padding: 22px 0 16px;
+            border-bottom: 1px solid var(--line);
+            margin-bottom: 18px;
+        }
+
+        .rep-head h2 { font-size: 19px; font-weight: 600; letter-spacing: 1px; }
+        .rep-head p { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+        .rep-score {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 14px;
+        }
+
+        .rep-score b {
+            font-size: 42px;
+            font-weight: 600;
+            color: var(--cyan);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .rep-score span { font-size: 13px; color: var(--muted); }
+
+        .rep-block { margin-bottom: 20px; }
+
+        .rep-block h3 {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--cyan);
+            margin-bottom: 10px;
+            padding-left: 9px;
+            border-left: 3px solid var(--cyan);
+        }
+
+        /* ============ 提示条 ============ */
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 88px;
+            transform: translate(-50%, 14px);
+            background: rgba(8, 26, 40, .97);
+            border: 1px solid var(--line2);
+            border-radius: 9px;
+            padding: 11px 20px;
+            font-size: 13px;
+            color: var(--text);
+            opacity: 0;
+            pointer-events: none;
+            transition: all .25s;
+            z-index: 99;
+            max-width: 80vw;
+            text-align: center;
+        }
+
+        .toast.show { opacity: 1; transform: translate(-50%, 0); }
+        .toast.err { border-color: rgba(255, 107, 107, .5); color: #ffc9c9; }
+        .toast.ok { border-color: rgba(74, 222, 128, .5); color: #c6f8d8; }
+
+        .empty { text-align: center; padding: 40px 0; color: var(--muted); font-size: 13px; }
+
+        @media (max-width: 980px) {
+            .app { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+            .side { flex-direction: row; align-items: center; border-right: none; border-bottom: 1px solid var(--line); overflow-x: auto; }
+            .brand, .stat-row, .side-foot { border: none; padding: 12px 16px; }
+            .brand h1 span { display: none; }
+            .task-list { display: flex; gap: 6px; padding: 8px 12px; overflow-x: auto; }
+            .titem { margin-bottom: 0; white-space: nowrap; }
+            .tinfo i { display: none; }
+            .grid3, .dev-grid { grid-template-columns: 1fr; }
+            .grid2 { grid-template-columns: 1fr; }
+            .body { padding: 16px; }
+            .top, .foot { padding: 12px 16px; }
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <aside class="side">
+        <div class="brand">
+            <a href="/" target="_top">&#8592; 返回首页</a>
+            <h1>5G 基站单站验证<span>SSV FIELD TRAINING</span></h1>
+        </div>
+        <div class="stat-row">
+            <div class="stat"><b id="statDone">0/8</b><span>任务完成</span></div>
+            <div class="stat"><b id="statScore">0</b><span>实训得分</span></div>
+        </div>
+        <div class="task-list" id="taskList"></div>
+        <div class="side-foot">
+            <button class="btn ghost sm" style="width:100%" onclick="resetAll()">重新开始实训</button>
+        </div>
+    </aside>
+
+    <main class="main">
+        <div class="top">
+            <div class="top-title">
+                实训演示基站-TEST01
+                <small id="topSub">单站验证任务清单</small>
+            </div>
+            <div class="bar"><i id="barFill"></i></div>
+            <div class="clock" id="clock"></div>
+        </div>
+        <div class="body" id="body"></div>
+        <div class="foot">
+            <div class="foot-tip" id="footTip"></div>
+            <button class="btn ghost" id="btnPrev" onclick="prevStep()">上一任务</button>
+            <button class="btn primary" id="btnNext" onclick="submitTask()">提交并解锁下一任务</button>
+        </div>
+    </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<link rel="stylesheet" href="/static/desktop_pet.css">
+<script src="/static/desktop_pet.js" defer></script>
+
+<script>
+/* =========================================================
+   5G 基站单站验证实训 —— 任务状态机
+   ========================================================= */
+
+const STATION = {
+    name: '实训演示基站-TEST01',
+    code: '1080108',
+    tac: '2228501',
+    freq: '51300',
+    band: '100M',
+    mode: 'TDD',
+    pci: '201 / 202 / 203',
+    azimuth: '0° / 120° / 240°',
+    tilt: '10° / 10° / 10°',
+    height: '35m',
+    address: '河北省石家庄市实训园区创新路12号',
+    lng: '114.4021',
+    lat: '38.0201',
+    net: '5G',
+    poleH: '7m',
+    buildingH: '35m',
+    antLen: '1m',
+    power: '≤60W'
+};
+
+const TASKS = [
+    { t: '接到单站验证通知', s: '核对基站基础参数' },
+    { t: '设备状态检查', s: '主设备 / 天馈 / 传输 / 告警' },
+    { t: '挑选外场测试工具', s: '外场工具选型' },
+    { t: '预约司机并规划路线', s: '导航至实训基站' },
+    { t: '外场信号覆盖测试', s: '多点采集 RSRP / SINR' },
+    { t: '业务性能测试', s: '语音 / 视频 / 数据业务' },
+    { t: '邻区关系验证', s: '切换信令与成功率' },
+    { t: '实训报告生成', s: '汇总数据并导出' }
+];
+
+const KEY = 'lsr_ssv_v1';
+
+const DEFAULT = () => ({
+    step: 0,
+    done: [false, false, false, false, false, false, false, false],
+    score: [0, 0, 0, 0, 0, 0, 0, 0],
+    d: {
+        t1: { checked: [] },
+        t2: { open: '', alarms: [true, true, false], dev: { main: '', ant: '', trans: '' }, note: '' },
+        t3: { tools: [], lastErr: [], penalty: 0, passed: false },
+        t4: { from: '实训中心（创新路8号）', lng: '114.4021', lat: '38.0201', driver: '', routed: false },
+        t5: { pts: [null, null, null, null, null] },
+        t6: { voice: null, video: null, data: null },
+        t7: { cells: [{ pci: '202', ok: null }, { pci: '203', ok: null }, { pci: '118', ok: null }], added: false },
+        t8: { exported: false }
+    }
+});
+
+let S = load();
+
+function load() {
+    try {
+        const raw = localStorage.getItem(KEY);
+        if (!raw) return DEFAULT();
+        const o = JSON.parse(raw);
+        const base = DEFAULT();
+        const merged = Object.assign(base, o, { d: Object.assign(base.d, o.d || {}) });
+        merged.d['t3'] = Object.assign({ tools: [], lastErr: [], penalty: 0, passed: false }, merged.d['t3'] || {});
+        return merged;
+    } catch (e) { return DEFAULT(); }
+}
+
+function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
+}
+
+/* ---------------- 通用工具 ---------------- */
+function esc(v) {
+    return String(v == null ? '' : v).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+
+function toast(msg, type) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast show' + (type ? ' ' + type : '');
+    clearTimeout(el._t);
+    el._t = setTimeout(() => { el.className = 'toast'; }, 2400);
+}
+
+function unlocked(i) { return i === 0 || S.done[i - 1]; }
+
+function go(step) {
+    if (step < 0 || step > 7) return;
+    if (!unlocked(step)) { toast('请先完成上一个任务', 'err'); return; }
+    S.step = step;
+    save();
+    render();
+    document.getElementById('body').scrollTop = 0;
+}
+
+function prevStep() { go(S.step - 1); }
+
+function resetAll() {
+    if (!confirm('确定要清空本次实训的全部记录并重新开始吗？')) return;
+    S = DEFAULT();
+    save();
+    render();
+    toast('已重置实训进度', 'ok');
+}
+
+/* ---------------- 渲染骨架 ---------------- */
+function render() {
+    renderList();
+    renderBar();
+    document.getElementById('body').innerHTML = renderTask(S.step);
+    bindTask(S.step);
+    renderFoot();
+}
+
+function renderList() {
+    const box = document.getElementById('taskList');
+    box.innerHTML = TASKS.map((tk, i) => {
+        const cls = ['titem'];
+        if (i === S.step) cls.push('active');
+        if (S.done[i]) cls.push('done');
+        if (!unlocked(i)) cls.push('locked');
+        const num = S.done[i] ? '&#10003;' : (i + 1);
+        return `<div class="${cls.join(' ')}" onclick="go(${i})">
+            <div class="tnum">${num}</div>
+            <div class="tinfo"><b>${esc(tk.t)}</b><i>${esc(tk.s)}</i></div>
+        </div>`;
+    }).join('');
+
+    const doneCount = S.done.filter(Boolean).length;
+    document.getElementById('statDone').textContent = doneCount + '/8';
+    document.getElementById('statScore').textContent = S.score.reduce((a, b) => a + b, 0);
+}
+
+function renderBar() {
+    const doneCount = S.done.filter(Boolean).length;
+    const pct = Math.round((doneCount + (S.done[S.step] ? 0 : 0)) / 8 * 100);
+    document.getElementById('barFill').style.width = pct + '%';
+    document.getElementById('topSub').textContent =
+        S.done[7] ? '实训已完成，可导出报告' : '第 ' + (S.step + 1) + ' / 8 项任务 · ' + TASKS[S.step].t;
+}
+
+function renderFoot() {
+    const tip = document.getElementById('footTip');
+    const next = document.getElementById('btnNext');
+    const prev = document.getElementById('btnPrev');
+    prev.disabled = S.step === 0;
+    tip.className = 'foot-tip';
+    next.disabled = false;
+
+    if (S.step === 7) {
+        next.textContent = '导出实训报告';
+        if (!S.done[7]) tip.textContent = '确认报告内容无误后，点击右侧导出';
+    } else if (S.done[S.step]) {
+        next.textContent = '进入下一任务';
+        tip.className = 'foot-tip';
+        tip.textContent = '本任务已完成，可继续下一项';
+    } else {
+        next.textContent = '提交并解锁下一任务';
+        tip.textContent = '完成判定条件后即可提交';
+    }
+}
+
+/* ---------------- 任务内容分发 ---------------- */
+function renderTask(i) {
+    switch (i) {
+        case 0: return t1();
+        case 1: return t2();
+        case 2: return t3();
+        case 3: return t4();
+        case 4: return t5();
+        case 5: return t6();
+        case 6: return t7();
+        case 7: return t8();
+    }
+    return '';
+}
+
+function head(title, desc) {
+    return `<div class="task-desc"><h3 style="font-size:14px;margin-bottom:8px;color:var(--cyan);font-weight:600">${title}</h3>${desc}</div>`;
+}
+
+/* =========================================================
+   任务 1：接到单站验证通知
+   ========================================================= */
+const KEY_PARAMS = ['code', 'tac', 'freq', 'pci', 'lng', 'height'];
+const PARAM_LABEL = {
+    name: '基站名称', code: '基站标识', tac: 'TAC', freq: '下行频点', band: '带宽',
+    mode: '制式', pci: 'PCI', azimuth: '方位角', tilt: '下倾角', height: '挂高',
+    address: '地址', lng: '经度', lat: '纬度', net: '网络类型',
+    poleH: '站高', buildingH: '楼高', antLen: '天线长度', power: '天线功率'
+};
+
+function t1() {
+    const ck = S.d['t1'].checked || [];
+    const rows = Object.keys(PARAM_LABEL).map(k => {
+        const isKey = KEY_PARAMS.includes(k);
+        const on = ck.includes(k);
+        const val = k === 'lng' ? STATION.lng : k === 'lat' ? STATION.lat : STATION[k];
+        return `<div class="kv-item ${on ? 'ok' : ''}">
+            <span>${PARAM_LABEL[k]}</span>
+            <b>${esc(val)}</b>
+            ${isKey ? `<button class="btn sm ${on ? '' : 'ghost'}" style="margin-left:6px" onclick="t1check('${k}')">${on ? '已核对' : '核对'}</button>` : ''}
+        </div>`;
+    }).join('');
+
+    const allDone = ck.length >= KEY_PARAMS.length;
+    const agreed = !!S.d['t1'].agreed;
+    const boxCls = agreed ? 'on' : (allDone ? 'ready' : 'locked');
+    const boxTxt = agreed
+        ? '已阅读任务通知，基站参数核对无误'
+        : (allDone ? '点击确认：已阅读任务通知，基站参数核对无误' : '请先完成上方 6 项关键参数核对');
+
+    return head('任务 1 · 接到单站验证通知',
+        `<p><b>任务描述：</b>接收下发的单站验证任务通知，阅读实训基站基础资料，核对基站参数信息。</p>
+         <p><b>操作动作：</b>打开通知，逐项核对基站名称、标识、频点、PCI、经纬度、挂高等关键参数。</p>
+         <p><b>完成判定：</b>6 项关键参数核对完成，勾选「已阅读任务通知」后提交。</p>`) +
+    `<div class="card">
+        <div class="card-head"><h2><em>工单</em>单站验证任务通知</h2><span class="small muted">工单号 SSV-20261019-001</span></div>
+        <div class="grid3" style="margin-bottom:14px">
+            <div class="kv-item"><span>下发单位</span><b>网络优化中心</b></div>
+            <div class="kv-item"><span>执行角色</span><b>单站验证工程师</b></div>
+            <div class="kv-item"><span>完成时限</span><b>当日 18:00 前</b></div>
+        </div>
+        <p class="small muted" style="line-height:1.9">请前往 <b style="color:var(--text)">${esc(STATION.address)}</b> 完成 ${esc(STATION.name)} 的单站验证，覆盖设备状态核查、外场信号覆盖测试、业务性能测试与邻区关系验证，并输出验证报告。</p>
+    </div>
+    <div class="card">
+        <div class="card-head"><h2><em>参数</em>基站基础信息</h2><span class="small muted">点击「核对」逐项确认</span></div>
+        <div class="kv">${rows}</div>
+    </div>
+    <div class="card" style="display:flex;align-items:center;gap:12px">
+        <span class="tool ${boxCls}" style="flex:1" onclick="t1agree()">
+            <span class="tick">&#10003;</span><span>${boxTxt}</span>
+        </span>
+    </div>`;
+}
+
+function t1check(k) {
+    const arr = S.d['t1'].checked || [];
+    if (!arr.includes(k)) arr.push(k);
+    S.d['t1'].checked = arr;
+    save();
+    document.getElementById('body').innerHTML = renderTask(0);
+    bindTask(0);
+}
+
+function t1agree() {
+    if ((S.d['t1'].checked || []).length < KEY_PARAMS.length) {
+        toast('请先完成全部 6 项关键参数核对', 'err');
+        return;
+    }
+    S.d['t1'].agreed = !S.d['t1'].agreed;
+    save();
+    document.getElementById('body').innerHTML = renderTask(0);
+    bindTask(0);
+}
+
+/* =========================================================
+   任务 2：设备状态检查
+   ========================================================= */
+const DEVICES = [
+    {
+        id: 'main', name: '主设备（BBU/AAU）',
+        rows: [['设备型号', 'BBU5900 + AAU5613'], ['运行状态', '正常'], ['CPU 占用', '32%'], ['设备温度', '41 ℃'], ['供电电压', '-48.2 V']]
+    },
+    {
+        id: 'ant', name: '天馈系统',
+        rows: [['通道配置', '64T64R'], ['驻波比 VSWR', '1.18'], ['机械下倾', '10°'], ['方位角', '0°/120°/240°'], ['天馈链路', '正常']]
+    },
+    {
+        id: 'trans', name: '传输设备',
+        rows: [['传输方式', 'SPN 光纤'], ['收光功率', '-8.2 dBm'], ['发光功率', '-3.1 dBm'], ['链路状态', '正常'], ['保护倒换', '未触发']]
+    }
+];
+
+function t2() {
+    const d = S.d['t2'];
+    const devs = DEVICES.map(dv => `
+        <div class="dev ${d.open === dv.id ? 'open' : ''}" onclick="t2open('${dv.id}')">
+            <div class="dev-top">
+                <span class="dev-name">${dv.name}</span>
+                <span class="dot"><i></i>正常</span>
+            </div>
+            <div class="dev-body">
+                ${dv.rows.map(r => `<div class="dev-row"><span>${r[0]}</span><b>${r[1]}</b></div>`).join('')}
+            </div>
+        </div>`).join('');
+
+    const ALARMS = [
+        ['08:12:36', '主设备', '设备温度告警', 0],
+        ['09:05:11', '天馈系统', '驻波比越限告警', 1],
+        ['10:47:52', '传输设备', '光路 LOS 告警', 2]
+    ];
+    const alarms = ALARMS.map(a => {
+        const cleared = d.alarms[a[3]];
+        return `<div class="alarm ${cleared ? '' : 'active'}">
+            <span class="alarm-time">${a[0]}</span>
+            <span class="alarm-name">${a[1]} · ${a[2]}</span>
+            <span class="alarm-state">${cleared ? '已清除' : '未清除'}</span>
+            ${cleared ? '' : `<button class="btn sm" onclick="t2clear(${a[3]})">确认处理</button>`}
+        </div>`;
+    }).join('');
+
+    const sel = (id, label) => `
+        <div class="field"><label>${label}</label>
+            <select onchange="t2set('${id}', this.value)">
+                <option value="">请选择</option>
+                <option value="正常" ${d.dev[id] === '正常' ? 'selected' : ''}>正常</option>
+                <option value="异常" ${d.dev[id] === '异常' ? 'selected' : ''}>异常</option>
+            </select>
+        </div>`;
+
+    const allCleared = d.alarms.every(Boolean);
+
+    return head('任务 2 · 设备状态检查',
+        `<p><b>任务描述：</b>远程登录基站网管平台，核查基站主设备、天馈系统、传输设备运行状态，检查有无告警。</p>
+         <p><b>操作动作：</b>依次查看主设备运行状态、天馈链路状态、传输链路状态，查看告警列表并处理活动告警。</p>
+         <p><b>完成判定：</b>无未清除告警，设备状态检查表三项均填写为「正常」后提交。</p>`) +
+    `<div class="card">
+        <div class="card-head"><h2><em>网管</em>设备运行状态</h2><span class="small muted">点击卡片展开详情</span></div>
+        <div class="dev-grid">${devs}</div>
+    </div>
+    <div class="card">
+        <div class="card-head"><h2><em>告警</em>当前告警列表</h2>
+            <span class="small ${allCleared ? 'pass' : 'fail'}">${allCleared ? '全部已清除' : '存在未清除告警'}</span></div>
+        ${alarms}
+    </div>
+    <div class="card">
+        <div class="card-head"><h2><em>表单</em>设备状态检查表</h2></div>
+        <div class="grid3">
+            ${sel('main', '主设备运行状态')}
+            ${sel('ant', '天馈链路状态')}
+            ${sel('trans', '传输链路状态')}
+        </div>
+    </div>`;
+}
+
+function t2open(id) {
+    S.d['t2'].open = S.d['t2'].open === id ? '' : id;
+    save();
+    document.getElementById('body').innerHTML = renderTask(1);
+    bindTask(1);
+}
+
+function t2clear(i) {
+    S.d['t2'].alarms[i] = true;
+    save();
+    document.getElementById('body').innerHTML = renderTask(1);
+    bindTask(1);
+    toast('告警已确认处理', 'ok');
+}
+
+function t2set(k, v) {
+    S.d['t2'].dev[k] = v;
+    save();
+}
+
+/* =========================================================
+   任务 3：挑选外场测试工具（含错误干扰选项）
+   ========================================================= */
+const TOOL_ITEMS = [
+    { n: '测试手机', ok: true },
+    { n: 'GPS模块', ok: true },
+    { n: '笔记本电脑（预装路测软件）', ok: true },
+    { n: '移动电源', ok: true },
+    { n: '数据线', ok: true },
+    { n: '手持云台', ok: true },
+    { n: '示波器', ok: false },
+    { n: '电焊台', ok: false },
+    { n: '万用表', ok: false },
+    { n: '光纤熔接机', ok: false },
+    { n: '信号发生器', ok: false }
+];
+const TOOL_OK = TOOL_ITEMS.filter(t => t.ok).map(t => t.n);
+const TOOL_MAP = {};
+TOOL_ITEMS.forEach(t => { TOOL_MAP[t.n] = t.ok; });
+
+function t3() {
+    const d = S.d['t3'];
+    const on = d.tools || [];
+    const err = d.lastErr || [];
+    const okCnt = on.filter(t => TOOL_MAP[t]).length;
+
+    const list = TOOL_ITEMS.map(t => {
+        const sel = on.indexOf(t.n) >= 0;
+        const bad = err.indexOf(t.n) >= 0;
+        return `
+        <div class="tool ${sel ? 'on' : ''} ${bad ? 'bad' : ''}" onclick="t3toggle('${t.n}')">
+            <span class="tick">&#10003;</span><span>${t.n}</span>
+        </div>`;
+    }).join('');
+
+    const banner = err.length ? `
+        <div class="sel-err">
+            <b>存在错误选型：</b>${err.join('/')} 不属于本次外场单站验证所需工具，请重新选择。
+            <span class="pen">已扣 ${d.penalty || 0} 分</span>
+        </div>` : '';
+
+    const tip = `<div class="sel-tip">提示：单站外场路测只需要采集无线信号、业务数据，焊接、光纤熔接、电路测量类设备不需要带到现场。</div>`;
+
+    return head('任务 3 · 挑选外场测试工具',
+        `<p><b>题干：</b>本次 5G 基站单站验证外场测试，请选出本次实训<b>需要携带</b>的测试工具，不要勾选无关设备，选错将会扣除实训分数。</p>
+         <p><b>操作动作：</b>逐项判断工具用途，点击勾选本次外场路测真正需要的工具。</p>
+         <p><b>完成判定：</b>6 项必需工具全部勾选，且不得勾选任何无关设备。每次误选扣 2 分，取消错误选项后可重新提交。</p>`) +
+    `<div class="card">
+        <div class="card-head"><h2><em>选型</em>外场测试工具</h2>
+            <span class="small ${okCnt === TOOL_OK.length && !err.length ? 'pass' : 'wait'}">已选 ${on.length} 项 · 必需 ${okCnt}/${TOOL_OK.length}</span></div>
+        ${tip}
+        ${banner}
+        <div class="tool-grid">${list}</div>
+    </div>`;
+}
+
+function t3toggle(t) {
+    const d = S.d['t3'];
+    const arr = d.tools || [];
+    const i = arr.indexOf(t);
+    if (i >= 0) arr.splice(i, 1); else arr.push(t);
+    d.tools = arr;
+    d.lastErr = (d.lastErr || []).filter(x => arr.indexOf(x) >= 0);
+    save();
+    document.getElementById('body').innerHTML = renderTask(2);
+    bindTask(2);
+}
+
+/* =========================================================
+   任务 4：预约司机，规划路线
+   ========================================================= */
+const DRIVERS = ['张师傅 · 冀A·8F21K · 越野车', '李师傅 · 冀A·6D07M · 商务车', '王师傅 · 冀A·2K55P · 皮卡'];
+
+function t4() {
+    const d = S.d['t4'];
+    const routed = d.routed;
+    return head('任务 4 · 预约司机，规划路线',
+        `<p><b>任务描述：</b>预约车辆，输入基站经纬度，规划前往实训基站的外场测试路线。</p>
+         <p><b>操作动作：</b>填写起点与基站经纬度，选择随车司机，生成导航路线。</p>
+         <p><b>完成判定：</b>经纬度合法且路线生成成功后提交。</p>`) +
+    `<div class="card">
+        <div class="card-head"><h2><em>预约</em>车辆与目的地</h2></div>
+        <div class="grid2">
+            <div class="field"><label>出发地</label><input type="text" id="from" value="${esc(d.from)}" onchange="t4set('from', this.value)"></div>
+            <div class="field"><label>随车司机 / 车辆</label>
+                <select id="driver" onchange="t4set('driver', this.value)">
+                    <option value="">请选择</option>
+                    ${DRIVERS.map(x => `<option value="${esc(x)}" ${d.driver === x ? 'selected' : ''}>${esc(x)}</option>`).join('')}
+                </select>
+            </div>
+            <div class="field"><label>基站经度</label><input type="text" id="lng" value="${esc(d.lng)}" onchange="t4set('lng', this.value)"></div>
+            <div class="field"><label>基站纬度</label><input type="text" id="lat" value="${esc(d.lat)}" onchange="t4set('lat', this.value)"></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+            <button class="btn" onclick="t4route()">${routed ? '重新规划路线' : '生成导航路线'}</button>
+            <span class="small muted">基站坐标参考：${esc(STATION.lng)}, ${esc(STATION.lat)}</span>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-head"><h2><em>路线</em>导航预览</h2>${routed ? '<span class="small pass">路线已生成</span>' : '<span class="small wait">尚未规划</span>'}</div>
+        <div class="map-wrap">
+            <svg class="map-svg" viewBox="0 0 640 260" preserveAspectRatio="none">
+                <path d="M 60 210 L 160 210 L 160 150 L 300 150 L 300 96 L 460 96 L 460 60 L 575 60"
+                      class="route-line ${routed ? 'show' : ''}" style="stroke-dashoffset:${routed ? 0 : 420}"/>
+                <circle cx="60" cy="210" r="5" fill="#4dd8ff"/>
+                <text x="60" y="234" fill="#7ea6c6" font-size="11" text-anchor="middle">出发点</text>
+                <circle cx="575" cy="60" r="6" fill="${routed ? '#4ade80' : '#7ea6c6'}"/>
+                <text x="575" y="44" fill="${routed ? '#4ade80' : '#7ea6c6'}" font-size="11" text-anchor="middle">实训基站</text>
+            </svg>
+            <div class="map-meta">
+                全程 <b>${routed ? '12.6' : '--'} km</b><br>
+                预计 <b>${routed ? '23' : '--'} 分钟</b><br>
+                目的地 <b>${esc(STATION.address)}</b>
+            </div>
+        </div>
+    </div>`;
+}
+
+function t4set(k, v) { S.d['t4'][k] = v; save(); }
+
+function t4route() {
+    const d = S.d['t4'];
+    const okNum = v => /^\d{2,3}\.\d{2,6}$/.test(String(v).trim());
+    if (!d.driver) { toast('请先选择随车司机', 'err'); return; }
+    if (!okNum(d.lng) || !okNum(d.lat)) { toast('经纬度格式不正确，应为 114.4021 / 38.0201 形式', 'err'); return; }
+    const dlng = Math.abs(parseFloat(d.lng) - parseFloat(STATION.lng));
+    const dlat = Math.abs(parseFloat(d.lat) - parseFloat(STATION.lat));
+    if (dlng > 0.05 || dlat > 0.05) { toast('坐标与实训基站偏差过大，请核对经纬度', 'err'); return; }
+    d.routed = true;
+    save();
+    document.getElementById('body').innerHTML = renderTask(3);
+    bindTask(3);
+    toast('路线规划完成，预计 23 分钟到达', 'ok');
+}
+
+/* =========================================================
+   任务 5：外场信号覆盖测试
+   ========================================================= */
+const POINTS = [
+    { n: 'P1 近点', dsc: '站下 30m', base: [-72, 22] },
+    { n: 'P2 中近点', dsc: '站下 120m', base: [-81, 18] },
+    { n: 'P3 中点', dsc: '站下 260m', base: [-89, 13] },
+    { n: 'P4 远点', dsc: '站下 420m', base: [-97, 6] },
+    { n: 'P5 边缘点', dsc: '站下 600m', base: [-104, 1] }
+];
+const RSRP_MIN = -95, SINR_MIN = 0;
+
+function t5() {
+    const pts = S.d['t5'].pts;
+    const rows = POINTS.map((p, i) => {
+        const v = pts[i] || {};
+        const rsrp = v.rsrp, sinr = v.sinr;
+        let judge = '<span class="wait">未采样</span>';
+        if (rsrp != null && sinr != null) {
+            judge = (rsrp >= RSRP_MIN && sinr >= SINR_MIN)
+                ? '<span class="pass">达标</span>'
+                : '<span class="fail">不达标</span>';
+        }
+        return `<tr>
+            <td>${p.n}<br><span class="small muted">${p.dsc}</span></td>
+            <td><input type="number" step="0.1" value="${rsrp != null ? rsrp : ''}" placeholder="dBm" onchange="t5set(${i},'rsrp',this.value)"></td>
+            <td><input type="number" step="0.1" value="${sinr != null ? sinr : ''}" placeholder="dB" onchange="t5set(${i},'sinr',this.value)"></td>
+            <td>${judge}</td>
+            <td style="text-align:right"><button class="btn sm ghost" onclick="t5sample(${i})">采样</button></td>
+        </tr>`;
+    }).join('');
+
+    const filled = pts.filter(p => p && p.rsrp != null && p.sinr != null).length;
+    const okCount = pts.filter(p => p && p.rsrp != null && p.sinr != null && p.rsrp >= RSRP_MIN && p.sinr >= SINR_MIN).length;
+
+    return head('任务 5 · 外场信号覆盖测试',
+        `<p><b>任务描述：</b>驱车到达站点，在基站覆盖区域多点采集无线指标，记录 RSRP、SINR。</p>
+         <p><b>操作动作：</b>沿测试路线在多个采样点读取 RSRP、SINR 数值，填入测试记录表。</p>
+         <p><b>完成判定：</b>5 个采样点全部完成采样，指标记录完整后提交。判定门限：RSRP ≥ ${RSRP_MIN} dBm 且 SINR ≥ ${SINR_MIN} dB。</p>`) +
+    `<div class="card">
+        <div class="card-head"><h2><em>路测</em>覆盖指标采样</h2>
+            <span class="small ${filled === 5 ? 'pass' : 'wait'}">已采样 ${filled} / 5 · 达标 ${okCount}</span></div>
+        <table class="dt">
+            <thead><tr><th style="width:32%">采样点</th><th style="width:20%">RSRP (dBm)</th><th style="width:20%">SINR (dB)</th><th style="width:16%">判定</th><th></th></tr></thead>
+            <tbody>${rows}</tbody>
+        </table>
+    </div>
+    <div class="card small muted" style="line-height:1.9">
+        <b style="color:var(--text)">提示：</b>点击「采样」可模拟一次路测读数，也可手动录入。近点指标通常优良，边缘点低于门限属正常现象，需在报告中记录并说明。
+    </div>`;
+}
+
+function t5set(i, k, v) {
+    const pts = S.d['t5'].pts;
+    if (!pts[i]) pts[i] = {};
+    pts[i][k] = v === '' ? null : parseFloat(v);
+    save();
+    document.getElementById('body').innerHTML = renderTask(4);
+    bindTask(4);
+}
+
+function t5sample(i) {
+    const b = POINTS[i].base;
+    const jitter = () => (Math.random() * 3 - 1.5);
+    const pts = S.d['t5'].pts;
+    pts[i] = {
+        rsrp: Math.round((b[0] + jitter()) * 10) / 10,
+        sinr: Math.round((b[1] + jitter()) * 10) / 10
+    };
+    save();
+    document.getElementById('body').innerHTML = renderTask(4);
+    bindTask(4);
+}
+
+/* =========================================================
+   任务 6：业务性能测试
+   ========================================================= */
+function t6() {
+    const d = S.d['t6'];
+    const block = (key, title, fields) => {
+        const v = d[key];
+        const done = v != null;
+        return `<div class="card">
+            <div class="card-head"><h2><em>${title[0]}</em>${title[1]}</h2>
+                <span class="small ${done ? 'pass' : 'wait'}">${done ? '已完成' : '未测试'}</span></div>
+            <div class="grid3">${fields.map(f => `
+                <div class="field"><label>${f[1]}</label>
+                    <input type="number" step="${f[3] || '1'}" value="${done && v[f[0]] != null ? v[f[0]] : ''}" placeholder="${f[2]}" onchange="t6set('${key}','${f[0]}',this.value)">
+                </div>`).join('')}</div>
+            <button class="btn sm ${done ? 'ghost' : ''}" onclick="t6run('${key}')">${done ? '重新拨测' : '执行拨测'}</button>
+        </div>`;
+    };
+
+    const v1 = d.voice, v2 = d.video, v3 = d.data;
+    let sum = '';
+    if (v1 && v1.calls) {
+        const ar = (v1.connected / v1.calls * 100).toFixed(1);
+        const dr = (v1.dropped / v1.calls * 100).toFixed(1);
+        sum = `<div class="card small">
+            <b style="color:var(--text)">实时统计：</b>
+            接通率 <b class="${ar >= 95 ? 'pass' : 'fail'}">${ar}%</b> ·
+            掉话率 <b class="${dr <= 3 ? 'pass' : 'fail'}">${dr}%</b>
+            <span class="muted">（考核门限：接通率 ≥ 95%，掉话率 ≤ 3%）</span>
+        </div>`;
+    }
+
+    return head('任务 6 · 业务性能测试',
+        `<p><b>任务描述：</b>在覆盖点位开展语音通话、视频通话、上下行数据业务测试，记录接通率、掉话率、传输速率。</p>
+         <p><b>操作动作：</b>依次执行拨测任务，填写各项业务指标。</p>
+         <p><b>完成判定：</b>语音、视频、数据三项业务全部测试完成并填写指标后提交。</p>`) +
+    block('voice', ['语音', '语音通话测试'], [
+        ['calls', '拨打次数', '次', '1'], ['connected', '接通次数', '次', '1'], ['dropped', '掉话次数', '次', '1']
+    ]) +
+    block('video', ['视频', '视频通话测试'], [
+        ['delay', '端到端时延 (ms)', 'ms', '1'], ['mos', 'MOS 评分', '1-5', '0.1']
+    ]) +
+    block('data', ['数据', '上下行数据业务'], [
+        ['dl', '下行速率 (Mbps)', 'Mbps', '0.1'], ['ul', '上行速率 (Mbps)', 'Mbps', '0.1']
+    ]) + sum;
+}
+
+function t6set(key, k, v) {
+    if (!S.d['t6'][key]) S.d['t6'][key] = {};
+    S.d['t6'][key][k] = v === '' ? null : parseFloat(v);
+    save();
+    document.getElementById('body').innerHTML = renderTask(5);
+    bindTask(5);
+}
+
+function t6run(key) {
+    const r = (a, b, f) => Math.round((a + Math.random() * (b - a)) * (f || 1)) / (f || 1);
+    if (key === 'voice') S.d['t6'].voice = { calls: 10, connected: 10, dropped: 0 };
+    if (key === 'video') S.d['t6'].video = { delay: r(24, 38), mos: r(4, 4.6, 10) };
+    if (key === 'data') S.d['t6'].data = { dl: r(760, 880, 10), ul: r(88, 112, 10) };
+    save();
+    document.getElementById('body').innerHTML = renderTask(5);
+    bindTask(5);
+    toast('拨测完成，请核对指标', 'ok');
+}
+
+/* =========================================================
+   任务 7：邻区关系验证
+   ========================================================= */
+function t7() {
+    const d = S.d['t7'];
+    const cells = d.cells.map((c, i) => {
+        const st = c.ok === null ? '<span class="wait">未验证</span>'
+            : c.ok ? '<span class="pass">切换成功</span>' : '<span class="fail">切换失败</span>';
+        return `<tr>
+            <td>邻区 ${i + 1}</td>
+            <td>PCI ${esc(c.pci)}</td>
+            <td>同站/异站邻区</td>
+            <td>${st}</td>
+            <td style="text-align:right"><button class="btn sm ghost" onclick="t7run(${i})">触发切换</button></td>
+        </tr>`;
+    }).join('');
+
+    const okCount = d.cells.filter(c => c.ok === true).length;
+    const verified = d.cells.filter(c => c.ok !== null).length;
+    const rate = verified ? Math.round(okCount / verified * 100) : 0;
+
+    return head('任务 7 · 邻区关系验证',
+        `<p><b>任务描述：</b>验证本站与周边邻基站的切换过程，核查切换成功率。</p>
+         <p><b>操作动作：</b>模拟移动终端，逐个触发小区切换，查看切换信令，记录切换结果。</p>
+         <p><b>完成判定：</b>3 个邻区切换验证完成，切换成功率统计后提交。</p>`) +
+    `<div class="card">
+        <div class="card-head"><h2><em>邻区</em>切换验证</h2>
+            <span class="small ${verified === 3 ? 'pass' : 'wait'}">已验证 ${verified} / 3 · 成功率 ${rate}%</span></div>
+        <table class="dt">
+            <thead><tr><th>邻区</th><th>标识</th><th>类型</th><th>结果</th><th></th></tr></thead>
+            <tbody>${cells}</tbody>
+        </table>
+        ${d.cells.some(c => c.ok === false) && !d.added ? `
+        <div class="alarm active" style="margin-top:14px">
+            <span class="alarm-name">检测到邻区 ${d.cells.find(c => c.ok === false).pci} 未配置邻区关系，请在网管侧补配后重新验证</span>
+            <button class="btn sm" onclick="t7add()">添加邻区关系</button>
+        </div>` : ''}
+        ${d.added ? '<div class="small pass" style="margin-top:12px">邻区关系已补配完成，可重新触发切换</div>' : ''}
+    </div>
+    <div class="card">
+        <div class="card-head"><h2><em>信令</em>切换流程</h2></div>
+        <div class="sig" id="sigBox">等待触发切换测试…</div>
+    </div>`;
+}
+
+const SIG_FLOW = [
+    ['RRC', 'Measurement Report', '终端上报邻区测量结果'],
+    ['X2', 'Handover Request', '源基站向目标基站发起切换请求'],
+    ['X2', 'Handover Request Ack', '目标基站接纳并返回确认'],
+    ['RRC', 'RRC Connection Reconfiguration', '源基站下发切换命令'],
+    ['RRC', 'RRC Connection Reconfiguration Complete', '终端接入目标小区完成']
+];
+
+function t7run(i) {
+    const box = document.getElementById('sigBox');
+    if (!box) return;
+    const fail = S.d['t7'].cells[i].pci === '118' && !S.d['t7'].added;
+    box.innerHTML = '';
+    let k = 0;
+    const timer = setInterval(() => {
+        if (k < SIG_FLOW.length) {
+            const s = SIG_FLOW[k];
+            const div = document.createElement('div');
+            div.innerHTML = `<span style="color:#7ea6c6">[${s[0]}]</span> <b>${s[1]}</b> <span style="color:#7ea6c6">— ${s[2]}</span>`;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+            k++;
+        } else {
+            clearInterval(timer);
+            const end = document.createElement('div');
+            if (fail) {
+                end.className = 'ok';
+                end.style.color = '#ff6b6b';
+                end.innerHTML = '<span style="color:#ff6b6b">[X2] Handover Preparation Failure — 目标小区未配置邻区关系，切换失败</span>';
+            } else {
+                end.className = 'ok';
+                end.textContent = '[OK] 切换成功，终端已驻留目标小区';
+            }
+            box.appendChild(end);
+            box.scrollTop = box.scrollHeight;
+            S.d['t7'].cells[i].ok = !fail;
+            save();
+            setTimeout(() => {
+                const body = document.getElementById('body');
+                if (body) { body.innerHTML = renderTask(6); bindTask(6); }
+            }, 700);
+        }
+    }, 320);
+}
+
+function t7add() {
+    S.d['t7'].added = true;
+    S.d['t7'].cells.forEach(c => { if (c.pci === '118') c.ok = null; });
+    save();
+    document.getElementById('body').innerHTML = renderTask(6);
+    bindTask(6);
+    toast('邻区关系已添加，请重新验证', 'ok');
+}
+
+/* =========================================================
+   任务 8：实训报告生成
+   ========================================================= */
+function t8() {
+    const total = S.score.reduce((a, b) => a + b, 0);
+    const pts = S.d['t5'].pts;
+    const okPts = pts.filter(p => p && p.rsrp >= RSRP_MIN && p.sinr >= SINR_MIN).length;
+    const filledPts = pts.filter(p => p).length;
+    const voice = S.d['t6'].voice || {};
+    const ar = voice.calls ? (voice.connected / voice.calls * 100).toFixed(1) : '--';
+    const dr = voice.calls ? (voice.dropped / voice.calls * 100).toFixed(1) : '--';
+    const verified = S.d['t7'].cells.filter(c => c.ok !== null).length;
+    const okCells = S.d['t7'].cells.filter(c => c.ok === true).length;
+
+    const paramRows = Object.keys(PARAM_LABEL).map(k => {
+        const v = k === 'lng' ? STATION.lng : k === 'lat' ? STATION.lat : STATION[k];
+        return `<tr><td class="muted">${PARAM_LABEL[k]}</td><td>${esc(v)}</td></tr>`;
+    }).join('');
+
+    const ptRows = POINTS.map((p, i) => {
+        const v = pts[i];
+        const judge = v ? (v.rsrp >= RSRP_MIN && v.sinr >= SINR_MIN ? '<span class="pass">达标</span>' : '<span class="fail">不达标</span>') : '<span class="wait">未采样</span>';
+        return `<tr><td>${p.n}</td><td>${v ? v.rsrp : '--'}</td><td>${v ? v.sinr : '--'}</td><td>${judge}</td></tr>`;
+    }).join('');
+
+    const cellRows = S.d['t7'].cells.map((c, i) =>
+        `<tr><td>邻区 ${i + 1}</td><td>PCI ${esc(c.pci)}</td><td>${c.ok === null ? '<span class="wait">未验证</span>' : c.ok ? '<span class="pass">成功</span>' : '<span class="fail">失败</span>'}</td></tr>`
+    ).join('');
+
+    const t2dev = S.d['t2'].dev;
+    const devOk = ['main', 'ant', 'trans'].every(k => t2dev[k] === '正常');
+
+    return `<div class="card">
+        <div class="rep-head">
+            <h2>5G 基站单站验证实训报告</h2>
+            <p>${esc(STATION.name)} · ${esc(STATION.code)} · 报告生成时间 <span id="repTime"></span></p>
+            <div class="rep-score"><b>${total}</b><span>/ 100 分</span></div>
+        </div>
+
+        <div class="rep-block">
+            <h3>一、基站基础信息</h3>
+            <table class="dt"><tbody>${paramRows}</tbody></table>
+        </div>
+
+        <div class="rep-block">
+            <h3>二、设备状态检查</h3>
+            <table class="dt"><tbody>
+                <tr><td class="muted">主设备运行状态</td><td>${esc(t2dev.main || '未填写')}</td></tr>
+                <tr><td class="muted">天馈链路状态</td><td>${esc(t2dev.ant || '未填写')}</td></tr>
+                <tr><td class="muted">传输链路状态</td><td>${esc(t2dev.trans || '未填写')}</td></tr>
+                <tr><td class="muted">告警处理</td><td>${S.d['t2'].alarms.every(Boolean) ? '全部告警已清除' : '存在未清除告警'}</td></tr>
+            </tbody></table>
+        </div>
+
+        <div class="rep-block">
+            <h3>三、测试工具与路线</h3>
+            <table class="dt"><tbody>
+                <tr><td class="muted">工具选型</td><td>${(S.d['t3'].tools || []).join('、') || '未选择'}</td></tr>
+                <tr><td class="muted">选型判定</td><td>${S.d['t3'].passed ? '全选正确，无错误选型' : '未通过'}${S.d['t3'].penalty ? `（误选扣 ${S.d['t3'].penalty} 分）` : ''}</td></tr>
+                <tr><td class="muted">随车司机</td><td>${esc(S.d['t4'].driver || '未预约')}</td></tr>
+                <tr><td class="muted">路线</td><td>${S.d['t4'].routed ? '已规划，全程 12.6 km，预计 23 分钟' : '未规划'}</td></tr>
+            </tbody></table>
+        </div>
+
+        <div class="rep-block">
+            <h3>四、外场信号覆盖测试</h3>
+            <table class="dt">
+                <thead><tr><th>采样点</th><th>RSRP (dBm)</th><th>SINR (dB)</th><th>判定</th></tr></thead>
+                <tbody>${ptRows}</tbody>
+            </table>
+            <p class="small muted" style="margin-top:10px">覆盖达标率：<b class="pass">${filledPts ? Math.round(okPts / filledPts * 100) : 0}%</b>（${okPts}/${filledPts} 点达标，门限 RSRP ≥ ${RSRP_MIN} dBm 且 SINR ≥ ${SINR_MIN} dB）</p>
+        </div>
+
+        <div class="rep-block">
+            <h3>五、业务性能测试</h3>
+            <table class="dt"><tbody>
+                <tr><td class="muted">语音接通率 / 掉话率</td><td>${ar}% / ${dr}%</td></tr>
+                <tr><td class="muted">视频时延 / MOS</td><td>${S.d['t6'].video ? S.d['t6'].video.delay + ' ms / ' + S.d['t6'].video.mos : '未测试'}</td></tr>
+                <tr><td class="muted">下行 / 上行速率</td><td>${S.d['t6'].data ? S.d['t6'].data.dl + ' / ' + S.d['t6'].data.ul + ' Mbps' : '未测试'}</td></tr>
+            </tbody></table>
+        </div>
+
+        <div class="rep-block">
+            <h3>六、邻区关系验证</h3>
+            <table class="dt">
+                <thead><tr><th>邻区</th><th>标识</th><th>切换结果</th></tr></thead>
+                <tbody>${cellRows}</tbody>
+            </table>
+            <p class="small muted" style="margin-top:10px">切换成功率：<b class="${verified && okCells === verified ? 'pass' : 'fail'}">${verified ? Math.round(okCells / verified * 100) : 0}%</b>（${okCells}/${verified}）</p>
+        </div>
+
+        <div class="rep-block">
+            <h3>七、验证结论</h3>
+            <p class="small" style="line-height:2">
+                本次单站验证覆盖设备状态、信号覆盖、业务性能、邻区关系四项内容。
+                设备状态${devOk ? '正常，无未清除告警' : '存在异常项，需现场处理'}；
+                外场覆盖达标率 ${filledPts ? Math.round(okPts / filledPts * 100) : 0}%${okPts < filledPts ? '，边缘点位 RSRP 低于门限，建议结合天馈调整或补点规划' : '，各采样点均达标'}；
+                语音接通率 ${ar}%，掉话率 ${dr}%；
+                邻区切换成功率 ${verified ? Math.round(okCells / verified * 100) : 0}%。
+            </p>
+        </div>
+
+        <div style="display:flex;gap:10px;justify-content:center;margin-top:22px">
+            <button class="btn" onclick="exportReport()">导出实训报告</button>
+            <button class="btn ghost" onclick="window.print()">打印 / 另存 PDF</button>
+        </div>
+    </div>`;
+}
+
+function bindTask(i) {
+    if (i === 7) {
+        const el = document.getElementById('repTime');
+        if (el) el.textContent = new Date().toLocaleString('zh-CN');
+    }
+}
+
+/* ---------------- 提交与计分 ---------------- */
+function submitTask() {
+    const i = S.step;
+
+    if (i === 7) { exportReport(); return; }
+    if (S.done[i]) { go(i + 1); return; }
+
+    let sc = 0;
+    let msg = '';
+
+    if (i === 0) {
+        if ((S.d['t1'].checked || []).length < KEY_PARAMS.length) { toast('请先完成全部 6 项关键参数核对', 'err'); return; }
+        if (!S.d['t1'].agreed) { toast('请先点击下方「已阅读任务通知」确认框完成阅读确认', 'err'); return; }
+        sc = 0;
+        msg = '任务通知已接收，参数核对完成';
+    }
+
+    if (i === 1) {
+        const d = S.d['t2'];
+        if (!d.alarms.every(Boolean)) { toast('仍有未清除告警，请先确认处理', 'err'); return; }
+        if (!d.dev.main || !d.dev.ant || !d.dev.trans) { toast('请完整填写设备状态检查表', 'err'); return; }
+        const allOk = ['main', 'ant', 'trans'].every(k => d.dev[k] === '正常');
+        sc = allOk ? 10 : 4;
+        msg = allOk ? '设备状态检查通过，得 10 分' : '检查表存在异常项，得 4 分';
+    }
+
+    if (i === 2) {
+        const d = S.d['t3'];
+        const sel = d.tools || [];
+        const wrong = sel.filter(t => TOOL_MAP[t] === false);
+        const miss = TOOL_OK.filter(t => sel.indexOf(t) < 0);
+
+        /* 规则 2：勾选任意 1 个错误选项即判定答题错误 */
+        if (wrong.length) {
+            d.penalty = Math.min(10, (d.penalty || 0) + 2);
+            d.lastErr = wrong;
+            save();
+            document.getElementById('body').innerHTML = renderTask(2);
+            bindTask(2);
+            toast('存在错误选型，' + wrong.join('/') + ' 不属于本次外场单站验证所需工具，请重新选择。', 'err');
+            return;
+        }
+
+        /* 规则 1：必须勾选全部 6 个正确选项 */
+        if (miss.length) { toast('仍有 ' + miss.length + ' 项必需工具未勾选：' + miss.join('、'), 'err'); return; }
+
+        d.passed = true;
+        d.lastErr = [];
+        sc = Math.max(0, 10 - (d.penalty || 0));
+        msg = d.penalty ? `工具选择无误，可以准备出发！解锁下一任务，因误选扣 ${d.penalty} 分，本项得 ${sc} 分` : '工具选择无误，可以准备出发！解锁下一任务，本项得 10 分';
+    }
+
+    if (i === 3) {
+        const d = S.d['t4'];
+        if (!d.routed) { toast('请先生成导航路线', 'err'); return; }
+        sc = 10;
+        msg = '路线规划完成，得 10 分';
+    }
+
+    if (i === 4) {
+        const pts = S.d['t5'].pts;
+        if (pts.filter(p => p && p.rsrp != null && p.sinr != null).length < 5) { toast('请完成全部 5 个采样点的指标采集', 'err'); return; }
+        const ok = pts.filter(p => p.rsrp >= RSRP_MIN && p.sinr >= SINR_MIN).length;
+        sc = Math.round(30 * ok / 5);
+        msg = `覆盖测试完成，${ok}/5 点达标，得 ${sc} 分`;
+    }
+
+    if (i === 5) {
+        const d = S.d['t6'];
+        if (!d.voice || !d.video || !d.data) { toast('请完成语音、视频、数据三项业务拨测', 'err'); return; }
+        const ar = d.voice.calls ? d.voice.connected / d.voice.calls * 100 : 0;
+        const dr = d.voice.calls ? d.voice.dropped / d.voice.calls * 100 : 100;
+        let s = 20;
+        if (ar < 95) s -= 8;
+        if (dr > 3) s -= 6;
+        if (!(d.video.mos >= 3.5)) s -= 3;
+        if (!(d.data.dl >= 500)) s -= 3;
+        sc = Math.max(0, s);
+        msg = `业务测试完成，得 ${sc} 分`;
+    }
+
+    if (i === 6) {
+        const cells = S.d['t7'].cells;
+        if (cells.some(c => c.ok === null)) { toast('仍有邻区未完成切换验证', 'err'); return; }
+        const ok = cells.filter(c => c.ok).length;
+        if (ok < cells.length) { toast('存在切换失败邻区，请补配邻区关系后重新验证', 'err'); return; }
+        sc = 20;
+        msg = '邻区切换全部成功，得 20 分';
+    }
+
+    S.done[i] = true;
+    S.score[i] = sc;
+    save();
+    toast(msg, 'ok');
+
+    if (i < 7) {
+        S.step = i + 1;
+        save();
+        render();
+        document.getElementById('body').scrollTop = 0;
+    } else {
+        render();
+    }
+}
+
+/* ---------------- 报告导出 ---------------- */
+function exportReport() {
+    const total = S.score.reduce((a, b) => a + b, 0);
+    const now = new Date().toLocaleString('zh-CN');
+    const pts = S.d['t5'].pts;
+    const v = S.d['t6'].video || {}, dt = S.d['t6'].data || {}, vo = S.d['t6'].voice || {};
+
+    const row = (a, b) => `<tr><td style="color:#666;width:180px">${a}</td><td>${esc(b)}</td></tr>`;
+    const paramRows = Object.keys(PARAM_LABEL).map(k => {
+        const val = k === 'lng' ? STATION.lng : k === 'lat' ? STATION.lat : STATION[k];
+        return row(PARAM_LABEL[k], val);
+    }).join('');
+    const ptRows = POINTS.map((p, i) => {
+        const x = pts[i];
+        return `<tr><td>${p.n}</td><td>${x ? x.rsrp : '--'}</td><td>${x ? x.sinr : '--'}</td><td>${x ? (x.rsrp >= RSRP_MIN && x.sinr >= SINR_MIN ? '达标' : '不达标') : '未采样'}</td></tr>`;
+    }).join('');
+
+    const html = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">
+<title>5G基站单站验证实训报告 - ${esc(STATION.name)}</title>
+<style>
+body{font-family:"Microsoft YaHei",sans-serif;max-width:820px;margin:36px auto;padding:0 24px;color:#222;line-height:1.8}
+h1{font-size:22px;text-align:center;margin-bottom:6px}
+.sub{text-align:center;color:#666;font-size:13px;margin-bottom:6px}
+.score{text-align:center;font-size:30px;color:#0a7ac0;font-weight:700;margin:16px 0 26px}
+h2{font-size:15px;border-left:4px solid #0a7ac0;padding-left:10px;margin:24px 0 10px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+td,th{border:1px solid #ddd;padding:7px 10px;text-align:left}
+th{background:#f5f8fa;font-weight:600}
+</style></head><body>
+<h1>5G 基站单站验证实训报告</h1>
+<div class="sub">${esc(STATION.name)} · 基站标识 ${esc(STATION.code)}</div>
+<div class="sub">生成时间：${now}</div>
+<div class="score">${total} / 100 分</div>
+<h2>一、基站基础信息</h2><table>${paramRows}</table>
+<h2>二、设备状态检查</h2><table>
+${row('主设备运行状态', S.d['t2'].dev.main || '未填写')}
+${row('天馈链路状态', S.d['t2'].dev.ant || '未填写')}
+${row('传输链路状态', S.d['t2'].dev.trans || '未填写')}
+${row('告警处理', S.d['t2'].alarms.every(Boolean) ? '全部告警已清除' : '存在未清除告警')}
+</table>
+<h2>三、测试工具与路线</h2><table>
+${row('工具选型', (S.d['t3'].tools || []).join('、') || '未选择')}
+${row('选型判定', (S.d['t3'].passed ? '全选正确，无错误选型' : '未通过') + (S.d['t3'].penalty ? `（误选扣 ${S.d['t3'].penalty} 分）` : ''))}
+${row('随车司机', S.d['t4'].driver || '未预约')}
+${row('路线', S.d['t4'].routed ? '已规划，全程 12.6 km，预计 23 分钟' : '未规划')}
+</table>
+<h2>四、外场信号覆盖测试</h2>
+<table><thead><tr><th>采样点</th><th>RSRP (dBm)</th><th>SINR (dB)</th><th>判定</th></tr></thead><tbody>${ptRows}</tbody></table>
+<h2>五、业务性能测试</h2><table>
+${row('语音接通率 / 掉话率', vo.calls ? (vo.connected / vo.calls * 100).toFixed(1) + '% / ' + (vo.dropped / vo.calls * 100).toFixed(1) + '%' : '未测试')}
+${row('视频时延 / MOS', v.delay != null ? v.delay + ' ms / ' + v.mos : '未测试')}
+${row('下行 / 上行速率', dt.dl != null ? dt.dl + ' / ' + dt.ul + ' Mbps' : '未测试')}
+</table>
+<h2>六、邻区关系验证</h2><table>
+${S.d['t7'].cells.map((c, i) => row('邻区 ' + (i + 1) + '（PCI ' + c.pci + '）', c.ok ? '切换成功' : (c.ok === false ? '切换失败' : '未验证'))).join('')}
+</table>
+<h2>七、验证结论</h2>
+<p>本次单站验证共完成 8 项任务，实训得分 ${total} 分。测试数据均来自本次实训采集，可用于教学存档。</p>
+</body></html>`;
+
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `5G基站单站验证实训报告_${STATION.code}_${new Date().toISOString().slice(0, 10)}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+
+    if (!S.done[7]) {
+        S.done[7] = true;
+        S.score[7] = 0;
+        save();
+        render();
+    }
+    submitScenarioResult();
+    toast('报告已导出到下载目录', 'ok');
+}
+
+/* ---------------- 成绩回传（接入能力画像） ---------------- */
+function submitScenarioResult() {
+    if (S._reported) return;
+    S._reported = true;
+    save();
+    try {
+        fetch('/api/scenario-result', { method: 'POST', credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ scene_id: 'ssv', scene_name: '5G 单站验证',
+                score: S.score.reduce((a, b) => a + b, 0), score_max: 100 }) }).catch(() => {});
+    } catch (e) {}
+}
+
+/* ---------------- 时钟 ---------------- */
+function tick() {
+    const el = document.getElementById('clock');
+    if (el) el.textContent = new Date().toLocaleString('zh-CN', { hour12: false });
+}
+setInterval(tick, 1000);
+
+/* ---------------- 启动 ---------------- */
+tick();
+render();
+if (S.done[7]) submitScenarioResult();   // 历史已完成的实训，补传一次成绩
+</script>
+</body>
+</html>

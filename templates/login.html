@@ -1,0 +1,2120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 灵智尚人</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            /* 渐变作为 fallback（JS 关掉 splash 后也能看到背景） */
+            background: linear-gradient(135deg, #0a1a3a 0%, #1a2a5a 100%);
+        }
+
+        /* ===== 左右分屏容器 ===== */
+        .login-wrapper {
+            display: flex;
+            min-height: 100vh;
+            width: 100%;
+        }
+
+        /* ===== 左侧品牌面板 ===== */
+        .brand-panel {
+            position: relative;
+            flex: 1.15;
+            background: linear-gradient(135deg, #0a1a3a 0%, #0e2a55 45%, #1a3d7a 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px 70px;
+            overflow: hidden;
+        }
+        /* 品牌面板装饰光斑 */
+        .brand-panel::before,
+        .brand-panel::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.3;
+            pointer-events: none;
+        }
+        .brand-panel::before {
+            width: 500px; height: 500px;
+            background: #0080ff;
+            top: -150px; left: -100px;
+        }
+        .brand-panel::after {
+            width: 400px; height: 400px;
+            background: #5b3dff;
+            bottom: -120px; right: -80px;
+            opacity: 0.25;
+        }
+        /* 网格线装饰 */
+        .brand-grid {
+            position: absolute; inset: 0;
+            background-image:
+                linear-gradient(rgba(0,200,255,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,200,255,0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+        }
+
+        .brand-content {
+            position: relative; z-index: 2;
+            max-width: 578px;
+            width: 100%;
+        }
+
+        .brand-logo-row {
+            display: flex; align-items: center; gap: 14px;
+            margin-bottom: 22px;
+        }
+        .brand-logo-box {
+            width: 56px; height: 56px;
+            background: linear-gradient(135deg, #0080ff, #00c8ff);
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 8px 24px rgba(0,130,255,0.45);
+            overflow: hidden;
+        }
+        .brand-logo-box img { width: 100%; height: 100%; object-fit: cover; }
+        .brand-logo-text { color: #fff; font-size: 20px; font-weight: 600; letter-spacing: 2px; }
+
+        .brand-headline {
+            color: #fff;
+            font-size: 38px;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 16px;
+            letter-spacing: 1px;
+        }
+        .brand-headline span {
+            background: linear-gradient(90deg, #00c8ff, #5b8dff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .brand-slogan {
+            color: rgba(255,255,255,0.65);
+            font-size: 15px;
+            line-height: 1.8;
+            margin-bottom: 24px;
+        }
+
+        /* 功能亮点列表 */
+        .brand-features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+        .feature-item {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 13px 15px;
+            transition: all 0.3s;
+        }
+        .feature-item:hover {
+            background: rgba(0,200,255,0.1);
+            border-color: rgba(0,200,255,0.3);
+            transform: translateY(-2px);
+        }
+        .feature-icon {
+            font-size: 22px; margin-bottom: 6px;
+            display: block;
+        }
+        .feature-title {
+            color: #fff; font-size: 14px; font-weight: 600; margin-bottom: 2px;
+        }
+        .feature-desc {
+            color: rgba(255,255,255,0.45); font-size: 12px; line-height: 1.5;
+        }
+
+        /* ===== 应用场景预览轮播（桌面端品牌面板） ===== */
+        /* 玻璃拟态舞台：有圆角+边框框架，但背景透明不盖面板渐变 */
+        .scene-showcase {
+            position: relative;
+            margin-bottom: 26px;
+            background: transparent;
+            border: 1px solid rgba(0, 200, 255, 0.22);
+            border-radius: 16px;
+            padding: 12px;
+            overflow: hidden;
+            box-shadow:
+                inset 0 0 0 1px rgba(0, 200, 255, 0.06),
+                0 0 24px rgba(0, 130, 255, 0.10);
+        }
+        .scene-screen {
+            position: relative;
+            height: 318px;
+        }
+        /* 非活跃场景直接不渲染（display:none），避免多层合成引发的浏览器灰底渲染异常 */
+        .scene {
+            display: none;
+            background: none;
+        }
+        .scene.active {
+            display: block;
+            animation: sceneIn 0.5s ease;
+        }
+        @keyframes sceneIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* ── 场景1：5G 单站验证（基站信号脉冲 + 手机信号条） ── */
+        .tower { position: absolute; left: 40px; bottom: 10px; width: 72px; height: 168px; }
+        .tower-mast {
+            position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 9px; height: 122px;
+            background: linear-gradient(180deg, #3f5a96, #22355e);
+            border-radius: 4px;
+        }
+        .tower-mast::before, .tower-mast::after {
+            content: '';
+            position: absolute; bottom: 8px; left: 50%; width: 42px; height: 6px;
+            background: #3f5a96; border-radius: 3px;
+        }
+        .tower-mast::before { transform: translateX(-50%) rotate(24deg); }
+        .tower-mast::after { transform: translateX(-50%) rotate(-24deg); bottom: 26px; }
+        .tower-head {
+            position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+            width: 20px; height: 44px;
+            background: linear-gradient(135deg, #0080ff, #00c8ff);
+            border-radius: 6px;
+            box-shadow: 0 0 14px rgba(0, 180, 255, 0.8);
+            animation: headGlow 2.2s ease-in-out infinite;
+        }
+        @keyframes headGlow {
+            0%, 100% { box-shadow: 0 0 10px rgba(0, 180, 255, 0.55); }
+            50% { box-shadow: 0 0 22px rgba(0, 200, 255, 0.95); }
+        }
+        .pulse {
+            position: absolute; top: 30px; left: 50%;
+            width: 34px; height: 34px;
+            border: 2.5px solid rgba(0, 200, 255, 0.7);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: pulseOut 2.6s linear infinite;
+            pointer-events: none;
+        }
+        .pulse.p2 { animation-delay: 0.85s; }
+        .pulse.p3 { animation-delay: 1.7s; }
+        @keyframes pulseOut {
+            0% { width: 30px; height: 30px; opacity: 0.9; }
+            100% { width: 190px; height: 190px; opacity: 0; }
+        }
+        .mini-phone {
+            position: absolute; right: 36px; bottom: 16px;
+            width: 92px; height: 150px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 2px solid rgba(140, 170, 255, 0.35);
+            border-radius: 14px;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 10px;
+            animation: phoneSway 4s ease-in-out infinite;
+        }
+        @keyframes phoneSway {
+            0%, 100% { transform: rotate(-2deg) translateY(0); }
+            50% { transform: rotate(2deg) translateY(-6px); }
+        }
+        .mini-phone .bars { display: flex; align-items: flex-end; gap: 5px; height: 46px; }
+        .mini-phone .bars i {
+            width: 10px; border-radius: 3px 3px 0 0;
+            background: linear-gradient(180deg, #00e5ff, #0080ff);
+            animation: barUp 1.8s ease-in-out infinite;
+        }
+        .mini-phone .bars i:nth-child(1) { height: 14px; animation-delay: 0s; }
+        .mini-phone .bars i:nth-child(2) { height: 23px; animation-delay: 0.15s; }
+        .mini-phone .bars i:nth-child(3) { height: 33px; animation-delay: 0.3s; }
+        .mini-phone .bars i:nth-child(4) { height: 44px; animation-delay: 0.45s; }
+        @keyframes barUp {
+            0%, 100% { transform: scaleY(0.55); opacity: 0.55; }
+            50% { transform: scaleY(1); opacity: 1; }
+        }
+        .mini-phone b {
+            font-size: 10.5px; color: #00e5ff;
+            font-family: 'Consolas', monospace; font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        /* ── 场景2：网格优化路测（地图轨迹行进） ── */
+        .sc-2 svg.route-map {
+            position: absolute; left: 10px; right: 10px; top: 34px;
+            width: calc(100% - 20px); height: 218px;
+        }
+        .route-line {
+            fill: none; stroke: rgba(0, 200, 255, 0.35);
+            stroke-width: 3; stroke-dasharray: 8 7;
+            stroke-linecap: round;
+        }
+        .route-line.ghost { stroke: rgba(255, 255, 255, 0.1); stroke-dasharray: none; }
+        .route-car {
+            fill: #00e5ff;
+            filter: drop-shadow(0 0 7px rgba(0, 229, 255, 0.9));
+        }
+        .map-kpi {
+            position: absolute; right: 16px; top: 46px;
+            font-size: 11px; color: #9db4e8;
+            font-family: 'Consolas', monospace;
+            background: #0e1b3a;
+            border: 1px solid rgba(140, 170, 255, 0.3);
+            border-radius: 7px; padding: 4px 9px;
+        }
+        .map-kpi i {
+            display: inline-block; font-style: normal;
+            color: #00e5ff; margin-right: 4px;
+            animation: ledBlink 1.2s ease-in-out infinite;
+        }
+
+        /* ── 场景3：AI 剧情生成（打字机 + 进度） ── */
+        .ai-lines {
+            position: absolute; left: 18px; right: 18px; top: 40px;
+            display: flex; flex-direction: column; gap: 12px;
+        }
+        .ai-lines i {
+            font-style: normal;
+            font-size: 13px; line-height: 1.5;
+            font-family: 'Consolas', 'Courier New', monospace;
+            color: #9fd8ff;
+            background: rgba(0, 200, 255, 0.06);
+            border-left: 2.5px solid rgba(0, 200, 255, 0.5);
+            border-radius: 0 9px 9px 0;
+            padding: 9px 13px;
+            width: fit-content; max-width: 92%;
+            white-space: nowrap; overflow: hidden;
+            animation: typeIn 9s steps(1) infinite;
+        }
+        .ai-lines i:nth-child(1) { animation-delay: 0.4s; }
+        .ai-lines i:nth-child(2) { animation-delay: 2.6s; color: #c9b8ff; border-left-color: rgba(155, 120, 255, 0.6); background: rgba(140, 100, 255, 0.07); }
+        .ai-lines i:nth-child(3) { animation-delay: 5.4s; color: #7dffb8; border-left-color: rgba(60, 220, 140, 0.6); background: rgba(60, 220, 140, 0.06); }
+        @keyframes typeIn {
+            0%, 8% { clip-path: inset(0 100% 0 0); }
+            16%, 92% { clip-path: inset(0 0 0 0); }
+            100% { clip-path: inset(0 100% 0 0); opacity: 0; }
+        }
+        .ai-cursor {
+            position: absolute; left: 18px; bottom: 52px;
+            width: 9px; height: 17px;
+            background: #00e5ff;
+            animation: caretBlink 0.8s steps(1) infinite;
+        }
+        @keyframes caretBlink { 50% { opacity: 0; } }
+
+        /* ── 场景4：故障链演练（节点依次点亮 + 链路脉冲） ── */
+        .fl-row {
+            position: absolute; left: 22px; right: 22px; top: 96px;
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 4px;
+        }
+        .fl-node {
+            width: 48px; height: 48px; border-radius: 12px;
+            background: rgba(255,255,255,0.04);
+            border: 1.5px solid rgba(140,170,255,0.28);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+            position: relative;
+        }
+        .fl-node.on {
+            background: rgba(0,229,255,0.12);
+            border-color: rgba(0,229,255,0.7);
+            box-shadow: 0 0 14px rgba(0,229,255,0.45);
+        }
+        .fl-node.danger {
+            background: rgba(255,95,87,0.14);
+            border-color: rgba(255,95,87,0.75);
+            box-shadow: 0 0 14px rgba(255,95,87,0.45);
+        }
+        .fl-link {
+            flex: 1; height: 2px;
+            background: linear-gradient(90deg, rgba(0,229,255,0.5), rgba(0,229,255,0.05));
+            border-radius: 2px;
+            position: relative; overflow: hidden;
+        }
+        .fl-link::after {
+            content: ''; position: absolute; top: 0; left: -30%;
+            width: 30%; height: 100%;
+            background: linear-gradient(90deg, transparent, #00e5ff, transparent);
+            animation: flPulse 2.2s linear infinite;
+        }
+        @keyframes flPulse {
+            0% { left: -30%; } 100% { left: 100%; }
+        }
+        .fl-kpi {
+            position: absolute; right: 22px; top: 44px;
+            font-size: 11px; color: #7dffb8;
+            font-family: 'Consolas', monospace;
+            background: rgba(11,23,48,0.85);
+            border: 1px solid rgba(125,255,184,0.4);
+            border-radius: 7px; padding: 4px 10px;
+        }
+        .fl-kpi i {
+            font-style: normal; color: #00e5ff; margin-right: 4px;
+            animation: ledBlink 1.1s ease-in-out infinite;
+        }
+        .fl-title {
+            position: absolute; left: 22px; top: 44px;
+            font-size: 11px; color: #9db4e8;
+            font-family: 'Consolas', monospace;
+            letter-spacing: 1px;
+        }
+
+        /* ── 场景5：AI 模拟面试（气泡交替对话 + 打字机） ── */
+        .q-bubble, .a-bubble {
+            position: absolute; max-width: 58%;
+            padding: 9px 13px; border-radius: 12px;
+            font-size: 12px; line-height: 1.55;
+            font-family: 'Consolas', monospace;
+            animation: bubbleIn 0.6s ease both;
+        }
+        .q-bubble {
+            left: 22px; top: 38px;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(140,170,255,0.28);
+            color: #cfe0ff;
+        }
+        .q-bubble::before { content: '🤖 AI：'; color: #00e5ff; }
+        .a-bubble {
+            right: 22px; top: 128px;
+            background: rgba(0,229,255,0.12);
+            border: 1px solid rgba(0,229,255,0.45);
+            color: #eaf4ff;
+        }
+        .a-bubble::before { content: '🧑‍🎓：'; color: #7dffb8; }
+        .q-bubble span, .a-bubble span {
+            display: inline-block; overflow: hidden;
+            border-right: 1.5px solid rgba(0,229,255,0.8);
+            white-space: nowrap;
+            animation: typeWrite 3.5s steps(40, end) infinite, blinkCaret 0.7s step-end infinite;
+        }
+        @keyframes bubbleIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: none; }
+        }
+        @keyframes typeWrite {
+            0%, 100% { width: 0; }
+            50% { width: 100%; }
+        }
+        @keyframes blinkCaret {
+            50% { border-color: transparent; }
+        }
+        .ai-score {
+            position: absolute; left: 50%; bottom: 28px;
+            transform: translateX(-50%);
+            font-size: 11px; color: #7dffb8;
+            font-family: 'Consolas', monospace;
+            background: rgba(11,23,48,0.85);
+            border: 1px solid rgba(125,255,184,0.4);
+            border-radius: 14px; padding: 5px 16px;
+        }
+        .ai-score b { color: #00e5ff; font-size: 13px; margin: 0 3px; }
+
+        /* ── 场景6：岗位匹配（雷达图 + 匹配度） ── */
+        .pm-wrap {
+            position: absolute; inset: 20px 22px 20px;
+            display: flex; align-items: center; gap: 22px;
+        }
+        .pm-resume {
+            flex: 0 0 108px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(140,170,255,0.28);
+            border-radius: 10px;
+            padding: 14px 10px; text-align: center;
+        }
+        .pm-resume .pm-avatar {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: linear-gradient(135deg, #0080ff, #00c8ff);
+            margin: 0 auto 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; font-weight: 600; color: #fff;
+        }
+        .pm-resume .pm-name { font-size: 10px; color: #cfe0ff; letter-spacing: 1px; }
+        .pm-resume .pm-major { font-size: 9px; color: #9db4e8; margin-top: 3px; }
+        .pm-resume .pm-tags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; }
+        .pm-resume .pm-tags span {
+            font-size: 8px; color: #00e5ff;
+            background: rgba(0,229,255,0.12);
+            border: 1px solid rgba(0,229,255,0.3);
+            border-radius: 3px; padding: 1px 4px;
+        }
+        .pm-radar-wrap { flex: 1; text-align: center; }
+        .pm-radar-wrap svg { width: 148px; height: 148px; }
+        .pm-radar-grid { fill: none; stroke: rgba(255,255,255,0.1); stroke-width: 1; }
+        .pm-radar-data {
+            fill: rgba(0,229,255,0.22);
+            stroke: #00e5ff; stroke-width: 1.8;
+            animation: radarPulse 3s ease-in-out infinite;
+            transform-origin: 74px 74px;
+        }
+        @keyframes radarPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(0.94); }
+        }
+        .pm-radar-label { fill: #9db4e8; font-size: 9px; font-family: 'Consolas', monospace; }
+        .pm-score {
+            position: absolute; right: 22px; bottom: 22px;
+            text-align: center;
+        }
+        .pm-score .pm-num {
+            font-family: 'Consolas', monospace;
+            font-size: 28px; font-weight: 700; color: #00e5ff;
+            text-shadow: 0 0 14px rgba(0,229,255,0.55);
+            animation: scorePulse 2.8s ease-in-out infinite;
+        }
+        .pm-score .pm-num small { font-size: 14px; color: #7dffb8; }
+        .pm-score .pm-pct { font-size: 10px; color: #9db4e8; letter-spacing: 1px; }
+        @keyframes scorePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.06); }
+        }
+
+        /* ── 舞台底部：指示点 + 标题描述（透明融入面板） ── */
+        .scene-meta {
+            position: relative;
+            padding: 14px 4px 0;
+            background: transparent;
+        }
+        .scene-dots {
+            display: flex; gap: 6px;
+            margin-bottom: 10px;
+        }
+        .scene-dots span {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.22);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .scene-dots span.on {
+            background: #00e5ff;
+            box-shadow: 0 0 8px rgba(0, 229, 255, 0.9);
+            transform: scale(1.25);
+        }
+        .scene-meta b {
+            display: block;
+            color: #eaf4ff; font-size: 14.5px; font-weight: 600;
+            margin-bottom: 3px; letter-spacing: 0.5px;
+        }
+        .scene-meta p {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px; line-height: 1.55;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .scene, .scene * { animation-duration: 0.001s !important; animation-iteration-count: 1 !important; }
+        }
+
+        /* 底部版权 */
+        .brand-footer {
+            position: relative; z-index: 2;
+            color: rgba(255,255,255,0.35);
+            font-size: 12px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        /* ===== 右侧登录面板容器（与左侧同风格深色背景） ===== */
+        .login-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 32px;
+            background: linear-gradient(135deg, #0d1f45 0%, #1a2d6a 50%, #0a1838 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        /* 右面板装饰光斑 */
+        .login-panel::before {
+            content: '';
+            position: absolute;
+            width: 380px; height: 380px;
+            background: #5b3dff;
+            filter: blur(100px);
+            top: -100px; right: -80px;
+            border-radius: 50%;
+            opacity: 0.28;
+            pointer-events: none;
+        }
+        /* 右面板网格线 */
+        .login-panel::after {
+            content: '';
+            position: absolute; inset: 0;
+            background-image:
+                linear-gradient(rgba(100,100,255,0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(100,100,255,0.06) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+        }
+
+        /* 面板粒子（左右两侧通用） */
+        .panel-particles {
+            position: absolute; inset: 0;
+            pointer-events: none; z-index: 1;
+        }
+        .panel-particles span {
+            position: absolute; display: block;
+            border-radius: 50%;
+            animation: panelFloat linear infinite;
+        }
+        /* 左面板粒子 — 青蓝色 */
+        .brand-particles span {
+            background: rgba(0, 229, 255, 0.85);
+            box-shadow: 0 0 6px rgba(0, 229, 255, 0.9);
+        }
+        /* 右面板粒子 — 紫蓝色 + 白色 */
+        .login-particles span {
+            background: rgba(180, 180, 255, 0.75);
+            box-shadow: 0 0 5px rgba(150, 150, 255, 0.8);
+        }
+        @keyframes panelFloat {
+            0%   { transform: translateY(0) translateX(0); opacity: 0; }
+            10%  { opacity: 1; }
+            90%  { opacity: 0.9; }
+            100% { transform: translateY(-130vh) translateX(20px); opacity: 0; }
+        }
+        /* 左右各 16 个粒子的起点/时长配置 */
+        .brand-particles span:nth-child(1)  { left: 6%;  top: 20%; width:3px; height:3px; animation-duration: 10s; animation-delay: 0s; }
+        .brand-particles span:nth-child(2)  { left: 14%; top: 78%; width:4px; height:4px; animation-duration: 12s; animation-delay: -2s; }
+        .brand-particles span:nth-child(3)  { left: 22%; top: 40%; width:3px; height:3px; animation-duration: 9s;  animation-delay: -4s; }
+        .brand-particles span:nth-child(4)  { left: 30%; top: 88%; width:4px; height:4px; animation-duration: 13s; animation-delay: -1s; }
+        .brand-particles span:nth-child(5)  { left: 42%; top: 15%; width:3px; height:3px; animation-duration: 11s; animation-delay: -3s; }
+        .brand-particles span:nth-child(6)  { left: 52%; top: 62%; width:4px; height:4px; animation-duration: 10s; animation-delay: -5s; }
+        .brand-particles span:nth-child(7)  { left: 62%; top: 28%; width:3px; height:3px; animation-duration: 14s; animation-delay: -2s; }
+        .brand-particles span:nth-child(8)  { left: 72%; top: 82%; width:4px; height:4px; animation-duration: 9s;  animation-delay: -6s; }
+        .brand-particles span:nth-child(9)  { left: 82%; top: 45%; width:3px; height:3px; animation-duration: 12s; animation-delay: -1s; }
+        .brand-particles span:nth-child(10) { left: 90%; top: 68%; width:4px; height:4px; animation-duration: 11s; animation-delay: -4s; }
+        .brand-particles span:nth-child(11) { left: 4%;  top: 55%; width:3px; height:3px; animation-duration: 13s; animation-delay: -7s; }
+        .brand-particles span:nth-child(12) { left: 18%; top: 8%;  width:4px; height:4px; animation-duration: 10s; animation-delay: -3s; }
+        .brand-particles span:nth-child(13) { left: 38%; top: 94%; width:3px; height:3px; animation-duration: 12s; animation-delay: -8s; }
+        .brand-particles span:nth-child(14) { left: 56%; top: 48%; width:4px; height:4px; animation-duration: 14s; animation-delay: -2s; }
+        .brand-particles span:nth-child(15) { left: 76%; top: 16%; width:3px; height:3px; animation-duration: 11s; animation-delay: -5s; }
+        .brand-particles span:nth-child(16) { left: 28%; top: 35%; width:4px; height:4px; animation-duration: 13s; animation-delay: -9s; }
+
+        .login-particles span:nth-child(1)  { left: 5%;  top: 18%; width:3px; height:3px; animation-duration: 11s; animation-delay: -1s; }
+        .login-particles span:nth-child(2)  { left: 16%; top: 72%; width:3px; height:3px; animation-duration: 13s; animation-delay: -3s; }
+        .login-particles span:nth-child(3)  { left: 26%; top: 42%; width:4px; height:4px; animation-duration: 10s; animation-delay: -5s; }
+        .login-particles span:nth-child(4)  { left: 36%; top: 86%; width:3px; height:3px; animation-duration: 14s; animation-delay: -2s; }
+        .login-particles span:nth-child(5)  { left: 46%; top: 12%; width:4px; height:4px; animation-duration: 12s; animation-delay: -4s; }
+        .login-particles span:nth-child(6)  { left: 58%; top: 58%; width:3px; height:3px; animation-duration: 11s; animation-delay: -6s; }
+        .login-particles span:nth-child(7)  { left: 68%; top: 25%; width:3px; height:3px; animation-duration: 13s; animation-delay: -1s; }
+        .login-particles span:nth-child(8)  { left: 78%; top: 78%; width:4px; height:4px; animation-duration: 10s; animation-delay: -7s; }
+        .login-particles span:nth-child(9)  { left: 88%; top: 40%; width:3px; height:3px; animation-duration: 12s; animation-delay: -3s; }
+        .login-particles span:nth-child(10) { left: 92%; top: 65%; width:3px; height:3px; animation-duration: 14s; animation-delay: -5s; }
+        .login-particles span:nth-child(11) { left: 8%;  top: 52%; width:4px; height:4px; animation-duration: 11s; animation-delay: -8s; }
+        .login-particles span:nth-child(12) { left: 20%; top: 10%; width:3px; height:3px; animation-duration: 13s; animation-delay: -2s; }
+        .login-particles span:nth-child(13) { left: 40%; top: 92%; width:3px; height:3px; animation-duration: 10s; animation-delay: -4s; }
+        .login-particles span:nth-child(14) { left: 54%; top: 46%; width:4px; height:4px; animation-duration: 12s; animation-delay: -6s; }
+        .login-particles span:nth-child(15) { left: 74%; top: 14%; width:3px; height:3px; animation-duration: 14s; animation-delay: -1s; }
+        .login-particles span:nth-child(16) { left: 32%; top: 60%; width:3px; height:3px; animation-duration: 11s; animation-delay: -9s; }
+
+        /* ===== 登录卡片（深色玻璃拟态，与首页同风格） ===== */
+        .login-container {
+            background: linear-gradient(165deg, rgba(16, 34, 78, 0.88) 0%, rgba(9, 20, 50, 0.92) 100%);
+            backdrop-filter: blur(18px);
+            border-radius: 22px;
+            border: 1px solid rgba(0, 200, 255, 0.28);
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5),
+                        0 0 40px rgba(0, 130, 255, 0.12) inset;
+            padding: 30px 30px 26px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            position: relative;
+            z-index: 5;
+            overflow: hidden;
+        }
+        /* 卡片顶部流光边 */
+        .login-container::before {
+            content: '';
+            position: absolute; top: 0; left: 8%; right: 8%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00c8ff, #5b8dff, transparent);
+            border-radius: 2px;
+            animation: shineSlide 3.2s ease-in-out infinite;
+        }
+        @keyframes shineSlide {
+            0%, 100% { opacity: 0.5; transform: scaleX(0.85); }
+            50% { opacity: 1; transform: scaleX(1); }
+        }
+        /* 右下角光晕装饰 */
+        .login-container::after {
+            content: '';
+            position: absolute;
+            width: 220px; height: 220px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 200, 255, 0.14), transparent 70%);
+            bottom: -80px; right: -60px;
+            pointer-events: none;
+        }
+
+        /* ===== 面板漂浮装饰图标 ===== */
+        .panel-deco {
+            position: absolute; inset: 0;
+            pointer-events: none;
+            z-index: 2;
+        }
+        .pd-ic {
+            position: absolute;
+            font-size: 26px;
+            opacity: 0.14;
+            filter: saturate(0.6);
+            animation: pdFloat 9s ease-in-out infinite;
+        }
+        .pd-1 { top: 14%; left: 9%; animation-delay: 0s; }
+        .pd-2 { top: 24%; right: 10%; font-size: 30px; animation-delay: -2.5s; }
+        .pd-3 { bottom: 20%; left: 12%; font-size: 22px; animation-delay: -5s; }
+        .pd-4 { bottom: 12%; right: 9%; animation-delay: -7s; }
+        @keyframes pdFloat {
+            0%, 100% { transform: translateY(0) rotate(-4deg); }
+            50% { transform: translateY(-16px) rotate(5deg); }
+        }
+
+        /* ===== 右面板顶部：系统状态条 ===== */
+        .sys-status {
+            position: relative; z-index: 5;
+            margin-bottom: 28px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: rgba(255,255,255,0.75);
+            font-size: 12px;
+            letter-spacing: 2px;
+        }
+        .sys-status .led {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            box-shadow: 0 0 8px #22c55e, 0 0 14px rgba(34,197,94,0.5);
+            animation: ledBlink 2s ease-in-out infinite;
+        }
+        @keyframes ledBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .sys-status .sep { color: rgba(255,255,255,0.2); margin: 0 4px; }
+
+        /* ===== 右面板底部：数据统计 ===== */
+        .login-stats {
+            position: relative; z-index: 5;
+            margin-top: 28px;
+            display: flex;
+            gap: 24px;
+            color: rgba(255,255,255,0.55);
+            font-size: 11px;
+            letter-spacing: 1px;
+        }
+        .login-stats .stat-num {
+            color: #00e5ff;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Consolas', monospace;
+            margin-right: 4px;
+        }
+
+        .icon {
+            position: relative;
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #0080ff 0%, #00c8ff 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 14px;
+            font-size: 32px;
+            overflow: visible;
+            box-shadow: 0 8px 28px rgba(0, 140, 255, 0.5);
+        }
+        /* logo 同心圆环 + 旋转光点装饰 */
+        .icon::before, .icon::after {
+            content: '';
+            position: absolute;
+            inset: -9px;
+            border-radius: 22px;
+            border: 1px dashed rgba(0, 200, 255, 0.4);
+            pointer-events: none;
+        }
+        .icon::after {
+            inset: -17px;
+            border-radius: 28px;
+            border-color: rgba(0, 200, 255, 0.18);
+            animation: iconSpin 14s linear infinite;
+        }
+        @keyframes iconSpin { to { transform: rotate(360deg); } }
+        .icon img { width: 100%; height: 100%; object-fit: cover; border-radius: 16px; }
+
+        h1 {
+            background: linear-gradient(90deg, #eaf4ff 20%, #00c8ff 60%, #5b8dff 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 25px;
+            margin-bottom: 4px;
+            font-weight: 700;
+            letter-spacing: 3px;
+        }
+
+        .subtitle {
+            color: #8fa3c8;
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+
+        /* 功能亮点 chips：填充留白的装饰 + 产品信息 */
+        .hero-badges {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .hero-badges span {
+            font-size: 11px;
+            color: #9db4e8;
+            background: rgba(0, 200, 255, 0.07);
+            border: 1px solid rgba(0, 200, 255, 0.22);
+            border-radius: 20px;
+            padding: 4px 11px;
+            letter-spacing: 0.5px;
+            transition: all 0.25s;
+        }
+        .hero-badges span:hover {
+            color: #fff;
+            background: rgba(0, 200, 255, 0.16);
+            transform: translateY(-1px);
+        }
+
+        .role-section {
+            margin-bottom: 14px;
+        }
+
+        .role-title {
+            display: block;
+            text-align: left;
+            color: #a8b8dc;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .role-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .role-btn {
+            flex: 1;
+            padding: 10px;
+            border: 1.5px solid rgba(140, 170, 255, 0.24);
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.05);
+            color: #c6d2ee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .role-btn:hover {
+            border-color: rgba(0, 200, 255, 0.55);
+            background: rgba(0, 200, 255, 0.08);
+        }
+
+        .role-btn.selected {
+            border-color: transparent;
+            background: linear-gradient(135deg, #0080ff 0%, #00c8ff 100%);
+            color: #fff;
+            box-shadow: 0 4px 18px rgba(0, 150, 255, 0.45);
+        }
+
+        .input-group {
+            margin-bottom: 13px;
+        }
+
+        .input-group label {
+            display: block;
+            text-align: left;
+            color: #a8b8dc;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1.5px solid rgba(140, 170, 255, 0.24);
+            border-radius: 11px;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            background: rgba(255, 255, 255, 0.06);
+            color: #eaf0ff;
+        }
+
+        .input-group input::placeholder { color: #5d6f96; }
+
+        .input-group input:focus {
+            border-color: rgba(0, 200, 255, 0.7);
+            box-shadow: 0 0 0 3px rgba(0, 200, 255, 0.12);
+            background: rgba(255, 255, 255, 0.09);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #0080ff 0%, #00c8ff 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 6px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 6px;
+            box-shadow: 0 6px 20px rgba(0, 140, 255, 0.35);
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 26px rgba(0, 160, 255, 0.5);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error {
+            color: #ff6b78;
+            font-size: 14px;
+            margin-top: 12px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+            animation: shake 0.35s;
+        }
+
+        /* 输入错误高亮 + 抖动 */
+        .input-group input.input-error {
+            border-color: #ff4d4f !important;
+            animation: shake 0.35s;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* 密码显隐切换 + 大写锁定提醒 */
+        .pwd-wrap { position: relative; }
+        .pwd-wrap input { padding-right: 48px; }
+        .pwd-eye {
+            position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+            width: 36px; height: 36px;
+            border: none; background: transparent; border-radius: 8px;
+            cursor: pointer; font-size: 16px; opacity: 0.55; transition: all 0.2s;
+        }
+        .pwd-eye:hover { opacity: 1; background: rgba(255, 255, 255, 0.1); }
+        .caps-hint {
+            display: none; text-align: left;
+            color: #ffb35c; font-size: 12px; margin-top: 6px;
+        }
+        .caps-hint.show { display: block; }
+
+        /* 登录按钮加载态 */
+        .btn-spin {
+            display: inline-block; width: 14px; height: 14px;
+            border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff;
+            border-radius: 50%; vertical-align: -2px; margin-right: 6px;
+            animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* 角色表单切换动画 */
+        .student-info.show, .teacher-info.show { animation: fadeSlide 0.25s ease; }
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(-4px); }
+            to   { opacity: 1; transform: none; }
+        }
+
+        .footer {
+            margin-top: 14px;
+            padding-top: 12px;
+            color: rgba(255, 255, 255, 0.35);
+            font-size: 11px;
+            letter-spacing: 2px;
+            position: relative;
+        }
+        .footer::before {
+            content: '';
+            position: absolute; top: 0; left: 30%; right: 30%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 200, 255, 0.35), transparent);
+        }
+
+        .student-info {
+            display: none;
+        }
+
+        .student-info.show {
+            display: block;
+        }
+
+        .teacher-info {
+            display: none;
+        }
+
+        .teacher-info.show {
+            display: block;
+        }
+
+        /* ===== 使用说明弹窗 ===== */
+        .guide-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.55);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+            animation: fadeIn 0.3s;
+            padding: 20px;
+        }
+
+        .guide-modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 720px;
+            width: 100%;
+            max-height: 86vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+            animation: guideSlide 0.4s;
+        }
+
+        @keyframes guideSlide {
+            from { transform: translateY(20px) scale(0.95); opacity: 0; }
+            to   { transform: translateY(0) scale(1); opacity: 1; }
+        }
+
+        .guide-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px 28px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .guide-header-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+        }
+
+        .guide-header-text h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .guide-header-text p {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .guide-close {
+            margin-left: auto;
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .guide-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .guide-body {
+            padding: 24px 28px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .guide-section {
+            margin-bottom: 22px;
+        }
+
+        .guide-section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #f0f2f5;
+        }
+
+        .guide-step-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .guide-step {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            background: #f8f9fc;
+            border-radius: 10px;
+            padding: 12px 14px;
+        }
+
+        .guide-step-num {
+            width: 26px;
+            height: 26px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .guide-step-text {
+            flex: 1;
+            font-size: 13px;
+            color: #444;
+            line-height: 1.6;
+        }
+
+        .guide-step-text strong {
+            color: #1a1a1a;
+        }
+
+        .guide-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .guide-tag {
+            background: linear-gradient(135deg, #e8ecfd, #f0e6ff);
+            color: #5144ad;
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .guide-footer {
+            padding: 16px 28px;
+            border-top: 1px solid #f0f2f5;
+            background: #fafbfc;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .guide-footer label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #888;
+            cursor: pointer;
+        }
+
+        .guide-footer label input {
+            cursor: pointer;
+        }
+
+        .guide-footer .btn-got-it {
+            margin-left: auto;
+            padding: 10px 26px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .guide-footer .btn-got-it:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        .guide-trigger {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(0, 200, 255, 0.1);
+            color: #9db4e8;
+            border: 1px solid rgba(0, 200, 255, 0.3);
+            padding: 6px 13px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            backdrop-filter: blur(4px);
+        }
+
+        .guide-trigger:hover {
+            background: rgba(0, 200, 255, 0.22);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        .login-container {
+            position: relative;
+        }
+
+        /* ============ 启动动画 Splash Overlay ============ */
+        .splash-overlay {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #0a1a3a 0%, #0d2a5c 50%, #061230 100%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+        .splash-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        /* 背景装饰：大光斑 */
+        .splash-overlay::before,
+        .splash-overlay::after {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.35;
+        }
+        .splash-overlay::before {
+            background: #0080ff;
+            top: -200px;
+            left: -150px;
+            animation: floatGlow 8s ease-in-out infinite;
+        }
+        .splash-overlay::after {
+            background: #00c8ff;
+            bottom: -200px;
+            right: -150px;
+            animation: floatGlow 10s ease-in-out infinite reverse;
+        }
+        @keyframes floatGlow {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(40px, -30px); }
+        }
+
+        /* CSS 粒子（18 个 span，纯 CSS） */
+        .splash-particles {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+        .splash-particles span {
+            position: absolute;
+            display: block;
+            width: 4px;
+            height: 4px;
+            background: rgba(0, 229, 255, 0.8);
+            border-radius: 50%;
+            box-shadow: 0 0 6px rgba(0, 229, 255, 0.9);
+            animation: splashFloat linear infinite;
+        }
+        /* 18 个粒子各不同起点和时长 — 纯手写避免 JS 注入 */
+        .splash-particles span:nth-child(1)  { left: 5%;  top: 15%; width:3px; height:3px; animation-duration: 9s; animation-delay: 0s;   opacity:.7; }
+        .splash-particles span:nth-child(2)  { left: 15%; top: 75%; width:5px; height:5px; animation-duration: 11s; animation-delay: -2s;  opacity:.9; }
+        .splash-particles span:nth-child(3)  { left: 25%; top: 35%; width:3px; height:3px; animation-duration: 8s;  animation-delay: -4s;  opacity:.6; }
+        .splash-particles span:nth-child(4)  { left: 35%; top: 85%; width:4px; height:4px; animation-duration: 12s; animation-delay: -1s;  opacity:.8; }
+        .splash-particles span:nth-child(5)  { left: 48%; top: 10%; width:3px; height:3px; animation-duration: 10s; animation-delay: -3s;  opacity:.7; }
+        .splash-particles span:nth-child(6)  { left: 55%; top: 60%; width:5px; height:5px; animation-duration: 9s;  animation-delay: -5s;  opacity:.85;}
+        .splash-particles span:nth-child(7)  { left: 65%; top: 25%; width:3px; height:3px; animation-duration: 13s; animation-delay: -2s;  opacity:.6; }
+        .splash-particles span:nth-child(8)  { left: 75%; top: 80%; width:4px; height:4px; animation-duration: 8s;  animation-delay: -6s;  opacity:.75;}
+        .splash-particles span:nth-child(9)  { left: 85%; top: 40%; width:3px; height:3px; animation-duration: 11s; animation-delay: -1s;  opacity:.65;}
+        .splash-particles span:nth-child(10) { left: 92%; top: 65%; width:4px; height:4px; animation-duration: 10s; animation-delay: -4s;  opacity:.8; }
+        .splash-particles span:nth-child(11) { left: 8%;  top: 50%; width:3px; height:3px; animation-duration: 14s; animation-delay: -7s;  opacity:.55;}
+        .splash-particles span:nth-child(12) { left: 20%; top: 5%;  width:4px; height:4px; animation-duration: 9s;  animation-delay: -3s;  opacity:.7; }
+        .splash-particles span:nth-child(13) { left: 42%; top: 92%; width:3px; height:3px; animation-duration: 11s; animation-delay: -8s;  opacity:.6; }
+        .splash-particles span:nth-child(14) { left: 60%; top: 45%; width:5px; height:5px; animation-duration: 13s; animation-delay: -2s;  opacity:.9; }
+        .splash-particles span:nth-child(15) { left: 78%; top: 12%; width:3px; height:3px; animation-duration: 10s; animation-delay: -5s;  opacity:.7; }
+        .splash-particles span:nth-child(16) { left: 3%;  top: 90%; width:4px; height:4px; animation-duration: 12s; animation-delay: -6s;  opacity:.75;}
+        .splash-particles span:nth-child(17) { left: 88%; top: 22%; width:3px; height:3px; animation-duration: 9s;  animation-delay: -9s;  opacity:.6; }
+        .splash-particles span:nth-child(18) { left: 32%; top: 55%; width:4px; height:4px; animation-duration: 11s; animation-delay: -3s;  opacity:.8; }
+
+        @keyframes splashFloat {
+            0%   { transform: translateY(0) translateX(0);   opacity: 0; }
+            10%  { opacity: 1; }
+            90%  { opacity: 1; }
+            100% { transform: translateY(-120vh) translateX(30px); opacity: 0; }
+        }
+
+        /* Logo + 标题区 */
+        .splash-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            animation: splashFadeIn 1.2s ease both;
+        }
+        @keyframes splashFadeIn {
+            0%   { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .splash-logo {
+            width: 96px;
+            height: 96px;
+            margin: 0 auto 28px;
+            background: linear-gradient(135deg, #0080ff 0%, #00c8ff 100%);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            box-shadow: 0 8px 32px rgba(0, 130, 255, 0.45),
+                        0 0 0 1px rgba(0, 200, 255, 0.3),
+                        inset 0 1px 0 rgba(255,255,255,0.2);
+            animation: splashPulse 2.8s ease-in-out infinite;
+            overflow: hidden;
+        }
+        .splash-logo img { width: 100%; height: 100%; object-fit: cover; }
+        @keyframes splashPulse {
+            0%, 100% { transform: scale(1); }
+            50%      { transform: scale(1.04); box-shadow: 0 8px 40px rgba(0, 130, 255, 0.6), 0 0 0 1px rgba(0,200,255,.5), inset 0 1px 0 rgba(255,255,255,.2); }
+        }
+
+        .splash-title {
+            color: #fff;
+            font-size: 30px;
+            font-weight: 600;
+            letter-spacing: 6px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(0, 200, 255, 0.4);
+        }
+        .splash-subtitle {
+            color: rgba(255,255,255,0.55);
+            font-size: 14px;
+            letter-spacing: 3px;
+            margin-bottom: 48px;
+        }
+
+        /* 进度条 */
+        .splash-progress {
+            width: 240px;
+            height: 3px;
+            background: rgba(255,255,255,0.12);
+            border-radius: 2px;
+            margin: 0 auto 18px;
+            overflow: hidden;
+        }
+        .splash-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #0080ff, #00e5ff);
+            border-radius: 2px;
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.6);
+            animation: splashProgress 2.2s cubic-bezier(.4,0,.2,1) forwards;
+        }
+        @keyframes splashProgress {
+            0%   { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        .splash-tip {
+            color: rgba(255,255,255,0.35);
+            font-size: 12px;
+            letter-spacing: 1px;
+        }
+
+        /* ===== 响应式：窄屏隐藏品牌面板 ===== */
+        @media (max-width: 960px) {
+            .brand-panel { display: none; }
+            .login-panel { flex: 1; }
+        }
+        @media (max-width: 480px) {
+            .login-panel { padding: 24px 16px; }
+            .login-container { padding: 36px 24px; }
+        }
+        /* ============ 移动端补充适配 ============ */
+        @media (max-width: 768px) {
+            .brand-panel { padding: 40px 28px; }
+            .brand-logo-text { font-size: 16px; letter-spacing: 1px; }
+            .brand-headline { font-size: 28px; }
+            .brand-slogan { font-size: 13px; margin-bottom: 32px; line-height: 1.7; }
+            .brand-features { gap: 10px; margin-bottom: 32px; }
+            .feature-item { padding: 12px 14px; }
+            .feature-icon { font-size: 18px; }
+            .feature-title { font-size: 13px; }
+            .feature-desc { font-size: 11px; }
+            .sys-status { font-size: 11px; letter-spacing: 1px; flex-wrap: wrap; }
+            .login-stats { gap: 14px; flex-wrap: wrap; justify-content: center; }
+            .login-stats .stat-num { font-size: 13px; }
+            .guide-header { padding: 18px 20px; gap: 10px; }
+            .guide-header-icon { width: 40px; height: 40px; font-size: 22px; }
+            .guide-header-text h2 { font-size: 17px; }
+            .guide-body { padding: 18px 20px; }
+            .guide-footer { padding: 12px 20px; flex-wrap: wrap; }
+            .guide-footer .btn-got-it { padding: 8px 18px; font-size: 13px; }
+            .splash-title { font-size: 24px; letter-spacing: 4px; }
+            .splash-subtitle { font-size: 12px; letter-spacing: 2px; }
+            .splash-logo { width: 80px; height: 80px; font-size: 38px; }
+        }
+        @media (max-width: 480px) {
+            .login-panel { padding: 14px 10px; }
+            .login-container { padding: 22px 16px 18px; border-radius: 18px; }
+            .login-container .icon { width: 54px; height: 54px; font-size: 27px; border-radius: 14px; margin-bottom: 10px; }
+            .login-container .icon::before { inset: -7px; border-radius: 19px; }
+            .login-container .icon::after { inset: -13px; border-radius: 23px; }
+            .login-container h1 { font-size: 21px; letter-spacing: 2px; }
+            .login-container .subtitle { font-size: 12px; margin-bottom: 10px; }
+            .hero-badges { gap: 6px; margin-bottom: 12px; }
+            .hero-badges span { font-size: 10px; padding: 3px 9px; }
+            .role-section { margin-bottom: 10px; }
+            .role-buttons { gap: 8px; }
+            .role-btn { padding: 9px 8px; font-size: 13px; gap: 4px; }
+            .input-group { margin-bottom: 10px; }
+            .input-group label { font-size: 12.5px; margin-bottom: 4px; }
+            .input-group input { padding: 10px 12px; font-size: 15px; }
+            .login-btn { padding: 11px; font-size: 15px; margin-top: 4px; }
+            .footer { margin-top: 10px; padding-top: 9px; }
+            .sys-status { margin-bottom: 14px; }
+            .login-stats { margin-top: 14px; }
+            .guide-trigger { top: 10px; right: 10px; padding: 5px 10px; font-size: 12px; }
+            .pd-ic { font-size: 20px; opacity: 0.1; }
+            .pd-2 { font-size: 23px; }
+            .guide-header-text h2 { font-size: 16px; }
+            .guide-header-text p { font-size: 11.5px; }
+            .guide-step { padding: 10px 12px; gap: 10px; }
+            .guide-step-num { width: 22px; height: 22px; font-size: 12px; }
+            .guide-step-text { font-size: 12.5px; }
+        }
+    </style>
+    <!-- 全局按钮美化 -->
+    <link rel="stylesheet" href="/static/global_buttons.css">
+</head>
+<body class="login-body">
+    <!-- ============ 启动动画 Splash Overlay ============ -->
+    <div class="splash-overlay" id="splashOverlay">
+        <div class="splash-particles">
+            <span></span><span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="splash-content">
+            <div class="splash-logo"><img src="/static/brand_logo.svg" alt="logo"></div>
+            <div class="splash-title">灵智尚人</div>
+            <div class="splash-subtitle">INTELLIGENT ENGINEERING TRAINING</div>
+            <div class="splash-progress">
+                <div class="splash-progress-bar"></div>
+            </div>
+            <div class="splash-tip">AI 驱动的智能工程训练平台</div>
+        </div>
+    </div>
+
+    <!-- 左右分屏主容器 -->
+    <div class="login-wrapper">
+        <!-- 左侧品牌展示面板 -->
+        <div class="brand-panel">
+            <div class="brand-grid"></div>
+            <div class="panel-particles brand-particles">
+                <span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span>
+            </div>
+            <div class="brand-content">
+                <div class="brand-logo-row">
+                    <div class="brand-logo-box"><img src="/static/brand_logo.svg" alt="logo"></div>
+                    <div class="brand-logo-text">灵智尚人 · AI 工程训练平台</div>
+                </div>
+
+                <!-- 应用场景预览轮播（纯 CSS 动画 + JS 轮播，仅桌面端显示） -->
+                <div class="scene-showcase" id="sceneStage">
+                    <div class="scene-screen">
+                        <div class="scene sc-1 active">
+                            <div class="tower">
+                                <div class="tower-mast"></div>
+                                <div class="tower-head"></div>
+                                <div class="pulse p1"></div><div class="pulse p2"></div><div class="pulse p3"></div>
+                            </div>
+                            <div class="mini-phone">
+                                <div class="bars"><i></i><i></i><i></i><i></i></div>
+                                <b>RSRP -87dBm</b>
+                            </div>
+                        </div>
+
+                        <div class="scene sc-2">
+                            <svg class="route-map" viewBox="0 0 300 140" preserveAspectRatio="xMidYMid meet">
+                                <line x1="0" y1="110" x2="300" y2="110" stroke="rgba(255,255,255,0.07)" stroke-width="8"/>
+                                <line x1="90" y1="0" x2="90" y2="140" stroke="rgba(255,255,255,0.07)" stroke-width="8"/>
+                                <line x1="210" y1="0" x2="210" y2="140" stroke="rgba(255,255,255,0.07)" stroke-width="8"/>
+                                <line x1="0" y1="40" x2="300" y2="40" stroke="rgba(255,255,255,0.07)" stroke-width="6"/>
+                                <path class="route-line ghost" d="M18,122 L90,122 L90,70 L150,70 L150,96 L210,96 L210,24 L262,24"/>
+                                <path class="route-line" d="M18,122 L90,122 L90,70 L150,70 L150,96 L210,96 L210,24 L262,24"/>
+                                <circle class="route-car" r="5.5">
+                                    <animateMotion dur="7s" repeatCount="indefinite" rotate="auto"
+                                        path="M18,122 L90,122 L90,70 L150,70 L150,96 L210,96 L210,24 L262,24"/>
+                                </circle>
+                            </svg>
+                            <b class="map-kpi"><i>●</i>GRID-1 路测中</b>
+                        </div>
+
+                        <div class="scene sc-3">
+                            <div class="ai-lines">
+                                <i>▍生成场景：数据中心机房设计…</i>
+                                <i>▍步骤 3/11 · 现场勘察 · 光纤路由研判</i>
+                                <i>▍✓ 已植入 2 处工程陷阱 · 报告就绪</i>
+                            </div>
+                            <div class="ai-cursor"></div>
+                        </div>
+
+                        <div class="scene sc-4">
+                            <div class="fl-title">⚡ 故障链诊断</div>
+                            <div class="fl-kpi"><i>●</i>根因定位 · 4.2s</div>
+                            <div class="fl-row">
+                                <div class="fl-node on">📡</div><div class="fl-link"></div>
+                                <div class="fl-node on">🔗</div><div class="fl-link"></div>
+                                <div class="fl-node danger">⚠️</div><div class="fl-link"></div>
+                                <div class="fl-node on">🖥</div><div class="fl-link"></div>
+                                <div class="fl-node on">✅</div>
+                            </div>
+                        </div>
+
+                        <div class="scene sc-5">
+                            <div class="q-bubble"><span>请描述 OTDR 曲线异常的排查思路？</span></div>
+                            <div class="a-bubble"><span>首先检查光功率计读数，定位断点位置…</span></div>
+                            <div class="ai-score">AI 评分 <b>85</b> / 100 · 继续加油</div>
+                        </div>
+
+                        <div class="scene sc-6">
+                            <div class="pm-wrap">
+                                <div class="pm-resume">
+                                    <div class="pm-avatar">张</div>
+                                    <div class="pm-name">张三</div>
+                                    <div class="pm-major">通信工程</div>
+                                    <div class="pm-tags"><span>VSWR</span><span>OTDR</span><span>5G</span><span>优化</span></div>
+                                </div>
+                                <div class="pm-radar-wrap">
+                                    <svg viewBox="0 0 148 148">
+                                        <!-- 3层网格 -->
+                                        <polygon class="pm-radar-grid" points="74,22 118,48 118,100 74,126 30,100 30,48"/>
+                                        <polygon class="pm-radar-grid" points="74,38 106,57 106,92 74,111 42,92 42,57"/>
+                                        <polygon class="pm-radar-grid" points="74,54 94,66 94,84 74,96 54,84 54,66"/>
+                                        <!-- 数据多边形：模拟6维能力值 -->
+                                        <polygon class="pm-radar-data" points="74,30 112,52 114,96 74,118 36,92 42,52"/>
+                                        <text class="pm-radar-label" x="74" y="16">理论</text>
+                                        <text class="pm-radar-label" x="122" y="46">实操</text>
+                                        <text class="pm-radar-label" x="122" y="110">排障</text>
+                                        <text class="pm-radar-label" x="74" y="138">伦理</text>
+                                        <text class="pm-radar-label" x="10" y="110">协作</text>
+                                        <text class="pm-radar-label" x="10" y="46">创新</text>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="pm-score">
+                                <div class="pm-num">92<small>%</small></div>
+                                <div class="pm-pct">岗位匹配度</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="scene-meta">
+                        <div class="scene-dots" id="sceneDots">
+                            <span class="on" data-i="0"></span><span data-i="1"></span><span data-i="2"></span><span data-i="3"></span><span data-i="4"></span><span data-i="5"></span>
+                        </div>
+                        <b id="sceneTitle">5G 单站验证 · 信号覆盖测试</b>
+                        <p id="sceneDesc">基站天馈调测与覆盖验证，实时读取 RSRP / SINR 等关键指标</p>
+                    </div>
+                </div>
+
+                <h2 class="brand-headline">
+                    让工程训练<br>
+                    从此 <span>更智能、更高效</span>
+                </h2>
+                <p class="brand-slogan">
+                    面向通信与电子信息专业的 AI 驱动虚拟仿真实训平台，融合知识图谱、
+                    场景剧情演绎、动态故障注入与智能报告生成，构建「学—练—评—改」闭环训练体系。
+                </p>
+
+                <div class="brand-features">
+                    <div class="feature-item">
+                        <span class="feature-icon">🧠</span>
+                        <div class="feature-title">AI 知识图谱</div>
+                        <div class="feature-desc">知识点自动关联，智能推荐学习路径</div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">🎬</span>
+                        <div class="feature-title">沉浸式剧情</div>
+                        <div class="feature-desc">真实工程场景模拟，身临其境练技能</div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">💡</span>
+                        <div class="feature-title">口语化排障</div>
+                        <div class="feature-desc">自然语言描述故障，AI 辅助定位根因</div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">📊</span>
+                        <div class="feature-title">胜任力画像</div>
+                        <div class="feature-desc">5 维能力雷达图，量身规划提升路线</div>
+                    </div>
+                </div>
+            </div>
+            <div class="brand-footer">
+                © 2024 灵智尚人 · 智能工程训练平台 · v2.1
+            </div>
+        </div>
+
+        <!-- 右侧登录面板 -->
+        <div class="login-panel">
+            <div class="panel-particles login-particles">
+                <span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span>
+            </div>
+            <!-- 漂浮装饰图标：填充面板留白 -->
+            <div class="panel-deco" aria-hidden="true">
+                <span class="pd-ic pd-1">📡</span>
+                <span class="pd-ic pd-2">🛰</span>
+                <span class="pd-ic pd-3">⚡</span>
+                <span class="pd-ic pd-4">📶</span>
+            </div>
+
+            <!-- 顶部系统状态条 -->
+            <div class="sys-status">
+                <span class="led"></span>
+                <span>SYSTEM ONLINE</span>
+                <span class="sep">│</span>
+                <span>CORE v2.1</span>
+                <span class="sep">│</span>
+                <span>SECURE LINK</span>
+            </div>
+
+    <div class="login-container">
+        <button class="guide-trigger" onclick="showGuide()">📖 使用说明</button>
+        <div class="icon"><img src="/static/brand_logo.svg" alt="logo"></div>
+        <h1>灵智尚人</h1>
+        <p class="subtitle">请选择角色并登录</p>
+        <div class="hero-badges">
+            <span>📡 单站验证</span>
+            <span>🛰 簇·网格优化</span>
+            <span>✨ AI 生成剧情</span>
+        </div>
+        
+        <!-- 角色选择 -->
+        <div class="role-section">
+            <span class="role-title">选择角色</span>
+            <div class="role-buttons">
+                <button class="role-btn selected" id="studentBtn" onclick="selectRole('student')">
+                    👨‍🎓 学生
+                </button>
+                <button class="role-btn" id="teacherBtn" onclick="selectRole('teacher')">
+                    👨‍🏫 老师
+                </button>
+            </div>
+        </div>
+        
+        <!-- 学生信息 -->
+        <div class="student-info" id="studentInfo">
+            <div class="input-group">
+                <label for="studentNo">学号</label>
+                <input type="text" id="studentNo" value="2024001001001" placeholder="请输入您的学号" maxlength="13" onkeypress="handleKeyPress(event)" autocomplete="username">
+            </div>
+            <div class="input-group">
+                <label for="studentName">学生姓名</label>
+                <input type="text" id="studentName" value="张三" placeholder="请输入您的姓名" onkeypress="handleKeyPress(event)">
+            </div>
+            <div class="input-group">
+                <label for="className">班级（可选）</label>
+                <input type="text" id="className" placeholder="请输入班级" onkeypress="handleKeyPress(event)">
+            </div>
+        </div>
+        
+        <!-- 老师信息 -->
+        <div class="teacher-info" id="teacherInfo">
+            <div class="input-group">
+                <label for="teacherName">老师账号</label>
+                <input type="text" id="teacherName" value="teacher1" placeholder="请输入老师账号" onkeypress="handleKeyPress(event)" autocomplete="username">
+            </div>
+        </div>
+        
+        <!-- 密码 -->
+        <div class="input-group">
+            <label for="password" id="passwordLabel">访问密码</label>
+            <div class="pwd-wrap">
+                <input type="password" id="password" value="tongxin2024" placeholder="请输入密码" onkeypress="handleKeyPress(event)" autocomplete="current-password">
+                <button type="button" class="pwd-eye" id="pwdEye" onclick="togglePwd()" title="显示/隐藏密码" tabindex="-1">👁</button>
+            </div>
+            <div class="caps-hint" id="capsHint">⚠ 大写锁定（Caps Lock）已开启</div>
+        </div>
+        
+        <button class="login-btn" id="loginBtn" onclick="doLogin()">
+            登录
+        </button>
+        
+        <div class="error" id="errorMsg"></div>
+        
+        <div class="footer">
+            仅限授权用户访问
+        </div>
+    </div>
+
+            <!-- 底部数据统计 -->
+            <div class="login-stats">
+                <div><span class="stat-num">3,200+</span>KNOWLEDGE NODES</div>
+                <div><span class="stat-num">15+</span>SCENARIOS</div>
+                <div><span class="stat-num">8</span>DIMENSIONS</div>
+            </div>
+
+        </div><!-- /login-panel -->
+    </div><!-- /login-wrapper -->
+
+    <!-- ============ 启动动画控制脚本 ============ -->
+    <script>
+    (function() {
+        var overlay = document.getElementById('splashOverlay');
+        var SPLASH_DURATION = 2500;   // 画面持续时长
+        var FADEOUT_DURATION = 700;   // 淡出过渡时长（与 CSS transition 对齐）
+        var TOTAL = SPLASH_DURATION + FADEOUT_DURATION;
+        var splashPlayed = false;
+        try { splashPlayed = !!sessionStorage.getItem('splashPlayed'); } catch (e) { splashPlayed = false; }
+        // 手机浏览器隐私模式下 sessionStorage 可能抛异常，必须容错，否则遮罩永不消失挡住整页
+        function hideSplash() {
+            overlay.classList.add('hidden');
+            setTimeout(function() {
+                if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+                window.dispatchEvent(new CustomEvent('splashEnded'));
+            }, FADEOUT_DURATION);
+        }
+
+        if (!splashPlayed) {
+            try { sessionStorage.setItem('splashPlayed', '1'); } catch (e) {}
+            setTimeout(hideSplash, SPLASH_DURATION);
+        } else {
+            overlay.style.display = 'none';
+            window.dispatchEvent(new CustomEvent('splashEnded'));
+        }
+    })();
+    </script>
+
+    <script>
+        const passwordInput = document.getElementById('password');
+        const passwordLabel = document.getElementById('passwordLabel');
+        const loginBtn = document.getElementById('loginBtn');
+        const errorMsg = document.getElementById('errorMsg');
+        const studentBtn = document.getElementById('studentBtn');
+        const teacherBtn = document.getElementById('teacherBtn');
+        const studentInfo = document.getElementById('studentInfo');
+        const teacherInfo = document.getElementById('teacherInfo');
+        const studentNoInput = document.getElementById('studentNo');
+        const studentNameInput = document.getElementById('studentName');
+        const classNameInput = document.getElementById('className');
+        const teacherNameInput = document.getElementById('teacherName');
+        
+        let selectedRole = 'student';
+        const capsHint = document.getElementById('capsHint');
+
+        // 页面加载完成后默认显示学生登录表单
+        document.addEventListener('DOMContentLoaded', () => selectRole('student'));
+
+        // ===== 密码显示/隐藏 =====
+        function togglePwd() {
+            const show = passwordInput.type === 'password';
+            passwordInput.type = show ? 'text' : 'password';
+            document.getElementById('pwdEye').textContent = show ? '🙈' : '👁';
+        }
+
+        // ===== 大写锁定提醒 =====
+        passwordInput.addEventListener('keydown', function (e) {
+            if (e.getModifierState && e.getModifierState('CapsLock')) capsHint.classList.add('show');
+            else capsHint.classList.remove('show');
+        });
+        passwordInput.addEventListener('blur', () => capsHint.classList.remove('show'));
+
+        function selectRole(role) {
+            selectedRole = role;
+            
+            // 更新按钮样式
+            studentBtn.classList.remove('selected');
+            teacherBtn.classList.remove('selected');
+            if (role === 'student') {
+                studentBtn.classList.add('selected');
+                studentInfo.classList.add('show');
+                teacherInfo.classList.remove('show');
+                passwordLabel.textContent = '访问密码';
+                passwordInput.placeholder = '请输入密码';
+                passwordInput.value = 'tongxin2024';
+            } else {
+                teacherBtn.classList.add('selected');
+                studentInfo.classList.remove('show');
+                teacherInfo.classList.add('show');
+                passwordLabel.textContent = '老师密码';
+                passwordInput.placeholder = '请输入老师密码';
+                passwordInput.value = '123456';
+            }
+        }
+        
+        async function doLogin() {
+            const password = passwordInput.value.trim();
+            const studentNo = studentNoInput.value.trim();
+            const studentName = studentNameInput.value.trim();
+            const className = classNameInput.value.trim();
+            const teacherName = teacherNameInput.value.trim();
+            
+            if (!password) {
+                showError('请输入密码', passwordInput);
+                return;
+            }
+
+            if (selectedRole === 'student') {
+                if (!studentNo) {
+                    showError('学生请输入学号', studentNoInput);
+                    return;
+                }
+                // 验证学号必须是13位数字
+                if (!/^\d{13}$/.test(studentNo)) {
+                    showError('学号必须是13位数字', studentNoInput);
+                    return;
+                }
+                if (!studentName) {
+                    showError('学生请输入姓名', studentNameInput);
+                    return;
+                }
+            } else {
+                if (!teacherName) {
+                    showError('老师请输入账号', teacherNameInput);
+                    return;
+                }
+            }
+
+            loginBtn.disabled = true;
+            const origBtnHtml = loginBtn.innerHTML;
+            loginBtn.innerHTML = '<span class="btn-spin"></span>登录中…';
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        password: password,
+                        role: selectedRole,
+                        student_no: studentNo,
+                        student_name: selectedRole === 'student' ? studentName : teacherName,
+                        class_name: className
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    if (data.is_new_user) {
+                        showWelcome(data.student_name);
+                    } else {
+                        window.location.href = '/';
+                    }
+                    return; // 登录成功不再恢复按钮（页面即将跳转）
+                } else {
+                    showError(data.message || '登录失败');
+                }
+            } catch (error) {
+                showError('网络错误，请重试');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = origBtnHtml;
+            }
+        }
+        
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                doLogin();
+            }
+        }
+        
+        function showError(message, input) {
+            errorMsg.textContent = message;
+            errorMsg.classList.remove('show');
+            void errorMsg.offsetWidth; // 强制重排以重启动画
+            errorMsg.classList.add('show');
+            document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+            if (input) { input.classList.add('input-error'); input.focus(); }
+            clearTimeout(showError._t);
+            showError._t = setTimeout(() => errorMsg.classList.remove('show'), 3000);
+        }
+        
+        function showWelcome(name) {
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;justify-content:center;align-items:center;z-index:9999;animation:fadeIn 0.3s;';
+            
+            const modal = document.createElement('div');
+            modal.style.cssText = 'background:white;border-radius:20px;padding:40px;max-width:440px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:slideUp 0.4s;';
+            
+            modal.innerHTML = `
+                <div style="width:72px;height:72px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:36px;">🎉</div>
+                <h2 style="color:#1a1a1a;font-size:24px;margin-bottom:8px;">欢迎加入，${name}！</h2>
+                <p style="color:#666;font-size:14px;margin-bottom:24px;line-height:1.6;">这是您首次登录灵智尚人学习平台<br>系统已为您创建学习档案，开始探索吧！</p>
+                <div style="background:#f8f9fc;border-radius:12px;padding:16px;margin-bottom:24px;text-align:left;">
+                    <div style="font-size:13px;color:#999;margin-bottom:8px;">您可以体验以下功能：</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                        <span style="background:#e8ecfd;color:#667eea;padding:4px 10px;border-radius:8px;font-size:12px;">📚 知识学习</span>
+                        <span style="background:#e8ecfd;color:#667eea;padding:4px 10px;border-radius:8px;font-size:12px;">✏️ 在线练习</span>
+                        <span style="background:#e8ecfd;color:#667eea;padding:4px 10px;border-radius:8px;font-size:12px;">🤖 智能问答</span>
+                        <span style="background:#e8ecfd;color:#667eea;padding:4px 10px;border-radius:8px;font-size:12px;">📊 能力分析</span>
+                        <span style="background:#e8ecfd;color:#667eea;padding:4px 10px;border-radius:8px;font-size:12px;">💼 岗位招聘</span>
+                    </div>
+                </div>
+                <button onclick="window.location.href='/survey-page'" style="width:100%;padding:14px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;transition:transform 0.2s;">开始职业问卷</button>
+                <button onclick="window.location.href='/'" style="width:100%;padding:12px;background:#f0f2f5;color:#666;border:none;border-radius:12px;font-size:14px;font-weight:500;cursor:pointer;margin-top:8px;transition:transform 0.2s;">稍后再填</button>
+            `;
+            
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+        }
+        
+        // 添加动画样式
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        `;
+        document.head.appendChild(style);
+
+        // ===== 使用说明弹窗 =====
+        const GUIDE_STORAGE_KEY = 'lzr_login_guide_shown';
+
+        function getGuideHtml() {
+            return `
+                <div class="guide-overlay" id="guideOverlay" onclick="if(event.target===this) closeGuide()">
+                    <div class="guide-modal">
+                        <div class="guide-header">
+                            <div class="guide-header-icon">📖</div>
+                            <div class="guide-header-text">
+                                <h2>平台使用说明</h2>
+                                <p>灵智尚人 · 通信工程智能学习平台</p>
+                            </div>
+                            <button class="guide-close" onclick="closeGuide()">×</button>
+                        </div>
+                        <div class="guide-body">
+                            <div class="guide-section">
+                                <div class="guide-section-title">🚀 新学员快速上手流程</div>
+                                <div class="guide-step-list">
+                                    <div class="guide-step">
+                                        <div class="guide-step-num">1</div>
+                                        <div class="guide-step-text"><strong>选择角色并登录</strong>：学生输入 13 位学号、姓名和访问密码，首次登录会自动创建学习档案。页面默认展示学生登录入口。</div>
+                                    </div>
+                                    <div class="guide-step">
+                                        <div class="guide-step-num">2</div>
+                                        <div class="guide-step-text"><strong>与 AI 助手对话学习</strong>：在主聊天框提问，AI 会实时回答。可切换「快速回答 / 深度思考」模式，支持上传图片提问。AI 思考较慢时桌宠会主动陪你聊天解闷～</div>
+                                    </div>
+                                    <div class="guide-step">
+                                        <div class="guide-step-num">3</div>
+                                        <div class="guide-step-text"><strong>沉浸式剧情演练</strong>：点击「🎬 沉浸式剧情」进入通信工程师岗位模拟，在真实场景中学习解决问题，提升工程实践能力。</div>
+                                    </div>
+                                    <div class="guide-step">
+                                        <div class="guide-step-num">4</div>
+                                        <div class="guide-step-text"><strong>完成周任务与练习</strong>：通过「📋 周任务」完成工程任务卡，使用「✏️ 互动练习」刷题巩固，错题会自动收录到错题本。</div>
+                                    </div>
+                                    <div class="guide-step">
+                                        <div class="guide-step-num">5</div>
+                                        <div class="guide-step-text"><strong>查看能力分析报告</strong>：点击「📊 我的报告」查看个人学习报告，包含 12 维能力雷达图、优缺点和补习建议；点击「🤖 AI个性化分析」可让 AI 综合你的对话、错题和学习记录，给出深度能力分析与学习建议。</div>
+                                    </div>
+                                    <div class="guide-step">
+                                        <div class="guide-step-num">6</div>
+                                        <div class="guide-step-text"><strong>岗位胜任力与招聘匹配</strong>：点击「🎯 胜任力画像」查看 5 维雷达图，「💼 岗位招聘」可匹配适合你的岗位方向。</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="guide-section">
+                                <div class="guide-section-title">⚙️ 核心功能一览</div>
+                                <div class="guide-tags">
+                                    <span class="guide-tag">📚 知识图谱学习</span>
+                                    <span class="guide-tag">✏️ 在线练习题库</span>
+                                    <span class="guide-tag">🤖 AI 智能问答助手</span>
+                                    <span class="guide-tag">📋 每周任务卡</span>
+                                    <span class="guide-tag">🔧 动态故障注入</span>
+                                    <span class="guide-tag">🛡️ 前置安全自检</span>
+                                    <span class="guide-tag">💬 口语化排障</span>
+                                    <span class="guide-tag">🔒 失败锁定机制</span>
+                                    <span class="guide-tag">📄 自动工程报告</span>
+                                    <span class="guide-tag">🎯 5 维胜任力画像</span>
+                                    <span class="guide-tag">💼 岗位招聘匹配</span>
+                                    <span class="guide-tag">🤖 AI个性化分析</span>
+                                    <span class="guide-tag">🎬 沉浸式剧情</span>
+                                    <span class="guide-tag">🐾 桌宠助手</span>
+                                    <span class="guide-tag">📊 知识库课件</span>
+                                    <span class="guide-tag">📈 学习曲线</span>
+                                </div>
+                            </div>
+
+                            <div class="guide-section">
+                                <div class="guide-section-title">⚠️ 注意事项</div>
+                                <div class="guide-step-list">
+                                    <div class="guide-step">
+                                        <div class="guide-step-num" style="background:#ff4d4f;">!</div>
+                                        <div class="guide-step-text"><strong>访问密码</strong>：tongxin2024（演示环境通用密码，请勿外泄）。</div>
+                                    </div>
+                                    <div class="guide-step">
+                                        <div class="guide-step-num" style="background:#fa8c16;">!</div>
+                                        <div class="guide-step-text"><strong>连续 3 次测验不及格</strong>将触发<strong>失败锁定（5 分钟冷却）</strong>，请先复习知识点再重试。</div>
+                                    </div>
+                                    <div class="guide-step">
+                                        <div class="guide-step-num" style="background:#52c41a;">✓</div>
+                                        <div class="guide-step-text"><strong>前置自检必须项</strong>未确认将阻止任务进行，请严格按操作规范执行，安全分纳入综合成绩。</div>
+                                    </div>
+                                    <div class="guide-step">
+                                        <div class="guide-step-num" style="background:#722ed1;">i</div>
+                                        <div class="guide-step-text"><strong>AI 个性化分析</strong>：在「📊 我的报告」中点击「🤖 AI个性化分析」，AI 会综合你的对话历史、错题本和学习记录，给出优势、不足和学习建议。</div>
+                                    </div>
+                                    <div class="guide-step">
+                                        <div class="guide-step-num" style="background:#1890ff;">i</div>
+                                        <div class="guide-step-text"><strong>桌宠陪伴</strong>：右下角桌宠会主动打招呼、提醒学习，AI 回复较慢时还会陪你聊天解闷，可拖动到任意位置。</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="guide-footer">
+                            <label>
+                                <input type="checkbox" id="guideDontShow"> 下次不再自动弹出
+                            </label>
+                            <button class="btn-got-it" onclick="closeGuide(true)">我知道了，开始使用</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showGuide() {
+            if (document.getElementById('guideOverlay')) return;
+            const wrap = document.createElement('div');
+            wrap.innerHTML = getGuideHtml();
+            document.body.appendChild(wrap.firstElementChild);
+        }
+
+        function closeGuide(fromGotIt) {
+            const overlay = document.getElementById('guideOverlay');
+            if (!overlay) return;
+            if (fromGotIt) {
+                const cb = document.getElementById('guideDontShow');
+                if (cb && cb.checked) {
+                    try { localStorage.setItem(GUIDE_STORAGE_KEY, '1'); } catch (e) {}
+                }
+            }
+            overlay.style.animation = 'fadeIn 0.2s reverse';
+            setTimeout(() => overlay.remove(), 180);
+        }
+
+        // 登录前自动弹出使用说明（在 splash 动画全部结束之后才弹）
+        (function autoShowGuide() {
+            try {
+                if (localStorage.getItem(GUIDE_STORAGE_KEY) === '1') return;
+            } catch (e) {}
+            // 手机小屏不自动弹引导，避免挡住登录表单（可用「📖 使用说明」手动打开）
+            if (window.innerWidth < 500) return;
+            function tryShow() {
+                setTimeout(showGuide, 300); // 登录页刚露出来时别立刻弹，等 300ms 缓和
+            }
+            // 等 splash 播放完再弹（自定义事件由 splash 脚本在淡出结束后触发）
+            window.addEventListener('splashEnded', tryShow, { once: true });
+        })();
+    </script>
+
+    <!-- 场景预览轮播控制 -->
+    <script>
+        (function () {
+            const stage = document.getElementById('sceneStage');
+            if (!stage) return;
+            const scenes = stage.querySelectorAll('.scene');
+            const dots = document.querySelectorAll('#sceneDots span');
+            const titleEl = document.getElementById('sceneTitle');
+            const descEl = document.getElementById('sceneDesc');
+            const infos = [
+                ['5G 单站验证 · 信号覆盖测试', '基站天馈调测与覆盖验证，实时读取 RSRP / SINR 等关键指标'],
+                ['网格优化 · 路测轨迹规划', '测试车辆按规划轨迹遍历网格，采集路测数据并定位弱覆盖区域'],
+                ['AI 自动生成剧情实训', '输入任意工程主题，AI 自动创作沉浸式实训剧本并智能评分'],
+                ['故障链演练 · 因果推理', '沿因果链路逐层排查故障，AI 导师引导定位根因，自适应难度升降'],
+                ['AI 模拟面试 · 实时评分', 'AI 面试官基于岗位 JD 提问，实时评估回答质量并给出改进建议'],
+                ['岗位匹配 · 能力雷达', '融合画像与岗位要求计算匹配度，识别技能缺口并推荐学习路径']
+            ];
+            let cur = 0, timer = null;
+
+            function show(i) {
+                cur = (i + scenes.length) % scenes.length;
+                scenes.forEach((s, k) => s.classList.toggle('active', k === cur));
+                dots.forEach((d, k) => d.classList.toggle('on', k === cur));
+                const [t, ds] = infos[cur];
+                titleEl.textContent = t;
+                descEl.textContent = ds;
+            }
+            function play() { stop(); timer = setInterval(() => show(cur + 1), 3800); }
+            function stop() { if (timer) { clearInterval(timer); timer = null; } }
+
+            dots.forEach(d => d.addEventListener('click', () => { show(+d.dataset.i); play(); }));
+            stage.addEventListener('mouseenter', stop);
+            stage.addEventListener('mouseleave', play);
+            play();
+        })();
+    </script>
+
+    <link rel="stylesheet" href="/static/desktop_pet.css">
+    <script src="/static/desktop_pet.js" defer></script>
+</body>
+</html>

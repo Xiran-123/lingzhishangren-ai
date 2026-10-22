@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>剧情演绎 - 模板A 经典双栏毛玻璃</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-1: #0a1838;
+            --bg-2: #0d1f45;
+            --bg-3: #1a2d6a;
+            --accent: #667eea;
+            --accent-2: #764ba2;
+            --cyan: #00c8ff;
+            --glass: rgba(255, 255, 255, 0.06);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --text: #e0ecff;
+            --text-dim: #8fa3c7;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 50%, var(--bg-3) 100%);
+            min-height: 100vh;
+            padding: 16px;
+            color: var(--text);
+            overflow-x: hidden;
+            position: relative;
+        }
+        /* 粒子背景 */
+        .bg-particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+        .bg-particles span {
+            position: absolute; display: block; border-radius: 50%;
+            background: rgba(0, 200, 255, 0.7); box-shadow: 0 0 6px rgba(0, 200, 255, 0.8);
+            animation: bgFloat linear infinite;
+        }
+        @keyframes bgFloat {
+            0% { transform: translateY(0) translateX(0); opacity: 0; }
+            10% { opacity: 0.9; } 90% { opacity: 0.7; }
+            100% { transform: translateY(-120vh) translateX(30px); opacity: 0; }
+        }
+        .bg-particles span:nth-child(1){left:5%;top:85%;width:3px;height:3px;animation-duration:14s;}
+        .bg-particles span:nth-child(2){left:20%;top:30%;width:4px;height:4px;animation-duration:16s;animation-delay:-5s;}
+        .bg-particles span:nth-child(3){left:50%;top:45%;width:3px;height:3px;animation-duration:17s;animation-delay:-6s;}
+        .bg-particles span:nth-child(4){left:75%;top:70%;width:2px;height:2px;animation-duration:13s;animation-delay:-3s;}
+        .bg-particles span:nth-child(5){left:90%;top:20%;width:4px;height:4px;animation-duration:15s;animation-delay:-4s;}
+        .bg-particles span:nth-child(6){left:35%;top:90%;width:2px;height:2px;animation-duration:18s;animation-delay:-8s;}
+
+        /* 顶部导航栏（与首页一致） */
+        .top-nav {
+            background: linear-gradient(135deg, #0a1a4a 0%, #0e2a60 100%);
+            color: white; padding: 12px 18px; display: flex; align-items: center; gap: 12px;
+            border-radius: 12px; margin-bottom: 16px; position: relative;
+            border-bottom: 1px solid rgba(0,200,255,0.2);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 2;
+        }
+        .top-nav::after {
+            content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0,200,255,0.6), transparent);
+        }
+        .nav-logo { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .nav-logo span { background: linear-gradient(135deg, var(--cyan), #4d94ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .nav-tag { padding: 4px 10px; background: rgba(255,255,255,0.1); border-radius: 6px; font-size: 12px; }
+        .nav-spacer { flex: 1; }
+        .nav-btn {
+            padding: 6px 14px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 8px; color: #e0ecff; font-size: 13px; cursor: pointer; transition: all 0.25s;
+            display: inline-flex; align-items: center; gap: 6px; text-decoration: none;
+        }
+        .nav-btn:hover { background: rgba(255,255,255,0.18); box-shadow: 0 2px 8px rgba(102,126,234,0.3); }
+        .nav-btn svg { display: block; }
+        .nav-btn-danger { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.4); color: #f87171; }
+        .nav-btn-danger:hover { background: rgba(239,68,68,0.22); box-shadow: 0 2px 8px rgba(239,68,68,0.3); }
+        .nav-btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); border-color: transparent; color: #fff; font-weight: 500; }
+        .nav-btn-primary:hover { box-shadow: 0 2px 10px rgba(102,126,234,0.5); transform: translateY(-1px); }
+
+        /* 主容器 双栏 */
+        .container { display: grid; grid-template-columns: 380px 1fr; gap: 16px; position: relative; z-index: 1; }
+        .panel {
+            background: var(--glass); backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border); border-radius: 16px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(0,200,255,0.05);
+            overflow: hidden;
+        }
+        .scenarios-panel { padding: 20px; height: calc(100vh - 100px); overflow-y: auto; }
+        .chat-panel { height: calc(100vh - 100px); display: flex; flex-direction: column; }
+
+        .panel-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .action-row { display: flex; gap: 8px; margin-bottom: 16px; }
+        .action-btn {
+            padding: 8px 14px; background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border);
+            border-radius: 8px; color: var(--text); font-size: 13px; cursor: pointer; transition: all 0.25s;
+        }
+        .action-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+        /* 沉浸式入口卡片 */
+        .immersive-entry {
+            background: linear-gradient(135deg, rgba(0,128,255,0.15) 0%, rgba(0,200,255,0.1) 100%);
+            border: 1px solid rgba(0,150,255,0.4); border-radius: 12px; padding: 14px 16px;
+            margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        }
+        .immersive-entry .badge { display:inline-block; background: linear-gradient(135deg,#0080ff,#00c8ff); color:#fff; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:700; }
+        .immersive-entry .title { font-size: 14px; font-weight: 600; margin: 4px 0; }
+        .immersive-entry .desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+        .immersive-entry .go {
+            padding: 8px 18px; background: linear-gradient(135deg, #0080ff, #00c8ff); color: #fff;
+            border: none; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer;
+            text-decoration: none; box-shadow: 0 4px 14px rgba(0,130,255,0.35); white-space: nowrap;
+        }
+
+        /* 自定义场景区 */
+        .custom-section {
+            background: linear-gradient(135deg, rgba(102,126,234,0.12) 0%, rgba(118,75,162,0.12) 100%);
+            border: 1.5px dashed rgba(102,126,234,0.6); border-radius: 12px; padding: 16px; margin-bottom: 16px;
+        }
+        .custom-title { font-size: 14px; font-weight: 600; color: var(--cyan); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+        .input-group { margin-bottom: 10px; }
+        .input-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-dim); margin-bottom: 5px; }
+        .input-group input, .input-group textarea {
+            width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border);
+            border-radius: 8px; color: var(--text); font-size: 13px; font-family: inherit; transition: border-color 0.2s;
+        }
+        .input-group input:focus, .input-group textarea:focus { outline: none; border-color: var(--cyan); }
+        .input-group textarea { resize: vertical; min-height: 60px; }
+        .start-custom-btn {
+            width: 100%; padding: 10px; background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s;
+        }
+        .start-custom-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102,126,234,0.4); }
+
+        .divider { display: flex; align-items: center; gap: 10px; margin: 16px 0; color: var(--text-dim); font-size: 12px; }
+        .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--glass-border); }
+
+        /* 场景卡片 */
+        .scenario-card {
+            background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); border-radius: 12px;
+            padding: 14px; margin-bottom: 12px; cursor: pointer; transition: all 0.3s;
+        }
+        .scenario-card:hover { border-color: var(--cyan); transform: translateY(-2px); background: rgba(0,200,255,0.05); box-shadow: 0 4px 16px rgba(0,200,255,0.15); }
+        .scenario-card.active { border-color: var(--accent); background: linear-gradient(135deg, rgba(102,126,234,0.15) 0%, rgba(118,75,162,0.15) 100%); }
+        .scenario-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .scenario-title { font-size: 15px; font-weight: 600; }
+        .difficulty-badge { padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+        .difficulty-badge.simple { background: rgba(46,125,50,0.2); color: #66bb6a; }
+        .difficulty-badge.medium { background: rgba(239,108,0,0.2); color: #ffa726; }
+        .difficulty-badge.hard { background: rgba(198,40,40,0.2); color: #ef5350; }
+        .scenario-description { font-size: 13px; color: var(--text-dim); line-height: 1.5; margin-bottom: 10px; }
+        .scenario-tasks { background: rgba(0,0,0,0.15); padding: 8px 10px; border-radius: 6px; }
+        .task-item { font-size: 12px; color: var(--text-dim); padding: 3px 0; display: flex; align-items: center; gap: 6px; }
+        .task-item::before { content: '▸'; color: var(--cyan); }
+
+        /* 聊天面板 */
+        .chat-header {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+            color: white; padding: 16px 20px; display: flex; align-items: center; gap: 12px;
+        }
+        .chat-icon { width: 36px; height: 36px; border-radius: 10px; overflow: hidden; }
+        .chat-icon img { width: 100%; height: 100%; object-fit: contain; }
+        .chat-title { font-size: 17px; font-weight: 600; }
+        .chat-subtitle { font-size: 12px; opacity: 0.85; }
+
+        .messages-area { flex: 1; overflow-y: auto; padding: 20px; background: rgba(0,0,0,0.15); }
+        .message { margin-bottom: 18px; display: flex; gap: 10px; animation: fadeInUp 0.3s ease; }
+        @keyframes fadeInUp { from { opacity:0; transform: translateY(10px);} to { opacity:1; transform: translateY(0);} }
+        .message.user { flex-direction: row-reverse; }
+        .avatar { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+        .message.user .avatar { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: white; }
+        .message.assistant .avatar { background: transparent; padding: 0; box-shadow: none; }
+        .message.assistant .avatar img { width: 100%; height: 100%; object-fit: contain; }
+        .message-content { max-width: 72%; padding: 12px 16px; border-radius: 14px; line-height: 1.6; word-wrap: break-word; }
+        .message.user .message-content { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: white; border-top-right-radius: 4px; }
+        .message.assistant .message-content { background: rgba(255,255,255,0.08); color: var(--text); border-top-left-radius: 4px; border: 1px solid var(--glass-border); }
+        .message-content pre { background: #0a0e1a; color: #e8e8e8; padding: 12px; border-radius: 8px; overflow-x: auto; margin: 10px 0; font-size: 13px; }
+
+        .typing-dots { display: flex; gap: 5px; align-items: center; }
+        .typing-dots span { width: 7px; height: 7px; background: var(--cyan); border-radius: 50%; animation: bounce 1.4s infinite; }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce { 0%,60%,100% { transform: translateY(0);} 30% { transform: translateY(-6px);} }
+
+        .input-area { padding: 14px 16px; background: rgba(0,0,0,0.2); border-top: 1px solid var(--glass-border); display: flex; gap: 10px; align-items: flex-end; }
+        .upload-btn { padding: 10px 12px; background: rgba(255,255,255,0.08); border: none; border-radius: 10px; font-size: 16px; cursor: pointer; color: var(--text); }
+        .upload-btn:hover { background: rgba(255,255,255,0.15); }
+        .upload-btn svg { display: block; }
+        .upload-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .upload-menu-wrap { position: relative; }
+        .upload-menu { position: absolute; bottom: calc(100% + 8px); left: 0; min-width: 132px; background: #1a2440; border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 6px; display: none; flex-direction: column; gap: 2px; z-index: 60; box-shadow: 0 8px 24px rgba(0,0,0,0.45); }
+        .upload-menu.show { display: flex; }
+        .upload-menu button { display: flex; align-items: center; gap: 8px; background: transparent; border: none; color: var(--text); padding: 8px 10px; border-radius: 8px; font-size: 13px; cursor: pointer; text-align: left; white-space: nowrap; }
+        .upload-menu button:hover { background: rgba(102,126,234,0.18); }
+        .input-box { flex: 1; display: flex; flex-direction: column; background: rgba(255,255,255,0.06); border-radius: 10px; }
+        .input-box textarea { width: 100%; padding: 12px 14px; border: none; background: transparent; color: var(--text); font-size: 14px; resize: none; max-height: 120px; outline: none; font-family: inherit; }
+        .input-box textarea::placeholder { color: var(--text-dim); }
+        .send-btn { padding: 12px 22px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .send-btn:hover:not(:disabled) { box-shadow: 0 4px 12px rgba(102,126,234,0.4); transform: translateY(-1px); }
+        .send-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-dim); text-align: center; }
+        .empty-icon { font-size: 56px; margin-bottom: 16px; opacity: 0.6; }
+
+        @media (max-width: 900px) {
+            .container { grid-template-columns: 1fr; }
+            .scenarios-panel, .chat-panel { height: auto; min-height: 400px; }
+        }
+    </style>
+    <link rel="stylesheet" href="/static/global_buttons.css">
+</head>
+<body>
+    <div class="bg-particles"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+
+    <nav class="top-nav">
+        <div class="nav-logo"><span>灵智尚人</span></div>
+        <span class="nav-tag">剧情演绎</span>
+        <div class="nav-spacer"></div>
+        <button class="nav-btn nav-btn-danger" onclick="clearChatHistory()"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4 h12"/><path d="M5.5 4 V2.5 h5 V4"/><rect x="3" y="4" width="10" height="11" rx="1.5"/><line x1="6" y1="7.5" x2="6" y2="12"/><line x1="10" y1="7.5" x2="10" y2="12"/></svg>清除记录</button>
+        <a href="/" target="_top" class="nav-btn nav-btn-primary"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3 L4 8 L10 13"/><line x1="4.5" y1="8" x2="15" y2="8"/></svg>返回首页</a>
+    </nav>
+
+    <div class="container">
+        <!-- 场景选择面板 -->
+        <div class="panel scenarios-panel">
+            <div class="immersive-entry">
+                <div>
+                    <div class="badge">NEW</div>
+                    <div class="title">🎞️ 沉浸式剧情演绎</div>
+                    <div class="desc">全屏场景 + 步骤引导 + 毛玻璃剧情面板</div>
+                </div>
+                <a href="/scenario-demo" class="go">立即体验 →</a>
+            </div>
+
+            <h2 class="panel-title">🎬 剧情演绎（经典模式）</h2>
+
+            <div class="custom-section">
+                <div class="custom-title">✏️ 创建自定义场景</div>
+                <div class="input-group"><label>场景标题</label><input type="text" id="customTitle" placeholder="例如：数据中心网络运维工程师"></div>
+                <div class="input-group"><label>场景描述</label><textarea id="customDescription" placeholder="描述你想体验的工作场景..."></textarea></div>
+                <div class="input-group"><label>预期任务（每行一个，可选）</label><textarea id="customTasks" placeholder="1. 检查网络设备状态&#10;2. 分析网络拓扑"></textarea></div>
+                <button class="start-custom-btn" onclick="startCustomScenario()">🚀 开始自定义场景</button>
+            </div>
+
+            <div class="divider">或选择预设场景</div>
+            <div id="scenariosList">
+                <div class="empty-state"><div class="empty-icon">📖</div><div>加载中...</div></div>
+            </div>
+        </div>
+
+        <!-- 聊天面板 -->
+        <div class="panel chat-panel">
+            <div class="chat-header">
+                <div class="chat-icon"><img src="/static/avatar_t4_gradient.svg" alt="AI"></div>
+                <div><div class="chat-title">灵智尚人</div><div class="chat-subtitle">职业导师</div></div>
+            </div>
+            <div class="messages-area" id="messagesArea">
+                <div class="empty-state" id="emptyState"><div class="empty-icon">🎯</div><div>选择一个剧情开始吧！</div></div>
+            </div>
+            <div class="input-area" id="inputArea" style="display:none">
+                <input type="file" id="imageUpload" style="display:none" accept="image/*">
+                <input type="file" id="fileTextUpload" style="display:none" accept=".txt,.md,.csv,.json,.log,text/plain">
+                <div class="upload-menu-wrap">
+                    <button class="upload-btn" id="uploadPlusBtn" type="button" title="上传"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg></button>
+                    <div class="upload-menu" id="uploadMenu">
+                        <button type="button" data-act="image"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="2.5" width="14" height="11" rx="2"/><circle cx="5" cy="6.5" r="1.4"/><path d="M1.5 11.5 L5.5 8 L8 10.5 L11 7.5 L14.5 11"/></svg>上传图片</button>
+                        <button type="button" data-act="file"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 1.5 h6 l3 3 v10 h-9 z"/><path d="M9.5 1.5 v3 h3"/></svg>上传文件</button>
+                    </div>
+                </div>
+                <div class="input-box"><textarea id="userInput" placeholder="请输入...（Enter发送，Shift+Enter换行）" rows="1" onkeydown="handleKeyDown(event)" oninput="autoResize()"></textarea></div>
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()">发送</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedScenario=null, isGenerating=false, chatHistory=[], selectedImage=null;
+        const STORAGE_KEY='lingzhi_scenario_history';
+        const imageUpload=document.getElementById('imageUpload');
+        imageUpload.addEventListener('change',e=>{const f=e.target.files[0];if(f){const r=new FileReader();r.onload=ev=>{selectedImage=ev.target.result};r.readAsDataURL(f);}});
+        function saveChatHistory(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(chatHistory));}catch(e){}}
+        function loadChatHistory(){try{const s=localStorage.getItem(STORAGE_KEY);if(s){chatHistory=JSON.parse(s);chatHistory.forEach(m=>addMessage(m.content,m.isUser));document.getElementById('emptyState').style.display='none';document.getElementById('inputArea').style.display='flex';}}catch(e){}}
+        function clearChatHistory(){if(confirm('确定清除？')){chatHistory=[];saveChatHistory();location.reload();}}
+        async function loadScenarios(){
+            try{const r=await fetch('/scenarios');const d=await r.json();renderScenarios(d.scenarios||[]);}
+            catch(e){document.getElementById('scenariosList').innerHTML='<div class="empty-state"><div class="empty-icon">❌</div><div>加载失败</div></div>';}
+        }
+        function renderScenarios(s){
+            const c=document.getElementById('scenariosList');
+            if(!s.length){c.innerHTML='<div class="empty-state"><div class="empty-icon">📭</div><div>暂无剧情</div></div>';return;}
+            c.innerHTML=s.map(sc=>`<div class="scenario-card" data-id="${sc.id}" onclick="selectScenario(${sc.id})">
+                <div class="scenario-header"><div class="scenario-title">${sc.title}</div><span class="difficulty-badge ${getDifficultyClass(sc.difficulty)}">${sc.difficulty}</span></div>
+                <div class="scenario-description">${sc.description}</div>
+                <div class="scenario-tasks">${sc.tasks.map(t=>`<div class="task-item">${t}</div>`).join('')}</div>
+            </div>`).join('');
+        }
+        function getDifficultyClass(d){if(d==='简单')return'simple';if(d==='中等')return'medium';return'hard';}
+        async function startCustomScenario(){
+            const title=document.getElementById('customTitle').value.trim();
+            const desc=document.getElementById('customDescription').value.trim();
+            if(!title){alert('请输入场景标题！');return;}
+            if(!desc){alert('请输入场景描述！');return;}
+            const tasks=document.getElementById('customTasks').value.trim().split('\n').filter(t=>t.trim()).map(t=>t.trim());
+            selectedScenario={id:'custom',title,description:desc,tasks:tasks.length?tasks:['探索这个场景']};
+            document.querySelectorAll('.scenario-card').forEach(c=>c.classList.remove('active'));
+            document.getElementById('emptyState').style.display='none';
+            document.getElementById('inputArea').style.display='flex';
+            let w=`欢迎来到【${title}】！\n\n${desc}`;
+            if(selectedScenario.tasks.length)w+=`\n\n你的目标：\n${selectedScenario.tasks.map((t,i)=>`${i+1}. ${t}`).join('\n')}`;
+            w+='\n\n让我们开始吧！你可以先告诉我你的想法。';
+            addMessage(w,false);
+        }
+        async function selectScenario(id){
+            document.querySelectorAll('.scenario-card').forEach(c=>c.classList.remove('active'));
+            document.querySelector(`.scenario-card[data-id="${id}"]`).classList.add('active');
+            try{const r=await fetch('/start-scenario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({scenario_id:id})});
+            const d=await r.json();
+            if(d.success){selectedScenario=d.scenario;document.getElementById('emptyState').style.display='none';document.getElementById('inputArea').style.display='flex';
+            let w=`欢迎来到【${selectedScenario.title}】！\n\n${selectedScenario.description}`;
+            if(selectedScenario.tasks&&selectedScenario.tasks.length)w+=`\n\n你的目标：\n${selectedScenario.tasks.map((t,i)=>`${i+1}. ${t}`).join('\n')}`;
+            w+='\n\n让我们开始吧！你可以先告诉我你的想法。';
+            addMessage(w,false);}}catch(e){console.error(e);}
+        }
+        function addMessage(content,isUser){
+            chatHistory.push({content,isUser,timestamp:Date.now()});saveChatHistory();
+            const area=document.getElementById('messagesArea');
+            const div=document.createElement('div');div.className='message '+(isUser?'user':'assistant');
+            const av=document.createElement('div');av.className='avatar';
+            if(isUser){av.textContent='👤';av.style.background='linear-gradient(135deg,var(--accent),var(--accent-2))';av.style.color='white';}
+            else{const img=document.createElement('img');img.src='/static/avatar_t4_gradient.svg';img.alt='AI';av.appendChild(img);}
+            const cd=document.createElement('div');cd.className='message-content';
+            cd.innerHTML=(isUser?'':'<div style="font-size:11px;color:#8fa3c7;margin-bottom:4px;">✨ AI 生成内容</div>')+formatMessage(content);
+            div.appendChild(av);div.appendChild(cd);area.appendChild(div);scrollToBottom();return cd;
+        }
+        function formatMessage(c){return c.replace(/```([\s\S]*?)```/g,'<pre><code>$1</code></pre>').replace(/\n/g,'<br>');}
+        function addTypingIndicator(){const area=document.getElementById('messagesArea');const d=document.createElement('div');d.className='message assistant';d.id='typingIndicator';
+        d.innerHTML='<div class="avatar"><img src="/static/avatar_t4_gradient.svg" alt="AI" style="width:100%;height:100%;object-fit:contain;"></div><div class="message-content"><div class="typing-dots"><span></span><span></span><span></span></div></div>';
+        area.appendChild(d);scrollToBottom();return d;}
+        function removeTypingIndicator(){const t=document.getElementById('typingIndicator');if(t)t.remove();}
+        function scrollToBottom(){const a=document.getElementById('messagesArea');a.scrollTop=a.scrollHeight;}
+        async function sendMessage(){
+            if(isGenerating)return;
+            const input=document.getElementById('userInput');const msg=input.value.trim();
+            if(!msg)return;
+            addMessage(msg,true);input.value='';input.style.height='auto';
+            setInputDisabled(true);addTypingIndicator();isGenerating=true;
+            try{const body={message:msg,is_scenario:true,stream:true};
+            if(selectedScenario)body.scenario_info={title:selectedScenario.title,description:selectedScenario.description,tasks:selectedScenario.tasks||[]};
+            const r=await fetch('/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+            if(!r.ok)throw new Error('请求失败');
+            removeTypingIndicator();const cd=addMessage('',false);let raw='';
+            const reader=r.body.getReader();const dec=new TextDecoder();
+            while(true){const{done,value}=await reader.read();if(done)break;
+            const lines=dec.decode(value).split('\n\n');
+            for(const l of lines){if(l.startsWith('data: ')){try{const j=JSON.parse(l.slice(6));if(j.content){raw+=j.content;cd.innerHTML='<div style="font-size:11px;color:#8fa3c7;margin-bottom:4px;">✨ AI 生成内容</div>'+formatMessage(raw);scrollToBottom();}}catch(e){}}}}
+            }catch(e){removeTypingIndicator();addMessage('请求出错，请稍后重试',false);}
+            finally{isGenerating=false;setInputDisabled(false);input.focus();}
+        }
+        function setInputDisabled(d){document.getElementById('userInput').disabled=d;document.getElementById('sendBtn').disabled=d;const _up=document.getElementById('uploadPlusBtn');if(_up){_up.disabled=d;if(d)document.getElementById('uploadMenu').classList.remove('show');}}
+        function handleKeyDown(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
+        function autoResize(){const i=document.getElementById('userInput');i.style.height='auto';i.style.height=Math.min(i.scrollHeight,120)+'px';}
+        (function(){const p=document.getElementById('uploadPlusBtn'),m=document.getElementById('uploadMenu'),ft=document.getElementById('fileTextUpload');if(!p||!m||!ft)return;
+        p.addEventListener('click',e=>{e.stopPropagation();m.classList.toggle('show');});m.addEventListener('click',e=>e.stopPropagation());document.addEventListener('click',()=>m.classList.remove('show'));
+        m.querySelector('[data-act="image"]').addEventListener('click',()=>{m.classList.remove('show');document.getElementById('imageUpload').click();});
+        m.querySelector('[data-act="file"]').addEventListener('click',()=>{m.classList.remove('show');ft.click();});
+        ft.addEventListener('change',function(){const f=this.files[0];if(!f)return;if(f.size>200*1024){alert('文件过大，仅支持 200KB 以内的文本文件');this.value='';return;}
+        const r=new FileReader();r.onload=()=>{const ta=document.getElementById('userInput');ta.value=(ta.value?ta.value+'\n':'')+'【文件：'+f.name+'】\n'+r.result;if(typeof autoResize==='function')autoResize();ta.focus();};r.readAsText(f);this.value='';});})();
+        loadScenarios();loadChatHistory();
+    </script>
+    <link rel="stylesheet" href="/static/desktop_pet.css">
+    <script src="/static/desktop_pet.js" defer></script>
+</body>
+</html>

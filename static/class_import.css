@@ -1,0 +1,328 @@
+/* =========================================================
+   班级管理面板（入口在「班级通知」页）
+   功能：班级列表、新建/删除班级、Excel 名单导入（预览 + 确认）
+   依赖：static/class_import.js
+   ========================================================= */
+
+.cim-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, .55);
+    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(3px);
+    z-index: 1200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.cim-overlay.show { display: flex; }
+
+.cim-modal {
+    background: #fff;
+    border-radius: 16px;
+    width: min(1080px, 100%);
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(8, 15, 40, .38);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+    box-sizing: border-box;
+}
+
+.cim-modal *,
+.cim-modal *::before,
+.cim-modal *::after { box-sizing: border-box; }
+
+.cim-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 22px;
+    border-bottom: 1px solid #eef0f7;
+    flex: 0 0 auto;
+}
+
+.cim-title { font-size: 17px; font-weight: 800; color: #2f3646; }
+
+.cim-close {
+    border: none;
+    background: #f0f2f8;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    color: #667;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.cim-close:hover { background: #e4e8f4; color: #d32f2f; }
+
+.cim-body {
+    display: grid;
+    grid-template-columns: 274px minmax(0, 1fr);
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* ---------- 左：班级列表 ---------- */
+.cim-left {
+    border-right: 1px solid #eef0f7;
+    padding: 14px;
+    overflow-y: auto;
+    background: #fbfcff;
+}
+
+.cim-sec-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .5px;
+    color: #7a8199;
+    margin: 2px 0 8px;
+}
+
+.cim-sec-title b { color: #667eea; font-size: 11px; }
+
+.cim-class {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 13.5px;
+    color: #3c4257;
+    transition: .16s;
+    margin-bottom: 2px;
+}
+
+.cim-class:hover { background: #f1f4fd; transform: translateX(2px); }
+
+.cim-class.on {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, .3);
+    transform: none;
+}
+
+.cim-class .nm {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cim-class .cnt {
+    margin-left: auto;
+    flex: 0 0 auto;
+    font-size: 11px;
+    font-weight: 700;
+    background: #eef1fb;
+    color: #5a67c4;
+    border-radius: 10px;
+    padding: 1px 7px;
+}
+
+.cim-class.on .cnt { background: rgba(255, 255, 255, .24); color: #fff; }
+
+.cim-class .del {
+    border: none;
+    background: transparent;
+    color: #c9cee0;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 0 2px;
+    flex: 0 0 auto;
+}
+
+.cim-class .del:hover { color: #ff6b6b; }
+
+.cim-newclass { display: flex; gap: 6px; margin-top: 12px; }
+
+.cim-newclass input {
+    flex: 1;
+    min-width: 0;
+    padding: 7px 9px;
+    font-size: 12.5px;
+    border: 1.5px solid #e4e8f4;
+    border-radius: 8px;
+}
+
+.cim-newclass input:focus { outline: none; border-color: #667eea; }
+
+.cim-newclass button {
+    padding: 7px 12px;
+    border-radius: 8px;
+    border: none;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+/* ---------- 右：导入 ---------- */
+.cim-right { padding: 16px 20px; overflow-y: auto; }
+
+.cim-form {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.cim-field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+
+.cim-field label { font-size: 11.5px; font-weight: 600; color: #7a8199; }
+
+.cim-field select,
+.cim-field input[type="text"] {
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 13px;
+    border: 1.5px solid #e4e8f4;
+    border-radius: 8px;
+    background: #fff;
+    color: #333;
+}
+
+.cim-field select:focus,
+.cim-field input[type="text"]:focus { outline: none; border-color: #667eea; }
+
+.cim-drop {
+    border: 2px dashed #d9dff2;
+    border-radius: 12px;
+    padding: 20px 16px;
+    text-align: center;
+    color: #8a90a6;
+    font-size: 13.5px;
+    cursor: pointer;
+    transition: .2s;
+    line-height: 1.7;
+}
+
+.cim-drop:hover,
+.cim-drop.drag { border-color: #667eea; background: rgba(102, 126, 234, .05); color: #5a67c4; }
+
+.cim-summary {
+    margin-top: 12px;
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: #4a55a2;
+    background: rgba(102, 126, 234, .08);
+    border-radius: 9px;
+    padding: 9px 12px;
+}
+
+.cim-summary b { color: #33418a; }
+
+.cim-issues {
+    margin-top: 10px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #a15c00;
+    background: #fff8e6;
+    border: 1px solid #ffe2b0;
+    border-radius: 8px;
+    padding: 8px 12px;
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+.cim-table-wrap {
+    max-height: 280px;
+    overflow: auto;
+    border: 1px solid #eef0f7;
+    border-radius: 10px;
+    margin-top: 10px;
+}
+
+.cim-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+
+.cim-table th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #f7f8fc;
+    color: #7a8199;
+    font-weight: 700;
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #eef0f7;
+    white-space: nowrap;
+}
+
+.cim-table td {
+    padding: 7px 8px;
+    border-bottom: 1px solid #f4f6fb;
+    color: #3c4257;
+    white-space: nowrap;
+}
+
+.cim-table tr:hover td { background: #fafbff; }
+
+.cim-badge {
+    font-size: 11px;
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.cim-badge.new { background: #e8f5e9; color: #2e7d32; }
+.cim-badge.dup { background: #fff3e0; color: #e65100; }
+
+.cim-empty { text-align: center; color: #9aa2b8; font-size: 12.5px; padding: 26px 8px; }
+
+/* ---------- 底部 ---------- */
+.cim-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 13px 22px;
+    border-top: 1px solid #eef0f7;
+    flex: 0 0 auto;
+}
+
+.cim-hint { font-size: 12.5px; color: #8a90a6; }
+
+.cim-btn {
+    padding: 9px 20px;
+    border-radius: 9px;
+    border: none;
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: .18s;
+}
+
+.cim-btn.primary { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; }
+.cim-btn.primary:hover:not(:disabled) { box-shadow: 0 6px 18px rgba(102, 126, 234, .45); transform: translateY(-1px); }
+.cim-btn.primary:disabled { opacity: .45; cursor: not-allowed; }
+.cim-btn.ghost { background: #eef1f9; color: #5563a8; border: 1.5px solid #dfe4f2; }
+.cim-btn.ghost:hover { border-color: #667eea; color: #667eea; }
+
+/* ---------- 移动端 ---------- */
+@media (max-width: 900px) {
+    .cim-overlay { padding: 10px; }
+    .cim-modal { max-height: 92vh; }
+    .cim-body { grid-template-columns: 1fr; overflow-y: auto; }
+    .cim-left {
+        border-right: none;
+        border-bottom: 1px solid #eef0f7;
+        max-height: 210px;
+    }
+    .cim-form { grid-template-columns: 1fr 1fr; }
+    .cim-right { overflow: visible; }
+    .cim-foot { flex-wrap: wrap; }
+    .cim-hint { flex: 1 1 100%; }
+}

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 200" width="480" height="200">
+  <rect width="480" height="200" fill="#0a0e1a" rx="12"/>
+  <text x="24" y="30" fill="#E5E5E5" font-family="system-ui,'PingFang SC',sans-serif" font-size="15" font-weight="500">方案 3 · 多动作工具栏</text>
+  <text x="24" y="50" fill="#6b7a99" font-family="system-ui,'PingFang SC',sans-serif" font-size="11">底部浮出动作，输入区保持干净</text>
+  <rect x="24" y="70" width="432" height="44" rx="10" fill="#0f1a3a"/>
+  <text x="40" y="97" fill="#4a5a8a" font-family="system-ui,'PingFang SC',sans-serif" font-size="13">请输入你的问题...</text>
+  <rect x="388" y="77" width="56" height="30" rx="8" fill="url(#g3)"/>
+  <text x="416" y="97" fill="#fff" font-family="system-ui,'PingFang SC',sans-serif" font-size="13" font-weight="500" text-anchor="middle">发送</text>
+  <line x1="24" y1="124" x2="456" y2="124" stroke="rgba(255,255,255,.04)" stroke-width="1"/>
+  <rect x="24" y="132" width="66" height="26" rx="6" fill="rgba(255,255,255,.04)"/>
+  <text x="38" y="149" fill="#7a8aaa" font-family="system-ui,sans-serif" font-size="12">📷 图片</text>
+  <rect x="98" y="132" width="66" height="26" rx="6" fill="rgba(255,255,255,.04)"/>
+  <text x="112" y="149" fill="#7a8aaa" font-family="system-ui,sans-serif" font-size="12">🎤 语音</text>
+  <rect x="172" y="132" width="66" height="26" rx="6" fill="rgba(255,255,255,.04)"/>
+  <text x="186" y="149" fill="#7a8aaa" font-family="system-ui,sans-serif" font-size="12">📎 文件</text>
+  <rect x="246" y="132" width="72" height="26" rx="6" fill="rgba(255,255,255,.04)"/>
+  <text x="262" y="149" fill="#7a8aaa" font-family="system-ui,sans-serif" font-size="12">🔄 重生成</text>
+  <defs>
+    <linearGradient id="g3" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#667eea"/>
+      <stop offset="1" stop-color="#764ba2"/>
+    </linearGradient>
+  </defs>
+</svg>

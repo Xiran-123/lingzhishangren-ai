@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🚨 多故障并发应急调度 · 灵智尚人</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+        background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf7 100%);
+        min-height: 100vh; color: #2d3748; padding-bottom: 40px;
+    }
+    .topbar {
+        background: linear-gradient(135deg, #ff512f 0%, #dd2476 100%);
+        color: #fff; padding: 18px 28px; display: flex; align-items: center; gap: 16px;
+        box-shadow: 0 4px 16px rgba(221,36,118,0.25); position: sticky; top: 0; z-index: 50;
+    }
+    .topbar h1 { font-size: 19px; font-weight: 600; letter-spacing: .5px; }
+    .topbar .sub { font-size: 12px; opacity: .85; margin-top: 2px; }
+    .back-btn {
+        background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.35);
+        color: #fff; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px;
+        transition: .2s; white-space: nowrap; text-decoration: none;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.3); }
+    .wrap { max-width: 1180px; margin: 24px auto; padding: 0 20px; }
+    .card {
+        background: #fff; border-radius: 14px; padding: 22px 24px; margin-bottom: 20px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06); border: 1px solid #edf1f7;
+    }
+    .card-title { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+    .hint { font-size: 12px; color: #718096; line-height: 1.7; }
+    .btn {
+        border: none; border-radius: 9px; padding: 9px 18px; cursor: pointer; font-size: 13px;
+        background: linear-gradient(135deg, #ff512f, #dd2476); color: #fff; transition: .2s; font-weight: 500;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(221,36,118,0.35); }
+    .btn:disabled { opacity: .55; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn.ghost { background: #fff; color: #4a5568; border: 1px solid #d7def0; }
+    .btn.small { padding: 6px 12px; font-size: 12px; }
+    .tag { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; background: #fff5f5; color: #c53030; font-weight: 600; }
+    .tag.blue { background: #ebf4ff; color: #2b6cb0; }
+    .tag.green { background: #f0fdf4; color: #15803d; }
+    .tag.gray { background: #f1f5f9; color: #64748b; }
+    .tag.purple { background: #faf5ff; color: #6b46c1; }
+    .tag.orange { background: #fff7ed; color: #c2410c; }
+
+    /* 页签 */
+    .tabs { display: flex; gap: 8px; margin-bottom: 18px; }
+    .tab-btn {
+        padding: 9px 20px; border-radius: 999px; border: 1px solid #d7def0; background: #fff;
+        cursor: pointer; font-size: 13px; font-weight: 500; color: #4a5568; transition: .2s;
+    }
+    .tab-btn.active { background: linear-gradient(135deg, #ff512f, #dd2476); color: #fff; border-color: transparent; }
+
+    /* 难度等级 */
+    .level-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
+    .level-card {
+        flex: 1; min-width: 220px; border: 2px solid #edf1f7; border-radius: 12px; padding: 14px 16px;
+        cursor: pointer; transition: .2s; position: relative;
+    }
+    .level-card:hover { border-color: #ff8a5c; }
+    .level-card.cur { border-color: #dd2476; background: #fff5f9; }
+    .level-card .lv-name { font-weight: 700; font-size: 14px; }
+    .level-card .lv-desc { font-size: 12px; color: #718096; margin-top: 6px; line-height: 1.6; }
+    .level-card .lv-badge { position: absolute; top: 10px; right: 12px; }
+
+    /* 故障卡片 */
+    .fault-card {
+        background: #fff; border: 1px solid #e6ebf5; border-left: 5px solid #dd2476;
+        border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; transition: .2s;
+    }
+    .fault-card.dragging { opacity: .45; }
+    .fault-card.dragover { border-top: 3px dashed #dd2476; }
+    .fault-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .rank-num {
+        width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #ff512f, #dd2476);
+        color: #fff; display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 14px; flex-shrink: 0;
+    }
+    .fault-title { font-weight: 700; font-size: 14.5px; }
+    .fault-symptom { font-size: 12.5px; color: #4a5568; line-height: 1.7; margin: 10px 0; background: #f8fafc; border-radius: 8px; padding: 10px 12px; }
+    .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+    .fault-foot { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .fault-foot select {
+        padding: 7px 10px; border: 1px solid #d7def0; border-radius: 8px; font-size: 12.5px; background: #fff;
+    }
+    .order-btns { display: flex; flex-direction: column; gap: 2px; }
+    .order-btns button {
+        width: 22px; height: 16px; border: 1px solid #d7def0; background: #fff; border-radius: 4px;
+        cursor: pointer; font-size: 10px; line-height: 1; color: #718096;
+    }
+    .order-btns button:hover { background: #fff5f9; color: #dd2476; }
+
+    /* 事件横幅 */
+    .event-banner {
+        display: none; background: linear-gradient(135deg, #fff7ed, #ffedd5); border: 2px solid #fb923c;
+        border-radius: 14px; padding: 18px 20px; margin-bottom: 16px; animation: pulse 1.6s infinite;
+    }
+    @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(251,146,60,.4);} 50% { box-shadow: 0 0 0 10px rgba(251,146,60,0);} }
+    .event-banner.show { display: block; }
+
+    /* 倒计时 */
+    .countdown { font-size: 22px; font-weight: 800; color: #dd2476; font-variant-numeric: tabular-nums; }
+    .countdown.danger { color: #c53030; animation: blink 1s infinite; }
+    @keyframes blink { 50% { opacity: .4; } }
+
+    /* 评分 */
+    .score-hero { display: flex; align-items: center; gap: 26px; flex-wrap: wrap; }
+    .score-big { font-size: 56px; font-weight: 800; background: linear-gradient(135deg, #ff512f, #dd2476); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .grade-badge { font-size: 30px; font-weight: 800; width: 66px; height: 66px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; }
+    .bar-row { display: flex; align-items: center; gap: 10px; margin: 8px 0; font-size: 13px; }
+    .bar-row .lbl { width: 130px; color: #4a5568; flex-shrink: 0; }
+    .bar-track { flex: 1; height: 12px; background: #edf1f7; border-radius: 999px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #ff512f, #dd2476); transition: width .6s; }
+    .bar-row .val { width: 70px; text-align: right; font-weight: 700; flex-shrink: 0; }
+
+    table.cmp { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    table.cmp th, table.cmp td { padding: 9px 8px; border-bottom: 1px solid #edf1f7; text-align: left; vertical-align: top; }
+    table.cmp th { background: #f8fafc; color: #4a5568; font-weight: 600; white-space: nowrap; }
+    .err-box { background: #fff5f5; border: 1px solid #feb2b2; border-radius: 10px; padding: 12px 16px; margin: 12px 0; font-size: 13px; color: #c53030; line-height: 1.8; }
+    .ok-box { background: #f0fdf4; border: 1px solid #86efac; border-radius: 10px; padding: 12px 16px; margin: 12px 0; font-size: 13px; color: #15803d; }
+    .morph-box { background: linear-gradient(135deg, #eef2ff, #e0e7ff); border: 1px solid #a5b4fc; border-radius: 10px; padding: 12px 16px; margin: 12px 0; font-size: 13px; color: #3730a3; }
+
+    .overview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 18px; }
+    .ov-card { background: #fff; border: 1px solid #edf1f7; border-radius: 12px; padding: 16px; text-align: center; }
+    .ov-card .num { font-size: 26px; font-weight: 800; color: #dd2476; }
+    .ov-card .lbl { font-size: 12px; color: #718096; margin-top: 4px; }
+    .empty { text-align: center; color: #a0aec0; padding: 40px 0; font-size: 13px; }
+    .res-legend { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+</style>
+</head>
+<body>
+<div class="topbar">
+    <a href="/" target="_top" class="back-btn">← 返回首页</a>
+    <div>
+        <h1>🚨 多故障并发应急调度演练</h1>
+        <div class="sub">多故障同时告警 · 基于业务SLA与影响用户数判断故障等级 · 有限人力下的最优排障决策</div>
+    </div>
+</div>
+
+<div class="wrap">
+    <div class="tabs">
+        <button class="tab-btn active" id="tabPlay" onclick="switchTab('play')">🎮 应急演练</button>
+        <button class="tab-btn" id="tabHistory" onclick="switchTab('history')">📊 成绩记录</button>
+    </div>
+
+    <!-- ========== 演练页签 ========== -->
+    <div id="panePlay">
+        <!-- 开局面板 -->
+        <div class="card" id="startPanel">
+            <div class="card-title">⚡ 选择难度，开始演练</div>
+            <div class="hint" id="curLevelHint">正在读取你的难度档案…</div>
+            <div class="level-row" id="levelRow"></div>
+            <div style="margin-top:16px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                <button class="btn" id="btnStart" onclick="startGame()">🚀 开始演练</button>
+                <span class="hint">每个故障的参数（影响用户/SLA/修复时长）每局随机生成。请识别次生故障——上游修复后它会自动消除，无需单独派单。</span>
+            </div>
+        </div>
+
+        <!-- 演练面板 -->
+        <div id="gamePanel" style="display:none;">
+            <div class="card">
+                <div class="card-title">📟 网管大屏 · 告警风暴</div>
+                <div class="hint" id="bgText" style="font-size:13px; color:#4a5568;"></div>
+                <div class="res-legend" id="resLegend"></div>
+                <div id="cdRow" style="display:none; margin-top:12px; align-items:center; gap:10px;">
+                    <span class="tag">⏱ 限时处置</span>
+                    <span class="countdown" id="cdNum">--:--</span>
+                    <span class="hint">超时将扣分，请果断决策</span>
+                </div>
+            </div>
+
+            <!-- 突发事件横幅 -->
+            <div class="event-banner" id="eventBanner">
+                <div class="card-title" style="color:#c2410c;">🚨 突发事件插入！</div>
+                <div id="eventBody"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">🗂 排障顺序（拖动卡片或点箭头调整，从上到下 = 处置优先级从高到低）</div>
+                <div id="faultList"></div>
+                <div style="display:flex; gap:10px; margin-top:14px; align-items:center; flex-wrap:wrap;">
+                    <button class="btn" id="btnSubmit" onclick="submitPlan()">✅ 提交排障方案</button>
+                    <button class="btn ghost" onclick="abandonGame()">放弃本局</button>
+                    <span class="hint" id="submitHint"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 结算面板 -->
+        <div id="resultPanel" style="display:none;"></div>
+    </div>
+
+    <!-- ========== 成绩页签 ========== -->
+    <div id="paneHistory" style="display:none;">
+        <div id="overviewBox"></div>
+        <div class="card">
+            <div class="card-title">📜 演练记录</div>
+            <div id="historyBox"><div class="empty">加载中…</div></div>
+        </div>
+    </div>
+</div>
+
+<script>
+const ROLE = "{{ role }}";
+let INFO = null;          // 难度档案
+let SESS = null;          // 当前会话
+let order = [];           // 故障id顺序
+let assignments = {};     // fid -> resource
+let pollTimer = null, cdTimer = null;
+let EVENT = null;         // 突发事件
+let eventAction = 'ignore', eventPosition = 0;
+let pickLevel = 0;        // 自选难度（0=当前等级）
+
+// ---------- 工具 ----------
+async function api(url, opts) {
+    const r = await fetch(url, Object.assign({headers: {'Content-Type': 'application/json'}}, opts));
+    return r.json();
+}
+function esc(s){ return (s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function fmtUsers(n){ return n >= 10000 ? (n/10000).toFixed(1)+'万' : n; }
+function stars(w){ return '★'.repeat(w) + '☆'.repeat(4-w); }
+
+// ---------- 初始化 ----------
+async function init() {
+    INFO = await api('/api/multi-fault/info');
+    if (!INFO.success) return;
+    renderLevels();
+}
+function renderLevels() {
+    document.getElementById('curLevelHint').innerHTML =
+        `你当前的难度等级：<span class="tag">${INFO.level_label}</span>　规则：${esc(INFO.level_rules[INFO.level].desc)}`;
+    const row = document.getElementById('levelRow');
+    row.innerHTML = '';
+    [1,2,3].forEach(lv => {
+        const r = INFO.level_rules[lv];
+        const div = document.createElement('div');
+        div.className = 'level-card' + (lv === INFO.level ? ' cur' : '');
+        div.innerHTML = `<div class="lv-name">${lv===1?'🌱':lv===2?'🔧':'👑'} ${r.label}</div>
+            ${lv===INFO.level?'<span class="lv-badge tag">当前等级</span>':''}
+            <div class="lv-desc">${esc(r.desc)}</div>`;
+        div.onclick = () => {
+            pickLevel = lv;
+            document.querySelectorAll('.level-card').forEach(c => c.classList.remove('cur'));
+            div.classList.add('cur');
+        };
+        row.appendChild(div);
+    });
+}
+
+// ---------- 开局 ----------
+async function startGame() {
+    const btn = document.getElementById('btnStart');
+    btn.disabled = true; btn.textContent = '生成故障工单中…';
+    const ret = await api('/api/multi-fault/start', {method: 'POST', body: JSON.stringify({level: pickLevel})});
+    btn.disabled = false; btn.textContent = '🚀 开始演练';
+    if (!ret.success) { alert(ret.error || '开局失败'); return; }
+    SESS = ret.session;
+    order = SESS.faults.map(f => f.id);
+    assignments = {};
+    SESS.faults.forEach(f => { assignments[f.id] = f.onsite ? 'crew_a' : 'remote'; });
+    EVENT = null; eventAction = 'ignore'; eventPosition = 0;
+    document.getElementById('startPanel').style.display = 'none';
+    document.getElementById('resultPanel').style.display = 'none';
+    document.getElementById('gamePanel').style.display = 'block';
+    document.getElementById('bgText').textContent = SESS.background;
+    document.getElementById('resLegend').innerHTML =
+        '<span class="hint">可用人力：</span>' +
+        Object.entries(SESS.resources).map(([k,v]) =>
+            `<span class="tag ${k==='remote'?'blue':'green'}">${esc(v)}${k==='remote'?'（仅远程）':''}</span>`).join('');
+    renderFaults();
+    // 倒计时 & 事件轮询
+    clearInterval(pollTimer); clearInterval(cdTimer);
+    if (SESS.time_limit_sec) {
+        document.getElementById('cdRow').style.display = 'flex';
+        tickCd(); cdTimer = setInterval(tickCd, 1000);
+    }
+    if (SESS.level === 3) {
+        document.getElementById('btnSubmit').disabled = true;
+        document.getElementById('submitHint').textContent = '保障期间可能有新增告警，请持续盯屏，提交通道将在信息完整后解锁…';
+        pollTimer = setInterval(pollState, 4000);
+    } else {
+        document.getElementById('btnSubmit').disabled = false;
+        document.getElementById('submitHint').textContent = '';
+    }
+}
+function tickCd() {
+    if (!SESS) return;
+    let remain = SESS.remaining_sec != null ? SESS.remaining_sec : SESS.time_limit_sec;
+    const started = new Date(SESS.started_at.replace(' ', 'T'));
+    remain = Math.max(0, SESS.time_limit_sec - Math.floor((Date.now() - started.getTime())/1000));
+    const el = document.getElementById('cdNum');
+    el.textContent = String(Math.floor(remain/60)).padStart(2,'0') + ':' + String(remain%60).padStart(2,'0');
+    el.classList.toggle('danger', remain <= 120);
+    if (remain <= 0) { clearInterval(cdTimer); submitPlan(true); }
+}
+
+// ---------- 事件轮询 ----------
+async function pollState() {
+    if (!SESS) return;
+    const ret = await api('/api/multi-fault/state?session_id=' + SESS.session_id);
+    if (!ret.success) return;
+    if (ret.session.event && !EVENT) {
+        EVENT = ret.session.event;
+        assignments[EVENT.id] = 'crew_b';
+        showEvent();
+    }
+}
+function showEvent() {
+    const box = document.getElementById('eventBody');
+    box.innerHTML = `
+        <div style="font-size:13.5px; font-weight:600; margin-bottom:6px;">${esc(EVENT.title)}
+            <span class="tag orange">${esc(EVENT.domain_label)}</span></div>
+        <div class="hint" style="color:#7c2d12; margin-bottom:10px;">${esc(EVENT.symptom)}</div>
+        <div class="chips">
+            <span class="tag purple">${esc(EVENT.biz_type)}</span>
+            <span class="tag">业务等级 ${stars(EVENT.biz_weight)}</span>
+            <span class="tag blue">影响 ${fmtUsers(EVENT.users)} 人</span>
+            <span class="tag">SLA ${EVENT.sla} 分钟</span>
+            <span class="tag gray">修复约 ${EVENT.repair} 分钟</span>
+            <span class="tag orange">必须现场</span>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; font-size:13px;">
+            <label><input type="radio" name="evAct" value="insert" checked onchange="evActChange(this.value)"> 排入处置序列，位置
+                <select id="evPos">${order.map((f,i)=>`<option value="${i}" ${i===0?'selected':''}>第 ${i+1} 位</option>`).join('')}
+                <option value="${order.length}">第 ${order.length+1} 位（最后）</option></select></label>
+            <label><input type="radio" name="evAct" value="ignore" onchange="evActChange(this.value)"> 暂不处理</label>
+        </div>`;
+    document.getElementById('eventBanner').classList.add('show');
+    document.getElementById('btnSubmit').disabled = false;
+    document.getElementById('submitHint').textContent = '突发事件已到达，请决策后提交';
+    clearInterval(pollTimer);
+}
+function evActChange(v){ eventAction = v; }
+
+// ---------- 故障卡片渲染与排序 ----------
+function faultCard(f, idx) {
+    const div = document.createElement('div');
+    div.className = 'fault-card'; div.draggable = true; div.dataset.fid = f.id;
+    div.innerHTML = `
+        <div class="fault-head">
+            <div class="rank-num">${idx+1}</div>
+            <div class="order-btns">
+                <button onclick="moveFault('${f.id}',-1)" title="上移">▲</button>
+                <button onclick="moveFault('${f.id}',1)" title="下移">▼</button>
+            </div>
+            <div class="fault-title">${esc(f.title)}</div>
+            <span class="tag blue">${esc(f.domain_label)}</span>
+        </div>
+        <div class="fault-symptom">${esc(f.symptom)}</div>
+        <div class="chips">
+            <span class="tag purple">${esc(f.biz_type)}</span>
+            <span class="tag">业务等级 ${stars(f.biz_weight)}</span>
+            <span class="tag blue">影响 ${fmtUsers(f.users)} 人</span>
+            <span class="tag">SLA 剩余 ${f.sla} 分钟</span>
+            <span class="tag gray">修复约 ${f.repair} 分钟</span>
+            <span class="tag ${f.onsite?'orange':'green'}">${f.onsite?'必须现场':'可远程'}</span>
+        </div>
+        <div class="fault-foot">
+            <span class="hint">处理通道：</span>
+            <select onchange="assignRes('${f.id}', this.value)">
+                <option value="crew_a" ${assignments[f.id]==='crew_a'?'selected':''}>现场班组A</option>
+                <option value="crew_b" ${assignments[f.id]==='crew_b'?'selected':''}>现场班组B</option>
+                <option value="remote" ${assignments[f.id]==='remote'?'selected':''}>远程支持席</option>
+                <option value="none" ${assignments[f.id]==='none'?'selected':''}>不派单（疑似次生/暂缓）</option>
+            </select>
+        </div>`;
+    // 拖拽
+    div.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', f.id); div.classList.add('dragging'); });
+    div.addEventListener('dragend', () => div.classList.remove('dragging'));
+    div.addEventListener('dragover', e => { e.preventDefault(); div.classList.add('dragover'); });
+    div.addEventListener('dragleave', () => div.classList.remove('dragover'));
+    div.addEventListener('drop', e => {
+        e.preventDefault(); div.classList.remove('dragover');
+        const src = e.dataTransfer.getData('text/plain');
+        if (!src || src === f.id) return;
+        const from = order.indexOf(src), to = order.indexOf(f.id);
+        order.splice(from, 1); order.splice(to, 0, src);
+        renderFaults();
+    });
+    return div;
+}
+function renderFaults() {
+    const box = document.getElementById('faultList');
+    box.innerHTML = '';
+    const fmap = {}; SESS.faults.forEach(f => fmap[f.id] = f);
+    order.forEach((fid, i) => { if (fmap[fid]) box.appendChild(faultCard(fmap[fid], i)); });
+}
+function moveFault(fid, dir) {
+    const i = order.indexOf(fid), j = i + dir;
+    if (i < 0 || j < 0 || j >= order.length) return;
+    [order[i], order[j]] = [order[j], order[i]];
+    renderFaults();
+}
+function assignRes(fid, v){ assignments[fid] = v; }
+
+// ---------- 提交 ----------
+async function submitPlan(timeout) {
+    if (!SESS) return;
+    if (!timeout && !confirm('确定提交排障方案？提交后不可修改。')) return;
+    clearInterval(pollTimer); clearInterval(cdTimer);
+    const evPosEl = document.getElementById('evPos');
+    const body = {session_id: SESS.session_id, order, assignments,
+                  event_action: EVENT ? eventAction : '',
+                  event_position: EVENT && evPosEl ? parseInt(evPosEl.value) : -1};
+    const ret = await api('/api/multi-fault/submit', {method: 'POST', body: JSON.stringify(body)});
+    if (!ret.success) { alert(ret.error || '提交失败'); return; }
+    renderResult(ret);
+}
+async function abandonGame() {
+    if (!SESS || !confirm('确定放弃本局？记 0 分。')) return;
+    clearInterval(pollTimer); clearInterval(cdTimer);
+    await api('/api/multi-fault/abandon', {method: 'POST', body: JSON.stringify({session_id: SESS.session_id})});
+    resetToStart();
+}
+function resetToStart() {
+    SESS = null;
+    document.getElementById('gamePanel').style.display = 'none';
+    document.getElementById('resultPanel').style.display = 'none';
+    document.getElementById('startPanel').style.display = 'block';
+    document.getElementById('eventBanner').classList.remove('show');
+    init();
+}
+
+// ---------- 结算 ----------
+function renderResult(ret) {
+    document.getElementById('gamePanel').style.display = 'none';
+    const v = ret.verdict;
+    const gradeColor = {'S':'#7c3aed','A':'#16a34a','B':'#2563eb','C':'#d97706','D':'#dc2626'}[ret.grade];
+    let html = `<div class="card"><div class="card-title">🏁 演练结算</div>
+        <div class="score-hero">
+            <div class="score-big">${ret.score}<span style="font-size:20px;">分</span></div>
+            <div class="grade-badge" style="background:${gradeColor};">${ret.grade}</div>
+            <div style="flex:1; min-width:280px;">
+                ${bar('排序决策（40）', v.order_score, 40)}
+                ${bar('资源调度（30）', v.dispatch_score, 30)}
+                ${bar('动态决策（20）', v.decision_score, 20)}
+                ${bar('零重大失误（10）', v.clean_score, 10)}
+            </div>
+        </div>
+        <div class="hint" style="margin-top:12px;">业务损失：<b>${v.student_loss}</b>（越小越好）｜最优解损失：<b>${v.optimal_loss}</b>｜SLA 违约：你 ${v.student_violations} 起 / 最优 ${v.optimal_violations} 起｜顺序一致度：${(v.concordance*100).toFixed(0)}%${v.timed_out ? '｜⏱ 已超时（-10分）' : ''}</div>`;
+    if (v.major_errors && v.major_errors.length) {
+        html += `<div class="err-box">❌ <b>重大失误：</b><br>${v.major_errors.map(e => '· ' + esc(e)).join('<br>')}</div>`;
+    } else {
+        html += `<div class="ok-box">✅ 零重大失误！排障决策与最优方案高度一致。</div>`;
+    }
+    if (ret.suggestion) html += `<div class="morph-box">⚡ 难度自适应：${esc(ret.suggestion.text)}</div>`;
+    html += `</div>`;
+
+    // 对比表
+    html += `<div class="card"><div class="card-title">🔍 最优方案对比复盘</div>
+        <div style="overflow-x:auto;"><table class="cmp"><thead><tr>
+            <th>最优序</th><th>故障</th><th>紧急度</th><th>最优处理</th><th>你的序</th><th>你的处理</th><th>恢复时刻（最优/你的）</th><th>SLA</th>
+        </tr></thead><tbody>`;
+    v.reveal.forEach(r => {
+        const rowStyle = r.secondary ? 'background:#faf5ff;' : (r.is_event ? 'background:#fff7ed;' : '');
+        html += `<tr style="${rowStyle}">
+            <td><b>${r.optimal_rank}</b></td>
+            <td>${esc(r.title)}${r.secondary ? '<br><span class="tag purple">次生故障</span>' : ''}${r.is_event ? '<br><span class="tag orange">突发事件</span>' : ''}
+                ${r.secondary && r.clue ? `<div class="hint" style="margin-top:4px;">💡 ${esc(r.clue)}</div>` : ''}</td>
+            <td>${r.urgency}</td>
+            <td>${esc(r.optimal_resource)}<br><span class="hint">${r.optimal_done_min != null ? r.optimal_done_min + ' 分钟恢复' : ''}</span></td>
+            <td><b>${r.student_rank}</b></td>
+            <td>${esc(r.student_resource)}<br><span class="hint">${r.student_done_min != null ? r.student_done_min + ' 分钟恢复' : ''}</span></td>
+            <td>${r.optimal_done_min != null ? r.optimal_done_min : '—'} / ${r.student_done_min != null ? r.student_done_min : '—'} 分钟</td>
+            <td>${r.student_violated ? '<span class="tag">你违约</span>' : '<span class="tag green">你达标</span>'}
+                ${r.optimal_violated ? '<span class="tag gray">最优也违约</span>' : ''}</td>
+        </tr>`;
+    });
+    html += `</tbody></table></div>
+        <div class="hint" style="margin-top:10px;">紧急度 = 业务权重×40 + 影响用户规模 + SLA 紧迫度。次生故障（紫底）应识别为上游故障的连带告警，不单独派单。</div>
+        <div style="margin-top:14px;"><button class="btn" onclick="resetToStart()">🔄 再来一局</button></div></div>`;
+    const panel = document.getElementById('resultPanel');
+    panel.innerHTML = html;
+    panel.style.display = 'block';
+    window.scrollTo({top: 0, behavior: 'smooth'});
+}
+function bar(lbl, val, max) {
+    return `<div class="bar-row"><span class="lbl">${lbl}</span>
+        <div class="bar-track"><div class="bar-fill" style="width:${Math.round(val/max*100)}%"></div></div>
+        <span class="val">${val}/${max}</span></div>`;
+}
+
+// ---------- 成绩 ----------
+function switchTab(t) {
+    document.getElementById('tabPlay').classList.toggle('active', t === 'play');
+    document.getElementById('tabHistory').classList.toggle('active', t === 'history');
+    document.getElementById('panePlay').style.display = t === 'play' ? 'block' : 'none';
+    document.getElementById('paneHistory').style.display = t === 'history' ? 'block' : 'none';
+    if (t === 'history') loadHistory();
+}
+async function loadHistory() {
+    const ret = await api('/api/multi-fault/history');
+    const box = document.getElementById('historyBox');
+    if (!ret.success) { box.innerHTML = '<div class="empty">加载失败</div>'; return; }
+    if (ROLE === 'teacher' && ret.overview) {
+        const o = ret.overview;
+        document.getElementById('overviewBox').innerHTML = `<div class="overview-grid">
+            <div class="ov-card"><div class="num">${o.total_sessions}</div><div class="lbl">总演练次数</div></div>
+            <div class="ov-card"><div class="num">${o.avg_score}</div><div class="lbl">平均分</div></div>
+            <div class="ov-card"><div class="num">${o.upgrades}</div><div class="lbl">升级次数</div></div>
+            <div class="ov-card"><div class="num">${o.downgrades}</div><div class="lbl">降级次数</div></div>
+            <div class="ov-card"><div class="num">${o.active_sessions}</div><div class="lbl">进行中</div></div>
+        </div></div>`;
+    }
+    if (!ret.history.length) { box.innerHTML = '<div class="empty">暂无演练记录</div>'; return; }
+    let html = '<div style="overflow-x:auto;"><table class="cmp"><thead><tr><th>时间</th>' +
+        (ROLE === 'teacher' ? '<th>学生</th>' : '') +
+        '<th>难度</th><th>得分</th><th>评级</th><th>排序/调度/决策</th><th>损失(你/最优)</th><th>SLA违约</th><th>变形</th></tr></thead><tbody>';
+    ret.history.forEach(h => {
+        html += `<tr><td>${esc(h.finished_at || '')}</td>` +
+            (ROLE === 'teacher' ? `<td>${esc(h.student_name || h.student_no)}</td>` : '') +
+            `<td>${['','入门','工程师','专家'][h.level] || h.level}</td>
+            <td><b>${h.score}</b></td><td>${h.grade}</td>
+            <td>${h.order_score ?? '-'} / ${h.dispatch_score ?? '-'} / ${h.decision_score ?? '-'}</td>
+            <td>${h.student_loss ?? '-'} / ${h.optimal_loss ?? '-'}</td>
+            <td>${h.violations ?? '-'}</td>
+            <td>${h.morph === 'upgrade' ? '<span class="tag green">↑升级</span>' : h.morph === 'downgrade' ? '<span class="tag">↓降级</span>' : h.morph === 'abandoned' ? '<span class="tag gray">放弃</span>' : '—'}</td></tr>`;
+    });
+    box.innerHTML = html + '</tbody></table></div>';
+}
+
+init();
+</script>
+</body>
+</html>

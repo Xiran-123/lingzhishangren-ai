@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 170" width="480" height="170">
+  <rect width="480" height="170" fill="#0a0e1a" rx="12"/>
+  <text x="24" y="30" fill="#E5E5E5" font-family="system-ui,'PingFang SC',sans-serif" font-size="15" font-weight="500">方案 B · 图标 + 文字标签</text>
+  <text x="24" y="50" fill="#6b7a99" font-family="system-ui,'PingFang SC',sans-serif" font-size="11">直接写明"图片"，可发现性最强</text>
+  <rect x="24" y="70" width="432" height="48" rx="10" fill="#0f1a3a"/>
+  <!-- 带文字的按钮 -->
+  <rect x="36" y="78" width="76" height="32" rx="8" fill="rgba(102,126,234,.12)" stroke="rgba(102,126,234,.3)" stroke-width="1"/>
+  <g transform="translate(48,87)" stroke="#a0b4ff" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="0" y="1" width="14" height="12" rx="2"/>
+    <circle cx="4.5" cy="5.5" r="1.4"/>
+    <path d="M1 11 L5 7 L8 9.5 L11 7 L14 10.5"/>
+  </g>
+  <text x="60" y="99" fill="#a0b4ff" font-family="system-ui,'PingFang SC',sans-serif" font-size="12">图片</text>
+  <text x="126" y="98" fill="#4a5a8a" font-family="system-ui,'PingFang SC',sans-serif" font-size="13">请输入你的问题...</text>
+  <rect x="396" y="79" width="56" height="30" rx="8" fill="#667eea"/>
+  <text x="424" y="98" fill="#fff" font-family="system-ui,'PingFang SC',sans-serif" font-size="13" font-weight="500" text-anchor="middle">发送</text>
+  <text x="24" y="150" fill="#3d4d6e" font-family="system-ui,'PingFang SC',sans-serif" font-size="10">学生端用户不需要猜图标含义，点击率高</text>
+</svg>

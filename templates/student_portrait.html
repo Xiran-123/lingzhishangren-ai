@@ -1,0 +1,1770 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生能力画像 - 灵智尚人</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 18px 20px 44px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 18px;
+            border-bottom: 2px solid #f0f0f5;
+            padding-bottom: 10px;
+        }
+        .full-width { grid-column: 1 / -1; }
+        .radar-container {
+            position: relative;
+            height: 400px;
+        }
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 18px 12px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 26px;
+            font-weight: bold;
+            line-height: 1.2;
+        }
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+        .competence-list {
+            list-style: none;
+        }
+        .competence-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f5;
+        }
+        .competence-name {
+            font-size: 14px;
+            color: #333;
+        }
+        .competence-bar {
+            flex: 1;
+            margin: 0 15px;
+            height: 8px;
+            background: #f0f0f5;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .competence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 4px;
+            transition: width 0.5s;
+        }
+        .competence-score {
+            font-weight: bold;
+            color: #667eea;
+            min-width: 50px;
+            text-align: right;
+        }
+        .job-card {
+            background: #f8f9fc;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .job-name {
+            font-weight: 600;
+            color: #333;
+        }
+        .job-match {
+            font-size: 20px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .gap-item, .strength-item {
+            background: #f8f9fc;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .gap-item { border-left: 3px solid #ff6b6b; }
+        .strength-item { border-left: 3px solid #51cf66; }
+        .chart-container {
+            height: 300px;
+        }
+        select, input {
+            padding: 8px 15px;
+            border: 2px solid #e0e0e8;
+            border-radius: 8px;
+            font-size: 14px;
+            background: #fff;
+            color: #333;
+        }
+        select:focus, input:focus { outline: none; border-color: #667eea; }
+        .control-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .btn-primary {
+            padding: 9px 22px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .btn-primary:hover { box-shadow: 0 6px 18px rgba(102,126,234,0.45); transform: translateY(-1px); }
+        .btn-ghost {
+            padding: 9px 18px;
+            background: #f0f2f8;
+            color: #5563a8;
+            border: 1.5px solid #dfe3f2;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .btn-ghost:hover { border-color: #667eea; color: #667eea; }
+
+        /* ===== 画像信息条 ===== */
+        .profile-strip {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 26px;
+            align-items: center;
+        }
+        .profile-field { display: flex; flex-direction: column; gap: 3px; }
+        .profile-field .k { font-size: 11px; color: #9aa2b8; letter-spacing: .5px; }
+        .profile-field .v { font-size: 14px; color: #2f3646; font-weight: 600; }
+        .risk-pill {
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        /* ===== 新增：分析卡片 ===== */
+        .mini-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+        .mini-card {
+            background: #f8f9fc;
+            border-radius: 10px;
+            padding: 14px;
+            border-left: 3px solid #667eea;
+        }
+        .mini-card .num { font-size: 22px; font-weight: 700; color: #4a55a2; }
+        .mini-card .cap { font-size: 12px; color: #8a90a6; margin-top: 4px; }
+        .mini-card .sub { font-size: 11px; color: #a8aec0; margin-top: 6px; }
+
+        .kv-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 9px 0;
+            border-bottom: 1px dashed #eef0f7;
+            font-size: 13px;
+        }
+        .kv-row:last-child { border-bottom: none; }
+        .kv-row .k { color: #667; }
+        .kv-row .v { color: #333; font-weight: 600; }
+
+        .timeline { list-style: none; }
+        .timeline li {
+            position: relative;
+            padding: 0 0 16px 20px;
+            border-left: 2px solid #eef0f7;
+            font-size: 13px;
+            color: #444;
+        }
+        .timeline li:last-child { border-left-color: transparent; padding-bottom: 0; }
+        .timeline li::before {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: 3px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,.15);
+        }
+        .timeline .t-time { color: #9aa2b8; font-size: 12px; margin-left: 8px; }
+
+        .advice-item {
+            background: #f8f9fc;
+            border-radius: 10px;
+            padding: 13px 16px;
+            margin-bottom: 10px;
+            border-left: 3px solid #667eea;
+            font-size: 13px;
+            line-height: 1.65;
+            color: #3c4257;
+        }
+        .advice-tag {
+            display: inline-block;
+            padding: 2px 9px;
+            border-radius: 12px;
+            background: rgba(102,126,234,.12);
+            color: #5a67c4;
+            font-size: 11px;
+            font-weight: 700;
+            margin-right: 8px;
+        }
+        .empty-hint { color: #9aa2b8; font-size: 13px; padding: 14px 0; text-align: center; }
+
+        /* ===== AI 分析弹窗 ===== */
+        .ai-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, .55);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .ai-overlay.show { display: flex; }
+        .ai-modal {
+            background: #fff;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 720px;
+            max-height: 86vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .ai-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 22px;
+            border-bottom: 1px solid #eef0f7;
+            font-weight: 700;
+            color: #333;
+        }
+        .ai-close {
+            border: none;
+            background: #f0f2f8;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: #667;
+        }
+        .ai-body {
+            padding: 20px 24px;
+            overflow-y: auto;
+            font-size: 14px;
+            line-height: 1.75;
+            color: #333;
+        }
+        .ai-body h3 {
+            color: #667eea;
+            font-size: 15px;
+            margin: 16px 0 8px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid #eef0fa;
+        }
+        .ai-body h3:first-child { margin-top: 0; }
+        .ai-body ul { padding-left: 20px; margin: 8px 0; }
+        .ai-body li { margin: 5px 0; }
+        .ai-body .cursor { color: #764ba2; animation: blink 1s steps(2) infinite; }
+        @keyframes blink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
+        .spinner-sm {
+            display: inline-block;
+            width: 13px;
+            height: 13px;
+            border: 2px solid rgba(255,255,255,.45);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+            margin-right: 6px;
+            vertical-align: -2px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ===== 左侧学生分类导航 + 右侧数据（双栏） ===== */
+        .pz-wrap {
+            display: grid;
+            grid-template-columns: 272px minmax(0, 1fr);
+            gap: 18px;
+            max-width: 1560px;
+            margin: 0 auto;
+            padding: 16px 20px 44px;
+            align-items: start;
+        }
+        .pz-wrap.solo { grid-template-columns: minmax(0, 1fr); }
+
+        .pz-side {
+            background: white;
+            border-radius: 15px;
+            padding: 14px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 74px;
+            max-height: calc(100vh - 92px);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .pz-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .pz-headtitle {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 15px;
+            font-weight: 700;
+            color: #333;
+        }
+        .pz-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: #667eea;
+            box-shadow: 0 0 8px #667eea;
+            flex: 0 0 auto;
+        }
+        .pz-mini {
+            padding: 4px 12px;
+            border-radius: 14px;
+            border: 1px solid #e4e8f6;
+            background: #f7f8fc;
+            color: #5563a8;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .pz-mini:hover { border-color: #667eea; color: #667eea; }
+
+        .pz-filters { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+        .pz-filters select,
+        .pz-filters input {
+            width: 100%;
+            padding: 6px 8px;
+            font-size: 12px;
+            border: 1.5px solid #e4e8f4;
+            border-radius: 8px;
+            background: #fff;
+            color: #333;
+        }
+        .pz-filters select:focus,
+        .pz-filters input:focus { outline: none; border-color: #667eea; }
+        .pz-filters .full { grid-column: 1 / -1; }
+
+        .pz-summary {
+            font-size: 11.5px;
+            line-height: 1.55;
+            color: #5a67c4;
+            background: rgba(102,126,234,.08);
+            border-radius: 8px;
+            padding: 6px 10px;
+            display: none;
+        }
+        .pz-summary b { color: #4a55a2; }
+
+        .pz-list {
+            overflow-y: auto;
+            flex: 1;
+            min-height: 60px;
+            margin: 0 -4px;
+            padding: 0 4px 6px;
+        }
+        .pz-glabel {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .5px;
+            color: #7a8199;
+            padding: 9px 6px 4px;
+            position: sticky;
+            top: 0;
+            background: #fff;
+            z-index: 1;
+        }
+        .pz-glabel b { color: #667eea; font-size: 11px; }
+        .pz-gsub {
+            font-size: 11px;
+            color: #9aa2b8;
+            padding: 2px 6px 4px;
+        }
+        .pz-item {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 7px 9px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: .18s;
+            margin-bottom: 2px;
+        }
+        .pz-item:hover { background: #f4f6fd; transform: translateX(2px); }
+        .pz-item.on {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            box-shadow: 0 4px 14px rgba(102,126,234,.35);
+            transform: none;
+        }
+        .pz-av {
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            background: #eef1fb;
+            color: #5a67c4;
+            display: grid;
+            place-items: center;
+            font-size: 12px;
+            font-weight: 700;
+            flex: 0 0 auto;
+        }
+        .pz-item.on .pz-av { background: rgba(255,255,255,.25); color: #fff; }
+        .pz-info { min-width: 0; flex: 1; display: flex; flex-direction: column; line-height: 1.25; }
+        .pz-name {
+            font-size: 13px; font-weight: 600; color: #333;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .pz-no {
+            font-size: 10.5px; color: #9aa2b8;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .pz-item.on .pz-name { color: #fff; }
+        .pz-item.on .pz-no { color: rgba(255,255,255,.75); }
+        .pz-score {
+            flex: 0 0 auto;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: #667eea;
+            background: #eef1fb;
+            border-radius: 10px;
+            padding: 2px 7px;
+        }
+        .pz-item.on .pz-score { background: rgba(255,255,255,.22); color: #fff; }
+        .pz-empty { text-align: center; color: #9aa2b8; font-size: 12.5px; padding: 26px 8px; }
+
+        .pz-main { max-width: none; margin: 0; padding: 0; min-width: 0; }
+        /* 切换学生时右侧轻微变淡，提示正在换数据 */
+        .pz-main { transition: opacity .18s ease; }
+        .pz-main.is-loading { opacity: .55; }
+        .pz-titlebar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .pz-titlebar .an-pagetitle { margin: 0; }
+
+        /* ===== 我的课程 ===== */
+        .course-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+        .course-chip {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 6px 13px; border-radius: 20px;
+            font-size: 13px; color: #4a55a2;
+            background: #f2f4fb; border: 1px solid #e4e8f6;
+        }
+        .course-chip .ic { font-size: 14px; }
+        .course-dim { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+        .course-dim span {
+            font-size: 11.5px; padding: 3px 10px; border-radius: 12px;
+            background: rgba(102,126,234,.10); color: #5563a8;
+        }
+        .course-empty { font-size: 13px; color: #9aa2b8; }
+        .course-note { margin-top: 10px; font-size: 12px; color: #9aa2b8; line-height: 1.6; }
+
+        /* ===== 选课弹窗 ===== */
+        .cm-modal {
+            background: #fff; border-radius: 16px;
+            width: min(760px, 100%); max-height: 86vh;
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+        .cm-head {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 15px 22px; border-bottom: 1px solid #eef0f7;
+            font-weight: 800; color: #2f3646; font-size: 16px;
+        }
+        .cm-body { padding: 16px 20px; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+        .cm-item {
+            display: flex; align-items: flex-start; gap: 9px;
+            padding: 10px 12px; border-radius: 10px;
+            border: 1.5px solid #e9ecf7; cursor: pointer; transition: .15s;
+        }
+        .cm-item:hover { border-color: #b9c3ea; background: #fafbff; }
+        .cm-item.on { border-color: #667eea; background: rgba(102,126,234,.07); }
+        .cm-item input { margin-top: 3px; flex: 0 0 auto; }
+        .cm-item .nm { font-size: 13.5px; color: #333; font-weight: 600; }
+        .cm-item .ds { font-size: 11.5px; color: #9aa2b8; margin-top: 3px; line-height: 1.5; }
+        .cm-foot {
+            display: flex; align-items: center; justify-content: space-between; gap: 12px;
+            padding: 13px 22px; border-top: 1px solid #eef0f7; flex-wrap: wrap;
+        }
+        .cm-tip { font-size: 12.5px; color: #8a90a6; }
+
+        /* ===== 移动端适配 ===== */
+        @media (max-width: 1100px) {
+            .pz-wrap { grid-template-columns: 236px minmax(0, 1fr); gap: 14px; }
+            .stat-grid { grid-template-columns: repeat(3, 1fr) !important; }
+            .mini-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+        @media (max-width: 768px) {
+            .container { padding: 12px 8px 30px !important; max-width: 100% !important; }
+            .pz-wrap { grid-template-columns: 1fr !important; padding: 12px 8px 30px !important; }
+            .pz-main { padding: 0 !important; }
+            .pz-side { position: static !important; max-height: none !important; }
+            .pz-list { max-height: 240px !important; }
+            .grid { grid-template-columns: 1fr !important; gap: 14px !important; }
+            .card { padding: 16px !important; }
+            .card h2 { font-size: 16px !important; margin-bottom: 12px !important; }
+            .stat-grid {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 10px !important;
+            }
+            .mini-grid { grid-template-columns: 1fr 1fr !important; }
+            .stat-box { padding: 14px 10px !important; }
+            .stat-value { font-size: 22px !important; }
+            .radar-container { height: 280px !important; }
+            .chart-container { height: 220px !important; }
+            .control-row { flex-wrap: wrap !important; gap: 8px !important; }
+            .control-row select, .control-row button { flex: 1 1 100% !important; min-width: 0 !important; width: 100% !important; }
+            .competence-item { flex-wrap: wrap !important; gap: 6px !important; }
+            .competence-bar { flex: 1 1 100% !important; margin: 4px 0 !important; order: 3; }
+            .competence-score { min-width: 60px !important; }
+            .card.full-width > div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; gap: 12px !important; }
+            .profile-strip { gap: 10px 18px !important; }
+        }
+        @media (max-width: 480px) {
+            .container { padding: 10px 6px 26px !important; }
+            .card { padding: 12px !important; border-radius: 12px !important; }
+            .stat-value { font-size: 20px !important; }
+            .radar-container { height: 240px !important; }
+            .chart-container { height: 200px !important; }
+            .mini-grid { grid-template-columns: 1fr !important; }
+        }
+    </style>
+    <!-- 全局按钮美化 -->
+    <link rel="stylesheet" href="/static/global_buttons.css">
+    <link rel="stylesheet" href="/static/global_pages.css">
+    <!-- 全站顶部导航栏（与首页同一套视觉） -->
+    <link rel="stylesheet" href="/static/app_nav.css">
+</head>
+<body>
+    <div id="appNav"></div>
+    <div class="pz-wrap" id="pzWrap">
+        <!-- ===== 左侧：学生分类导航 ===== -->
+        <aside class="pz-side" id="pzSide">
+            <div class="pz-head">
+                <span class="pz-headtitle"><span class="pz-dot"></span>学生分类</span>
+                <span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+                    <button class="pz-mini" onclick="resetFilters()">重置</button>
+                    <button class="pz-mini" id="pzFilterBtn" onclick="toggleFilterPanel()">收起</button>
+                </span>
+            </div>
+
+            <div class="pz-filters" id="pzFilters">
+                <select id="filterGrade" onchange="applyFilters()"><option value="">全部年级</option></select>
+                <select id="filterLevel" onchange="applyFilters()"><option value="">全部层次</option></select>
+                <select id="filterClass" onchange="applyFilters()"><option value="">全部班级</option></select>
+                <select id="filterMajor" onchange="applyFilters()"><option value="">全部专业</option></select>
+                <select id="filterSort" class="full" onchange="applyFilters()">
+                    <option value="score_desc">按综合能力 高→低</option>
+                    <option value="score_asc">按综合能力 低→高</option>
+                    <option value="questions_desc">按提问数 多→少</option>
+                    <option value="wrong_desc">按未掌握错题 多→少</option>
+                    <option value="name_asc">按姓名</option>
+                    <option value="student_no_asc">按学号</option>
+                    <option value="last_login_desc">按最近登录</option>
+                </select>
+                <input id="filterKeyword" class="full" type="text" placeholder="搜索姓名 / 学号，回车" autocomplete="off">
+            </div>
+
+            <div class="pz-summary" id="filterSummary"></div>
+            <div class="pz-list" id="studentNav">
+                <div class="pz-empty">加载中…</div>
+            </div>
+        </aside>
+
+        <!-- ===== 右侧：该学生画像数据 ===== -->
+        <main class="container pz-main">
+            <div class="pz-titlebar an-nav-title">
+                <div class="an-pagetitle an-nav-title">
+                    <h1>📊 学生能力画像</h1>
+                    <span class="an-sub">12 维能力雷达 · 学习行为 · 错题与过程性数据</span>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn-primary" onclick="loadAllData()">刷新</button>
+                    <button class="btn-ghost" onclick="runAiAnalysis()">🤖 AI 深度分析</button>
+                </div>
+            </div>
+
+        <!-- ===== 画像信息条 ===== -->
+        <div class="card full-width" id="profileCard" style="margin-bottom: 20px;">
+            <div class="profile-strip" id="profileStrip">
+                <div class="profile-field"><span class="k">年级 / 层次</span><span class="v">-</span></div>
+                <div class="profile-field"><span class="k">班级</span><span class="v">-</span></div>
+                <div class="profile-field"><span class="k">专业</span><span class="v">-</span></div>
+                <div class="profile-field"><span class="k">学号</span><span class="v">-</span></div>
+                <div class="profile-field"><span class="k">最近登录</span><span class="v">-</span></div>
+                <div class="profile-field"><span class="k">建档时间</span><span class="v">-</span></div>
+            </div>
+        </div>
+
+        <!-- ===== 我的课程（能力维度按课程走） ===== -->
+        <div class="card full-width" id="courseCard" style="margin-bottom: 20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+                <h2 style="margin:0;border:none;padding:0;"><span id="courseTitle">📚 我的课程</span>
+                    <span style="font-size:12px;color:#9aa2b8;font-weight:400;">（能力维度按所选课程展示）</span>
+                </h2>
+                <button class="btn-ghost" id="courseEditBtn" onclick="openCoursePicker()" style="display:none;">✏️ 调整课程</button>
+            </div>
+            <div class="course-chips" id="courseChips" style="margin-top:14px;">
+                <span class="course-empty">加载中…</span>
+            </div>
+            <div class="course-dim" id="courseDims"></div>
+            <div class="course-note" id="courseNote"></div>
+        </div>
+
+        <!-- ===== 核心指标 ===== -->
+        <div class="stat-grid" id="statGrid">
+            <div class="stat-box">
+                <div class="stat-value" id="totalQuestions">0</div>
+                <div class="stat-label">累计提问</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="avgScore">0</div>
+                <div class="stat-label">综合能力</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="topCategory">-</div>
+                <div class="stat-label">最强领域</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="classRank">-</div>
+                <div class="stat-label">班级排名</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="wrongCount">0</div>
+                <div class="stat-label">未掌握错题</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="weeklyRate">0%</div>
+                <div class="stat-label">周任务完成</div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h2>🎯 12维能力雷达图
+                    <label style="float:right;font-size:12px;font-weight:400;color:#7a8199;cursor:pointer;">
+                        <input type="checkbox" id="cmpClass" onchange="loadRadarData()" style="vertical-align:-1px;"> 对比班级平均
+                    </label>
+                </h2>
+                <div class="radar-container">
+                    <canvas id="radarChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📚 能力分类汇总</h2>
+                <div id="categorySummary"></div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h2>📈 学习曲线（最近30天）</h2>
+                <div class="chart-container">
+                    <canvas id="curveChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>💼 岗位匹配度</h2>
+                <div id="jobMatchList"><div class="empty-hint">加载中…</div></div>
+            </div>
+        </div>
+
+        <!-- ===== 新增：学习行为 / 错题分布 ===== -->
+        <div class="grid">
+            <div class="card">
+                <h2>⏱️ 近 30 天学习行为</h2>
+                <div class="mini-grid" id="behaviorGrid"></div>
+                <div style="margin-top:16px;" id="behaviorKv"></div>
+            </div>
+            <div class="card">
+                <h2>📕 错题分布（按知识点）</h2>
+                <div id="wrongByPoint"></div>
+            </div>
+        </div>
+
+        <!-- ===== 新增：任务 / 作业 / 面试 / 证书 ===== -->
+        <div class="card full-width" style="margin-bottom: 20px;">
+            <h2>🗂️ 任务与过程性数据</h2>
+            <div class="mini-grid" id="processGrid"></div>
+            <div style="margin-top:16px; display:grid; grid-template-columns:1fr 1fr; gap:20px;" id="processDetail">
+                <div>
+                    <h3 style="font-size:14px;color:#ff6b6b;margin-bottom:10px;">最近错题</h3>
+                    <div id="recentWrongList"></div>
+                </div>
+                <div>
+                    <h3 style="font-size:14px;color:#51cf66;margin-bottom:10px;">最近活动</h3>
+                    <ul class="timeline" id="timelineList"></ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 新增：风险与建议 ===== -->
+        <div class="card full-width" style="margin-bottom: 20px;">
+            <h2>💡 学情诊断与学习建议</h2>
+            <div class="control-row" style="margin-bottom:14px;">
+                <span class="risk-pill" id="riskPill" style="background:#cdd3e2;">风险 -</span>
+                <span style="font-size:13px;color:#667;" id="riskReasons"></span>
+            </div>
+            <div id="adviceList"></div>
+        </div>
+
+        <div class="card full-width" style="margin-bottom: 20px;">
+            <h2>📋 能力详情</h2>
+            <ul class="competence-list" id="competenceList"></ul>
+        </div>
+
+        <div class="card full-width" style="margin-bottom: 20px;">
+            <h2>🎓 岗位差距分析</h2>
+            <div class="control-row">
+                <label>选择岗位：</label>
+                <select id="jobSelect">
+                    <option value="通信工程师">通信工程师</option>
+                    <option value="网络优化工程师">网络优化工程师</option>
+                    <option value="射频工程师">射频工程师</option>
+                    <option value="研发工程师">研发工程师</option>
+                </select>
+                <button class="btn-primary" onclick="loadJobGaps()">分析</button>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <h3 style="color: #ff6b6b; margin-bottom: 10px;">⚠️ 待提升能力</h3>
+                    <div id="gapsList"></div>
+                </div>
+                <div>
+                    <h3 style="color: #51cf66; margin-bottom: 10px;">✅ 优势能力</h3>
+                    <div id="strengthsList"></div>
+                </div>
+            </div>
+        </div>
+        </main>
+    </div>
+
+    <!-- ===== AI 分析弹窗 ===== -->
+    <div class="ai-overlay" id="aiOverlay">
+        <div class="ai-modal">
+            <div class="ai-head">
+                <span>🤖 AI 个性化分析</span>
+                <button class="ai-close" onclick="closeAiAnalysis()">✕</button>
+            </div>
+            <div class="ai-body" id="aiBody">
+                <div class="empty-hint">点击「AI 深度分析」开始生成。</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 选课弹窗 ===== -->
+    <div class="ai-overlay" id="courseOverlay">
+        <div class="cm-modal">
+            <div class="cm-head">
+                <span>📚 我的课程</span>
+                <button class="ai-close" onclick="closeCoursePicker()">✕</button>
+            </div>
+            <div class="cm-body" id="courseOptions">
+                <div class="course-empty">加载中…</div>
+            </div>
+            <div class="cm-foot">
+                <div class="cm-tip" id="coursePickTip">勾选你本学期/已修的课程，能力画像会按课程显示对应维度</div>
+                <div style="display:flex;gap:10px;">
+                    <button class="btn-ghost" onclick="closeCoursePicker()">取消</button>
+                    <button class="btn-primary" onclick="saveCourses()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ===================== 状态 ===================== */
+        const S = {
+            role: 'student',
+            students: [],          // 当前筛选出的学生（含指标）
+            currentId: '',
+            currentName: '',
+            reqSeq: 0,             // 切人序号：用于丢弃过期请求，防止数据串号
+            course: null,          // 当前学生的课程与覆盖维度
+            courseCatalog: null,   // 课程目录缓存
+            radarChart: null,
+            curveChart: null,
+            analysis: null,
+            aiRunning: false,
+        };
+
+        const $ = id => document.getElementById(id);
+        const esc = s => String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+        async function getJSON(url) {
+            const r = await fetch(url);
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+        }
+
+        /* ===================== 初始化 ===================== */
+        async function init() {
+            let user = {};
+            try { user = await getJSON('/current-user'); } catch (e) { console.error(e); }
+            S.role = user.role === 'teacher' ? 'teacher' : 'student';
+
+            if (S.role === 'teacher') {
+                await loadFilterOptions();
+                await loadStudentList();
+            } else {
+                // 学生端：只能看自己，隐藏左侧分类导航，数据区占满整行
+                $('pzSide').style.display = 'none';
+                $('pzWrap').classList.add('solo');
+                await initSelf(user);
+            }
+        }
+
+        async function initSelf(user) {
+            let mine = null;
+            try {
+                const d = await getJSON('/students');
+                mine = (d.students || [])[0] || null;
+            } catch (e) { console.error(e); }
+
+            const name = (mine && mine.name) || user.student_name || '';
+            if (!name) {
+                renderProfileStrip({});
+                clearPanels();
+                return;
+            }
+            S.currentId = mine ? mine.id : '';
+            S.currentName = name;
+
+            renderProfileSelf(mine, user);
+            loadAllData();
+            loadJobGaps();
+        }
+
+        function renderProfileSelf(s, user) {
+            const meta = s ? metaOf(s) : {
+                grade: '', grade_level: '', class_name: user.class_name || '',
+                major: '', student_no: user.student_no || '',
+                last_login: '', created_at: '',
+            };
+            renderProfileStrip(meta);
+        }
+
+        function metaOf(s) {
+            return {
+                grade: s.grade || '', grade_level: s.grade_level || '',
+                class_name: s.class_name || '', major: s.major || '',
+                student_no: s.student_no || '', last_login: s.last_login || '',
+                created_at: s.created_at || '',
+            };
+        }
+
+        /* ===================== 分类筛选 ===================== */
+        async function loadFilterOptions() {
+            let d = {};
+            try { d = await getJSON('/api/students/filters'); } catch (e) { console.error(e); }
+
+            fillSelect('filterGrade', d.grades || [], '全部年级');
+            fillSelect('filterLevel', d.grade_levels || [], '全部层次');
+            fillSelect('filterClass', d.classes || [], '全部班级');
+            fillSelect('filterMajor', d.majors || [], '全部专业');
+        }
+
+        function fillSelect(id, items, allLabel) {
+            const el = $(id);
+            const cur = el.value;
+            el.innerHTML = `<option value="">${allLabel}</option>` +
+                items.map(i => `<option value="${esc(i.value)}">${esc(i.label)}（${i.count}）</option>`).join('');
+            if (cur && items.some(i => i.value === cur)) el.value = cur;
+        }
+
+        function currentFilters() {
+            return {
+                grade: $('filterGrade').value,
+                grade_level: $('filterLevel').value,
+                class_name: $('filterClass').value,
+                major: $('filterMajor').value,
+                keyword: $('filterKeyword').value.trim(),
+                sort: $('filterSort').value,
+            };
+        }
+
+        function applyFilters() {
+            loadStudentList(true);
+        }
+
+        function resetFilters() {
+            ['filterGrade', 'filterLevel', 'filterClass', 'filterMajor'].forEach(id => $(id).value = '');
+            $('filterKeyword').value = '';
+            $('filterSort').value = 'score_desc';
+            loadStudentList(true);
+        }
+
+        // 收起/展开筛选条件（窄屏时省空间）
+        function toggleFilterPanel() {
+            const el = $('pzFilters');
+            const hidden = el.style.display === 'none';
+            el.style.display = hidden ? 'grid' : 'none';
+            $('pzFilterBtn').textContent = hidden ? '收起' : '筛选';
+        }
+
+        $('filterKeyword').addEventListener('keydown', e => {
+            if (e.key === 'Enter') applyFilters();
+        });
+
+        async function loadStudentList(resetSelection) {
+            const f = currentFilters();
+            const qs = new URLSearchParams({ ...f, page: 1, page_size: 300 }).toString();
+
+            let d = {};
+            try { d = await getJSON('/api/students/overview?' + qs); } catch (e) {
+                console.error('学生总览加载失败', e);
+                return;
+            }
+            S.students = d.students || [];
+
+            // 汇总条
+            const sm = d.summary || {};
+            const summaryEl = $('filterSummary');
+            summaryEl.style.display = 'block';
+            summaryEl.innerHTML =
+                `共 <b>${sm.student_count || 0}</b> 人` +
+                (sm.all_count && sm.all_count !== sm.student_count ? `（全校 ${sm.all_count}）` : '') +
+                ` · 均分 <b>${sm.avg_score || 0}</b><br>活跃 ${sm.active_count || 0} 人` +
+                ` · 未掌握错题 ${sm.wrong_unmastered || 0} 道`;
+
+            renderStudentNav();
+
+            if (!S.students.length) {
+                S.currentId = ''; S.currentName = '';
+                clearPanels();
+                return;
+            }
+
+            // 保持原选择，否则选第一人
+            const keep = resetSelection ? null : S.students.find(s => String(s.id) === String(S.currentId));
+            selectStudentRow(keep || S.students[0]);
+        }
+
+        /* 左侧学生导航：年级(层次) → 班级 → 学生 */
+        function renderStudentNav() {
+            const box = $('studentNav');
+            if (!S.students.length) {
+                box.innerHTML = '<div class="pz-empty">当前条件下暂无学生</div>';
+                return;
+            }
+
+            const byGrade = new Map();
+            S.students.forEach(s => {
+                const g = [s.grade || '未标注年级', s.grade_level || ''].filter(Boolean).join(' · ');
+                const c = s.class_name || '未分班';
+                if (!byGrade.has(g)) byGrade.set(g, new Map());
+                const cls = byGrade.get(g);
+                if (!cls.has(c)) cls.set(c, []);
+                cls.get(c).push(s);
+            });
+
+            let html = '';
+            byGrade.forEach((classes, gradeLabel) => {
+                let total = 0;
+                classes.forEach(arr => total += arr.length);
+                html += `<div class="pz-glabel"><span>${esc(gradeLabel)}</span><b>${total}人</b></div>`;
+                classes.forEach((arr, className) => {
+                    html += `<div class="pz-gsub">📁 ${esc(className)} · ${arr.length}人</div>`;
+                    html += arr.map(s => {
+                        const on = String(s.id) === String(S.currentId) ? ' on' : '';
+                        return `<div class="pz-item${on}" data-id="${esc(s.id)}" onclick="pickStudent('${esc(s.id)}')"
+                                     title="${esc(s.name)} ${esc(s.student_no || '')}">
+                            <span class="pz-av">${esc((s.name || '?').charAt(0))}</span>
+                            <span class="pz-info">
+                                <span class="pz-name">${esc(s.name)}</span>
+                                <span class="pz-no">${esc(s.student_no || '未填学号')}</span>
+                            </span>
+                            <span class="pz-score">${s.avg_score}</span>
+                        </div>`;
+                    }).join('');
+                });
+            });
+            box.innerHTML = html;
+        }
+
+        function pickStudent(id) {
+            const row = S.students.find(s => String(s.id) === String(id));
+            if (row) selectStudentRow(row);
+        }
+
+        function selectStudentRow(row) {
+            S.currentId = row.id;
+            S.currentName = row.name;
+            // 每次切人递增序号：切走后旧请求的返回一律丢弃，避免慢请求覆盖新学生的数据
+            const seq = ++S.reqSeq;
+
+            document.querySelectorAll('.pz-item').forEach(el => {
+                el.classList.toggle('on', String(el.dataset.id) === String(row.id));
+            });
+            renderProfileStrip(row);
+            setPanelLoading(true);
+            loadJobGaps(seq);
+            loadAllData(seq).finally(() => {
+                if (seq === S.reqSeq) setPanelLoading(false);
+            });
+        }
+
+        /* 右侧数据区加载态（切人时轻微变淡，避免看着像没反应） */
+        function setPanelLoading(on) {
+            const main = document.querySelector('.pz-main');
+            if (main) main.classList.toggle('is-loading', !!on);
+        }
+
+        /* 是否为当前选中的学生（序号不一致说明用户已经切走了） */
+        function isCurrent(seq) {
+            return seq === undefined || seq === S.reqSeq;
+        }
+
+        /* ===================== 画像信息 ===================== */
+        function renderProfileStrip(m) {
+            const gradeTxt = [m.grade, m.grade_level].filter(Boolean).join(' / ') || '未标注';
+            $('profileStrip').innerHTML = [
+                ['年级 / 层次', gradeTxt],
+                ['班级', m.class_name || '未分班'],
+                ['专业', m.major || '未标注'],
+                ['学号', m.student_no || '未填写'],
+                ['最近登录', (m.last_login || '').slice(0, 16) || '暂无'],
+                ['建档时间', (m.created_at || '').slice(0, 10) || '暂无'],
+            ].map(([k, v]) =>
+                `<div class="profile-field"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>`
+            ).join('');
+        }
+
+        /* ===================== 数据加载 ===================== */
+        async function loadAllData(seq) {
+            if (seq === undefined) seq = S.reqSeq;
+            if (!S.currentId && !S.currentName) return;
+            await Promise.all([
+                loadCourses(seq),
+                loadRadarData(seq),
+                loadLearningCurve(seq),
+                loadJobMatch(seq),
+                loadAnalysis(seq),
+            ]);
+        }
+
+        /* ===================== 课程（学生自填，老师只读） ===================== */
+        async function loadCourses(seq) {
+            if (!S.currentId) {
+                const box = $('courseChips');
+                if (box) box.innerHTML = '<span class="course-empty">未获取到学生档案</span>';
+                return null;
+            }
+            try {
+                const d = await getJSON(`/api/students/${encodeURIComponent(S.currentId)}/courses`);
+                if (!isCurrent(seq)) return null;   // 已切换学生，丢弃旧响应
+                S.course = d;
+                renderCourseCard(d);
+                return d;
+            } catch (e) {
+                if (!isCurrent(seq)) return null;
+                console.error('课程加载失败', e);
+                const box = $('courseChips');
+                if (box) box.innerHTML = '<span class="course-empty">课程信息加载失败</span>';
+                return null;
+            }
+        }
+
+        function renderCourseCard(d) {
+            if (!d) return;
+            const courses = d.courses || [];
+            const chips = $('courseChips');
+
+            const title = $('courseTitle');
+            if (title) title.textContent = d.editable ? '📚 我的课程' : '📚 该学生的课程';
+
+            if (!courses.length) {
+                chips.innerHTML = '<span class="course-empty">还没有填写课程 —— 未选课时按全部 12 维展示</span>';
+            } else {
+                chips.innerHTML = courses.map(c =>
+                    `<span class="course-chip"><span class="ic">${esc(c.icon)}</span>${esc(c.name)}</span>`
+                ).join('');
+            }
+
+            const dims = d.dimensions || [];
+            $('courseDims').innerHTML = dims.map(x =>
+                `<span>${esc(x.icon)} ${esc(x.name)}</span>`
+            ).join('');
+
+            const btn = $('courseEditBtn');
+            if (btn) btn.style.display = d.editable ? '' : 'none';
+
+            let note;
+            if (d.editable) {
+                note = courses.length
+                    ? `已选 ${courses.length} 门课，覆盖 ${dims.length} 个能力维度；没选到的维度不会出现在雷达图里。`
+                    : '请先填写本学期课程，能力画像会按课程展示对应维度（不填则显示全部 12 维）。';
+            } else {
+                note = courses.length
+                    ? `课程由学生本人设置（老师端只读），当前覆盖 ${dims.length} 个能力维度。`
+                    : '该学生还没有填写课程，暂按全部 12 维展示。';
+            }
+            $('courseNote').textContent = note;
+        }
+
+        async function openCoursePicker() {
+            if (!S.currentId) { alert('请先选择学生'); return; }
+            if (!S.course || !S.course.editable) return;
+
+            if (!S.courseCatalog) {
+                try {
+                    const d = await getJSON('/api/courses/catalog');
+                    S.courseCatalog = d.courses || [];
+                } catch (e) {
+                    alert('课程目录加载失败，请稍后重试');
+                    return;
+                }
+            }
+            renderCourseOptions();
+            $('courseOverlay').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function renderCourseOptions() {
+            const picked = new Set((S.course && S.course.course_ids) || []);
+            const dimNames = {};
+            (S.course && S.course.all_dimensions || []).forEach(x => { dimNames[x.id] = x.name; });
+
+            $('courseOptions').innerHTML = (S.courseCatalog || []).map(c => {
+                const on = picked.has(c.id) ? ' on' : '';
+                const ds = (c.dims || []).map(id => dimNames[id] || id).join(' / ');
+                return `<label class="cm-item${on}" data-id="${esc(c.id)}">
+                    <input type="checkbox" value="${esc(c.id)}" ${on ? 'checked' : ''}
+                           onchange="toggleCourseItem(this)">
+                    <span><span class="nm">${esc(c.icon)} ${esc(c.name)}</span>
+                          <span class="ds">→ ${esc(ds)}</span></span>
+                </label>`;
+            }).join('');
+
+            updateCoursePickTip();
+        }
+
+        function toggleCourseItem(input) {
+            const item = input.closest('.cm-item');
+            if (item) item.classList.toggle('on', input.checked);
+            updateCoursePickTip();
+        }
+
+        function selectedCourseIds() {
+            return Array.prototype.slice
+                .call(document.querySelectorAll('#courseOptions input[type=checkbox]:checked'))
+                .map(x => x.value);
+        }
+
+        function updateCoursePickTip() {
+            const ids = selectedCourseIds();
+            const tip = $('coursePickTip');
+            if (!tip) return;
+            if (!ids.length) {
+                tip.textContent = '未选课程时将按全部 12 维展示';
+                return;
+            }
+            const covered = new Set();
+            (S.courseCatalog || []).forEach(c => {
+                if (ids.indexOf(c.id) >= 0) (c.dims || []).forEach(d => covered.add(d));
+            });
+            tip.textContent = `已选 ${ids.length} 门课，覆盖 ${covered.size} 个能力维度`;
+        }
+
+        async function saveCourses() {
+            const ids = selectedCourseIds();
+            try {
+                const r = await fetch('/api/student/courses', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ courses: ids })
+                });
+                const d = await r.json();
+                if (!r.ok) { alert(d.error || '保存失败'); return; }
+                S.course = d;
+                renderCourseCard(d);
+                closeCoursePicker();
+                // 维度变了，重画雷达 / 能力详情 / 分类汇总
+                loadRadarData(S.reqSeq);
+            } catch (e) {
+                alert('保存失败：' + e.message);
+            }
+        }
+
+        function closeCoursePicker() {
+            const ov = $('courseOverlay');
+            if (ov) ov.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        async function loadRadarData(seq) {
+            if (!S.currentName) return;
+            const name = S.currentName;
+            const withAvg = ($('cmpClass') && $('cmpClass').checked) ? '&with_class_avg=1' : '';
+            try {
+                const data = await getJSON(
+                    `/api/competence-radar?student_name=${encodeURIComponent(name)}` +
+                    `&course_aware=1${withAvg}`);
+                if (!isCurrent(seq)) return;   // 已切换学生，丢弃旧响应
+                if (data.radar_data && data.radar_data.length) {
+                    renderRadar(data.radar_data, data.class_avg || []);
+                    renderCompetenceList(data.radar_data);
+                    renderCategorySummary(data.category_summary || {});
+                    updateStats(data.radar_data, data.total_questions);
+                } else {
+                    renderRadar([], []);
+                    $('competenceList').innerHTML = '<div class="empty-hint">暂无能力数据，先让学生去对话或做练习吧</div>';
+                    $('categorySummary').innerHTML = '<div class="empty-hint">暂无数据</div>';
+                }
+            } catch (e) { console.error('雷达图加载失败', e); }
+        }
+
+        function renderRadar(data, classAvg) {
+            // CDN 未加载（离线/证书异常）时退回纯 SVG 雷达图，保证画像页可用
+            if (typeof Chart === 'undefined') {
+                renderRadarSVG(data, classAvg);
+                return;
+            }
+            const ctx = $('radarChart').getContext('2d');
+            if (S.radarChart) S.radarChart.destroy();
+
+            const labels = data.length ? data.map(d => d.name) : ['暂无数据'];
+            const datasets = [{
+                label: '本人能力',
+                data: data.map(d => d.score),
+                backgroundColor: 'rgba(102, 126, 234, 0.2)',
+                borderColor: 'rgba(102, 126, 234, 1)',
+                borderWidth: 2,
+                pointBackgroundColor: 'rgba(102, 126, 234, 1)',
+                pointRadius: 4,
+            }];
+            if (classAvg && classAvg.length) {
+                datasets.push({
+                    label: '班级平均',
+                    data: classAvg.map(d => d.score),
+                    backgroundColor: 'rgba(255, 169, 77, 0.12)',
+                    borderColor: 'rgba(255, 169, 77, 0.95)',
+                    borderWidth: 2,
+                    borderDash: [5, 4],
+                    pointBackgroundColor: 'rgba(255, 169, 77, 1)',
+                    pointRadius: 3,
+                    fill: false,
+                });
+            }
+
+            S.radarChart = new Chart(ctx, {
+                type: 'radar',
+                data: { labels, datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { r: { beginAtZero: true, max: 100, ticks: { stepSize: 20 } } },
+                    plugins: { legend: { display: datasets.length > 1, position: 'bottom' } },
+                },
+            });
+        }
+
+        /* Chart.js 不可用时的纯 SVG 雷达图（零依赖降级） */
+        function renderRadarSVG(data, classAvg) {
+            const box = document.querySelector('.radar-container');
+            if (!box) return;
+            if (!data || data.length < 3) {
+                box.innerHTML = '<div class="empty-hint" style="padding-top:120px;">暂无能力数据</div>';
+                return;
+            }
+            const W = 440, H = 400, cx = W / 2, cy = H / 2 + 6, R = 132, N = data.length;
+            const ang = i => -Math.PI / 2 + i * 2 * Math.PI / N;
+            const pt = (i, r) => [cx + r * Math.cos(ang(i)), cy + r * Math.sin(ang(i))];
+            const poly = pts => pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+
+            let grid = '';
+            for (let lv = 1; lv <= 4; lv++) {
+                grid += `<polygon points="${poly(data.map((_, i) => pt(i, R * lv / 4)))}"
+                         fill="none" stroke="#e3e9f5" stroke-width="1"/>`;
+            }
+            let axes = '';
+            data.forEach((d, i) => {
+                const [x, y] = pt(i, R);
+                axes += `<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#e3e9f5" stroke-width="1"/>`;
+                const [lx, ly] = pt(i, R + 22);
+                const anchor = Math.abs(lx - cx) < 14 ? 'middle' : (lx > cx ? 'start' : 'end');
+                axes += `<text x="${lx.toFixed(1)}" y="${(ly - 3).toFixed(1)}" text-anchor="${anchor}"
+                         font-size="11" fill="#555">${esc(d.name)}</text>`;
+                axes += `<text x="${lx.toFixed(1)}" y="${(ly + 10).toFixed(1)}" text-anchor="${anchor}"
+                         font-size="10" fill="#667eea" font-weight="600">${Math.round(d.score)}</text>`;
+            });
+
+            const selfPts = data.map((d, i) => pt(i, R * Math.max(Math.min(d.score, 100), 2) / 100));
+            let shapes = `<polygon points="${poly(selfPts)}" fill="rgba(102,126,234,0.22)"
+                          stroke="#667eea" stroke-width="2"/>` +
+                selfPts.map(p => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" fill="#667eea"/>`).join('');
+
+            if (classAvg && classAvg.length === data.length) {
+                const avgPts = classAvg.map((d, i) => pt(i, R * Math.max(Math.min(d.score, 100), 2) / 100));
+                shapes += `<polygon points="${poly(avgPts)}" fill="rgba(255,169,77,0.10)"
+                           stroke="#ffa94d" stroke-width="2" stroke-dasharray="5 4"/>`;
+            }
+
+            box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:100%;"
+                preserveAspectRatio="xMidYMid meet" role="img" aria-label="能力雷达图">${grid}${axes}${shapes}</svg>`;
+        }
+
+        /* Chart.js 不可用时的学习曲线降级：以文字条展示最近 7 天 */
+        function renderCurveFallback(curve) {
+            const box = document.querySelector('.chart-container');
+            if (!box) return;
+            const rows = (curve || []).slice(-7);
+            if (!rows.length) {
+                box.innerHTML = '<div class="empty-hint" style="padding-top:60px;">近 30 天暂无学习记录</div>';
+                return;
+            }
+            const maxQ = Math.max(...rows.map(r => r.questions), 1);
+            box.innerHTML = '<div style="height:100%;overflow-y:auto;padding-top:6px;">' + rows.map(r => `
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:12px;color:#556;">
+                    <span style="width:52px;color:#8a90a6;">${esc((r.date || '').slice(5))}</span>
+                    <div style="flex:1;height:14px;background:#f0f2f8;border-radius:7px;overflow:hidden;">
+                        <div style="height:100%;width:${Math.max(r.questions / maxQ * 100, 3)}%;
+                             background:linear-gradient(90deg,#667eea,#764ba2);border-radius:7px;"></div>
+                    </div>
+                    <span style="width:74px;text-align:right;color:#667eea;font-weight:700;">
+                        ${r.questions}问 / ${r.accuracy}%</span>
+                </div>`).join('') + '</div>';
+        }
+
+        function renderCompetenceList(data) {
+            $('competenceList').innerHTML = data.map(item => `
+                <li class="competence-item">
+                    <span class="competence-name">${esc(item.icon || '')} ${esc(item.name)}
+                        <span style="color: #999; font-size: 12px;">(${esc(item.category)})</span></span>
+                    <div class="competence-bar">
+                        <div class="competence-fill" style="width: ${Math.min(item.score, 100)}%"></div>
+                    </div>
+                    <span class="competence-score">${item.score}分</span>
+                </li>
+            `).join('');
+        }
+
+        function renderCategorySummary(summary) {
+            const entries = Object.entries(summary || {});
+            if (!entries.length) {
+                $('categorySummary').innerHTML = '<div class="empty-hint">暂无数据</div>';
+                return;
+            }
+            $('categorySummary').innerHTML = entries.map(([cat, data]) => {
+                const pct = data.max ? (data.total_score / data.max) * 100 : 0;
+                return `
+                    <div style="margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span style="font-weight: 600; color: #333;">${esc(cat)}</span>
+                            <span style="color: #667eea; font-weight: bold;">${pct.toFixed(1)}%</span>
+                        </div>
+                        <div style="height: 10px; background: #f0f0f5; border-radius: 5px; overflow: hidden;">
+                            <div style="height: 100%; width: ${pct}%; background: linear-gradient(90deg, #667eea, #764ba2); border-radius: 5px;"></div>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        function updateStats(data, totalQuestions) {
+            // 维度可能是课程过滤后的子集，权重不再和为 1，按可见维度的权重归一化
+            const totalWeight = data.reduce((sum, d) => sum + (d.weight || 0), 0) || 1;
+            const avgScore = data.reduce((sum, d) => sum + d.score * (d.weight || 0), 0) / totalWeight;
+            const topArea = data.length ? data.reduce((max, d) => d.score > max.score ? d : max, data[0]) : null;
+            $('totalQuestions').textContent = totalQuestions ?? 0;
+            $('avgScore').textContent = avgScore.toFixed(1);
+            $('topCategory').textContent = topArea && topArea.score > 0
+                ? ((topArea.icon ? topArea.icon + ' ' : '') + topArea.name) : '-';
+        }
+
+        async function loadLearningCurve(seq) {
+            if (!S.currentName) return;
+            const name = S.currentName;
+            try {
+                const data = await getJSON(
+                    `/api/learning-curve?student_name=${encodeURIComponent(name)}&days=30`);
+                if (!isCurrent(seq)) return;   // 已切换学生，丢弃旧响应
+                if (typeof Chart === 'undefined') {
+                    renderCurveFallback(data.curve || []);
+                    return;
+                }
+                const ctx = $('curveChart').getContext('2d');
+                if (S.curveChart) S.curveChart.destroy();
+
+                S.curveChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: (data.curve || []).map(d => d.date),
+                        datasets: [{
+                            label: '提问数',
+                            data: (data.curve || []).map(d => d.questions),
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            tension: 0.3,
+                            fill: true,
+                        }, {
+                            label: '正确率(%)',
+                            data: (data.curve || []).map(d => d.accuracy),
+                            borderColor: '#51cf66',
+                            backgroundColor: 'rgba(81, 207, 102, 0.1)',
+                            tension: 0.3,
+                            fill: false,
+                        }],
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } },
+                });
+            } catch (e) { console.error('学习曲线加载失败', e); }
+        }
+
+        async function loadJobMatch(seq) {
+            if (!S.currentName) return;
+            const name = S.currentName;
+            try {
+                const data = await getJSON(`/api/job-match?student_name=${encodeURIComponent(name)}`);
+                if (!isCurrent(seq)) return;   // 已切换学生，丢弃旧响应
+                if (data.all_jobs) renderJobMatchList(data.all_jobs);
+            } catch (e) { console.error('岗位匹配加载失败', e); }
+        }
+
+        function renderJobMatchList(jobs) {
+            const sorted = Object.entries(jobs).sort((a, b) => b[1] - a[1]);
+            if (!sorted.length) {
+                $('jobMatchList').innerHTML = '<div class="empty-hint">暂无岗位数据</div>';
+                return;
+            }
+            $('jobMatchList').innerHTML = sorted.map(([job, rate]) => `
+                <div class="job-card">
+                    <span class="job-name">${esc(job)}</span>
+                    <span class="job-match" style="color: ${rate >= 70 ? '#51cf66' : rate >= 50 ? '#ffa94d' : '#ff6b6b'};">${rate}%</span>
+                </div>
+            `).join('');
+        }
+
+        async function loadJobGaps(seq) {
+            if (!S.currentName) return;
+            const name = S.currentName;
+            const jobName = $('jobSelect').value;
+            try {
+                const data = await getJSON(
+                    `/api/job-match?student_name=${encodeURIComponent(name)}&job_name=${encodeURIComponent(jobName)}`);
+                if (!isCurrent(seq)) return;   // 已切换学生，丢弃旧响应
+                const gapsList = $('gapsList');
+                const strengthsList = $('strengthsList');
+
+                gapsList.innerHTML = (data.gaps && data.gaps.length)
+                    ? data.gaps.map(g => `<div class="gap-item"><span>${esc(g.area)}</span>
+                        <span style="color: #ff6b6b;">差距 ${(g.gap * 100).toFixed(0)}%</span></div>`).join('')
+                    : '<div style="color: #51cf66; padding: 10px;">🎉 无明显差距</div>';
+
+                strengthsList.innerHTML = (data.strengths && data.strengths.length)
+                    ? data.strengths.map(s => `<div class="strength-item"><span>${esc(s.area)}</span>
+                        <span style="color: #51cf66;">超出 ${((s.current - s.required) * 100).toFixed(0)}%</span></div>`).join('')
+                    : '<div style="color: #999; padding: 10px;">暂无明显优势项</div>';
+            } catch (e) { console.error('岗位差距加载失败', e); }
+        }
+
+        /* ===================== 深度分析 ===================== */
+        async function loadAnalysis(seq) {
+            if (!S.currentId) return;
+            const id = S.currentId;
+            let d;
+            try { d = await getJSON(`/api/students/${encodeURIComponent(id)}/analysis`); }
+            catch (e) { console.error('深度分析加载失败', e); return; }
+
+            if (!isCurrent(seq)) return;   // 已切换学生，丢弃旧响应
+
+            S.analysis = d;
+            renderProfileStrip(d.student || {});
+            renderBehavior(d.learning || {});
+            renderWrong(d.wrong || {});
+            renderProcess(d);
+            renderRisk(d.risk || {}, d.advice || []);
+            updateAnalysisStats(d);
+        }
+
+        function updateAnalysisStats(d) {
+            const ov = d.overview || {};
+            if (ov.total_questions != null) $('totalQuestions').textContent = ov.total_questions;
+            // 综合能力由雷达数据按「课程可见维度」计算（updateStats 负责），这里不再覆盖，
+            // 否则会把课程口径下的分数又改回全 12 维的平均分。
+
+            $('wrongCount').textContent = (d.wrong || {}).unmastered ?? 0;
+            $('weeklyRate').textContent = ((d.weekly || {}).rate ?? 0) + '%';
+
+            const cls = ((d.rank || {}).class) || {};
+            $('classRank').textContent = cls.rank ? `${cls.rank}/${cls.total}` : '-';
+        }
+
+        function renderBehavior(l) {
+            $('behaviorGrid').innerHTML = [
+                ['活跃天数', l.active_days ?? 0, `近 ${l.days || 30} 天`],
+                ['学习记录', l.recent_records ?? 0, `累计 ${l.total_records ?? 0} 条`],
+                ['平均得分', l.avg_score ?? 0, '按记录计分'],
+                ['正确率', (l.accuracy ?? 0) + '%', `错题 ${l.wrong_in_window ?? 0} 道`],
+            ].map(([cap, num, sub]) => `
+                <div class="mini-card">
+                    <div class="num">${esc(num)}</div>
+                    <div class="cap">${esc(cap)}</div>
+                    <div class="sub">${esc(sub)}</div>
+                </div>`).join('');
+
+            const weekly = (S.analysis && S.analysis.weekly) || {};
+            $('behaviorKv').innerHTML = [
+                ['周任务', `${weekly.completed || 0} / ${weekly.total || 0}（${weekly.rate || 0}%）`],
+                ['近 30 天掌握错题', `${l.mastered_in_window ?? 0} 道`],
+                ['互动能力维度', `${(S.analysis && S.analysis.overview && S.analysis.overview.interacted_dimensions) || 0} / 12`],
+            ].map(([k, v]) => `<div class="kv-row"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>`).join('');
+        }
+
+        function renderWrong(w) {
+            const pts = w.by_knowledge_point || [];
+            if (!pts.length) {
+                $('wrongByPoint').innerHTML = '<div class="empty-hint">暂无错题记录 🎉</div>';
+                return;
+            }
+            const max = Math.max(...pts.map(p => p.total), 1);
+            $('wrongByPoint').innerHTML =
+                `<div class="kv-row" style="border-bottom:2px solid #f0f0f5;">
+                    <span class="k">共 ${w.total} 道 · 已掌握 ${w.mastered} 道（${w.mastered_rate}%）</span>
+                    <span class="v" style="color:#ff6b6b;">未掌握 ${w.unmastered}</span>
+                 </div>` +
+                pts.slice(0, 8).map(p => `
+                    <div style="margin-top:12px;">
+                        <div style="display:flex;justify-content:space-between;font-size:13px;color:#444;margin-bottom:5px;">
+                            <span>${esc(p.knowledge_point)}</span>
+                            <span style="color:#667eea;font-weight:700;">${p.total} 道</span>
+                        </div>
+                        <div style="height:8px;background:#f0f0f5;border-radius:4px;overflow:hidden;">
+                            <div style="height:100%;width:${(p.total / max * 100).toFixed(0)}%;
+                                        background:linear-gradient(90deg,#ff6b6b,#ffa94d);border-radius:4px;"></div>
+                        </div>
+                    </div>`).join('');
+        }
+
+        function renderProcess(d) {
+            const hw = d.homework || {};
+            const it = d.interview || {};
+            const cr = d.credential || {};
+            const wk = d.weekly || {};
+            $('processGrid').innerHTML = [
+                ['📋 周任务', `${wk.completed || 0}/${wk.total || 0}`, `完成率 ${wk.rate || 0}%`],
+                ['📝 作业提交', hw.submitted ?? 0, `平均 ${hw.avg_score ?? 0} 分${hw.late ? ` · 迟交 ${hw.late}` : ''}`],
+                ['🎤 模拟面试', `${it.completed || 0}/${it.total || 0}`, it.avg_score ? `均分 ${it.avg_score}` : '暂无评分'],
+                ['🔗 成长档案', cr.available ? (cr.records ?? 0) : '未启用',
+                    cr.available ? `证书 ${cr.certificates ?? 0} 张` : '模块未加载'],
+            ].map(([cap, num, sub]) => `
+                <div class="mini-card">
+                    <div class="num" style="font-size:18px;">${esc(num)}</div>
+                    <div class="cap">${esc(cap)}</div>
+                    <div class="sub">${esc(sub)}</div>
+                </div>`).join('');
+
+            const recentWrong = (d.wrong || {}).recent || [];
+            $('recentWrongList').innerHTML = recentWrong.length
+                ? recentWrong.map(q => `
+                    <div class="kv-row">
+                        <span class="k" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                            ${esc(q.question)}
+                        </span>
+                        <span class="v" style="color:${q.mastered ? '#51cf66' : '#ff6b6b'};white-space:nowrap;">
+                            ${q.mastered ? '已掌握' : '错 ' + q.count + ' 次'}
+                        </span>
+                    </div>`).join('')
+                : '<div class="empty-hint">暂无错题</div>';
+
+            const tl = (d.learning || {}).timeline || [];
+            $('timelineList').innerHTML = tl.length
+                ? tl.map(t => `<li>${esc(t.knowledge_point || t.type || '学习活动')}
+                        ${t.score != null ? `<span style="color:#667eea;font-weight:600;"> · ${t.score}分</span>` : ''}
+                        <span class="t-time">${esc((t.timestamp || '').slice(5, 16))}</span></li>`).join('')
+                : '<li style="border-left-color:transparent;color:#9aa2b8;">暂无学习记录</li>';
+        }
+
+        function renderRisk(risk, advice) {
+            const pill = $('riskPill');
+            pill.textContent = `风险 ${risk.label || '-'}`;
+            pill.style.background = risk.color || '#cdd3e2';
+            $('riskReasons').textContent = (risk.reasons || []).join('；');
+
+            $('adviceList').innerHTML = advice.length
+                ? advice.map(a => `
+                    <div class="advice-item">
+                        <span class="advice-tag">${esc(a.type || '建议')}</span>
+                        <strong style="color:#4a55a2;">${esc(a.target || '')}</strong>
+                        <div style="margin-top:6px;">${esc(a.text || '')}</div>
+                    </div>`).join('')
+                : '<div class="empty-hint">暂无建议</div>';
+        }
+
+        function clearPanels() {
+            ['competenceList', 'categorySummary', 'jobMatchList', 'behaviorGrid', 'behaviorKv',
+             'wrongByPoint', 'processGrid', 'recentWrongList', 'timelineList', 'adviceList']
+                .forEach(id => { const el = $(id); if (el) el.innerHTML = '<div class="empty-hint">暂无数据</div>'; });
+            $('totalQuestions').textContent = '0';
+            $('avgScore').textContent = '0';
+            $('topCategory').textContent = '-';
+            $('classRank').textContent = '-';
+            $('wrongCount').textContent = '0';
+            $('weeklyRate').textContent = '0%';
+        }
+
+        /* ===================== AI 分析 ===================== */
+        function closeAiAnalysis() { $('aiOverlay').classList.remove('show'); }
+
+        async function runAiAnalysis() {
+            if (S.aiRunning) return;
+            if (!S.currentId) { alert('请先选择学生'); return; }
+            if (S.role !== 'teacher') { /* 学生本人也允许，后端已做归属校验 */ }
+
+            S.aiRunning = true;
+            $('aiOverlay').classList.add('show');
+            $('aiBody').innerHTML = '<div class="empty-hint"><span class="spinner-sm" style="border-color:#c9d0e8;border-top-color:#667eea;"></span>AI 正在综合分析，通常 20-60 秒…</div>';
+
+            let raw = '', err = '';
+            try {
+                const resp = await fetch(`/students/${encodeURIComponent(S.currentId)}/ai-analysis`);
+                if (!resp.ok || !resp.body) throw new Error('HTTP ' + resp.status);
+                const reader = resp.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                let buf = '';
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    buf += decoder.decode(value, { stream: true });
+                    const lines = buf.split('\n');
+                    buf = lines.pop();
+                    for (const line of lines) {
+                        if (!line.startsWith('data: ')) continue;
+                        const payload = line.slice(6).trim();
+                        if (payload === '[DONE]' || !payload) continue;
+                        try {
+                            const j = JSON.parse(payload);
+                            if (j.error) err = j.error;
+                            else if (j.content) {
+                                raw += j.content;
+                                $('aiBody').innerHTML = formatAi(raw) + '<span class="cursor">▍</span>';
+                                $('aiBody').scrollTop = $('aiBody').scrollHeight;
+                            }
+                        } catch (e) { /* 半截 JSON 忽略 */ }
+                    }
+                }
+                $('aiBody').innerHTML = raw ? formatAi(raw) : `<div class="empty-hint">${esc(err || '分析失败，请稍后重试')}</div>`;
+            } catch (e) {
+                $('aiBody').innerHTML = `<div class="empty-hint">网络错误：${esc(e.message)}</div>`;
+            } finally {
+                S.aiRunning = false;
+            }
+        }
+
+        function formatAi(text) {
+            let html = esc(text);
+            const out = [];
+            let inList = false;
+            for (const line of html.split('\n')) {
+                const t = line.trim();
+                if (/^【.+】$/.test(t)) {
+                    if (inList) { out.push('</ul>'); inList = false; }
+                    out.push(`<h3>${t.slice(1, -1)}</h3>`);
+                    continue;
+                }
+                const b = t.match(/^[-·•]\s+(.*)$/);
+                if (b) {
+                    if (!inList) { out.push('<ul>'); inList = true; }
+                    out.push(`<li>${b[1]}</li>`);
+                    continue;
+                }
+                const o = t.match(/^(\d+)[\.、]\s+(.*)$/);
+                if (o) {
+                    if (!inList) { out.push('<ul>'); inList = true; }
+                    out.push(`<li><strong>${o[1]}.</strong> ${o[2]}</li>`);
+                    continue;
+                }
+                if (!t) { if (inList) { out.push('</ul>'); inList = false; } continue; }
+                if (inList) { out.push('</ul>'); inList = false; }
+                out.push(`<p>${t}</p>`);
+            }
+            if (inList) out.push('</ul>');
+            return '<div style="font-size:12px;color:#999;background:#f5f5f5;border-radius:6px;padding:6px 12px;margin-bottom:12px;">✨ 本分析由 AI 生成，仅供参考</div>' + out.join('');
+        }
+
+        $('aiOverlay').addEventListener('click', e => {
+            if (e.target.id === 'aiOverlay') closeAiAnalysis();
+        });
+        $('courseOverlay').addEventListener('click', e => {
+            if (e.target.id === 'courseOverlay') closeCoursePicker();
+        });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') { closeAiAnalysis(); closeCoursePicker(); }
+        });
+
+        init();
+    </script>
+
+    <!-- 全站顶部导航栏 -->
+    <script src="/static/app_nav.js" defer></script>
+
+    <!-- 全局桌宠 Desktop Pet -->
+    <link rel="stylesheet" href="/static/desktop_pet.css">
+    <script src="/static/desktop_pet.js" defer></script>
+</body>
+</html>

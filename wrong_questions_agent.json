@@ -1,0 +1,13 @@
+[
+  {
+    "id": "wq_1",
+    "student_name": "test_student",
+    "question": "傅里叶变换的主要作用是什么？",
+    "category": "练习题",
+    "knowledge_point": "傅里叶变换",
+    "student_answer": "B",
+    "correct_answer": "A",
+    "timestamp": "2026-07-10T16:04:29.757916",
+    "mastered": false
+  }
+]

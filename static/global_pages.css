@@ -1,0 +1,131 @@
+/* =========================================================
+   功能页面全局美化 v2 · Global Pages Beautifier
+   策略：body 背景 + 装饰纹理 + 温和容器光效
+   ✅ 不强制改容器底色（尊重页面原有设计）
+   ✅ 只加光效/边框/阴影/hover 动画
+   ✅ 用精确选择器，避免误伤
+   ========================================================= */
+
+/* ---------- 1. 统一 body 背景：深蓝紫科技渐变 ---------- */
+body:not(.chat-body):not(.login-body) {
+    background: linear-gradient(135deg, #0f1e4a 0%, #162a5e 30%, #1e3c72 60%, #2a4a8a 100%) !important;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* ---------- 2. body 伪元素：网格纹理 + 光晕 ---------- */
+body:not(.chat-body):not(.login-body)::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+        linear-gradient(rgba(102, 126, 234, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(102, 126, 234, 0.08) 1px, transparent 1px);
+    background-size: 40px 40px;
+}
+
+/* ---------- 3. 顶部光晕 ---------- */
+body:not(.chat-body):not(.login-body)::after {
+    content: '';
+    position: fixed;
+    top: -200px; left: 50%;
+    transform: translateX(-50%);
+    width: 900px; height: 500px;
+    background: radial-gradient(ellipse at center, rgba(102, 126, 234, 0.25) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+    animation: glowFloat 8s ease-in-out infinite alternate;
+}
+
+@keyframes glowFloat {
+    0% { transform: translateX(-50%) translateY(0); opacity: 0.8; }
+    100% { transform: translateX(-50%) translateY(30px); opacity: 1; }
+}
+
+/* ---------- 4. 容器层级提升 ---------- */
+body:not(.chat-body):not(.login-body) .container,
+body:not(.chat-body):not(.login-body) main {
+    position: relative;
+    z-index: 1;
+}
+body:not(.chat-body):not(.login-body) .container > *,
+body:not(.chat-body):not(.login-body) main > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* =========================================================
+   5. 容器光效美化（v2 新增 · 温和版）
+   策略：只给 body 下第一层容器加，不碰嵌套子卡片
+   ========================================================= */
+
+/* 5a. Header 标题条加蓝紫光晕边框效果 */
+body:not(.chat-body):not(.login-body) .header,
+body:not(.chat-body):not(.login-body) [class*="header"]:not([class*="nav"]):not([class*="chat"]) {
+    box-shadow:
+        0 6px 24px rgba(102, 126, 234, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    border: none !important;
+}
+
+/* 5b. 主内容区域容器：加毛玻璃底 + 蓝边光效
+   精确匹配：.container 下第一层非 header 的 div */
+body:not(.chat-body):not(.login-body) .container > div:not([class*="header"]):not([class*="nav"]):not([class*="target"]):not([class*="back"]) {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(102, 126, 234, 0.18) !important;
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.12),
+        0 2px 8px rgba(102, 126, 234, 0.1) !important;
+}
+
+/* 5c. 面板容器（.scenarios-panel / .chat-panel / [class*="panel"]） */
+body:not(.chat-body):not(.login-body) [class*="panel"] {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(102, 126, 234, 0.2) !important;
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.15),
+        0 0 0 1px rgba(102, 126, 234, 0.05) !important;
+    transition: box-shadow 0.3s ease !important;
+}
+
+/* 5d. 卡片 hover 上浮 */
+body:not(.chat-body):not(.login-body) [class*="panel"]:hover,
+body:not(.chat-body):not(.login-body) .container > div:not([class*="header"]):not([class*="nav"]):hover {
+    box-shadow:
+        0 12px 40px rgba(102, 126, 234, 0.2),
+        0 4px 16px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 5e. 小卡片/列表项 hover 高亮 */
+body:not(.chat-body):not(.login-body) [class*="-card"],
+body:not(.chat-body):not(.login-body) [class*="-item"],
+body:not(.chat-body):not(.login-body) [class*="-row"] {
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+body:not(.chat-body):not(.login-body) [class*="-card"]:hover,
+body:not(.chat-body):not(.login-body) [class*="-item"]:hover,
+body:not(.chat-body):not(.login-body) [class*="-row"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.18) !important;
+}
+
+/* 5f. banner / 进度条 / 标签 特殊容器 */
+body:not(.chat-body):not(.login-body) [class*="banner"],
+body:not(.chat-body):not(.login-body) [class*="progress"],
+body:not(.chat-body):not(.login-body) [class*="filter"] {
+    border: 1px solid rgba(102, 126, 234, 0.15) !important;
+    box-shadow: 0 2px 10px rgba(102, 126, 234, 0.08) !important;
+}
+
+/* ---------- 6. 已有彩色背景页：保持原色，只加网格纹理 ---------- */
+body.bg-purple::before,
+body.bg-pink::before,
+body.bg-blue::before,
+body.bg-dark::before {
+    background-size: 30px 30px;
+    opacity: 0.7;
+}

@@ -1,0 +1,88 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="hexGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a1a4a"/>
+      <stop offset="100%" stop-color="#1a3d8a"/>
+    </linearGradient>
+    <radialGradient id="coreGrad" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#00f0ff"/>
+      <stop offset="60%" stop-color="#0080ff"/>
+      <stop offset="100%" stop-color="#0040a0"/>
+    </radialGradient>
+    <radialGradient id="eyeGrad" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#00f0ff"/>
+      <stop offset="100%" stop-color="#004080"/>
+    </radialGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- 外层六边形能量盾（旋转） -->
+  <g filter="url(#glow)">
+    <polygon points="100,20 169,60 169,140 100,180 31,140 31,60"
+             fill="none" stroke="#00e5ff" stroke-width="1.5" opacity="0.55">
+      <animateTransform attributeName="transform" type="rotate"
+                        from="0 100 100" to="360 100 100" dur="18s" repeatCount="indefinite"/>
+    </polygon>
+  </g>
+
+  <!-- 中层六边形（反向旋转） -->
+  <polygon points="100,40 153,70 153,130 100,160 47,130 47,70"
+           fill="none" stroke="#00c8ff" stroke-width="1" opacity="0.4">
+    <animateTransform attributeName="transform" type="rotate"
+                      from="360 100 100" to="0 100 100" dur="12s" repeatCount="indefinite"/>
+  </polygon>
+
+  <!-- 内层六边形主体 -->
+  <polygon points="100,55 140,78 140,122 100,145 60,122 60,78"
+           fill="url(#hexGrad)" stroke="#00e5ff" stroke-width="1.2"/>
+
+  <!-- 顶部能量线 -->
+  <line x1="100" y1="45" x2="100" y2="28" stroke="#00e5ff" stroke-width="1.5" opacity="0.7"/>
+  <circle cx="100" cy="25" r="2.5" fill="#00e5ff">
+    <animate attributeName="r" values="2.5;4;2.5" dur="1.5s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- 右侧能量线 -->
+  <line x1="142" y1="72" x2="158" y2="62" stroke="#00e5ff" stroke-width="1.2" opacity="0.5"/>
+  <circle cx="160" cy="60" r="1.8" fill="#00e5ff"/>
+
+  <!-- 左侧能量线 -->
+  <line x1="58" y1="72" x2="42" y2="62" stroke="#00e5ff" stroke-width="1.2" opacity="0.5"/>
+  <circle cx="40" cy="60" r="1.8" fill="#00e5ff"/>
+
+  <!-- 电路板纹理（顶部） -->
+  <path d="M 75 75 L 85 75 L 85 82 L 95 82" stroke="#00c8ff" stroke-width="1" fill="none" opacity="0.6"/>
+  <path d="M 105 82 L 115 82 L 115 75 L 125 75" stroke="#00c8ff" stroke-width="1" fill="none" opacity="0.6"/>
+
+  <!-- 左眼 -->
+  <ellipse cx="82" cy="100" rx="9" ry="10" fill="url(#eyeGrad)" filter="url(#glow)"/>
+  <circle cx="84" cy="98" r="3" fill="#ffffff" opacity="0.9"/>
+  <ellipse cx="82" cy="100" rx="10" ry="11" fill="none" stroke="#00e5ff" stroke-width="0.6" opacity="0.5"/>
+
+  <!-- 右眼 -->
+  <ellipse cx="118" cy="100" rx="9" ry="10" fill="url(#eyeGrad)" filter="url(#glow)"/>
+  <circle cx="120" cy="98" r="3" fill="#ffffff" opacity="0.9"/>
+  <ellipse cx="118" cy="100" rx="10" ry="11" fill="none" stroke="#00e5ff" stroke-width="0.6" opacity="0.5"/>
+
+  <!-- 能量核心（眼睛之间） -->
+  <circle cx="100" cy="100" r="4" fill="url(#coreGrad)" filter="url(#glow)">
+    <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="100" cy="100" r="6" fill="none" stroke="#00e5ff" stroke-width="0.8" opacity="0.4">
+    <animate attributeName="r" values="6;10;6" dur="2s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.6;0;0.6" dur="2s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- 底部电路 -->
+  <path d="M 75 118 L 85 118 L 85 125 L 95 125" stroke="#00c8ff" stroke-width="1" fill="none" opacity="0.6"/>
+  <path d="M 105 125 L 115 125 L 115 118 L 125 118" stroke="#00c8ff" stroke-width="1" fill="none" opacity="0.6"/>
+
+  <!-- 数据点 -->
+  <circle cx="85" cy="125" r="1.5" fill="#00e5ff" opacity="0.7"/>
+  <circle cx="115" cy="125" r="1.5" fill="#00e5ff" opacity="0.7"/>
+  <circle cx="95" cy="82" r="1.2" fill="#00e5ff" opacity="0.5"/>
+  <circle cx="105" cy="82" r="1.2" fill="#00e5ff" opacity="0.5"/>
+</svg>

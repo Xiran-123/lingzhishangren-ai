@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- 背景 -->
+  <rect x="0" y="0" width="200" height="200" rx="44" fill="#6C7BEF"/>
+  <!-- 头顶天线帽子 -->
+  <rect x="76" y="36" width="48" height="18" rx="8" fill="#F7C948"/>
+  <line x1="100" y1="36" x2="100" y2="20" stroke="#F7C948" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="100" cy="17" r="5" fill="#F0506E"/>
+  <!-- 双侧天线 -->
+  <line x1="46" y1="64" x2="46" y2="42" stroke="#F0506E" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="46" cy="39" r="4" fill="#F0506E"/>
+  <line x1="154" y1="64" x2="154" y2="42" stroke="#F0506E" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="154" cy="39" r="4" fill="#F0506E"/>
+  <!-- 头部 -->
+  <rect x="38" y="60" width="124" height="110" rx="40" fill="#F3EFF6"/>
+  <!-- 脸屏 -->
+  <rect x="52" y="74" width="96" height="52" rx="20" fill="#2A2B55"/>
+  <!-- 矩形眼睛 -->
+  <rect x="68" y="88" width="16" height="16" rx="4" fill="#3FD3E8"/>
+  <rect x="84" y="88" width="2" height="16" fill="#3FD3E8"/>
+  <rect x="114" y="88" width="16" height="16" rx="4" fill="#3FD3E8"/>
+  <rect x="114" y="88" width="2" height="16" fill="#3FD3E8"/>
+  <!-- 嘴 -->
+  <rect x="88" y="132" width="24" height="4" rx="2" fill="#2A2B55"/>
+  <!-- 腮红 -->
+  <circle cx="60" cy="142" r="8" fill="#F06A8E" opacity=".5"/>
+  <circle cx="140" cy="142" r="8" fill="#F06A8E" opacity=".5"/>
+  <!-- 侧耳 -->
+  <ellipse cx="36" cy="112" rx="7" ry="14" fill="#F06A8E"/>
+  <ellipse cx="164" cy="112" rx="7" ry="14" fill="#F06A8E"/>
+</svg>

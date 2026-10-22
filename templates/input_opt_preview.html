@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>输入框优化方案预览</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, "PingFang SC", sans-serif; background: #06080f; color: #e5e5e5; padding: 40px 24px; min-height: 100vh; }
+  h1 { font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+  p.sub { font-size: 13px; color: #6b7a99; margin-bottom: 28px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(460px, 1fr)); gap: 20px; max-width: 1400px; margin: 0 auto; }
+  .card { background: #101422; border: 1px solid rgba(255,255,255,.06); border-radius: 14px; padding: 18px; transition: border-color .2s; }
+  .card:hover { border-color: rgba(102,126,234,.4); }
+  .card img { width: 100%; height: auto; display: block; border-radius: 10px; }
+  .desc { margin-top: 12px; font-size: 12px; color: #7a8aaa; line-height: 1.7; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 10px; background: rgba(102,126,234,.15); color: #a0b4ff; font-size: 11px; margin-right: 6px; margin-top: 8px; }
+  .card.selected { border-color: #667eea; box-shadow: 0 0 0 2px rgba(102,126,234,.15); }
+</style>
+</head>
+<body>
+  <h1>💬 聊天输入框 · 5 款优化方案</h1>
+  <p class="sub">点击方案卡片查看大图，选中后告诉我编号即可落地</p>
+  <div class="grid">
+    <div class="card" onclick="this.classList.toggle('selected')">
+      <img src="/static/opt_input_01_minimal.svg" alt="方案1">
+      <div class="desc">占位符只写核心内容"请输入你的问题..."，操作提示挪到底部灰色细条。改动最小、最安全，立刻消除当前占位符的啰嗦感。</div>
+      <span class="tag">极简</span><span class="tag">改动小</span><span class="tag">推荐</span>
+    </div>
+    <div class="card" onclick="this.classList.toggle('selected')">
+      <img src="/static/opt_input_02_capsule.svg" alt="方案2">
+      <div class="desc">整个输入区做成圆角胶囊，左侧光点装饰 + 中间输入 + 右侧按钮无缝拼接，视觉一体化，高级感明显提升。</div>
+      <span class="tag">胶囊</span><span class="tag">高级</span><span class="tag">改结构</span>
+    </div>
+    <div class="card" onclick="this.classList.toggle('selected')">
+      <img src="/static/opt_input_03_toolbar.svg" alt="方案3">
+      <div class="desc">底部浮出一排轻量动作按钮：📷 图片 / 🎤 语音 / 📎 文件 / 🔄 重生成。补齐当前页面缺失的功能入口。</div>
+      <span class="tag">工具栏</span><span class="tag">补功能</span><span class="tag">改布局</span>
+    </div>
+    <div class="card" onclick="this.classList.toggle('selected')">
+      <img src="/static/opt_input_04_states.svg" alt="方案4">
+      <div class="desc">发送按钮三态自动切换：空输入变灰禁用（防误点）、有内容渐变色（激活）、生成中绿色加载（反馈）。仅改按钮样式，不动布局。</div>
+      <span class="tag">状态化</span><span class="tag">改按钮</span><span class="tag">反馈强</span>
+    </div>
+    <div class="card" onclick="this.classList.toggle('selected')">
+      <img src="/static/opt_input_05_expand.svg" alt="方案5">
+      <div class="desc">默认紧凑收起，聚焦输入框时自动展开显示工具栏 + 快捷键提示。需要添加 focus 动画逻辑，精致桌面端体验。</div>
+      <span class="tag">动效</span><span class="tag">精致</span><span class="tag">成本高</span>
+    </div>
+  </div>
+  <p style="text-align:center;margin-top:32px;color:#3d4d6e;font-size:11px;">💡 推荐组合：方案 1 极简占位符 + 方案 4 状态化按钮，只改 CSS/JS 不动布局</p>
+</body>
+</html>

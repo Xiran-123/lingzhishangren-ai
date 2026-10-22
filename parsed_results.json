@@ -1,0 +1,407 @@
+{
+  "job_1791813982485_8895": null,
+  "job_1791813982486_3798": {
+    "competence_weights": {
+      "signal_system": 0.6,
+      "communication_principle": 0.5,
+      "digital_signal": 0.6,
+      "rf_engineering": 0.2,
+      "network_protocol": 0.8,
+      "antenna_design": 0.1,
+      "modulation": 0.3,
+      "troubleshooting": 0.9,
+      "equipment_operation": 0.8,
+      "safety_awareness": 0.6,
+      "teamwork": 0.7,
+      "innovation": 0.6
+    },
+    "required_skills": [
+      "C/C++",
+      "嵌入式Linux",
+      "RTOS",
+      "通信协议",
+      "硬件调试"
+    ],
+    "career_type": "研发",
+    "difficulty": "中级"
+  },
+  "job_1791813982486_1768": {
+    "competence_weights": {
+      "signal_system": 0.6,
+      "communication_principle": 0.55,
+      "digital_signal": 0.2,
+      "rf_engineering": 0.95,
+      "network_protocol": 0.15,
+      "antenna_design": 1.0,
+      "modulation": 0.4,
+      "troubleshooting": 0.7,
+      "equipment_operation": 0.75,
+      "safety_awareness": 0.45,
+      "teamwork": 0.7,
+      "innovation": 0.8
+    },
+    "required_skills": [
+      "天线设计",
+      "电磁仿真",
+      "HFSS",
+      "CST",
+      "阻抗匹配",
+      "阵列天线",
+      "射频测试",
+      "暗室测试",
+      "方向图分析",
+      "Smith圆图"
+    ],
+    "career_type": "研发",
+    "difficulty": "中高级"
+  },
+  "job_1791776179967_5786": {
+    "competence_weights": {
+      "signal_system": 0.5,
+      "communication_principle": 0.5,
+      "digital_signal": 0.2,
+      "rf_engineering": 0.95,
+      "network_protocol": 0.1,
+      "antenna_design": 1.0,
+      "modulation": 0.2,
+      "troubleshooting": 0.75,
+      "equipment_operation": 0.7,
+      "safety_awareness": 0.5,
+      "teamwork": 0.7,
+      "innovation": 0.8
+    },
+    "required_skills": [
+      "天线设计",
+      "射频工程",
+      "电磁仿真",
+      "HFSS",
+      "CST",
+      "阻抗匹配",
+      "微波技术"
+    ],
+    "career_type": "研发",
+    "difficulty": "中高级"
+  },
+  "job_1791776179967_6030": {
+    "competence_weights": {
+      "signal_system": 0.5,
+      "communication_principle": 0.75,
+      "digital_signal": 0.35,
+      "rf_engineering": 0.4,
+      "network_protocol": 0.85,
+      "antenna_design": 0.2,
+      "modulation": 0.6,
+      "troubleshooting": 0.6,
+      "equipment_operation": 0.7,
+      "safety_awareness": 0.4,
+      "teamwork": 0.9,
+      "innovation": 0.75
+    },
+    "required_skills": [
+      "解决方案设计",
+      "技术宣讲",
+      "需求分析",
+      "招投标支持",
+      "网络协议"
+    ],
+    "career_type": "售前技术支持",
+    "difficulty": "中级"
+  },
+  "job_1791776179967_8674": null,
+  "job_1791776179967_3850": {
+    "competence_weights": {
+      "signal_system": 0.5,
+      "communication_principle": 0.85,
+      "digital_signal": 0.3,
+      "rf_engineering": 0.4,
+      "network_protocol": 0.9,
+      "antenna_design": 0.2,
+      "modulation": 0.5,
+      "troubleshooting": 0.6,
+      "equipment_operation": 0.5,
+      "safety_awareness": 0.5,
+      "teamwork": 0.95,
+      "innovation": 0.75
+    },
+    "required_skills": [
+      "方案设计",
+      "技术交流",
+      "标书制作",
+      "网络规划",
+      "5G"
+    ],
+    "career_type": "售前技术支持",
+    "difficulty": "中级"
+  },
+  "job_1791726538153_7689": null,
+  "job_1791726536822_4514": {
+    "competence_weights": {
+      "signal_system": 0.6,
+      "communication_principle": 0.75,
+      "digital_signal": 0.5,
+      "rf_engineering": 0.45,
+      "network_protocol": 0.85,
+      "antenna_design": 0.3,
+      "modulation": 0.6,
+      "troubleshooting": 0.75,
+      "equipment_operation": 0.7,
+      "safety_awareness": 0.6,
+      "teamwork": 0.95,
+      "innovation": 0.8
+    },
+    "required_skills": [
+      "方案设计",
+      "售前技术支持",
+      "网络规划",
+      "需求分析",
+      "产品演示"
+    ],
+    "career_type": "解决方案",
+    "difficulty": "中级"
+  },
+  "job_1791726536823_6438": {
+    "competence_weights": {
+      "signal_system": 0.5,
+      "communication_principle": 0.7,
+      "digital_signal": 0.3,
+      "rf_engineering": 0.4,
+      "network_protocol": 0.85,
+      "antenna_design": 0.2,
+      "modulation": 0.5,
+      "troubleshooting": 0.95,
+      "equipment_operation": 0.85,
+      "safety_awareness": 0.6,
+      "teamwork": 0.85,
+      "innovation": 0.4
+    },
+    "required_skills": [
+      "网络协议",
+      "故障排查",
+      "设备运维",
+      "客户沟通"
+    ],
+    "career_type": "技术支持",
+    "difficulty": "中级"
+  },
+  "job_1791726497108_8053": {
+    "competence_weights": {
+      "signal_system": 0.6,
+      "communication_principle": 0.7,
+      "digital_signal": 0.4,
+      "rf_engineering": 0.2,
+      "network_protocol": 0.95,
+      "antenna_design": 0.1,
+      "modulation": 0.4,
+      "troubleshooting": 0.9,
+      "equipment_operation": 0.85,
+      "safety_awareness": 0.75,
+      "teamwork": 0.8,
+      "innovation": 0.6
+    },
+    "required_skills": [
+      "TCP/IP",
+      "路由交换",
+      "网络协议",
+      "网络设备",
+      "故障排查"
+    ],
+    "career_type": "工程",
+    "difficulty": "中级"
+  },
+  "job_1791813982486_6317": null,
+  "job_1791813982487_1005": null,
+  "job_1791776179967_4039": null,
+  "job_1791726763274_1349": {
+    "competence_weights": {
+      "signal_system": 0.7,
+      "communication_principle": 0.8,
+      "digital_signal": 0.6,
+      "rf_engineering": 0.85,
+      "network_protocol": 0.75,
+      "antenna_design": 0.35,
+      "modulation": 0.7,
+      "troubleshooting": 0.9,
+      "equipment_operation": 0.95,
+      "safety_awareness": 0.7,
+      "teamwork": 0.8,
+      "innovation": 0.5
+    },
+    "required_skills": [
+      "射频测试",
+      "协议测试",
+      "频谱仪",
+      "网络分析仪",
+      "5G",
+      "Python",
+      "自动化测试"
+    ],
+    "career_type": "测试",
+    "difficulty": "中级"
+  },
+  "job_1791726763274_4942": null,
+  "job_1791726763274_9403": {
+    "competence_weights": {
+      "signal_system": 0.9,
+      "communication_principle": 0.9,
+      "digital_signal": 0.95,
+      "rf_engineering": 0.3,
+      "network_protocol": 0.4,
+      "antenna_design": 0.2,
+      "modulation": 0.95,
+      "troubleshooting": 0.75,
+      "equipment_operation": 0.2,
+      "safety_awareness": 0.3,
+      "teamwork": 0.8,
+      "innovation": 0.9
+    },
+    "required_skills": [
+      "无线通信",
+      "信号处理",
+      "MATLAB",
+      "Python",
+      "OFDM",
+      "MIMO",
+      "5G NR",
+      "C/C++"
+    ],
+    "career_type": "研发",
+    "difficulty": "中高级"
+  },
+  "job_1791726763274_7427": null,
+  "job_1791726538153_4647": {
+    "competence_weights": {
+      "signal_system": 0.6,
+      "communication_principle": 0.6,
+      "digital_signal": 0.7,
+      "rf_engineering": 0.4,
+      "network_protocol": 0.9,
+      "antenna_design": 0.1,
+      "modulation": 0.5,
+      "troubleshooting": 0.9,
+      "equipment_operation": 0.8,
+      "safety_awareness": 0.6,
+      "teamwork": 0.8,
+      "innovation": 0.7
+    },
+    "required_skills": [
+      "C/C++",
+      "嵌入式系统",
+      "通信协议",
+      "RTOS",
+      "硬件调试"
+    ],
+    "career_type": "研发",
+    "difficulty": "中级"
+  },
+  "job_1791726497108_9005": {
+    "competence_weights": {
+      "signal_system": 0.6,
+      "communication_principle": 0.9,
+      "digital_signal": 0.5,
+      "rf_engineering": 0.1,
+      "network_protocol": 1.0,
+      "antenna_design": 0.0,
+      "modulation": 0.6,
+      "troubleshooting": 0.8,
+      "equipment_operation": 0.2,
+      "safety_awareness": 0.4,
+      "teamwork": 0.8,
+      "innovation": 0.8
+    },
+    "required_skills": [
+      "TCP/IP",
+      "协议栈",
+      "C/C++",
+      "网络编程",
+      "5G NR",
+      "LTE",
+      "Socket编程",
+      "嵌入式协议"
+    ],
+    "career_type": "研发",
+    "difficulty": "中高级"
+  },
+  "job_1791726497108_9322": null,
+  "job_1791726538153_3464": {
+    "competence_weights": {
+      "signal_system": 0.3,
+      "communication_principle": 0.5,
+      "digital_signal": 0.2,
+      "rf_engineering": 0.25,
+      "network_protocol": 0.6,
+      "antenna_design": 0.15,
+      "modulation": 0.3,
+      "troubleshooting": 0.6,
+      "equipment_operation": 0.4,
+      "safety_awareness": 0.8,
+      "teamwork": 0.95,
+      "innovation": 0.6
+    },
+    "required_skills": [
+      "项目管理",
+      "通信网络",
+      "团队管理",
+      "进度控制",
+      "PMP",
+      "沟通协调"
+    ],
+    "career_type": "管理",
+    "difficulty": "中高级"
+  },
+  "job_1791726538153_5269": {
+    "competence_weights": {
+      "signal_system": 0.85,
+      "communication_principle": 0.75,
+      "digital_signal": 0.95,
+      "rf_engineering": 0.25,
+      "network_protocol": 0.55,
+      "antenna_design": 0.05,
+      "modulation": 0.75,
+      "troubleshooting": 0.9,
+      "equipment_operation": 0.65,
+      "safety_awareness": 0.35,
+      "teamwork": 0.8,
+      "innovation": 0.75
+    },
+    "required_skills": [
+      "FPGA开发",
+      "Verilog/VHDL",
+      "数字信号处理",
+      "时序约束",
+      "ModelSim",
+      "Xilinx Vivado",
+      "通信协议"
+    ],
+    "career_type": "研发",
+    "difficulty": "中高级"
+  },
+  "job_1791726538153_8743": null,
+  "job_1791726538153_9612": null,
+  "job_1791726536822_9161": null,
+  "job_1791726497108_3579": {
+    "competence_weights": {
+      "signal_system": 0.35,
+      "communication_principle": 0.65,
+      "digital_signal": 0.25,
+      "rf_engineering": 0.45,
+      "network_protocol": 0.85,
+      "antenna_design": 0.15,
+      "modulation": 0.35,
+      "troubleshooting": 0.95,
+      "equipment_operation": 0.9,
+      "safety_awareness": 0.9,
+      "teamwork": 0.8,
+      "innovation": 0.35
+    },
+    "required_skills": [
+      "网络运维",
+      "故障排查",
+      "设备监控",
+      "通信系统",
+      "Linux",
+      "网管平台"
+    ],
+    "career_type": "运维",
+    "difficulty": "中级"
+  }
+}

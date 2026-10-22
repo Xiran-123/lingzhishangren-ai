@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 160" width="480" height="160">
+  <rect width="480" height="160" fill="#0a0e1a" rx="12"/>
+  <text x="24" y="28" fill="#E5E5E5" font-family="system-ui,'PingFang SC',sans-serif" font-size="15" font-weight="500">方案 3 · 常显轻文字链</text>
+  <text x="24" y="46" fill="#6b7a99" font-family="system-ui,'PingFang SC',sans-serif" font-size="11">不再悬停才出现，小字常显在消息下方，移动端友好</text>
+  <rect x="24" y="58" width="300" height="52" rx="12" fill="rgba(255,255,255,.06)"/>
+  <text x="40" y="80" fill="#c5d0e8" font-family="system-ui,'PingFang SC',sans-serif" font-size="12">AI 的回复内容……</text>
+  <text x="40" y="98" fill="#5a6a8a" font-family="system-ui,'PingFang SC',sans-serif" font-size="11">这是一段回答文本，用于展示按钮位置。</text>
+  <!-- 文字链 -->
+  <g font-family="system-ui,'PingFang SC',sans-serif" font-size="11.5" fill="#5e7399">
+    <g transform="translate(26,124)" stroke="#5e7399" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9.5 2.2 H4.2 a1.6 1.6 0 0 0 -1.6 1.6 v4.8 a1.6 1.6 0 0 0 1.6 1.6 h1.9 l3 2.3 v-2.3"/><path d="M4.7 5 h3.9 M4.7 7.5 h2.7"/>
+    </g>
+    <text x="40" y="133">追问</text>
+    <text x="74" y="133" fill="#3d4d6e">·</text>
+    <g transform="translate(88,124)" stroke="#5e7399" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="6.2" height="7" rx="1.1"/><path d="M5.2 3 V1.9 a.8.8 0 0 1 .8 -.8 h3.9 a1.2 1.2 0 0 1 1.2 1.2 v6.1 a1.2 1.2 0 0 1 -1.2 1.2 h-.8"/>
+    </g>
+    <text x="102" y="133">复制</text>
+    <text x="136" y="133" fill="#3d4d6e">·</text>
+    <g transform="translate(150,124)" stroke="#5e7399" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M1.6 3.9 v3 h2.3 l3 2.7 v-8.4 L3.9 3.9 z"/><path d="M8.5 3.5 a3.1 3.1 0 0 1 0 3.9 M10 2.4 a5.3 5.3 0 0 1 0 6.1"/>
+    </g>
+    <text x="164" y="133">朗读</text>
+    <text x="212" y="133" fill="#3d4d6e" font-size="10">12:04</text>
+  </g>
+  <text x="24" y="152" fill="#3d4d6e" font-family="system-ui,'PingFang SC',sans-serif" font-size="10">时间戳与操作同行，不占额外高度；触屏无需 hover 也能点</text>
+</svg>

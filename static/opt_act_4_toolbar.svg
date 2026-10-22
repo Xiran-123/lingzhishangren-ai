@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 160" width="480" height="160">
+  <rect width="480" height="160" fill="#0a0e1a" rx="12"/>
+  <text x="24" y="28" fill="#E5E5E5" font-family="system-ui,'PingFang SC',sans-serif" font-size="15" font-weight="500">方案 4 · 一体式工具条</text>
+  <text x="24" y="46" fill="#6b7a99" font-family="system-ui,'PingFang SC',sans-serif" font-size="11">三个动作收进一条带分隔线的工具条，更整体</text>
+  <rect x="24" y="58" width="300" height="52" rx="12" fill="rgba(255,255,255,.06)"/>
+  <text x="40" y="80" fill="#c5d0e8" font-family="system-ui,'PingFang SC',sans-serif" font-size="12">AI 的回复内容……</text>
+  <text x="40" y="98" fill="#5a6a8a" font-family="system-ui,'PingFang SC',sans-serif" font-size="11">这是一段回答文本，用于展示按钮位置。</text>
+  <!-- 一体工具条 -->
+  <rect x="24" y="120" width="216" height="30" rx="15" fill="rgba(255,255,255,.06)" stroke="rgba(255,255,255,.12)"/>
+  <g transform="translate(42,128)" stroke="#8fa3c7" stroke-width="1.3" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 2.8 H5 a1.9 1.9 0 0 0 -1.9 1.9 v5.6 a1.9 1.9 0 0 0 1.9 1.9 h2.4 l3.7 2.8 v-2.8"/><path d="M5.8 6 h4.8 M5.8 9 h3.4"/>
+  </g>
+  <text x="62" y="139" fill="#8fa3c7" font-family="system-ui,'PingFang SC',sans-serif" font-size="12">追问</text>
+  <line x1="98" y1="127" x2="98" y2="143" stroke="rgba(255,255,255,.1)"/>
+  <g transform="translate(114,128)" stroke="#8fa3c7" stroke-width="1.3" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3.8" y="3.8" width="7.4" height="8.4" rx="1.3"/><path d="M6.5 3.8 V2.4 a1 1 0 0 1 1 -1 h4.7 a1.4 1.4 0 0 1 1.4 1.4 v7.4 a1.4 1.4 0 0 1 -1.4 1.4 h-1"/>
+  </g>
+  <text x="134" y="139" fill="#8fa3c7" font-family="system-ui,'PingFang SC',sans-serif" font-size="12">复制</text>
+  <line x1="170" y1="127" x2="170" y2="143" stroke="rgba(255,255,255,.1)"/>
+  <g transform="translate(186,128)" stroke="#8fa3c7" stroke-width="1.3" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 4.7 v3.6 h2.7 l3.6 3.2 v-10.6 L4.7 4.7 z"/><path d="M10.2 4.2 a3.7 3.7 0 0 1 0 4.7 M12 2.9 a6.4 6.4 0 0 1 0 7.3"/>
+  </g>
+  <text x="206" y="139" fill="#8fa3c7" font-family="system-ui,'PingFang SC',sans-serif" font-size="12">朗读</text>
+</svg>

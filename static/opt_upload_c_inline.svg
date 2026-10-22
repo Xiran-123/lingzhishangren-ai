@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 170" width="480" height="170">
+  <rect width="480" height="170" fill="#0a0e1a" rx="12"/>
+  <text x="24" y="30" fill="#E5E5E5" font-family="system-ui,'PingFang SC',sans-serif" font-size="15" font-weight="500">方案 C · 内嵌输入框左侧</text>
+  <text x="24" y="50" fill="#6b7a99" font-family="system-ui,'PingFang SC',sans-serif" font-size="11">图标收进输入框内，现代聊天产品主流做法</text>
+  <rect x="24" y="70" width="432" height="48" rx="24" fill="#1a2744" stroke="rgba(102,126,234,.25)" stroke-width="1"/>
+  <!-- 内嵌图标 -->
+  <g transform="translate(44,86)" stroke="#5e6a8a" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="0" y="2" width="16" height="13" rx="2"/>
+    <circle cx="5" cy="6.5" r="1.6"/>
+    <path d="M1 13 L6 8 L9.5 11 L12.5 8.5 L16 12"/>
+  </g>
+  <line x1="72" y1="82" x2="72" y2="106" stroke="rgba(255,255,255,.08)" stroke-width="1"/>
+  <text x="86" y="98" fill="#4a5a8a" font-family="system-ui,'PingFang SC',sans-serif" font-size="13">请输入你的问题...</text>
+  <rect x="392" y="78" width="56" height="32" rx="16" fill="#667eea"/>
+  <text x="420" y="98" fill="#fff" font-family="system-ui,'PingFang SC',sans-serif" font-size="13" font-weight="500" text-anchor="middle">发送</text>
+  <text x="24" y="150" fill="#3d4d6e" font-family="system-ui,'PingFang SC',sans-serif" font-size="10">与方案 2 胶囊输入框天然配套，视觉最干净</text>
+</svg>

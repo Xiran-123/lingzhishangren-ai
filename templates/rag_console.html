@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>知识检索控制台 · 灵智尚人</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #eef2ff 0%, #dfe7fb 100%);
+            min-height: 100vh; padding: 20px; color: #1f2937;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        .header {
+            background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
+            color: #fff; padding: 24px 32px; border-radius: 16px; margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(24, 40, 72, 0.3);
+        }
+        .header-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+        .header h1 { font-size: 26px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
+        .header p { opacity: 0.88; font-size: 14px; line-height: 1.6; }
+        .back-btn {
+            padding: 10px 20px; background: rgba(255,255,255,0.18); border: none; border-radius: 10px;
+            color: #fff; font-size: 14px; cursor: pointer; text-decoration: none; white-space: nowrap;
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.3); }
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 18px; }
+        .stat-card { background: rgba(255,255,255,0.16); padding: 14px 18px; border-radius: 12px; }
+        .stat-label { font-size: 12px; opacity: 0.85; margin-bottom: 6px; }
+        .stat-value { font-size: 24px; font-weight: 700; }
+        .stat-value small { font-size: 13px; font-weight: 400; opacity: .8; margin-left: 3px; }
+
+        .panel { background: #fff; border-radius: 14px; padding: 18px 20px; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(31,41,55,0.06); }
+        .panel-title { font-size: 15px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+        .panel-title .hint { font-size: 12px; font-weight: 400; color: #6b7280; }
+        .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+        .btn {
+            padding: 9px 16px; border: none; border-radius: 9px; font-size: 13px; cursor: pointer;
+            background: #4b6cb7; color: #fff; transition: opacity .15s;
+        }
+        .btn:hover { opacity: .88; }
+        .btn:disabled { opacity: .5; cursor: not-allowed; }
+        .btn.ghost { background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; }
+        .btn.ok { background: #10b981; }
+        .btn.warn { background: #f59e0b; }
+
+        input[type="text"], select {
+            padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 8px;
+            font-size: 13px; font-family: inherit; background: #fff; color: #1f2937;
+        }
+        #queryInput { flex: 1; min-width: 260px; }
+
+        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+
+        .col-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .col-head h3 { font-size: 14px; font-weight: 700; }
+        .tag { font-size: 11px; padding: 3px 9px; border-radius: 20px; background: #eef2ff; color: #4338ca; font-weight: 600; }
+        .tag.grey { background: #f3f4f6; color: #6b7280; }
+        .tag.warn { background: #fef3c7; color: #92400e; }
+
+        .hit {
+            border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px 14px; margin-bottom: 10px;
+            background: #fbfbfd;
+        }
+        .hit-top { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+        .hit-title { font-size: 13px; font-weight: 700; color: #1f2937; }
+        .hit-score { font-size: 12px; font-family: 'Consolas', 'Monaco', monospace; color: #4338ca; white-space: nowrap; }
+        .hit-breakdown { font-size: 11px; color: #6b7280; font-family: 'Consolas', 'Monaco', monospace; margin-bottom: 6px; }
+        .hit-text { font-size: 12.5px; color: #4b5563; line-height: 1.65; white-space: pre-wrap; word-break: break-word;
+                    max-height: 132px; overflow: hidden; position: relative; }
+        .hit.matched .hit-text { max-height: none; }
+        .hit-expand { font-size: 11px; color: #4b6cb7; cursor: pointer; margin-top: 6px; user-select: none; }
+
+        .empty { text-align: center; color: #9ca3af; font-size: 13px; padding: 28px 10px; }
+        .banner { padding: 12px 16px; border-radius: 10px; font-size: 13px; margin-bottom: 14px; }
+        .banner.info { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+        .banner.warn { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+        .banner.ok { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+
+        .meta-strip { display: flex; flex-wrap: wrap; gap: 18px; font-size: 12.5px; color: #374151; }
+        .meta-strip b { color: #4b6cb7; font-family: 'Consolas', 'Monaco', monospace; }
+        .toast {
+            position: fixed; left: 50%; bottom: 34px; transform: translateX(-50%);
+            background: #1f2937; color: #fff; padding: 11px 20px; border-radius: 10px;
+            font-size: 13px; opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 9999;
+        }
+        .toast.show { opacity: .95; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="header-top">
+            <div>
+                <h1>🔎 知识检索控制台</h1>
+                <p>知识库 RAG 向量检索：语义召回最相关片段，替代「整库塞进提示词」。<br>
+                   左栏为向量 + 关键词混合召回，右栏为纯关键词字面召回，可直接对比两者差异。</p>
+            </div>
+            <a href="/" target="_top" class="back-btn">← 返回首页</a>
+        </div>
+        <div class="stats-row" id="statsRow">
+            <div class="stat-card"><div class="stat-label">索引切片数</div><div class="stat-value" id="stChunks">–</div></div>
+            <div class="stat-card"><div class="stat-label">向量维度</div><div class="stat-value" id="stDim">–</div></div>
+            <div class="stat-card"><div class="stat-label">索引体积</div><div class="stat-value" id="stSize">–</div></div>
+            <div class="stat-card"><div class="stat-label">全库字符数</div><div class="stat-value" id="stSource">–</div></div>
+            <div class="stat-card"><div class="stat-label">建索引时间</div><div class="stat-value" id="stBuilt" style="font-size:14px;">–</div></div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-title">⚙️ 索引状态 <span class="hint" id="statusHint"></span></div>
+        <div id="statusBanner"></div>
+        <div class="row" style="margin-top:12px;">
+            <button class="btn ghost" id="refreshBtn">刷新状态</button>
+            <button class="btn warn" id="rebuildBtn" style="display:none;">重建索引</button>
+            <span class="hint" style="font-size:12px;color:#6b7280;" id="rebuildHint"></span>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-title">🔍 检索测试</div>
+        <div class="row">
+            <input type="text" id="queryInput" placeholder="例如：5G 为什么能做到低延迟高可靠？">
+            <label class="hint" style="font-size:12px;color:#6b7280;">Top-K</label>
+            <select id="topKSelect">
+                <option value="3">3</option>
+                <option value="5" selected>5</option>
+                <option value="8">8</option>
+            </select>
+            <button class="btn" id="searchBtn">检索</button>
+        </div>
+        <div class="row" style="margin-top:10px;">
+            <button class="btn ghost smp" data-q="5G 为什么能做到低延迟高可靠？">5G 低时延高可靠</button>
+            <button class="btn ghost smp" data-q="怎么让信号传输得更远">信号传得更远</button>
+            <button class="btn ghost smp" data-q="怎么抵抗多径衰落？">抗多径衰落</button>
+            <button class="btn ghost smp" data-q="信号的调制方式都有哪些">信号调制方式</button>
+        </div>
+        <div class="banner info" id="metaBanner" style="display:none;margin-top:14px;"></div>
+    </div>
+
+    <div class="grid2">
+        <div class="panel">
+            <div class="col-head">
+                <h3>🧠 向量 + 关键词混合召回</h3>
+                <span class="tag" id="ragTag">RAG</span>
+            </div>
+            <div id="ragHits"><div class="empty">输入问题后点击「检索」</div></div>
+        </div>
+        <div class="panel">
+            <div class="col-head">
+                <h3>📝 纯关键词字面召回（对照）</h3>
+                <span class="tag grey" id="kwTag">Keyword</span>
+            </div>
+            <div id="kwHits"><div class="empty">输入问题后点击「检索」</div></div>
+        </div>
+    </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+    const IS_TEACHER = {{ (session.get('role') or '')|tojson }} === 'teacher';
+    const $ = (id) => document.getElementById(id);
+
+    function esc(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        })[c]);
+    }
+
+    let toastTimer = null;
+    function toast(msg) {
+        const t = $('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+    }
+
+    function renderStatus(s) {
+        $('stChunks').textContent = s.chunks || 0;
+        $('stDim').textContent = s.dim || '–';
+        $('stSize').textContent = (s.size_kb || 0) + ' KB';
+        $('stSource').textContent = (s.source_chars || 0).toLocaleString();
+        $('stBuilt').textContent = s.built_at || '未建立';
+        $('statusHint').textContent = '模型 ' + (s.model || '–');
+
+        const banner = $('statusBanner');
+        if (!s.available) {
+            banner.className = 'banner warn';
+            banner.innerHTML = '⚠️ 尚未建立向量索引，问答将退回「整库注入」模式。请点击「重建索引」。';
+        } else if (s.stale) {
+            banner.className = 'banner warn';
+            banner.innerHTML = '⚠️ 知识库已更新，索引过期（' + (s.built_at || '') + '）。建议点击「重建索引」以覆盖最新内容。';
+        } else {
+            banner.className = 'banner ok';
+            banner.innerHTML = '✅ 索引可用且为最新：' + s.chunks + ' 个切片 · ' + s.dim + ' 维 · ' +
+                '混合权重 向量 ' + s.vector_weight + ' / 关键词 ' + s.keyword_weight + ' · Top-' + s.top_k;
+        }
+        $('rebuildBtn').style.display = IS_TEACHER ? 'inline-block' : 'none';
+        $('rebuildHint').textContent = IS_TEACHER ? '（教师可重建）' : '（仅教师可重建索引）';
+    }
+
+    async function refresh() {
+        try {
+            const r = await fetch('/api/rag/status');
+            const d = await r.json();
+            if (d.error) { toast(d.error); return; }
+            renderStatus(d);
+        } catch (e) { toast('状态获取失败：' + e.message); }
+    }
+
+    function hitCard(c, showBreakdown) {
+        const bd = showBreakdown
+            ? '<div class="hit-breakdown">向量 ' + c.vector_score + ' × ' + ' | 关键词 ' + c.keyword_score + ' → 综合 ' + c.score + '</div>'
+            : '<div class="hit-breakdown">关键词命中率 ' + c.score + '</div>';
+        return '<div class="hit">' +
+            '<div class="hit-top"><span class="hit-title">' + esc(c.title || '（无标题）') + '</span>' +
+            '<span class="hit-score">' + c.score + '</span></div>' +
+            '<div class="hit-breakdown">来源：' + esc(c.source) + ' · ' + (c.text || '').length + ' 字</div>' +
+            bd +
+            '<div class="hit-text">' + esc(c.text) + '</div>' +
+            '<div class="hit-expand">展开全文 ▾</div>' +
+            '</div>';
+    }
+
+    function renderHits(box, hits, showBreakdown, emptyMsg) {
+        if (!hits || !hits.length) {
+            box.innerHTML = '<div class="empty">' + emptyMsg + '</div>';
+            return;
+        }
+        box.innerHTML = hits.map(c => hitCard(c, showBreakdown)).join('');
+        box.querySelectorAll('.hit-expand').forEach(el => {
+            el.addEventListener('click', () => {
+                const hit = el.parentElement;
+                const on = hit.classList.toggle('matched');
+                el.textContent = on ? '收起 ▴' : '展开全文 ▾';
+            });
+        });
+    }
+
+    async function doSearch() {
+        const q = $('queryInput').value.trim();
+        if (!q) { toast('请输入检索内容'); return; }
+        const topK = $('topKSelect').value;
+        $('searchBtn').disabled = true;
+        $('ragHits').innerHTML = '<div class="empty">检索中…</div>';
+        $('kwHits').innerHTML = '<div class="empty">检索中…</div>';
+        try {
+            const r = await fetch('/api/rag/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: q, top_k: Number(topK) })
+            });
+            const d = await r.json();
+            if (!d.success) {
+                $('ragHits').innerHTML = '<div class="empty">' + esc(d.error || '检索失败') + '</div>';
+                $('kwHits').innerHTML = '<div class="empty">—</div>';
+                $('metaBanner').style.display = 'none';
+                toast(d.error || '检索失败');
+                return;
+            }
+            renderHits($('ragHits'), d.rag_hits, true, '没有召回任何片段（相关度均低于阈值）');
+            renderHits($('kwHits'), d.keyword_hits, false, '纯关键词字面匹配不到任何片段 —— 这正是语义检索的价值');
+            $('ragTag').textContent = d.meta.degraded ? 'RAG（已降级为关键词）' : 'RAG';
+            $('ragTag').className = 'tag' + (d.meta.degraded ? ' warn' : '');
+            $('kwTag').textContent = 'Keyword ' + d.meta.keyword_count + ' 条';
+            const m = d.meta;
+            $('metaBanner').style.display = 'block';
+            $('metaBanner').innerHTML =
+                '📊 本次检索注入提示词 <b style="font-family:monospace;color:#4338ca;">' + m.used_chars.toLocaleString() +
+                '</b> 字符 / 全库 <b style="font-family:monospace;">' + m.total_chars.toLocaleString() +
+                '</b> 字符 → 压缩 <b style="font-family:monospace;color:#10b981;">' + (m.compress_ratio * 100).toFixed(1) +
+                '%</b>；向量召回 <b>' + m.rag_count + '</b> 条，关键词召回 <b>' + m.keyword_count + '</b> 条。';
+        } catch (e) {
+            toast('检索请求失败：' + e.message);
+            $('ragHits').innerHTML = '<div class="empty">请求失败</div>';
+        } finally {
+            $('searchBtn').disabled = false;
+        }
+    }
+
+    async function rebuild() {
+        if (!IS_TEACHER) { toast('只有老师可以重建索引'); return; }
+        if (!confirm('重新切片并向量化整个知识库，确认继续？')) return;
+        $('rebuildBtn').disabled = true;
+        $('rebuildBtn').textContent = '重建中…';
+        toast('正在重建索引，请稍候');
+        try {
+            const r = await fetch('/api/rag/rebuild', { method: 'POST' });
+            const d = await r.json();
+            if (d.success) toast(d.message || '索引重建完成');
+            else toast(d.error || '重建失败');
+            await refresh();
+        } catch (e) {
+            toast('重建失败：' + e.message);
+        } finally {
+            $('rebuildBtn').disabled = false;
+            $('rebuildBtn').textContent = '重建索引';
+        }
+    }
+
+    $('refreshBtn').addEventListener('click', refresh);
+    $('rebuildBtn').addEventListener('click', rebuild);
+    $('searchBtn').addEventListener('click', doSearch);
+    $('queryInput').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+    document.querySelectorAll('.smp').forEach(b => {
+        b.addEventListener('click', () => { $('queryInput').value = b.dataset.q; doSearch(); });
+    });
+
+    refresh();
+</script>
+</body>
+</html>

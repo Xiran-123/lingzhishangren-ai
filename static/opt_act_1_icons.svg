@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 160" width="480" height="160">
+  <rect width="480" height="160" fill="#0a0e1a" rx="12"/>
+  <text x="24" y="28" fill="#E5E5E5" font-family="system-ui,'PingFang SC',sans-serif" font-size="15" font-weight="500">方案 1 · 统一线性 SVG 图标</text>
+  <text x="24" y="46" fill="#6b7a99" font-family="system-ui,'PingFang SC',sans-serif" font-size="11">只换图标，药丸样式与悬停交互完全不动，零风险</text>
+  <!-- 消息气泡示意 -->
+  <rect x="24" y="58" width="300" height="52" rx="12" fill="rgba(255,255,255,.06)"/>
+  <text x="40" y="80" fill="#c5d0e8" font-family="system-ui,'PingFang SC',sans-serif" font-size="12">AI 的回复内容……</text>
+  <text x="40" y="98" fill="#5a6a8a" font-family="system-ui,'PingFang SC',sans-serif" font-size="11">这是一段回答文本，用于展示按钮位置。</text>
+  <!-- 三个药丸按钮 -->
+  <g font-family="system-ui,'PingFang SC',sans-serif" font-size="12">
+    <rect x="24" y="120" width="82" height="28" rx="14" fill="rgba(255,255,255,.1)" stroke="rgba(255,255,255,.15)"/>
+    <g transform="translate(38,128)" stroke="#8fa3c7" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M13 3 H5.5 a2 2 0 0 0 -2 2 v6 a2 2 0 0 0 2 2 H8 l4 3 v-3"/><path d="M6 6.5 h5 M6 9.5 h3.5"/>
+    </g>
+    <text x="58" y="138" fill="#8fa3c7">追问</text>
+    <rect x="116" y="120" width="82" height="28" rx="14" fill="rgba(255,255,255,.1)" stroke="rgba(255,255,255,.15)"/>
+    <g transform="translate(130,128)" stroke="#8fa3c7" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4" y="4" width="8" height="9" rx="1.5"/><path d="M7 4 V2.5 a1 1 0 0 1 1 -1 h5 a1.5 1.5 0 0 1 1.5 1.5 v8 a1.5 1.5 0 0 1 -1.5 1.5 H12"/>
+    </g>
+    <text x="150" y="138" fill="#8fa3c7">复制</text>
+    <rect x="208" y="120" width="82" height="28" rx="14" fill="rgba(255,255,255,.1)" stroke="rgba(255,255,255,.15)"/>
+    <g transform="translate(222,128)" stroke="#8fa3c7" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M2 5 v4 h3 l4 3.5 v-11 L6 5 z"/><path d="M11 4.5 a4 4 0 0 1 0 5 M13 3 a7 7 0 0 1 0 8"/>
+    </g>
+    <text x="242" y="138" fill="#8fa3c7">朗读</text>
+  </g>
+</svg>

@@ -1,0 +1,1936 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生分析报告 - 灵智尚人</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 18px 20px 40px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 10px;
+        }
+
+        .back-btn {
+            padding: 10px 20px;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            color: #667eea;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .nav-btn {
+            padding: 10px 16px;
+            background: rgba(102, 126, 234, 0.1);
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            color: #667eea;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .nav-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .logout-btn {
+            background: rgba(211, 47, 47, 0.1);
+            border-color: #d32f2f;
+            color: #d32f2f;
+        }
+
+        .logout-btn:hover {
+            background: #d32f2f;
+            color: white;
+        }
+
+        .title {
+            font-size: 28px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        /* 学生列表卡片 */
+        .students-section {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .add-btn {
+            margin-left: auto;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .students-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .student-card {
+            background: #f8f9fc;
+            border: 2px solid #e8e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+        }
+
+        /* 卡片右上角删除按钮：hover 时显现 */
+        .card-delete-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: 50%;
+            background: transparent;
+            color: #c3c8d6;
+            font-size: 15px;
+            line-height: 1;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .student-card:hover .card-delete-btn {
+            opacity: 1;
+        }
+
+        .card-delete-btn:hover {
+            background: #ffeded;
+            color: #e74c3c;
+            transform: scale(1.1);
+        }
+
+        .student-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .student-card.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        }
+
+        .student-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 12px;
+            object-fit: cover;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .student-avatar.upload-btn {
+            cursor: pointer;
+            opacity: 0.7;
+        }
+
+        .student-avatar.upload-btn:hover {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+
+        .student-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .student-class {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 12px;
+        }
+
+        .student-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 13px;
+            color: #888;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* 报告卡片 */
+        .report-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .report-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            padding: 25px;
+        }
+
+        /* ===== 学生报告弹窗 ===== */
+        .report-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 30px 16px;
+        }
+        .report-modal-overlay.show { display: block; }
+        /* 覆盖全局布局规则 .container > * 的 position:relative，弹窗必须脱离文档流全屏覆盖 */
+        .report-modal-overlay { position: fixed !important; z-index: 1000 !important; }
+        .report-modal {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #f7f8fc;
+            border-radius: 20px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.35);
+            animation: modalPop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes modalPop {
+            from { opacity: 0; transform: translateY(26px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .report-modal-head {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 18px 24px;
+            border-bottom: 1px solid #eceef5;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        .report-modal-avatar {
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-size: 19px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .report-modal-name { font-size: 18px; font-weight: 700; color: #2d3142; }
+        .report-modal-meta { font-size: 13px; color: #8a8fa3; margin-top: 2px; }
+        .report-modal-close {
+            margin-left: auto;
+            width: 34px; height: 34px;
+            border: none;
+            border-radius: 50%;
+            background: #f0f2f8;
+            color: #666;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .report-modal-close:hover { background: #ffeded; color: #e74c3c; transform: rotate(90deg); }
+        .ai-analysis-btn {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s;
+            box-shadow: 0 3px 10px rgba(102,126,234,.35);
+            flex-shrink: 0;
+        }
+        .ai-analysis-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102,126,234,.45); }
+        .ai-analysis-btn:disabled { opacity: .6; cursor: wait; transform: none; }
+        .ai-analysis-btn .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .8s linear infinite; vertical-align: middle; margin-right: 6px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* AI分析弹窗 */
+        .ai-analysis-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.55);
+            backdrop-filter: blur(3px);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .ai-analysis-overlay.show { display: flex; }
+        .ai-analysis-modal {
+            background: #fff;
+            border-radius: 18px;
+            max-width: 720px;
+            width: 100%;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,.3);
+            animation: slideUp .3s ease;
+        }
+        .ai-analysis-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 24px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            flex-shrink: 0;
+        }
+        .ai-analysis-title { font-size: 17px; font-weight: 700; }
+        .ai-analysis-close {
+            background: rgba(255,255,255,.2);
+            border: none;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 50%;
+            width: 30px; height: 30px;
+        }
+        .ai-analysis-body {
+            padding: 24px;
+            overflow-y: auto;
+            line-height: 1.8;
+            color: #333;
+            font-size: 14px;
+        }
+        .ai-analysis-body::-webkit-scrollbar { width: 8px; }
+        .ai-analysis-body::-webkit-scrollbar-thumb { background: #c7cbe0; border-radius: 4px; }
+        .ai-loading {
+            text-align: center;
+            padding: 50px 20px;
+            color: #667eea;
+        }
+        .ai-loading .big-spinner {
+            display: inline-block;
+            width: 40px; height: 40px;
+            border: 4px solid #e8ebf7;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+        .ai-analysis-body h3 {
+            color: #667eea;
+            font-size: 16px;
+            margin: 18px 0 10px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid #eef0fa;
+        }
+        .ai-analysis-body h3:first-child { margin-top: 0; }
+        .ai-analysis-body ul { padding-left: 20px; margin: 8px 0; }
+        .ai-analysis-body li { margin: 6px 0; }
+        .ai-analysis-body p { margin: 8px 0; }
+        .ai-analysis-body strong { color: #764ba2; }
+        .ai-stream-cursor {
+            display: inline-block;
+            color: #764ba2;
+            font-weight: 400;
+            animation: aiCursorBlink 1s steps(2) infinite;
+            margin-left: 2px;
+        }
+        @keyframes aiCursorBlink { 0%,50% { opacity: 1; } 50.01%,100% { opacity: 0; } }
+        .ai-error {
+            color: #d32f2f;
+            background: #ffebee;
+            padding: 14px 18px;
+            border-radius: 10px;
+        }
+        .report-modal-body { padding: 25px; }
+        .report-modal-body .report-section { max-width: none; }
+
+        .report-card.full-width {
+            grid-column: span 2;
+        }
+
+        .report-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* 能力雷达图区域 */
+        .radar-container {
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* 短板列表 */
+        .weakness-list, .strength-list {
+            list-style: none;
+        }
+
+        .weakness-item, .strength-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+            background: #fff3e0;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .strength-item {
+            background: #e8f5e9;
+        }
+
+        .item-name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .item-score {
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* 建议列表 */
+        .suggestion-list {
+            list-style: none;
+        }
+
+        .suggestion-item {
+            padding: 15px;
+            background: #f8f9fc;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            line-height: 1.6;
+            color: #333;
+            font-size: 14px;
+        }
+
+        /* 推荐场景 */
+        .scenario-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .scenario-card {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .scenario-card:hover {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        }
+
+        .scenario-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .scenario-reason {
+            font-size: 13px;
+            color: #667eea;
+        }
+
+        /* 模态框 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 450px;
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 8px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e8;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .modal-btn.cancel {
+            background: #f0f2f5;
+            color: #666;
+        }
+
+        .modal-btn.cancel:hover {
+            background: #e0e0e8;
+        }
+
+        .modal-btn.confirm {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .modal-btn.confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .empty-state-text {
+            font-size: 18px;
+        }
+
+        /* 进度条 */
+        .progress-bar {
+            height: 8px;
+            background: #f0f2f5;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        /* ===== 新增：学生分类筛选条 ===== */
+        .filter-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            align-items: end;
+            background: #f8f9fc;
+            border: 1px solid #e9ecf7;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 18px;
+        }
+        .filter-field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+        .filter-field label { font-size: 12px; font-weight: 600; color: #7a8199; }
+        .filter-field select, .filter-field input {
+            padding: 8px 12px;
+            border: 2px solid #e4e8f4;
+            border-radius: 9px;
+            font-size: 13px;
+            background: #fff;
+            color: #333;
+            width: 100%;
+        }
+        .filter-field select:focus, .filter-field input:focus { outline: none; border-color: #667eea; }
+        .filter-actions { display: flex; gap: 8px; }
+        .f-btn {
+            padding: 9px 16px;
+            border-radius: 9px;
+            border: none;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .f-btn.primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; }
+        .f-btn.ghost { background: #eef1f9; color: #5563a8; border: 1.5px solid #dfe4f2; }
+        .f-btn.ghost:hover { border-color: #667eea; color: #667eea; }
+        .filter-stat {
+            grid-column: 1 / -1;
+            font-size: 12px;
+            color: #667eea;
+            background: rgba(102,126,234,.07);
+            border-radius: 8px;
+            padding: 7px 12px;
+        }
+        .chip-row { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 7px; }
+        .f-chip {
+            padding: 4px 11px;
+            border-radius: 14px;
+            background: #fff;
+            border: 1px solid #e4e8f6;
+            color: #5563a8;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .f-chip:hover { background: rgba(102,126,234,.1); }
+        .f-chip.active { background: linear-gradient(135deg,#667eea,#764ba2); color:#fff; border-color: transparent; }
+
+        /* ===== 新增：深度分析区 ===== */
+        .deep-sub { margin-bottom: 20px; }
+        .deep-sub:last-child { margin-bottom: 0; }
+        .deep-sub h4 {
+            font-size: 14px;
+            color: #4a55a2;
+            margin-bottom: 10px;
+            padding-left: 9px;
+            border-left: 3px solid #667eea;
+        }
+        .deep-mini { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .deep-mini .m {
+            background: #f8f9fc;
+            border-radius: 10px;
+            padding: 12px;
+            border-left: 3px solid #667eea;
+        }
+        .deep-mini .m .n { font-size: 19px; font-weight: 700; color: #4a55a2; }
+        .deep-mini .m .c { font-size: 11px; color: #8a90a6; margin-top: 3px; }
+        .deep-mini .m .s { font-size: 11px; color: #a8aec0; margin-top: 5px; }
+        .risk-pill {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 14px;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .deep-advice {
+            background: #f8f9fc;
+            border-left: 3px solid #667eea;
+            border-radius: 9px;
+            padding: 11px 14px;
+            margin-bottom: 9px;
+            font-size: 13px;
+            line-height: 1.65;
+            color: #3c4257;
+        }
+        .deep-tag {
+            display: inline-block;
+            background: rgba(102,126,234,.12);
+            color: #5a67c4;
+            border-radius: 10px;
+            padding: 1px 8px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-right: 6px;
+        }
+        .deep-kv {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px dashed #eef0f7;
+            font-size: 13px;
+        }
+        .deep-kv:last-child { border-bottom: none; }
+        .deep-kv .k { color: #667; }
+        .deep-kv .v { color: #333; font-weight: 600; }
+        .deep-empty { color: #9aa2b8; font-size: 13px; padding: 10px 0; text-align: center; }
+
+        /* ===== 新增：分组组头 ===== */
+        .group-head {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 6px 0 -4px;
+            padding: 9px 14px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(102,126,234,.12), rgba(118,75,162,.10));
+            border-left: 4px solid #667eea;
+            font-size: 14px;
+            font-weight: 700;
+            color: #4a55a2;
+        }
+        .group-head .group-count {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6d76a8;
+            background: rgba(255,255,255,.7);
+            border-radius: 12px;
+            padding: 3px 10px;
+        }
+
+        /* ===== 左侧学生分类导航 + 右侧报告（双栏） ===== */
+        .pz-wrap {
+            display: grid;
+            grid-template-columns: 272px minmax(0, 1fr);
+            gap: 18px;
+            max-width: 1560px;
+            margin: 0 auto;
+            padding: 16px 20px 44px;
+            align-items: start;
+        }
+        .pz-wrap.solo { grid-template-columns: minmax(0, 1fr); }
+        .pz-side {
+            background: white;
+            border-radius: 15px;
+            padding: 14px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 74px;
+            max-height: calc(100vh - 92px);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .pz-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .pz-headtitle {
+            display: flex; align-items: center; gap: 7px;
+            font-size: 15px; font-weight: 700; color: #333;
+        }
+        .pz-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: #667eea; box-shadow: 0 0 8px #667eea; flex: 0 0 auto;
+        }
+        .pz-mini {
+            padding: 4px 12px; border-radius: 14px;
+            border: 1px solid #e4e8f6; background: #f7f8fc;
+            color: #5563a8; font-size: 12px; cursor: pointer; font-family: inherit;
+        }
+        .pz-mini:hover { border-color: #667eea; color: #667eea; }
+        .pz-filters { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+        .pz-filters select, .pz-filters input {
+            width: 100%; padding: 6px 8px; font-size: 12px;
+            border: 1.5px solid #e4e8f4; border-radius: 8px;
+            background: #fff; color: #333;
+        }
+        .pz-filters select:focus, .pz-filters input:focus { outline: none; border-color: #667eea; }
+        .pz-filters .full { grid-column: 1 / -1; }
+        .pz-summary {
+            font-size: 11.5px; line-height: 1.55; color: #5a67c4;
+            background: rgba(102,126,234,.08); border-radius: 8px;
+            padding: 6px 10px; display: none;
+        }
+        .pz-summary b { color: #4a55a2; }
+        .pz-list {
+            overflow-y: auto; flex: 1; min-height: 60px;
+            margin: 0 -4px; padding: 0 4px 6px;
+        }
+        .pz-glabel {
+            display: flex; align-items: center; justify-content: space-between;
+            font-size: 11px; font-weight: 700; letter-spacing: .5px; color: #7a8199;
+            padding: 9px 6px 4px; position: sticky; top: 0; background: #fff; z-index: 1;
+        }
+        .pz-glabel b { color: #667eea; font-size: 11px; }
+        .pz-gsub { font-size: 11px; color: #9aa2b8; padding: 2px 6px 4px; }
+        .pz-item {
+            display: flex; align-items: center; gap: 9px;
+            padding: 7px 9px; border-radius: 10px; cursor: pointer;
+            transition: .18s; margin-bottom: 2px;
+        }
+        .pz-item:hover { background: #f4f6fd; transform: translateX(2px); }
+        .pz-item.on {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            box-shadow: 0 4px 14px rgba(102,126,234,.35);
+            transform: none;
+        }
+        .pz-av {
+            width: 26px; height: 26px; border-radius: 50%;
+            background: #eef1fb; color: #5a67c4;
+            display: grid; place-items: center;
+            font-size: 12px; font-weight: 700; flex: 0 0 auto;
+        }
+        .pz-item.on .pz-av { background: rgba(255,255,255,.25); color: #fff; }
+        .pz-info { min-width: 0; flex: 1; display: flex; flex-direction: column; line-height: 1.25; }
+        .pz-name {
+            font-size: 13px; font-weight: 600; color: #333;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .pz-no {
+            font-size: 10.5px; color: #9aa2b8;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .pz-item.on .pz-name { color: #fff; }
+        .pz-item.on .pz-no { color: rgba(255,255,255,.75); }
+        .pz-score {
+            flex: 0 0 auto; font-size: 11.5px; font-weight: 700;
+            color: #667eea; background: #eef1fb; border-radius: 10px; padding: 2px 7px;
+        }
+        .pz-item.on .pz-score { background: rgba(255,255,255,.22); color: #fff; }
+        .pz-empty { text-align: center; color: #9aa2b8; font-size: 12.5px; padding: 26px 8px; }
+        .pz-main { max-width: none; margin: 0; padding: 0; min-width: 0; }
+        .pz-titlebar {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 12px; flex-wrap: wrap; margin-bottom: 16px;
+        }
+        .pz-titlebar .an-pagetitle { margin: 0; }
+
+        /* 右侧报告容器本身不加全局光效，发光只交给内部卡片 */
+        .report-section {
+            border: none !important;
+            box-shadow: none !important;
+            -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
+        }
+
+        @media (max-width: 768px) {
+            .report-section {
+                grid-template-columns: 1fr;
+            }
+
+            .report-card.full-width {
+                grid-column: span 1;
+            }
+
+            .scenario-list {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+        }
+
+        /* ===== 移动端适配（新增补充） ===== */
+        @media (max-width: 768px) {
+            body { padding: 0 !important; }
+            .container { padding: 12px 8px 30px !important; }
+            .title { font-size: 19px !important; }
+            .pz-wrap { grid-template-columns: 1fr !important; padding: 12px 8px 30px !important; }
+            .pz-main { padding: 0 !important; }
+            .pz-side { position: static !important; max-height: none !important; }
+            .pz-list { max-height: 240px !important; }
+            .header-right { flex-wrap: wrap; }
+            .students-section { padding: 16px; }
+            .report-card { padding: 16px; }
+            .section-title { flex-wrap: wrap; gap: 8px; font-size: 17px; }
+            .add-btn { margin-left: 0; flex: 1 1 auto; }
+            .students-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+            .student-card { padding: 14px; }
+            .student-avatar { width: 52px; height: 52px; font-size: 22px; }
+            .student-name { font-size: 16px; word-break: break-all; }
+            .student-stats { flex-wrap: wrap; gap: 8px; justify-content: center; }
+            .weakness-item, .strength-item { flex-wrap: wrap; gap: 6px; }
+            .item-name { min-width: 0; word-break: break-all; }
+            .radar-container { padding: 10px; }
+            .modal { width: 94%; padding: 18px; max-height: 85vh; overflow-y: auto; }
+            .filter-bar { grid-template-columns: 1fr 1fr !important; padding: 10px; }
+            .deep-mini { grid-template-columns: 1fr 1fr !important; }
+            .filter-actions { flex-wrap: wrap; }
+            .modal-actions { flex-wrap: wrap; }
+            .empty-state { padding: 40px 12px; }
+        }
+        @media (max-width: 480px) {
+            body { padding: 0 !important; }
+            .container { padding: 10px 6px 26px !important; }
+            .students-grid { grid-template-columns: 1fr; }
+            .title { font-size: 18px !important; }
+        }
+    </style>
+    <!-- 全局按钮美化 -->
+    <link rel="stylesheet" href="/static/global_buttons.css">
+    <link rel="stylesheet" href="/static/global_pages.css">
+    <!-- 全站顶部导航栏（与首页同一套视觉） -->
+    <link rel="stylesheet" href="/static/app_nav.css">
+</head>
+<body>
+    <div id="appNav"></div>
+    <div class="pz-wrap" id="pzWrap">
+        <!-- ===== 左侧：学生分类导航 ===== -->
+        <aside class="pz-side" id="pzSide">
+            <div class="pz-head">
+                <span class="pz-headtitle"><span class="pz-dot"></span>学生分类</span>
+                <span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+                    <button class="pz-mini" onclick="showAddModal()">+ 添加</button>
+                    <button class="pz-mini" id="pzFilterBtn" onclick="toggleFilterPanel()">收起</button>
+                </span>
+            </div>
+
+            <div class="pz-filters" id="pzFilters">
+                <select id="fGrade" onchange="reloadStudents()"><option value="">全部年级</option></select>
+                <select id="fLevel" onchange="reloadStudents()"><option value="">全部层次</option></select>
+                <select id="fClass" onchange="reloadStudents()"><option value="">全部班级</option></select>
+                <select id="fMajor" onchange="reloadStudents()"><option value="">全部专业</option></select>
+                <select id="fSort" class="full" onchange="reloadStudents()">
+                    <option value="score_desc">按综合能力 高→低</option>
+                    <option value="score_asc">按综合能力 低→高</option>
+                    <option value="questions_desc">按提问数 多→少</option>
+                    <option value="wrong_desc">按未掌握错题 多→少</option>
+                    <option value="name_asc">按姓名</option>
+                    <option value="student_no_asc">按学号</option>
+                    <option value="last_login_desc">按最近登录</option>
+                </select>
+                <input id="fKeyword" class="full" type="text" placeholder="搜索姓名 / 学号，回车" autocomplete="off">
+            </div>
+
+            <div class="pz-summary" id="filterStat"></div>
+            <div class="pz-list" id="studentNav">
+                <div class="pz-empty">加载中…</div>
+            </div>
+        </aside>
+
+        <!-- ===== 右侧：该学生分析报告 ===== -->
+        <main class="container pz-main">
+            <div class="pz-titlebar an-nav-title">
+                <div class="an-pagetitle an-nav-title">
+                    <h1 class="title" id="pageTitle">📊 学生分析报告</h1>
+                    <span class="an-sub">按年级 / 层次 / 班级 / 专业分类 · 深度学情分析</span>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <button class="ai-analysis-btn" id="aiAnalysisBtn" onclick="runAiAnalysis()">🤖 AI个性化分析</button>
+                    <span id="pzTeacherActions" style="display:flex; gap:8px;">
+                        <button class="btn-primary" onclick="reloadStudents()">刷新</button>
+                        <button class="btn-ghost" onclick="deleteSelectedStudent()">🗑 删除</button>
+                    </span>
+                </div>
+            </div>
+
+        <!-- 分析报告 -->
+        <div class="report-section" id="reportSection" style="display: none;">
+            <div class="report-card full-width">
+                <div class="report-title">🎯 学生概览</div>
+                <div style="display: flex; gap: 30px; flex-wrap: wrap; align-items: center;">
+                    <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 36px; font-weight: 700; color: #667eea;" id="studentName">--</div>
+                            <div style="font-size: 14px; color: #666; margin-top: 5px;">学生姓名</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 36px; font-weight: 700; color: #667eea;" id="totalConversations">0</div>
+                            <div style="font-size: 14px; color: #666; margin-top: 5px;">对话次数</div>
+                        </div>
+                    </div>
+                    <div id="radarWrap" style="display: none; margin-left: auto; text-align: center;">
+                        <div style="font-size: 14px; color: #666; margin-bottom: 4px;">🕸️ 能力雷达</div>
+                        <div id="radarSvg"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="report-card">
+                <div class="report-title">⚠️ 能力短板</div>
+                <ul class="weakness-list" id="weaknessList">
+                    <li class="empty-state" style="padding: 20px;">暂无数据</li>
+                </ul>
+            </div>
+
+            <div class="report-card">
+                <div class="report-title">✅ 优势领域</div>
+                <ul class="strength-list" id="strengthList">
+                    <li class="empty-state" style="padding: 20px;">暂无数据</li>
+                </ul>
+            </div>
+
+            <div class="report-card full-width">
+                <div class="report-title">📖 补习建议</div>
+                <ul class="suggestion-list" id="suggestionList">
+                    <li class="empty-state" style="padding: 20px;">暂无建议</li>
+                </ul>
+            </div>
+
+            <div class="report-card full-width">
+                <div class="report-title">🎬 推荐场景</div>
+                <div class="scenario-list" id="scenarioList">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🎭</div>
+                        <div class="empty-state-text">暂无推荐场景</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 新增：深度分析（学习行为 / 错题 / 过程性数据 / 学情诊断） -->
+            <div class="report-card full-width">
+                <div class="report-title">🔬 深度分析</div>
+                <div id="deepBody">
+                    <div class="deep-empty">选择学生后加载…</div>
+                </div>
+            </div>
+        </div><!-- /reportSection -->
+
+            <div class="deep-empty" id="emptyHint" style="display:none; padding:60px 10px;">
+                👈 请在左侧选择学生，或先「+ 添加」学生
+            </div>
+        </main>
+    </div><!-- /pz-wrap -->
+
+    <!-- AI个性化分析弹窗 -->
+    <div class="ai-analysis-overlay" id="aiAnalysisOverlay">
+        <div class="ai-analysis-modal">
+            <div class="ai-analysis-head">
+                <span class="ai-analysis-title">🤖 AI 个性化能力分析</span>
+                <button class="ai-analysis-close" onclick="closeAiAnalysis()" title="关闭">✕</button>
+            </div>
+            <div class="ai-analysis-body" id="aiAnalysisBody">
+                <div style="text-align:center;padding:40px 20px;color:#999;">
+                    <div style="font-size:40px;margin-bottom:12px;">🧠</div>
+                    <div>点击「AI个性化分析」按钮开始分析</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加学生模态框 -->
+    <div class="modal-overlay" id="addModal">
+        <div class="modal">
+            <h3 class="modal-title">+ 添加学生</h3>
+            <div class="form-group" style="text-align: center;">
+                <label style="display: block; margin-bottom: 10px;">头像（可选）</label>
+                <img id="avatarPreview" class="student-avatar" src="" alt="头像" style="cursor: pointer; margin: 0 auto;" onclick="document.getElementById('avatarUpload').click()">
+                <input type="file" id="avatarUpload" style="display: none;" accept="image/*">
+                <p style="font-size: 12px; color: #999; margin-top: 8px;">点击头像上传</p>
+            </div>
+            <div class="form-group">
+                <label>学生姓名</label>
+                <input type="text" id="studentNameInput" placeholder="请输入学生姓名">
+            </div>
+            <div class="form-group">
+                <label>学号（可选，13位数字）</label>
+                <input type="text" id="studentNoInput" placeholder="请输入13位学号，一个学号只能注册一个账号" maxlength="13">
+            </div>
+            <div class="form-group">
+                <label>班级（可选）</label>
+                <input type="text" id="classNameInput" placeholder="请输入班级">
+            </div>
+            <div class="form-group">
+                <label>年级（可选）</label>
+                <select id="gradeInput">
+                    <option value="">自动识别（按学号前 4 位）</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>专业（可选）</label>
+                <input type="text" id="majorInput" placeholder="如：通信工程">
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn cancel" onclick="hideAddModal()">取消</button>
+                <button class="modal-btn confirm" onclick="addStudent()">添加</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedStudentId = null;
+        let selectedSeq = 0;   // 切人序号：丢弃过期请求，避免慢响应覆盖新学生数据
+        let currentUser = { role: 'student', student_name: '' };
+
+        // 退出登录
+        async function doLogout() {
+            if (confirm('确定要退出登录吗？')) {
+                try {
+                    const response = await fetch('/logout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    
+                    if (response.ok) {
+                        localStorage.removeItem('lingzhi_chat_history');
+                        localStorage.removeItem('lingzhi_scenario_history');
+                        window.location.href = '/';
+                    }
+                } catch (error) {
+                    console.error('退出失败:', error);
+                    localStorage.removeItem('lingzhi_chat_history');
+                    localStorage.removeItem('lingzhi_scenario_history');
+                    window.location.href = '/';
+                }
+            }
+        }
+
+        // 获取当前用户信息
+        async function loadCurrentUser() {
+            try {
+                const response = await fetch('/current-user');
+                if (response.ok) {
+                    const data = await response.json();
+                    currentUser = data;
+                    initializePage();
+                }
+            } catch (error) {
+                console.error('获取用户信息失败:', error);
+            }
+        }
+
+        // 初始化页面
+        async function initializePage() {
+            if (currentUser.role === 'student') {
+                // 学生端：隐藏左侧分类导航，右侧直接显示自己的报告
+                document.getElementById('pzSide').style.display = 'none';
+                document.getElementById('pzWrap').classList.add('solo');
+                document.getElementById('pageTitle').textContent = '📊 我的学习报告';
+                const ta = document.getElementById('pzTeacherActions');
+                if (ta) ta.style.display = 'none';
+                
+                // 从URL参数获取姓名，或者使用session中的姓名
+                const urlParams = new URLSearchParams(window.location.search);
+                const studentName = urlParams.get('name') || currentUser.student_name;
+                
+                if (studentName) {
+                    // 通过姓名查找学生并显示报告
+                    await loadStudentReportByName(studentName);
+                }
+            } else {
+                // 老师端：左侧学生分类导航 + 右侧报告
+                document.getElementById('pageTitle').textContent = '📊 学生分析报告';
+                await loadFilterOptions();
+                loadStudents();
+            }
+        }
+
+        // 渲染能力雷达图（纯SVG，零依赖）
+        function renderRadar(radar) {
+            const wrap = document.getElementById('radarWrap');
+            const svgBox = document.getElementById('radarSvg');
+            if (!wrap || !svgBox) return;
+            if (!radar || radar.length < 3) { wrap.style.display = 'none'; return; }
+            wrap.style.display = 'block';
+
+            const W = 280, H = 250, cx = W / 2, cy = H / 2 + 6, R = 82, N = radar.length;
+            const angle = i => -Math.PI / 2 + i * 2 * Math.PI / N;
+            const pt = (i, r) => [cx + r * Math.cos(angle(i)), cy + r * Math.sin(angle(i))];
+            const poly = pts => pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+
+            // 网格（4层同心多边形）
+            let grid = '';
+            for (let lv = 1; lv <= 4; lv++) {
+                grid += `<polygon points="${poly(radar.map((_, i) => pt(i, R * lv / 4)))}" fill="none" stroke="#e3e9f5" stroke-width="1"/>`;
+            }
+            // 轴线 + 类目标签 + 分数
+            let axes = '';
+            radar.forEach((d, i) => {
+                const [x, y] = pt(i, R);
+                axes += `<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#e3e9f5" stroke-width="1"/>`;
+                const [lx, ly] = pt(i, R + 24);
+                const anchor = Math.abs(lx - cx) < 12 ? 'middle' : (lx > cx ? 'start' : 'end');
+                axes += `<text x="${lx.toFixed(1)}" y="${(ly - 6).toFixed(1)}" text-anchor="${anchor}" dominant-baseline="middle" font-size="12" fill="#555">${d.category}</text>`;
+                axes += `<text x="${lx.toFixed(1)}" y="${(ly + 8).toFixed(1)}" text-anchor="${anchor}" dominant-baseline="middle" font-size="11" fill="#667eea" font-weight="600">${Math.round(d.score * 100)}%</text>`;
+            });
+            // 数据多边形 + 顶点
+            const dataPts = radar.map((d, i) => pt(i, R * Math.max(Math.min(d.score, 1), 0.03)));
+            const data = `<polygon points="${poly(dataPts)}" fill="rgba(102,126,234,0.28)" stroke="#667eea" stroke-width="2" stroke-linejoin="round"/>
+                ${dataPts.map(p => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.5" fill="#667eea"/>`).join('')}`;
+
+            svgBox.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:${W}px;height:${H}px;max-width:100%;" role="img" aria-label="能力雷达图">${grid}${axes}${data}</svg>`;
+        }
+
+        // 通过姓名获取学生报告
+        async function loadStudentReportByName(studentName) {
+            try {
+                const response = await fetch('/students');
+                const data = await response.json();
+                const student = data.students.find(s => s.name === studentName);
+                
+                if (student) {
+                    // 复用 selectStudent：带请求序号，避免快速切换时数据串号
+                    await selectStudent(student.id);
+                    document.getElementById('reportSection').style.display = 'grid';
+                } else {
+                    document.getElementById('reportSection').style.display = 'grid';
+                    document.getElementById('studentName').textContent = studentName;
+                    document.getElementById('totalConversations').textContent = '0';
+                    document.getElementById('weaknessList').innerHTML = '<li style="text-align: center; padding: 20px; color: #999;">暂无学习数据，请先进行对话</li>';
+                    document.getElementById('strengthList').innerHTML = '<li style="text-align: center; padding: 20px; color: #999;">需要更多互动才能分析优势</li>';
+                    document.getElementById('suggestionList').innerHTML = '<li style="text-align: center; padding: 20px; color: #999;">暂无建议</li>';
+                    document.getElementById('scenarioList').innerHTML = '<div class="empty-state"><div class="empty-state-icon">🎭</div><div class="empty-state-text">暂无推荐场景</div></div>';
+                    document.getElementById('radarWrap').style.display = 'none';
+                    document.getElementById('deepBody').innerHTML = '<div class="deep-empty">暂无学习数据，暂无法生成深度分析</div>';
+                }
+            } catch (error) {
+                console.error('获取报告失败:', error);
+            }
+        }
+
+        // 加载学生列表（老师端）：左侧分类导航 + 右侧报告
+        async function loadStudents() {
+            try {
+                // 1) 全量档案（拿头像等展示字段）
+                const baseResp = await fetch('/students');
+                const baseData = await baseResp.json();
+                const baseMap = {};
+                (baseData.students || []).forEach(s => { baseMap[String(s.id)] = s; });
+
+                // 2) 带筛选条件与指标的总览
+                const f = currentStudentFilters();
+                const qs = new URLSearchParams({ ...f, page: 1, page_size: 300 }).toString();
+                const resp = await fetch('/api/students/overview?' + qs);
+                const data = await resp.json();
+
+                if (!resp.ok) throw new Error(data.error || '加载失败');
+
+                const rows = (data.students || []).map(row => {
+                    const base = baseMap[String(row.id)] || {};
+                    return { ...base, ...row, avatar: base.avatar || row.avatar || null };
+                });
+
+                window._studentsCache = rows;
+                renderFilterStat(data.summary || {});
+                renderStudentNav(rows);
+
+                const hint = document.getElementById('emptyHint');
+                if (!rows.length) {
+                    document.getElementById('reportSection').style.display = 'none';
+                    if (hint) hint.style.display = 'block';
+                    return;
+                }
+                if (hint) hint.style.display = 'none';
+
+                // 保持原选择，否则默认选中第一位
+                const keep = rows.find(s => String(s.id) === String(selectedStudentId));
+                selectStudent((keep || rows[0]).id);
+            } catch (error) {
+                console.error('加载学生失败:', error);
+                // 兜底：退回旧接口，保证页面不至于空白
+                try {
+                    const response = await fetch('/students');
+                    const data = await response.json();
+                    const rows = data.students || [];
+                    window._studentsCache = rows;
+                    renderStudentNav(rows);
+                    if (rows.length) selectStudent(rows[0].id);
+                } catch (e) { /* 忽略 */ }
+            }
+        }
+
+        /* ===== 分类筛选（年级 / 层次 / 班级 / 专业 / 关键字） ===== */
+        function currentStudentFilters() {
+            return {
+                grade: (document.getElementById('fGrade') || {}).value || '',
+                grade_level: (document.getElementById('fLevel') || {}).value || '',
+                class_name: (document.getElementById('fClass') || {}).value || '',
+                major: (document.getElementById('fMajor') || {}).value || '',
+                keyword: ((document.getElementById('fKeyword') || {}).value || '').trim(),
+                sort: (document.getElementById('fSort') || {}).value || 'score_desc',
+            };
+        }
+
+        async function loadFilterOptions() {
+            try {
+                const resp = await fetch('/api/students/filters');
+                const d = await resp.json();
+                if (!resp.ok) return;
+                fillFilterSelect('fGrade', d.grades || [], '全部年级');
+                fillFilterSelect('fLevel', d.grade_levels || [], '全部层次');
+                fillFilterSelect('fClass', d.classes || [], '全部班级');
+                fillFilterSelect('fMajor', d.majors || [], '全部专业');
+            } catch (e) { console.error('筛选选项加载失败', e); }
+        }
+
+        function fillFilterSelect(id, items, allLabel) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const cur = el.value;
+            el.innerHTML = `<option value="">${allLabel}</option>` +
+                items.map(i => `<option value="${i.value}">${i.label}（${i.count}）</option>`).join('');
+            if (cur && items.some(i => i.value === cur)) el.value = cur;
+        }
+
+        function renderFilterStat(summary) {
+            const stat = document.getElementById('filterStat');
+            if (!stat) return;
+            stat.style.display = 'block';
+            stat.innerHTML =
+                `共 <b>${summary.student_count || 0}</b> 人` +
+                (summary.all_count && summary.all_count !== summary.student_count
+                    ? `（全校 ${summary.all_count}）` : '') +
+                ` · 均分 <b>${summary.avg_score || 0}</b><br>活跃 ${summary.active_count || 0} 人` +
+                ` · 未掌握错题 ${summary.wrong_unmastered || 0} 道`;
+        }
+
+        /* 左侧学生导航：年级(层次) → 班级 → 学生 */
+        function renderStudentNav(students) {
+            const box = document.getElementById('studentNav');
+            if (!box) return;
+            if (!students || !students.length) {
+                box.innerHTML = '<div class="pz-empty">当前条件下暂无学生</div>';
+                return;
+            }
+
+            const byGrade = new Map();
+            students.forEach(s => {
+                const g = [s.grade || '未标注年级', s.grade_level || ''].filter(Boolean).join(' · ');
+                const c = s.class_name || '未分班';
+                if (!byGrade.has(g)) byGrade.set(g, new Map());
+                const cls = byGrade.get(g);
+                if (!cls.has(c)) cls.set(c, []);
+                cls.get(c).push(s);
+            });
+
+            let html = '';
+            byGrade.forEach((classes, gradeLabel) => {
+                let total = 0;
+                classes.forEach(arr => total += arr.length);
+                html += `<div class="pz-glabel"><span>${gradeLabel}</span><b>${total}人</b></div>`;
+                classes.forEach((arr, className) => {
+                    html += `<div class="pz-gsub">📁 ${className} · ${arr.length}人</div>`;
+                    html += arr.map(s => {
+                        const on = String(s.id) === String(selectedStudentId) ? ' on' : '';
+                        return `<div class="pz-item${on}" data-id="${s.id}" onclick="selectStudent('${s.id}')"
+                                     title="${s.name} ${s.student_no || ''}">
+                            <span class="pz-av">${(s.name || '?').charAt(0)}</span>
+                            <span class="pz-info">
+                                <span class="pz-name">${s.name}</span>
+                                <span class="pz-no">${s.student_no || '未填学号'}</span>
+                            </span>
+                            <span class="pz-score">${s.avg_score}</span>
+                        </div>`;
+                    }).join('');
+                });
+            });
+            box.innerHTML = html;
+        }
+
+        function reloadStudents() { loadStudents(); }
+
+        function resetStudentFilters() {
+            ['fGrade', 'fLevel', 'fClass', 'fMajor'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            const kw = document.getElementById('fKeyword');
+            if (kw) kw.value = '';
+            const sort = document.getElementById('fSort');
+            if (sort) sort.value = 'score_desc';
+            loadStudents();
+        }
+
+        // 收起/展开筛选条件
+        function toggleFilterPanel() {
+            const el = document.getElementById('pzFilters');
+            if (!el) return;
+            const hidden = el.style.display === 'none';
+            el.style.display = hidden ? 'grid' : 'none';
+            const btn = document.getElementById('pzFilterBtn');
+            if (btn) btn.textContent = hidden ? '收起' : '筛选';
+        }
+
+        // 选择学生：右侧直接渲染该学生报告
+        async function selectStudent(studentId) {
+            selectedStudentId = studentId;
+            const seq = ++selectedSeq;
+            document.querySelectorAll('.pz-item').forEach(el => {
+                el.classList.toggle('on', String(el.dataset.id) === String(studentId));
+            });
+
+            try {
+                const response = await fetch(`/students/${studentId}/report`);
+                const data = await response.json();
+                if (seq !== selectedSeq) return;   // 已切换学生，丢弃旧响应
+                renderReport(data);
+                loadDeepAnalysis(studentId, seq);
+            } catch (error) {
+                console.error('获取报告失败:', error);
+            }
+        }
+
+        /* ===== 新增：深度分析（学习行为 / 错题 / 过程数据 / 学情诊断） ===== */
+        async function loadDeepAnalysis(studentId, seq) {
+            const box = document.getElementById('deepBody');
+            if (!box) return;
+            box.innerHTML = '<div class="deep-empty">正在加载深度分析…</div>';
+            try {
+                const resp = await fetch(`/api/students/${encodeURIComponent(studentId)}/analysis`);
+                const d = await resp.json();
+                if (seq !== undefined && seq !== selectedSeq) return;   // 已切换学生，丢弃旧响应
+                if (!resp.ok) throw new Error(d.error || '加载失败');
+                box.innerHTML = renderDeep(d);
+            } catch (e) {
+                box.innerHTML = `<div class="deep-empty">深度分析加载失败：${e.message}</div>`;
+            }
+        }
+
+        function renderDeep(d) {
+            const ov = d.overview || {};
+            const wk = d.weekly || {};
+            const hw = d.homework || {};
+            const it = d.interview || {};
+            const cr = d.credential || {};
+            const lr = d.learning || {};
+            const wr = d.wrong || {};
+            const rk = d.rank || {};
+            const risk = d.risk || {};
+
+            const mini = (items) => `<div class="deep-mini">${items.map(([n, c, s]) => `
+                <div class="m"><div class="n">${n}</div><div class="c">${c}</div>
+                ${s ? `<div class="s">${s}</div>` : ''}</div>`).join('')}</div>`;
+
+            // 1) 学习行为
+            const behavior = `
+                <div class="deep-sub">
+                    <h4>⏱️ 近 30 天学习行为</h4>
+                    ${mini([
+                        [lr.active_days ?? 0, '活跃天数', `近 ${lr.days || 30} 天`],
+                        [lr.recent_records ?? 0, '学习记录', `累计 ${lr.total_records ?? 0} 条`],
+                        [lr.avg_score ?? 0, '平均得分', '按记录计分'],
+                        [(lr.accuracy ?? 0) + '%', '正确率', `错题 ${lr.wrong_in_window ?? 0} 道`],
+                    ])}
+                </div>`;
+
+            // 2) 过程性数据
+            const process = `
+                <div class="deep-sub">
+                    <h4>🗂️ 任务与过程性数据</h4>
+                    ${mini([
+                        [`${wk.completed || 0}/${wk.total || 0}`, '周任务', `完成率 ${wk.rate || 0}%`],
+                        [hw.submitted ?? 0, '作业提交', `均分 ${hw.avg_score ?? 0}`],
+                        [`${it.completed || 0}/${it.total || 0}`, '模拟面试', it.avg_score ? `均分 ${it.avg_score}` : '暂无评分'],
+                        [cr.available ? (cr.records ?? 0) : '未启用', '成长档案', cr.available ? `证书 ${cr.certificates || 0} 张` : '模块未加载'],
+                    ])}
+                </div>`;
+
+            // 3) 错题分布
+            const pts = (wr.by_knowledge_point || []).slice(0, 6);
+            const maxP = pts.length ? Math.max(...pts.map(p => p.total)) : 1;
+            const wrongBlock = `
+                <div class="deep-sub">
+                    <h4>📕 错题分布（共 ${wr.total || 0} 道，已掌握 ${wr.mastered || 0} 道）</h4>
+                    ${pts.length ? pts.map(p => `
+                        <div style="margin-bottom:10px;">
+                            <div style="display:flex;justify-content:space-between;font-size:13px;color:#444;margin-bottom:4px;">
+                                <span>${p.knowledge_point}</span>
+                                <span style="color:#667eea;font-weight:700;">${p.total} 道</span>
+                            </div>
+                            <div style="height:8px;background:#f0f0f5;border-radius:4px;overflow:hidden;">
+                                <div style="height:100%;width:${(p.total / maxP * 100).toFixed(0)}%;
+                                    background:linear-gradient(90deg,#ff6b6b,#ffa94d);border-radius:4px;"></div>
+                            </div>
+                        </div>`).join('') : '<div class="deep-empty">暂无错题记录 🎉</div>'}
+                </div>`;
+
+            // 4) 位次
+            const cls = rk.class || {}, grd = rk.grade || {};
+            const rankBlock = `
+                <div class="deep-sub">
+                    <h4>🏅 位次对比</h4>
+                    <div class="deep-kv"><span class="k">班级排名</span>
+                        <span class="v">${cls.rank ? `${cls.rank} / ${cls.total}（超过 ${cls.percentile}%）` : '未分班'}</span></div>
+                    <div class="deep-kv"><span class="k">年级排名</span>
+                        <span class="v">${grd.rank ? `${grd.rank} / ${grd.total}（超过 ${grd.percentile}%）` : '未标注年级'}</span></div>
+                    <div class="deep-kv"><span class="k">综合能力 / 累计提问</span>
+                        <span class="v">${ov.avg_score ?? 0} 分 / ${ov.total_questions ?? 0} 次</span></div>
+                    <div class="deep-kv"><span class="k">最强 / 最弱维度</span>
+                        <span class="v">${ov.top_dimension || '-'} / ${ov.weakest_dimension || '-'}</span></div>
+                </div>`;
+
+            // 5) 已修课程（学生自填，老师只读）
+            const courseList = d.courses || [];
+            const courseDims = d.course_dimensions || [];
+            const courseBlock = `
+                <div class="deep-sub">
+                    <h4>📚 已修课程（学生本人填写）</h4>
+                    ${courseList.length
+                        ? `<div style="display:flex;flex-wrap:wrap;gap:7px;">
+                               ${courseList.map(c => `<span class="deep-tag" style="margin:0;padding:3px 10px;">${c.icon || '📘'} ${c.name}</span>`).join('')}
+                           </div>
+                           <div style="font-size:12px;color:#9aa2b8;margin-top:8px;">
+                               能力维度按这些课程计算，当前覆盖 ${courseDims.length} 个维度${courseDims.length ? '：' + courseDims.map(x => x.name).join('、') : ''}
+                           </div>`
+                        : '<div class="deep-empty">该学生还没有填写课程，暂按全部 12 维展示</div>'}
+                </div>`;
+
+            // 6) 学情诊断与建议
+            const advice = (d.advice || []).map(a => `
+                <div class="deep-advice">
+                    <span class="deep-tag">${a.type || '建议'}</span>
+                    <strong style="color:#4a55a2;">${a.target || ''}</strong>
+                    <div style="margin-top:5px;">${a.text || ''}</div>
+                </div>`).join('') || '<div class="deep-empty">暂无建议</div>';
+
+            const diagnosis = `
+                <div class="deep-sub">
+                    <h4>💡 学情诊断与学习建议</h4>
+                    <div style="margin-bottom:10px;">
+                        <span class="risk-pill" style="background:${risk.color || '#cdd3e2'};">风险 ${risk.label || '-'}</span>
+                        <span style="font-size:12px;color:#667;margin-left:8px;">${(risk.reasons || []).join('；')}</span>
+                    </div>
+                    ${advice}
+                </div>`;
+
+            return behavior + process + courseBlock + wrongBlock + rankBlock + diagnosis;
+        }
+
+        /* ===== 删除学生 ===== */
+        async function deleteStudent(event, studentId) {
+            if (event && event.stopPropagation) event.stopPropagation();
+            const info = (window._studentsCache || []).find(s => String(s.id) === String(studentId)) || {};
+            const name = info.name || '该学生';
+            if (!confirm(`确定要删除学生「${name}」吗？\n删除后将同时清除其错题本和学习记录，此操作不可恢复！`)) {
+                return;
+            }
+            try {
+                const response = await fetch(`/students/${studentId}`, { method: 'DELETE' });
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    alert(`已删除学生「${data.deleted || name}」`);
+                    loadStudents(); // 刷新列表
+                } else {
+                    alert(data.error || '删除失败');
+                }
+            } catch (error) {
+                console.error('删除学生失败:', error);
+                alert('删除失败，请稍后重试');
+            }
+        }
+
+        // 删除当前选中的学生（右侧标题栏按钮）
+        function deleteSelectedStudent() {
+            if (!selectedStudentId) { alert('请先在左侧选择学生'); return; }
+            deleteStudent(null, selectedStudentId);
+        }
+
+        // ESC 关闭 AI 分析弹窗
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeAiAnalysis();
+        });
+
+        /* ===== AI 个性化分析 ===== */
+        function closeAiAnalysis() {
+            document.getElementById('aiAnalysisOverlay').classList.remove('show');
+            document.body.style.overflow = '';
+        }
+        document.getElementById('aiAnalysisOverlay').addEventListener('click', (e) => {
+            if (e.target.id === 'aiAnalysisOverlay') closeAiAnalysis();
+        });
+
+        async function runAiAnalysis() {
+            if (!selectedStudentId) {
+                alert('请先选择学生');
+                return;
+            }
+            const btn = document.getElementById('aiAnalysisBtn');
+            const overlay = document.getElementById('aiAnalysisOverlay');
+            const body = document.getElementById('aiAnalysisBody');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>分析中…';
+            overlay.classList.add('show');
+            document.body.style.overflow = 'hidden';
+            body.innerHTML = '<div class="ai-loading"><div class="big-spinner"></div><div>AI 正在综合分析你的对话、错题与学习记录…</div><div style="font-size:12px;color:#aaa;margin-top:8px;">AI 会逐字生成结果，通常 20-60 秒，生成中即可阅读 ☕</div></div>';
+
+            let raw = '';
+            let errMsg = '';
+            try {
+                const resp = await fetch(`/students/${selectedStudentId}/ai-analysis`);
+                if (!resp.ok || !resp.body) throw new Error('HTTP ' + resp.status);
+                const reader = resp.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                let buffer = '';
+                while (true) {
+                    const {done, value} = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, {stream: true});
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop();
+                    for (const line of lines) {
+                        if (!line.startsWith('data: ')) continue;
+                        const payload = line.slice(6).trim();
+                        if (payload === '[DONE]' || !payload) continue;
+                        try {
+                            const j = JSON.parse(payload);
+                            if (j.error) {
+                                errMsg = j.error;
+                            } else if (j.content) {
+                                raw += j.content;
+                                body.innerHTML = formatAiAnalysis(raw) + '<span class="ai-stream-cursor">▍</span>';
+                                body.scrollTop = body.scrollHeight;
+                            }
+                        } catch (e) { /* 忽略半截JSON */ }
+                    }
+                }
+                if (raw) {
+                    body.innerHTML = formatAiAnalysis(raw);
+                } else {
+                    body.innerHTML = `<div class="ai-error">❌ ${errMsg || '分析失败，请稍后重试'}</div>`;
+                }
+            } catch (err) {
+                body.innerHTML = `<div class="ai-error">❌ 网络错误：${err.message}，请稍后重试</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '🤖 AI个性化分析';
+            }
+        }
+
+        // 将AI返回的文本转成带样式的HTML
+        function formatAiAnalysis(text) {
+            if (!text) return '<div class="ai-error">AI未返回内容</div>';
+            // 转义HTML
+            let html = text
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const lines = html.split('\n');
+            const out = [];
+            let inList = false;
+            for (let line of lines) {
+                const trimmed = line.trim();
+                // 标题：【xxx】
+                if (/^【.+】$/.test(trimmed)) {
+                    if (inList) { out.push('</ul>'); inList = false; }
+                    out.push(`<h3>${trimmed.slice(1, -1)}</h3>`);
+                    continue;
+                }
+                // 无序项：- xxx 或 · xxx
+                const bullet = trimmed.match(/^[-·•]\s+(.*)$/);
+                if (bullet) {
+                    if (!inList) { out.push('<ul>'); inList = true; }
+                    out.push(`<li>${bullet[1]}</li>`);
+                    continue;
+                }
+                // 有序项：1. xxx
+                const ordered = trimmed.match(/^(\d+)[\.、]\s+(.*)$/);
+                if (ordered) {
+                    if (!inList) { out.push('<ul>'); inList = true; }
+                    out.push(`<li><strong>${ordered[1]}.</strong> ${ordered[2]}</li>`);
+                    continue;
+                }
+                // 普通文本
+                if (trimmed === '') {
+                    if (inList) { out.push('</ul>'); inList = false; }
+                    continue;
+                }
+                if (inList) { out.push('</ul>'); inList = false; }
+                out.push(`<p>${trimmed}</p>`);
+            }
+            if (inList) out.push('</ul>');
+            return '<div style="font-size:12px;color:#999;background:#f5f5f5;border-radius:6px;padding:6px 12px;margin-bottom:12px;">✨ 本分析报告由 AI 生成，仅供参考</div>' + out.join('');
+        }
+
+        // 渲染报告
+        function renderReport(report) {
+            if (report.error) {
+                document.getElementById('reportSection').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('reportSection').style.display = 'grid';
+            document.getElementById('studentName').textContent = report.student;
+            document.getElementById('totalConversations').textContent = report.total_conversations;
+            renderRadar(report.radar);
+
+            // 渲染短板
+            const weaknessList = document.getElementById('weaknessList');
+            if (report.weaknesses && report.weaknesses.length > 0) {
+                weaknessList.innerHTML = report.weaknesses.map(w => `
+                    <li class="weakness-item">
+                        <span class="item-name">${w.area}</span>
+                        <div style="text-align: right;">
+                            <div class="item-score">掌握度: ${Math.round(w.score * 100)}%</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${w.score * 100}%"></div>
+                            </div>
+                        </div>
+                    </li>
+                `).join('');
+            } else {
+                weaknessList.innerHTML = '<li style="text-align: center; padding: 20px; color: #2e7d32;">🎉 暂无明显短板！</li>';
+            }
+
+            // 渲染优势
+            const strengthList = document.getElementById('strengthList');
+            if (report.strengths && report.strengths.length > 0) {
+                strengthList.innerHTML = report.strengths.map(s => `
+                    <li class="strength-item">
+                        <span class="item-name">${s.area}</span>
+                        <div style="text-align: right;">
+                            <div class="item-score">掌握度: ${Math.round(s.score * 100)}%</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${s.score * 100}%"></div>
+                            </div>
+                        </div>
+                    </li>
+                `).join('');
+            } else {
+                strengthList.innerHTML = '<li style="text-align: center; padding: 20px; color: #999;">需要更多互动才能分析优势</li>';
+            }
+
+            // 渲染建议
+            const suggestionList = document.getElementById('suggestionList');
+            if (report.suggestions && report.suggestions.length > 0) {
+                suggestionList.innerHTML = report.suggestions.map((s, i) => `
+                    <li class="suggestion-item">
+                        <span style="font-weight: 600; color: #667eea;">${i + 1}.</span> ${s}
+                    </li>
+                `).join('');
+            } else {
+                suggestionList.innerHTML = '<li style="text-align: center; padding: 20px; color: #999;">暂无建议</li>';
+            }
+
+            // 渲染推荐场景
+            const scenarioList = document.getElementById('scenarioList');
+            if (report.recommended_scenarios && report.recommended_scenarios.length > 0) {
+                scenarioList.innerHTML = report.recommended_scenarios.map(s => `
+                    <div class="scenario-card">
+                        <div class="scenario-title">🎬 ${s.title}</div>
+                        <div class="scenario-reason">💡 ${s.reason}</div>
+                    </div>
+                `).join('');
+            } else {
+                scenarioList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🎭</div>
+                        <div class="empty-state-text">暂无推荐场景</div>
+                    </div>
+                `;
+            }
+        }
+
+        // 添加学生
+        async function addStudent() {
+            const name = document.getElementById('studentNameInput').value.trim();
+            const studentNo = document.getElementById('studentNoInput').value.trim();
+            const className = document.getElementById('classNameInput').value.trim();
+            const gradeEl = document.getElementById('gradeInput');
+            const majorEl = document.getElementById('majorInput');
+            const grade = gradeEl ? gradeEl.value : '';
+            const major = majorEl ? majorEl.value.trim() : '';
+            const avatarPreview = document.getElementById('avatarPreview');
+            const avatar = avatarPreview.src ? avatarPreview.src.split(',')[1] : null;
+            
+            if (!name) {
+                alert('请输入学生姓名');
+                return;
+            }
+            
+            if (studentNo && (!/^\d+$/.test(studentNo) || studentNo.length !== 13)) {
+                alert('学号必须是13位数字');
+                return;
+            }
+
+            try {
+                const response = await fetch('/students', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name, student_no: studentNo, class_name: className,
+                        grade, major, avatar,
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    hideAddModal();
+                    loadStudents();
+                    alert('添加成功！');
+                } else {
+                    alert(data.error || '添加失败');
+                }
+            } catch (error) {
+                alert('添加失败');
+            }
+        }
+
+        // 头像上传处理
+        document.getElementById('avatarUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    document.getElementById('avatarPreview').src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 显示/隐藏模态框
+        function showAddModal() {
+            document.getElementById('addModal').classList.add('show');
+            document.getElementById('avatarPreview').src = '';
+            document.getElementById('studentNameInput').value = '';
+            document.getElementById('studentNoInput').value = '';
+            document.getElementById('classNameInput').value = '';
+            const gradeEl = document.getElementById('gradeInput');
+            if (gradeEl) gradeEl.value = '';
+            const majorEl = document.getElementById('majorInput');
+            if (majorEl) majorEl.value = '';
+            document.getElementById('avatarUpload').value = '';
+        }
+
+        function hideAddModal() {
+            document.getElementById('addModal').classList.remove('show');
+            document.getElementById('studentNameInput').value = '';
+            document.getElementById('studentNoInput').value = '';
+            document.getElementById('classNameInput').value = '';
+            const gradeEl = document.getElementById('gradeInput');
+            if (gradeEl) gradeEl.value = '';
+            const majorEl = document.getElementById('majorInput');
+            if (majorEl) majorEl.value = '';
+            document.getElementById('avatarPreview').src = '';
+            document.getElementById('avatarUpload').value = '';
+        }
+
+        // 年级下拉：近 8 个入学年份
+        function initGradeOptions() {
+            const el = document.getElementById('gradeInput');
+            if (!el) return;
+            const now = new Date();
+            const startYear = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
+            let html = '<option value="">自动识别（按学号前 4 位）</option>';
+            for (let i = 0; i < 8; i++) {
+                const y = startYear - i;
+                html += `<option value="${y}级">${y}级</option>`;
+            }
+            el.innerHTML = html;
+        }
+
+        // 关键字筛选：回车即搜
+        document.getElementById('fKeyword').addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') reloadStudents();
+        });
+
+        // 初始化
+        initGradeOptions();
+        loadCurrentUser();
+    </script>
+
+    <!-- 全站顶部导航栏 -->
+    <script src="/static/app_nav.js" defer></script>
+
+    <!-- 全局桌宠 Desktop Pet -->
+    <link rel="stylesheet" href="/static/desktop_pet.css">
+    <script src="/static/desktop_pet.js" defer></script>
+</body>
+</html>

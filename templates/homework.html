@@ -1,0 +1,551 @@
+﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>作业管理 - 灵智尚人</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh; padding: 20px; color: #333;
+        }
+        .container { max-width: 1080px; margin: 0 auto; }
+        .header {
+            background: linear-gradient(135deg, #2f54eb 0%, #13c2c2 100%);
+            color: #fff; padding: 20px 24px; border-radius: 12px; margin-bottom: 22px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .header h1 { font-size: 23px; font-weight: 600; }
+        .header .sub { font-size: 13px; opacity: .9; margin-top: 4px; }
+        .nav-btn {
+            background: rgba(255,255,255,.2); color: #fff; border: none; padding: 9px 16px;
+            border-radius: 8px; font-size: 14px; cursor: pointer; text-decoration: none; transition: all .3s;
+        }
+        .nav-btn:hover { background: rgba(255,255,255,.32); }
+
+        .card {
+            background: #fff; border-radius: 12px; padding: 20px 22px; margin-bottom: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,.07);
+        }
+        .hw-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+        .hw-meta { font-size: 13px; color: #888; line-height: 1.9; }
+        .badge { display:inline-block; font-size:12px; padding:2px 10px; border-radius:20px; font-weight:600;}
+        .badge-green { background:#f6ffed; color:#52c41a; border:1px solid #b7eb8f;}
+        .badge-orange { background:#fff7e6; color:#fa8c16; border:1px solid #ffd591;}
+        .badge-gray { background:#f5f5f5; color:#999; border:1px solid #d9d9d9;}
+        .badge-red { background:#fff1f0; color:#ff4d4f; border:1px solid #ffa39e;}
+        .btn {
+            border:none; padding:9px 18px; border-radius:8px; font-size:14px; cursor:pointer; transition:all .2s; font-weight:600;
+        }
+        .btn-primary { background:linear-gradient(135deg,#2f54eb,#13c2c2); color:#fff;}
+        .btn-primary:hover { opacity:.9; }
+        .btn-plain { background:#f0f5ff; color:#2f54eb; border:1px solid #adc6ff;}
+        .btn-plain:hover { background:#e6f0ff;}
+        .btn-danger { background:#fff1f0; color:#ff4d4f; border:1px solid #ffa39e;}
+        .btn-sm { padding:5px 12px; font-size:13px;}
+        .row-actions { margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;}
+        .empty { text-align:center; color:#999; padding:50px 20px; font-size:14px;}
+
+        label.fld { display:block; font-size:13px; color:#666; font-weight:600; margin:14px 0 6px;}
+        input[type=text], input[type=datetime-local], textarea, select {
+            width:100%; padding:10px 12px; border:1px solid #d9d9d9; border-radius:8px; font-size:14px; font-family:inherit;
+        }
+        textarea { resize:vertical;}
+        .class-checks { display:flex; flex-wrap:wrap; gap:8px 18px; margin-top:6px;}
+        .class-checks label { font-size:14px; font-weight:400; display:flex; align-items:center; gap:5px; cursor:pointer;}
+
+        .q-block { border:1px solid #e8e8e8; border-radius:10px; padding:14px 16px; margin-bottom:14px; background:#fafcff;}
+        .q-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;}
+        .q-type-tag { font-size:12px; font-weight:700; padding:3px 10px; border-radius:6px;}
+        .tag-choice { background:#e6f7ff; color:#1890ff;}
+        .tag-text { background:#f9f0ff; color:#722ed1;}
+        .opt-row { display:flex; align-items:center; gap:8px; margin-top:8px;}
+        .opt-row input[type=radio] { width:auto;}
+        .opt-letter { font-weight:700; width:18px;}
+        .ai-tip { font-size:12px; color:#999; background:#f5f7fa; border-radius:6px; padding:6px 10px; margin-top:8px;}
+        .feedback-ok { background:#f6ffed; border-left:4px solid #52c41a; padding:10px 14px; border-radius:6px; margin-top:10px; font-size:13px; line-height:1.8;}
+        .feedback-bad { background:#fff1f0; border-left:4px solid #ff4d4f; padding:10px 14px; border-radius:6px; margin-top:10px; font-size:13px; line-height:1.8;}
+        .feedback-info { background:#f0f5ff; border-left:4px solid #2f54eb; padding:10px 14px; border-radius:6px; margin-top:10px; font-size:13px; line-height:1.8;}
+        .score-box { text-align:right; font-size:15px; font-weight:700; color:#2f54eb; margin-top:14px;}
+        table { width:100%; border-collapse:collapse; font-size:13px; margin-top:8px;}
+        th, td { border-bottom:1px solid #f0f0f0; padding:9px 8px; text-align:left;}
+        th { background:#fafafa; color:#666; font-weight:600;}
+        .modal-mask {
+            position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:9999; display:flex;
+            justify-content:center; align-items:flex-start; padding:40px 16px; overflow-y:auto;
+        }
+        .modal-box { background:#fff; border-radius:14px; max-width:860px; width:100%; box-shadow:0 20px 50px rgba(0,0,0,.25);}
+        .modal-head { padding:16px 22px; border-bottom:1px solid #f0f0f0; display:flex; justify-content:space-between; align-items:center;}
+        .modal-body { padding:20px 22px; max-height:70vh; overflow-y:auto;}
+        .back-link { color:#2f54eb; cursor:pointer; font-size:14px; margin-bottom:14px; display:inline-block;}
+        .back-link:hover { text-decoration:underline;}
+        .stat-pills { display:flex; gap:10px; flex-wrap:wrap; margin:10px 0 4px;}
+        .pill { background:#f5f7fa; border-radius:8px; padding:8px 14px; font-size:13px;}
+        .pill b { font-size:16px; color:#2f54eb;}
+        .spinner {
+            width:38px;height:38px;border:4px solid #2f54eb22;border-top-color:#2f54eb;border-radius:50%;
+            animation:spin 1s linear infinite; margin:0 auto 14px;
+        }
+        @keyframes spin { to { transform:rotate(360deg);} }
+        .loading-wrap { text-align:center; padding:50px 20px; color:#2f54eb;}
+        .loading-wrap .hint { font-size:12px; color:#999; margin-top:8px;}
+
+        /* ============ 移动端适配 ============ */
+        @media (max-width: 768px) {
+            body { padding: 12px; }
+            .header { padding: 16px 18px; margin-bottom: 16px; border-radius: 10px; }
+            .header h1 { font-size: 19px; }
+            .header .sub { font-size: 12px; }
+            .nav-btn { padding: 8px 14px; font-size: 13px; }
+            .card { padding: 16px 14px; border-radius: 10px; }
+            .modal-mask { padding: 12px 10px; align-items: stretch; }
+            .modal-box { border-radius: 12px; }
+            .modal-head { padding: 14px 16px; }
+            .modal-body { padding: 16px; max-height: 80vh; }
+            .q-block { padding: 12px; }
+            .row-actions .btn { flex: 1 1 auto; }
+            table { display: block; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+        }
+        @media (max-width: 480px) {
+            body { padding: 8px; }
+            .header { padding: 14px; }
+            .header h1 { font-size: 17px; }
+            .card { padding: 14px 12px; }
+            .hw-title { font-size: 16px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div>
+            <h1 id="pageTitle">📒 我的作业</h1>
+            <div class="sub" id="pageSub">灵智尚人 · 通信工程智能学习平台</div>
+        </div>
+        <div style="display:flex;gap:10px;">
+            <a class="nav-btn" href="/" target="_top">🏠 返回首页</a>
+        </div>
+    </div>
+    <div id="app"></div>
+</div>
+
+<script>
+let currentUser = { role: 'student', student_name: '', class_name: '' };
+let classList = [];
+let homeworkCache = [];
+
+function esc(t) {
+    const d = document.createElement('div'); d.textContent = (t == null ? '' : String(t)); return d.innerHTML;
+}
+
+async function init() {
+    try {
+        const u = await (await fetch('/current-user')).json();
+        currentUser = u || currentUser;
+    } catch (e) {}
+    document.getElementById('pageTitle').textContent = currentUser.role === 'teacher' ? '📝 作业管理' : '📒 我的作业';
+    if (currentUser.role === 'teacher') {
+        try { classList = (await (await fetch('/api/classes')).json()).classes || classList; } catch (e) {}
+        await loadTeacherHomework();
+    } else {
+        await loadStudentHomework();
+    }
+}
+
+/* ====================== 学生端 ====================== */
+async function loadStudentHomework() {
+    const app = document.getElementById('app');
+    app.innerHTML = '<div class="loading-wrap"><div class="spinner"></div>加载作业中…</div>';
+    let list = [];
+    try {
+        const d = await (await fetch('/api/homework')).json();
+        if (!d.success) { app.innerHTML = '<div class="card empty">' + esc(d.error || '加载失败') + '</div>'; return; }
+        list = d.homework || [];
+    } catch (e) { app.innerHTML = '<div class="card empty">加载失败：' + esc(e.message) + '</div>'; return; }
+    homeworkCache = list;
+    if (!list.length) { app.innerHTML = '<div class="card empty">📭 老师还没有发布作业</div>'; return; }
+    app.innerHTML = list.map(hw => {
+        const sub = hw.my_submission;
+        const done = !!sub;
+        const badge = done
+            ? '<span class="badge badge-green">✅ 已提交 ' + esc(sub.submitted_at || '') + '</span>'
+            : '<span class="badge badge-orange">⏳ 未提交</span>';
+        const lateBadge = done && sub.late ? '<span class="badge badge-red">迟交</span>' : '';
+        const scoreBadge = done ? '<span class="badge badge-gray">得分：' + (sub.teacher_score_override != null ? esc(sub.teacher_score_override) : esc(sub.ai_score_total)) + '</span>' : '';
+        const attach = hw.attachment
+            ? '<div style="margin-top:8px;">📎 作业文件：<a href="/uploads/' + encodeURIComponent(hw.attachment.stored_filename) + '" download="' + esc(hw.attachment.filename) + '">' + esc(hw.attachment.filename) + '</a></div>' : '';
+        return '<div class="card">' +
+            '<div class="hw-title">' + esc(hw.title) + ' ' + badge + lateBadge + scoreBadge + '</div>' +
+            '<div class="hw-meta">' +
+                '📅 发布时间：' + esc(hw.created_at) + (hw.deadline ? '　⏰ 截止：' + esc(hw.deadline.replace('T',' ')) : '') + '<br>' +
+                (hw.description ? '📝 ' + esc(hw.description) : '') +
+                attach +
+            '</div>' +
+            '<div class="row-actions">' +
+                '<button class="btn btn-primary" onclick="openStudentHomework(' + hw.id + ')">' + (done ? '👁 查看作答与批改' : '✍️ 开始作答') + '</button>' +
+            '</div></div>';
+    }).join('');
+}
+
+function openStudentHomework(hwId) {
+    const hw = homeworkCache.find(h => h.id === hwId);
+    if (!hw) return;
+    const sub = hw.my_submission;
+    if (sub) { renderStudentResult(hw, sub, false); return; }
+    renderStudentAnswer(hw);
+}
+
+function renderStudentAnswer(hw) {
+    const app = document.getElementById('app');
+    const attach = hw.attachment
+        ? '<div class="feedback-info">📎 作业文件：<a href="/uploads/' + encodeURIComponent(hw.attachment.stored_filename) + '" download="' + esc(hw.attachment.filename) + '">' + esc(hw.attachment.filename) + '</a>（请先下载查看作业要求）</div>' : '';
+    const qHtml = hw.questions.map((q, i) => {
+        if (q.type === 'choice') {
+            const opts = Object.entries(q.options || {}).map(([k, v]) =>
+                '<label class="opt-row"><input type="radio" name="' + q.id + '" value="' + k + '"><span class="opt-letter">' + k + '.</span><span>' + esc(v) + '</span></label>'
+            ).join('');
+            return '<div class="q-block"><div class="q-head"><b>' + (i+1) + '. ' + esc(q.question) + '</b><span class="q-type-tag tag-choice">选择题 · ' + esc(q.score) + '分</span></div>' + opts + '</div>';
+        }
+        return '<div class="q-block"><div class="q-head"><b>' + (i+1) + '. ' + esc(q.question) + '</b><span class="q-type-tag tag-text">作答题 · ' + esc(q.score) + '分</span></div>' +
+            '<textarea id="ans_' + q.id + '" rows="5" placeholder="请在此输入你的作答…"></textarea></div>';
+    }).join('');
+    app.innerHTML =
+        '<span class="back-link" onclick="loadStudentHomework()">← 返回作业列表</span>' +
+        '<div class="card"><div class="hw-title">' + esc(hw.title) + '</div>' +
+            '<div class="hw-meta">⏰ 截止：' + (hw.deadline ? esc(hw.deadline.replace('T',' ')) : '不限') + '</div>' +
+            attach +
+            '<div style="margin-top:14px;">' + qHtml + '</div>' +
+            '<div class="ai-tip">💡 提交后选择题立即判分，作答题由 AI 依据参考答案批改，请耐心等待。</div>' +
+            '<div class="row-actions"><button class="btn btn-primary" id="submitBtn" onclick="submitHomework(' + hw.id + ')">✅ 提交作业</button></div>' +
+        '</div>';
+}
+
+async function submitHomework(hwId) {
+    const hw = homeworkCache.find(h => h.id === hwId);
+    if (!hw) return;
+    const answers = {};
+    for (const q of hw.questions) {
+        if (q.type === 'choice') {
+            const sel = document.querySelector('input[name="' + q.id + '"]:checked');
+            answers[q.id] = sel ? sel.value : '';
+        } else {
+            const el = document.getElementById('ans_' + q.id);
+            answers[q.id] = el ? el.value.trim() : '';
+        }
+    }
+    if (!confirm('确认提交作业？提交后可重新作答（将覆盖原提交）。')) return;
+    const app = document.getElementById('app');
+    app.innerHTML = '<div class="card"><div class="loading-wrap"><div class="spinner"></div><div>AI 正在批改主观题，请稍候…</div><div class="hint">通常需要 10-60 秒，请勿关闭页面</div></div></div>';
+    try {
+        const resp = await fetch('/api/homework/' + hwId + '/submit', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ answers })
+        });
+        const d = await resp.json();
+        if (!d.success) { app.innerHTML = '<div class="card"><span class="back-link" onclick="loadStudentHomework()">← 返回</span><div class="feedback-bad">❌ ' + esc(d.error || '提交失败') + '</div></div>'; return; }
+        // 用返回的完整作业+提交记录渲染结果
+        d.homework.my_submission = d.submission;
+        const idx = homeworkCache.findIndex(h => h.id === hwId);
+        if (idx >= 0) homeworkCache[idx] = d.homework;
+        renderStudentResult(d.homework, d.submission, true);
+    } catch (e) {
+        app.innerHTML = '<div class="card"><span class="back-link" onclick="loadStudentHomework()">← 返回</span><div class="feedback-bad">❌ 网络错误：' + esc(e.message) + '</div></div>';
+    }
+}
+
+function renderStudentResult(hw, sub, justSubmitted) {
+    const app = document.getElementById('app');
+    const totalScore = sub.teacher_score_override != null ? sub.teacher_score_override : sub.ai_score_total;
+    const qHtml = hw.questions.map((q, i) => {
+        const a = sub.answers[q.id] || {};
+        if (q.type === 'choice') {
+            const ok = a.is_correct;
+            return '<div class="q-block"><div class="q-head"><b>' + (i+1) + '. ' + esc(q.question) + '</b><span class="q-type-tag tag-choice">选择题</span></div>' +
+                '<div style="font-size:14px;line-height:1.9;">你的答案：<b>' + esc(a.answer || '未作答') + '</b>　正确答案：<b style="color:#52c41a;">' + esc(q.answer) + '</b>　得分：<b>' + esc(a.score) + '</b>/' + esc(q.score) + '</div>' +
+                (ok ? '<div class="feedback-ok">✅ 回答正确' + (q.analysis ? '。' + esc(q.analysis) : '') + '</div>'
+                      : '<div class="feedback-bad">❌ 回答错误' + (q.analysis ? '。解析：' + esc(q.analysis) : '') + '</div>') +
+                '</div>';
+        }
+        return '<div class="q-block"><div class="q-head"><b>' + (i+1) + '. ' + esc(q.question) + '</b><span class="q-type-tag tag-text">作答题 · ' + esc(a.score) + '/' + esc(q.score) + '分</span></div>' +
+            '<div class="feedback-info">📝 你的作答：<br>' + esc(a.answer || '（未作答）').replace(/\n/g,'<br>') + '</div>' +
+            '<div class="feedback-ok">📖 参考答案：<br>' + esc(q.reference_answer || '（老师未提供）').replace(/\n/g,'<br>') + '</div>' +
+            '<div class="feedback-info">🤖 AI 批改：' + esc(a.ai_feedback || '') + '<br><span style="color:#999;font-size:12px;">✨ AI 批改结果仅供参考</span></div>' +
+            '</div>';
+    }).join('');
+    const teacherComment = sub.teacher_comment
+        ? '<div class="feedback-ok">👩‍🏫 <b>老师评语：</b>' + esc(sub.teacher_comment).replace(/\n/g,'<br>') + '</div>' : '';
+    app.innerHTML =
+        '<span class="back-link" onclick="loadStudentHomework()">← 返回作业列表</span>' +
+        '<div class="card"><div class="hw-title">' + esc(hw.title) +
+            (justSubmitted ? '<span class="badge badge-green">🎉 提交成功</span>' : '<span class="badge badge-green">已提交 ' + esc(sub.submitted_at) + '</span>') +
+            (sub.late ? '<span class="badge badge-red">迟交</span>' : '') +
+        '</div>' + qHtml + teacherComment +
+        '<div class="score-box">总分：' + esc(totalScore) + ' / ' + hw.questions.reduce((s,q)=>s+(q.score||0),0) + '</div>' +
+        '<div class="row-actions"><button class="btn btn-plain" onclick="reAnswerHomework(' + hw.id + ')">🔄 重新作答（覆盖提交）</button></div>' +
+        '</div>';
+}
+function reAnswerHomework(hwId) {
+    const hw = homeworkCache.find(h => h.id === hwId);
+    if (hw) renderStudentAnswer(hw);
+}
+
+/* ====================== 教师端 ====================== */
+async function loadTeacherHomework() {
+    const app = document.getElementById('app');
+    app.innerHTML = '<div class="loading-wrap"><div class="spinner"></div>加载作业中…</div>';
+    let list = [];
+    try {
+        const d = await (await fetch('/api/homework')).json();
+        if (!d.success) { app.innerHTML = '<div class="card empty">' + esc(d.error) + '</div>'; return; }
+        list = d.homework || [];
+    } catch (e) { app.innerHTML = '<div class="card empty">加载失败：' + esc(e.message) + '</div>'; return; }
+    homeworkCache = list;
+    const cards = list.length ? list.map(hw => {
+        const classPills = (hw.class_names || []).map(c => '<span class="badge badge-gray">' + esc(c) + '班</span>').join(' ');
+        const avg = hw.avg_score == null ? '—' : hw.avg_score;
+        const attach = hw.attachment ? '　📎 ' + esc(hw.attachment.filename) : '';
+        return '<div class="card">' +
+            '<div class="hw-title">' + esc(hw.title) + ' ' + classPills + '</div>' +
+            '<div class="hw-meta">📅 ' + esc(hw.created_at) + (hw.deadline ? '　⏰ 截止 ' + esc(hw.deadline.replace('T',' ')) : '') + attach + '<br>' +
+                '题目数：' + (hw.questions||[]).length + '（选择 ' + hw.questions.filter(q=>q.type==='choice').length + ' / 作答 ' + hw.questions.filter(q=>q.type==='text').length + '）' +
+                '　已交：<b>' + hw.submitted_count + '</b>/' + hw.total_students + '　平均分：' + avg + '</div>' +
+            '<div class="row-actions">' +
+                '<button class="btn btn-primary btn-sm" onclick="viewSubmissions(' + hw.id + ')">📊 完成情况 / 批改</button>' +
+            '</div></div>';
+    }).join('') : '<div class="card empty">还没有发布过作业</div>';
+    app.innerHTML =
+        '<div style="margin-bottom:16px;"><button class="btn btn-primary" onclick="showPublishForm()">➕ 发布新作业</button></div>' +
+        cards;
+}
+
+let qCounter = 0;
+function showPublishForm() {
+    qCounter = 0;
+    const app = document.getElementById('app');
+    const classChecks = classList.map(c =>
+        '<label><input type="checkbox" name="hwClass" value="' + esc(c.name) + '"> ' + esc(c.name) + '班</label>'
+    ).join('') || '<span style="color:#ff4d4f;font-size:13px;">暂无班级，请先在班级管理中创建</span>';
+    app.innerHTML =
+        '<span class="back-link" onclick="loadTeacherHomework()">← 返回作业列表</span>' +
+        '<div class="card"><div class="hw-title">➕ 发布新作业</div>' +
+        '<label class="fld">作业标题 *</label><input type="text" id="fTitle" placeholder="如：5G物理层第一次作业">' +
+        '<label class="fld">作业说明</label><textarea id="fDesc" rows="2" placeholder="本次作业的总体要求（可选）"></textarea>' +
+        '<label class="fld">发布给哪些班级 *</label><div class="class-checks" id="fClasses">' + classChecks + '</div>' +
+        '<label class="fld">截止时间（可选）</label><input type="datetime-local" id="fDeadline" style="max-width:260px;">' +
+        '<label class="fld">作业文件附件（可选，Word/PPT/PDF/TXT）</label><input type="file" id="fFile">' +
+        '<label class="fld">在线题目 *</label>' +
+        '<div id="qList"></div>' +
+        '<div style="display:flex;gap:10px;margin:6px 0 4px;">' +
+            '<button class="btn btn-plain btn-sm" onclick="addQuestion(\'choice\')">➕ 选择题</button>' +
+            '<button class="btn btn-plain btn-sm" onclick="addQuestion(\'text\')">➕ 作答题</button>' +
+        '</div>' +
+        '<div id="pubErr" class="feedback-bad" style="display:none;margin-top:12px;"></div>' +
+        '<div class="row-actions"><button class="btn btn-primary" id="pubBtn" onclick="submitPublish()">📤 发布作业</button></div>' +
+        '</div>';
+    addQuestion('choice');
+}
+
+function addQuestion(type) {
+    qCounter++;
+    const qid = 'qf_' + qCounter;
+    const wrap = document.createElement('div');
+    wrap.className = 'q-block';
+    wrap.id = qid;
+    if (type === 'choice') {
+        wrap.innerHTML =
+            '<div class="q-head"><span class="q-type-tag tag-choice">选择题</span><button class="btn btn-danger btn-sm" onclick="document.getElementById(\'' + qid + '\').remove()">删除</button></div>' +
+            '<label class="fld">题干 *</label><input type="text" class="f-question">' +
+            '<label class="fld">选项（至少填2项）与正确答案 *</label>' +
+            ['A','B','C','D'].map(k =>
+                '<div class="opt-row"><input type="radio" class="f-correct" name="cor_' + qid + '" value="' + k + '"><span class="opt-letter">' + k + '.</span><input type="text" class="f-opt" data-key="' + k + '" style="flex:1;" placeholder="选项' + k + '"></div>'
+            ).join('') +
+            '<label class="fld">解析（可选）</label><input type="text" class="f-analysis" placeholder="提交后展示给学生的解析">' +
+            '<label class="fld">分值</label><input type="number" class="f-score" value="5" min="0" style="max-width:120px;">' +
+            '<label class="fld">关联能力维度（可选，用于岗位匹配）</label><select class="f-cdim" style="max-width:200px;"><option value="">不关联</option><option value="signal_system">信号与系统</option><option value="communication_principle">通信原理</option><option value="digital_signal">数字信号处理</option><option value="network_protocol">网络协议</option><option value="modulation">调制技术</option><option value="rf_engineering">射频工程</option><option value="antenna_design">天线设计</option><option value="troubleshooting">故障排查</option><option value="equipment_operation">设备操作</option><option value="safety_awareness">安全意识</option><option value="innovation">创新思维</option><option value="teamwork">团队协作</option></select>';
+    } else {
+        wrap.innerHTML =
+            '<div class="q-head"><span class="q-type-tag tag-text">作答题</span><button class="btn btn-danger btn-sm" onclick="document.getElementById(\'' + qid + '\').remove()">删除</button></div>' +
+            '<label class="fld">题干 *</label><input type="text" class="f-question">' +
+            '<label class="fld">参考答案 *（AI 将依据它批改）</label><textarea class="f-reference" rows="3"></textarea>' +
+            '<label class="fld">分值</label><input type="number" class="f-score" value="10" min="0" style="max-width:120px;">' +
+            '<label class="fld">关联能力维度（可选，用于岗位匹配）</label><select class="f-cdim" style="max-width:200px;"><option value="">不关联</option><option value="signal_system">信号与系统</option><option value="communication_principle">通信原理</option><option value="digital_signal">数字信号处理</option><option value="network_protocol">网络协议</option><option value="modulation">调制技术</option><option value="rf_engineering">射频工程</option><option value="antenna_design">天线设计</option><option value="troubleshooting">故障排查</option><option value="equipment_operation">设备操作</option><option value="safety_awareness">安全意识</option><option value="innovation">创新思维</option><option value="teamwork">团队协作</option></select>';
+    }
+    wrap.dataset.type = type;
+    document.getElementById('qList').appendChild(wrap);
+}
+
+async function submitPublish() {
+    const errEl = document.getElementById('pubErr');
+    errEl.style.display = 'none';
+    const title = document.getElementById('fTitle').value.trim();
+    const description = document.getElementById('fDesc').value.trim();
+    const deadline = document.getElementById('fDeadline').value;
+    const class_names = Array.from(document.querySelectorAll('#fClasses input:checked')).map(i => i.value);
+    if (!title) return showPubErr('请填写作业标题');
+    if (!class_names.length) return showPubErr('请至少选择一个班级');
+
+    const questions = [];
+    const blocks = document.querySelectorAll('#qList .q-block');
+    if (!blocks.length) return showPubErr('请至少添加一道题目');
+    for (const b of blocks) {
+        const type = b.dataset.type;
+        const question = b.querySelector('.f-question').value.trim();
+        if (!question) return showPubErr('存在未填写题干的题目');
+        const score = parseFloat(b.querySelector('.f-score').value) || 0;
+        if (type === 'choice') {
+            const options = {};
+            b.querySelectorAll('.f-opt').forEach(i => { if (i.value.trim()) options[i.dataset.key] = i.value.trim(); });
+            if (Object.keys(options).length < 2) return showPubErr('选择题至少需要2个有效选项');
+            const corr = b.querySelector('.f-correct:checked');
+            if (!corr) return showPubErr('每道选择题都要选择正确答案');
+            if (!options[corr.value]) return showPubErr('正确答案对应的选项不能为空');
+            questions.push({ type, question, options, answer: corr.value,
+                analysis: b.querySelector('.f-analysis').value.trim(), score,
+                competence_dim: b.querySelector('.f-cdim').value });
+        } else {
+            const reference_answer = b.querySelector('.f-reference').value.trim();
+            if (!reference_answer) return showPubErr('作答题必须填写参考答案（AI 据此批改）');
+            questions.push({ type, question, reference_answer, score,
+                competence_dim: b.querySelector('.f-cdim').value });
+        }
+    }
+
+    const fd = new FormData();
+    fd.append('title', title);
+    fd.append('description', description);
+    fd.append('deadline', deadline);
+    fd.append('class_names', JSON.stringify(class_names));
+    fd.append('questions', JSON.stringify(questions));
+    const f = document.getElementById('fFile').files[0];
+    if (f) fd.append('file', f);
+
+    const btn = document.getElementById('pubBtn');
+    btn.disabled = true; btn.textContent = '发布中…';
+    try {
+        const resp = await fetch('/api/homework', { method: 'POST', body: fd });
+        const d = await resp.json();
+        if (!d.success) { btn.disabled = false; btn.textContent = '📤 发布作业'; return showPubErr(d.error || '发布失败'); }
+        await loadTeacherHomework();
+    } catch (e) {
+        btn.disabled = false; btn.textContent = '📤 发布作业'; showPubErr('网络错误：' + e.message);
+    }
+}
+function showPubErr(msg) {
+    const el = document.getElementById('pubErr');
+    el.textContent = '❌ ' + msg; el.style.display = 'block';
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+async function viewSubmissions(hwId) {
+    const app = document.getElementById('app');
+    app.innerHTML = '<div class="loading-wrap"><div class="spinner"></div>加载完成情况…</div>';
+    let d;
+    try {
+        d = await (await fetch('/api/homework/' + hwId + '/submissions')).json();
+    } catch (e) { app.innerHTML = '<div class="card empty">加载失败</div>'; return; }
+    if (!d.success) { app.innerHTML = '<div class="card empty">' + esc(d.error) + '</div>'; return; }
+    const hw = d.homework, roster = d.roster || [];
+    const submitted = roster.filter(r => r.submitted);
+    const unsubmitted = roster.filter(r => !r.submitted);
+
+    // 按班分组统计
+    const classStats = (hw.class_names || []).map(cn => {
+        const members = roster.filter(r => r.class_name === cn);
+        const sub = members.filter(r => r.submitted);
+        return '<div class="pill">' + esc(cn) + '班：<b>' + sub.length + '/' + members.length + '</b> 已交</div>';
+    }).join('');
+
+    const rows = roster.map(r => {
+        const action = r.submitted
+            ? '<button class="btn btn-primary btn-sm" onclick="viewStudentSubmission(' + hw.id + ',\'' + esc(r.student_no) + '\')">📝 查看批改</button>'
+            : '<span class="badge badge-gray">未提交</span>';
+        const score = r.submitted ? (r.score == null ? '—' : r.score) : '—';
+        const late = r.submitted && r.late ? ' <span class="badge badge-red">迟交</span>' : '';
+        const cmt = r.has_teacher_comment ? ' <span class="badge badge-green">已评</span>' : '';
+        return '<tr><td>' + esc(r.class_name) + '</td><td>' + esc(r.student_name || '') + '</td><td>' + esc(r.student_no || '') + '</td>' +
+            '<td>' + (r.submitted ? '✅ ' + esc(r.submitted_at) + late + cmt : '<span style="color:#fa8c16;">未提交</span>') + '</td>' +
+            '<td><b>' + score + '</b></td><td>' + action + '</td></tr>';
+    }).join('');
+
+    app.innerHTML =
+        '<span class="back-link" onclick="loadTeacherHomework()">← 返回作业列表</span>' +
+        '<div class="card"><div class="hw-title">📊 ' + esc(hw.title) + '</div>' +
+        '<div class="stat-pills">' +
+            '<div class="pill">总人数：<b>' + roster.length + '</b></div>' +
+            '<div class="pill">已交：<b>' + submitted.length + '</b></div>' +
+            '<div class="pill">未交：<b>' + unsubmitted.length + '</b></div>' +
+        '</div>' +
+        '<div class="stat-pills">' + classStats + '</div>' +
+        (unsubmitted.length ? '<div class="feedback-bad" style="margin-top:12px;">⚠️ 未交学生：' + esc(unsubmitted.map(u=>u.student_name||u.student_no).join('、')) + '</div>' : '<div class="feedback-ok" style="margin-top:12px;">🎉 全员已提交</div>') +
+        '<table><thead><tr><th>班级</th><th>姓名</th><th>学号</th><th>提交情况</th><th>得分</th><th>操作</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+        '</div>';
+}
+
+async function viewStudentSubmission(hwId, studentNo) {
+    let d;
+    try {
+        d = await (await fetch('/api/homework/' + hwId + '/submission/' + encodeURIComponent(studentNo))).json();
+    } catch (e) { alert('加载失败'); return; }
+    if (!d.success) { alert(d.error || '加载失败'); return; }
+    const hw = d.homework, sub = d.submission;
+    const totalScore = sub.teacher_score_override != null ? sub.teacher_score_override : sub.ai_score_total;
+    const maxScore = hw.questions.reduce((s,q)=>s+(q.score||0),0);
+    const qHtml = hw.questions.map((q,i) => {
+        const a = sub.answers[q.id] || {};
+        if (q.type === 'choice') {
+            return '<div class="q-block"><div class="q-head"><b>' + (i+1) + '. ' + esc(q.question) + '</b><span class="q-type-tag tag-choice">选择题 ' + esc(a.score) + '/' + esc(q.score) + '</span></div>' +
+                '<div style="font-size:14px;line-height:1.9;">学生答案：<b style="color:' + (a.is_correct?'#52c41a':'#ff4d4f') + '">' + esc(a.answer||'未作答') + '</b>　正确答案：<b>' + esc(q.answer) + '</b> ' +
+                (a.is_correct ? '✅' : '❌') + '</div>' +
+                (q.analysis ? '<div class="ai-tip">解析：' + esc(q.analysis) + '</div>' : '') + '</div>';
+        }
+        return '<div class="q-block"><div class="q-head"><b>' + (i+1) + '. ' + esc(q.question) + '</b><span class="q-type-tag tag-text">作答题 ' + esc(a.score) + '/' + esc(q.score) + '</span></div>' +
+            '<div class="feedback-info">📝 学生作答：<br>' + esc(a.answer||'（未作答）').replace(/\n/g,'<br>') + '</div>' +
+            '<div class="feedback-ok">📖 参考答案：<br>' + esc(q.reference_answer||'').replace(/\n/g,'<br>') + '</div>' +
+            '<div class="feedback-info">🤖 AI 批改：' + esc(a.ai_feedback||'') + ' <span style="color:#999;font-size:12px;">✨ AI 批改结果仅供参考</span></div></div>';
+    }).join('');
+
+    const mask = document.createElement('div');
+    mask.className = 'modal-mask';
+    mask.onclick = e => { if (e.target === mask) mask.remove(); };
+    mask.innerHTML =
+        '<div class="modal-box"><div class="modal-head"><b>' + esc(sub.student_name) + ' 的作答（' + esc(sub.class_name) + '班 · ' + esc(sub.submitted_at) + (sub.late?' · 迟交':'') + '）</b>' +
+            '<button class="btn btn-plain btn-sm" onclick="this.closest(\'.modal-mask\').remove()">关闭</button></div>' +
+        '<div class="modal-body">' + qHtml +
+            '<label class="fld">总分（AI/自动判定：' + esc(sub.ai_score_total) + '，可覆盖）</label>' +
+            '<input type="number" id="tOverride" min="0" max="' + maxScore + '" value="' + (sub.teacher_score_override != null ? esc(sub.teacher_score_override) : '') + '" placeholder="不填则用 AI 总分" style="max-width:200px;">' +
+            '<label class="fld">教师批改建议 / 评语</label>' +
+            '<textarea id="tComment" rows="3" placeholder="给学生的总体反馈…">' + esc(sub.teacher_comment||'') + '</textarea>' +
+            '<div class="row-actions"><button class="btn btn-primary" id="saveCmtBtn" onclick="saveTeacherComment(' + sub.id + ')">💾 保存批改</button>' +
+            '<span style="align-self:center;font-size:14px;color:#666;">当前总分：<b id="curTotal" style="color:#2f54eb;">' + esc(totalScore) + '</b> / ' + maxScore + '</span></div>' +
+        '</div></div>';
+    document.body.appendChild(mask);
+}
+
+async function saveTeacherComment(subId) {
+    const comment = document.getElementById('tComment').value.trim();
+    const override = document.getElementById('tOverride').value.trim();
+    const btn = document.getElementById('saveCmtBtn');
+    btn.disabled = true; btn.textContent = '保存中…';
+    try {
+        const resp = await fetch('/api/homework/submission/' + subId + '/comment', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ teacher_comment: comment, teacher_score_override: override === '' ? null : parseFloat(override) })
+        });
+        const d = await resp.json();
+        if (!d.success) { alert(d.error || '保存失败'); btn.disabled = false; btn.textContent = '💾 保存批改'; return; }
+        btn.textContent = '✅ 已保存';
+        document.getElementById('curTotal').textContent = d.submission.teacher_score_override != null ? d.submission.teacher_score_override : d.submission.ai_score_total;
+        setTimeout(() => {
+            document.querySelector('.modal-mask')?.remove();
+            // 刷新当前完成情况页（从缓存取hw id）
+            if (homeworkCache.length) { /* 保持简单：刷新名单需重新进入 */ loadTeacherHomework(); }
+        }, 700);
+    } catch (e) { alert('网络错误：' + e.message); btn.disabled = false; btn.textContent = '💾 保存批改'; }
+}
+
+init();
+</script>
+</body>
+</html>

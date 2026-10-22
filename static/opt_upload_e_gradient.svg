@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 170" width="480" height="170">
+  <defs>
+    <linearGradient id="gu" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#667eea"/>
+      <stop offset="1" stop-color="#764ba2"/>
+    </linearGradient>
+  </defs>
+  <rect width="480" height="170" fill="#0a0e1a" rx="12"/>
+  <text x="24" y="30" fill="#E5E5E5" font-family="system-ui,'PingFang SC',sans-serif" font-size="15" font-weight="500">方案 E · 品牌渐变实心按钮</text>
+  <text x="24" y="50" fill="#6b7a99" font-family="system-ui,'PingFang SC',sans-serif" font-size="11">与发送按钮同族渐变，视觉存在感最强</text>
+  <rect x="24" y="70" width="432" height="48" rx="10" fill="#0f1a3a"/>
+  <rect x="36" y="77" width="36" height="36" rx="10" fill="url(#gu)" opacity=".92"/>
+  <g transform="translate(46,88)" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="0" y="2" width="15" height="12" rx="2"/>
+    <circle cx="4.5" cy="6" r="1.5"/>
+    <path d="M1 12 L5.5 7.5 L8.5 10 L11.5 7.5 L15 11"/>
+  </g>
+  <text x="86" y="98" fill="#4a5a8a" font-family="system-ui,'PingFang SC',sans-serif" font-size="13">请输入你的问题...</text>
+  <rect x="396" y="79" width="56" height="30" rx="8" fill="url(#gu)"/>
+  <text x="424" y="98" fill="#fff" font-family="system-ui,'PingFang SC',sans-serif" font-size="13" font-weight="500" text-anchor="middle">发送</text>
+  <text x="24" y="150" fill="#3d4d6e" font-family="system-ui,'PingFang SC',sans-serif" font-size="10">悬停时微微上浮 + 投影加深，已选图后按钮上叠加小缩略角标</text>
+</svg>

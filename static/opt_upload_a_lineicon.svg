@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 170" width="480" height="170">
+  <rect width="480" height="170" fill="#0a0e1a" rx="12"/>
+  <text x="24" y="30" fill="#E5E5E5" font-family="system-ui,'PingFang SC',sans-serif" font-size="15" font-weight="500">方案 A · 线性 SVG 图标</text>
+  <text x="24" y="50" fill="#6b7a99" font-family="system-ui,'PingFang SC',sans-serif" font-size="11">替换 emoji 为矢量图标，任何系统渲染一致</text>
+  <!-- 模拟输入栏 -->
+  <rect x="24" y="70" width="432" height="48" rx="10" fill="#0f1a3a"/>
+  <!-- ghost 图标按钮 -->
+  <rect x="36" y="78" width="32" height="32" rx="8" fill="transparent" stroke="rgba(255,255,255,.15)" stroke-width="1"/>
+  <g transform="translate(44,86)" stroke="#8fa3cc" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="0" y="2" width="16" height="13" rx="2"/>
+    <circle cx="5" cy="6.5" r="1.6"/>
+    <path d="M1 13 L6 8 L9.5 11 L12.5 8.5 L16 12"/>
+  </g>
+  <text x="80" y="98" fill="#4a5a8a" font-family="system-ui,'PingFang SC',sans-serif" font-size="13">请输入你的问题...</text>
+  <rect x="396" y="79" width="56" height="30" rx="8" fill="#667eea"/>
+  <text x="424" y="98" fill="#fff" font-family="system-ui,'PingFang SC',sans-serif" font-size="13" font-weight="500" text-anchor="middle">发送</text>
+  <text x="24" y="150" fill="#3d4d6e" font-family="system-ui,'PingFang SC',sans-serif" font-size="10">悬停时图标变亮 + 显示"上传图片"气泡提示</text>
+</svg>

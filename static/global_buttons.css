@@ -1,0 +1,200 @@
+/* ========================================================
+   全局按钮美化 · Global Button Beautifier v2（修复版）
+   ✅ 只动按钮样式，不碰容器/卡片/背景
+   ✅ 每条规则都带更高优先级类名，避免误伤
+   ======================================================== */
+
+/* ---------- 基础 reset（仅限 button/按钮，不碰容器） ---------- */
+button, [role="button"] {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    letter-spacing: 0.2px;
+}
+
+/* ---------- Active 按压反馈 ---------- */
+button:active {
+    transform: translateY(1px) scale(0.98);
+}
+
+/* ---------- 滚动条（不影响布局，安全） ---------- */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: rgba(102,126,234,0.05); border-radius: 4px; }
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #667eea, #764ba2);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #5a6fd8, #6a4190); }
+
+/* ---------- Modal 弹窗按钮（最安全：类名精确） ---------- */
+.modal-btn, .btn-modal, [class*="modal-btn"] {
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    transition: all 0.2s !important;
+}
+.modal-btn.primary, .modal-btn.confirm,
+.btn-modal.primary, [class*="modal-btn"].primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: #fff !important;
+    border: none !important;
+    box-shadow: 0 2px 8px rgba(102,126,234,0.3);
+}
+.modal-btn.primary:hover, .modal-btn.confirm:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(102,126,234,0.5) !important;
+}
+.modal-btn.cancel, .modal-btn.secondary,
+.btn-modal.cancel, [class*="modal-btn"].cancel {
+    background: rgba(255,255,255,0.8) !important;
+    color: #4a5a8a !important;
+    border: 1.5px solid rgba(102,126,234,0.25) !important;
+}
+.modal-btn.cancel:hover {
+    background: rgba(102,126,234,0.08) !important;
+    border-color: #667eea !important;
+}
+
+/* ---------- Send Button（发送按钮，精确类名） ---------- */
+.send-btn, .btn-send, [class*="send-btn"] {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: #fff !important;
+    border: none !important;
+    border-radius: 12px !important;
+    padding: 12px 28px !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 8px rgba(102,126,234,0.3);
+    transition: all 0.2s !important;
+}
+.send-btn:hover:not(:disabled), .btn-send:hover:not(:disabled),
+[class*="send-btn"]:hover:not(:disabled) {
+    box-shadow: 0 6px 18px rgba(102,126,234,0.5) !important;
+    transform: translateY(-2px);
+}
+.send-btn:disabled, [class*="send-btn"]:disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* ---------- Mode Button（快速/深度思考，精确类名） ---------- */
+.mode-btn, [class*="mode-btn"] {
+    background: rgba(255,255,255,0.7) !important;
+    border: 2px solid rgba(102,126,234,0.25) !important;
+    border-radius: 20px !important;
+    padding: 8px 20px !important;
+    color: #4a5a8a !important;
+    font-weight: 500 !important;
+    transition: all 0.2s !important;
+}
+.mode-btn:hover, [class*="mode-btn"]:hover {
+    border-color: #667eea !important;
+    color: #667eea !important;
+    background: rgba(255,255,255,0.9) !important;
+    transform: translateY(-1px);
+}
+.mode-btn.active, [class*="mode-btn"].active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    border-color: transparent !important;
+    color: #fff !important;
+    box-shadow: 0 4px 12px rgba(102,126,234,0.4) !important;
+}
+
+/* ---------- Nav Button（导航按钮，精确类名） ---------- */
+.nav-btn, .nav-button, [class*="nav-btn"], [class*="nav-item-btn"] {
+    background: rgba(255,255,255,0.7) !important;
+    border: 1.5px solid rgba(102,126,234,0.2) !important;
+    border-radius: 12px !important;
+    padding: 10px 18px !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: #3a4a7a !important;
+    transition: all 0.2s !important;
+}
+.nav-btn:hover, .nav-button:hover,
+[class*="nav-btn"]:hover, [class*="nav-item-btn"]:hover {
+    background: rgba(102,126,234,0.08) !important;
+    border-color: #667eea !important;
+    color: #667eea !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(102,126,234,0.25) !important;
+}
+.nav-btn.active, [class*="nav-btn"].active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: #fff !important;
+    border-color: transparent !important;
+    box-shadow: 0 4px 14px rgba(102,126,234,0.4) !important;
+}
+
+/* ---------- Upload Button（上传按钮） ---------- */
+.upload-btn, .image-upload-btn, [class*="upload-btn"] {
+    background: rgba(255,255,255,0.7) !important;
+    border: 1.5px solid rgba(102,126,234,0.2) !important;
+    border-radius: 10px !important;
+    color: #667eea !important;
+    transition: all 0.2s !important;
+}
+.upload-btn:hover, [class*="upload-btn"]:hover {
+    background: rgba(102,126,234,0.1) !important;
+    border-color: #667eea !important;
+    transform: translateY(-1px);
+}
+
+/* ---------- Back/Cancel Button（返回/取消） ---------- */
+.btn-back, .btn-cancel, [class*="btn-back"], [class*="btn-cancel"],
+button[class*="back"], button[class*="cancel"] {
+    background: rgba(255,255,255,0.7) !important;
+    color: #667eea !important;
+    border: 1.5px solid rgba(102,126,234,0.3) !important;
+    border-radius: 10px !important;
+    font-weight: 500 !important;
+    transition: all 0.2s !important;
+}
+.btn-back:hover, .btn-cancel:hover,
+button[class*="back"]:hover, button[class*="cancel"]:hover {
+    background: rgba(102,126,234,0.08) !important;
+    border-color: #667eea !important;
+    transform: translateY(-1px);
+}
+
+/* ---------- Danger Button（危险操作） ---------- */
+.btn-danger, .btn-delete, [class*="btn-danger"], [class*="btn-delete"],
+button[class*="danger"], button[class*="delete"] {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%) !important;
+    color: #fff !important;
+    border: none !important;
+    border-radius: 10px !important;
+    box-shadow: 0 2px 8px rgba(255,107,107,0.25);
+    transition: all 0.2s !important;
+}
+.btn-danger:hover, .btn-delete:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(255,107,107,0.45) !important;
+}
+
+/* ---------- Tab / Chip ---------- */
+.tab, [class*="tab-"], [class*="-tab"],
+.chip, [class*="chip"], [class*="tag"] {
+    border-radius: 16px !important;
+    border: 1.5px solid rgba(102,126,234,0.2) !important;
+    background: rgba(255,255,255,0.6) !important;
+    padding: 6px 14px !important;
+    font-size: 13px !important;
+    color: #4a5a8a !important;
+    cursor: pointer;
+    transition: all 0.2s !important;
+}
+.tab:hover, [class*="tab-"]:hover, [class*="-tab"]:hover {
+    border-color: #667eea !important;
+    color: #667eea !important;
+    background: rgba(102,126,234,0.06) !important;
+}
+.tab.active, [class*="tab-"].active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: #fff !important;
+    border-color: transparent !important;
+}
+
+/* ---------- 统一焦点环（无障碍） ---------- */
+button:focus-visible, [role="button"]:focus-visible {
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(102,126,234,0.35) !important;
+}
