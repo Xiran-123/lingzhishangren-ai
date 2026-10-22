@@ -814,7 +814,7 @@ const STATION = {
 };
 
 const TASKS = [
-    { t: '接到单站验证通知', s: '核对基站基础参数' },
+    { t: '接到单站验证通知', s: '阅读任务通知与基站资料' },
     { t: '设备状态检查', s: '主设备 / 天馈 / 传输 / 告警' },
     { t: '挑选外场测试工具', s: '外场工具选型' },
     { t: '预约司机并规划路线', s: '导航至实训基站' },
@@ -831,7 +831,7 @@ const DEFAULT = () => ({
     done: [false, false, false, false, false, false, false, false],
     score: [0, 0, 0, 0, 0, 0, 0, 0],
     d: {
-        t1: { checked: [] },
+        t1: { agreed: false },
         t2: { open: '', alarms: [true, true, false], dev: { main: '', ant: '', trans: '' }, note: '' },
         t3: { tools: [], lastErr: [], penalty: 0, passed: false },
         t4: { from: '实训中心（创新路8号）', lng: '114.4021', lat: '38.0201', driver: '', routed: false },
@@ -982,29 +982,24 @@ const PARAM_LABEL = {
 };
 
 function t1() {
-    const ck = S.d['t1'].checked || [];
     const rows = Object.keys(PARAM_LABEL).map(k => {
-        const isKey = KEY_PARAMS.includes(k);
-        const on = ck.includes(k);
         const val = k === 'lng' ? STATION.lng : k === 'lat' ? STATION.lat : STATION[k];
-        return `<div class="kv-item ${on ? 'ok' : ''}">
+        return `<div class="kv-item">
             <span>${PARAM_LABEL[k]}</span>
             <b>${esc(val)}</b>
-            ${isKey ? `<button class="btn sm ${on ? '' : 'ghost'}" style="margin-left:6px" onclick="t1check('${k}')">${on ? '已核对' : '核对'}</button>` : ''}
         </div>`;
     }).join('');
 
-    const allDone = ck.length >= KEY_PARAMS.length;
     const agreed = !!S.d['t1'].agreed;
-    const boxCls = agreed ? 'on' : (allDone ? 'ready' : 'locked');
+    const boxCls = agreed ? 'on' : 'ready';
     const boxTxt = agreed
-        ? '已阅读任务通知，基站参数核对无误'
-        : (allDone ? '点击确认：已阅读任务通知，基站参数核对无误' : '请先完成上方 6 项关键参数核对');
+        ? '已阅读任务通知，知悉全部基站参数'
+        : '点击确认：我已阅读任务通知，知悉上述基站参数';
 
     return head('任务 1 · 接到单站验证通知',
-        `<p><b>任务描述：</b>接收下发的单站验证任务通知，阅读实训基站基础资料，核对基站参数信息。</p>
-         <p><b>操作动作：</b>打开通知，逐项核对基站名称、标识、频点、PCI、经纬度、挂高等关键参数。</p>
-         <p><b>完成判定：</b>6 项关键参数核对完成，勾选「已阅读任务通知」后提交。</p>`) +
+        `<p><b>任务描述：</b>接收下发的单站验证任务通知，阅读实训基站基础资料。</p>
+         <p><b>操作动作：</b>通读任务通知与下方基站基础信息，确认内容无误后点击「已阅读」确认框。</p>
+         <p><b>完成判定：</b>完成阅读并点击确认，提交即进入下一任务。</p>`) +
     `<div class="card">
         <div class="card-head"><h2><em>工单</em>单站验证任务通知</h2><span class="small muted">工单号 SSV-20261019-001</span></div>
         <div class="grid3" style="margin-bottom:14px">
@@ -1015,7 +1010,7 @@ function t1() {
         <p class="small muted" style="line-height:1.9">请前往 <b style="color:var(--text)">${esc(STATION.address)}</b> 完成 ${esc(STATION.name)} 的单站验证，覆盖设备状态核查、外场信号覆盖测试、业务性能测试与邻区关系验证，并输出验证报告。</p>
     </div>
     <div class="card">
-        <div class="card-head"><h2><em>参数</em>基站基础信息</h2><span class="small muted">点击「核对」逐项确认</span></div>
+        <div class="card-head"><h2><em>参数</em>基站基础信息</h2><span class="small muted">工单随附资料，通读即可</span></div>
         <div class="kv">${rows}</div>
     </div>
     <div class="card" style="display:flex;align-items:center;gap:12px">
@@ -1025,20 +1020,7 @@ function t1() {
     </div>`;
 }
 
-function t1check(k) {
-    const arr = S.d['t1'].checked || [];
-    if (!arr.includes(k)) arr.push(k);
-    S.d['t1'].checked = arr;
-    save();
-    document.getElementById('body').innerHTML = renderTask(0);
-    bindTask(0);
-}
-
 function t1agree() {
-    if ((S.d['t1'].checked || []).length < KEY_PARAMS.length) {
-        toast('请先完成全部 6 项关键参数核对', 'err');
-        return;
-    }
     S.d['t1'].agreed = !S.d['t1'].agreed;
     save();
     document.getElementById('body').innerHTML = renderTask(0);
@@ -1646,10 +1628,9 @@ function submitTask() {
     let msg = '';
 
     if (i === 0) {
-        if ((S.d['t1'].checked || []).length < KEY_PARAMS.length) { toast('请先完成全部 6 项关键参数核对', 'err'); return; }
-        if (!S.d['t1'].agreed) { toast('请先点击下方「已阅读任务通知」确认框完成阅读确认', 'err'); return; }
+        if (!S.d['t1'].agreed) { toast('请先点击下方「我已阅读任务通知」确认框', 'err'); return; }
         sc = 0;
-        msg = '任务通知已接收，参数核对完成';
+        msg = '任务通知已接收，阅读确认完成';
     }
 
     if (i === 1) {
