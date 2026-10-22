@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ graph.name }} · 岗位知识地图</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='knowledge_map.css') }}">
+</head>
+<body>
+  {% set q = ('?student_no=' ~ student_no) if is_teacher and student_no else '' %}
+  <header class="brandbar">
+    <a class="back" href="/job-knowledge-map{{ q }}">← 返回</a>
+    <span class="title">知识图谱 · 岗位知识地图</span>
+    <span class="info">{{ '教师端 · 只读查看' if is_teacher else '学生端' }}</span>
+  </header>
+
+  <div class="toolbar">
+    <label class="job-select">目标岗位
+      <select id="jobSelect" onchange="kmSwitchJob(this.value)">
+        {% for j in jobs %}
+        <option value="{{ j.id }}" {% if j.id == job_id %}selected{% endif %}>{{ j.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <div class="legend">
+      <span class="item"><span class="dot done"></span>已学会</span>
+      <span class="item"><span class="dot learning"></span>学习中</span>
+      <span class="item"><span class="dot todo"></span>未学习</span>
+    </div>
+    <div class="progress-wrap">
+      学习进度
+      <div class="progress-bar"><div style="width: {{ summary.progress_percent }}%"></div></div>
+      <b>{{ summary.learned }} / {{ summary.node_count }}</b>
+    </div>
+  </div>
+
+  <main class="km-map-main">
+    <div class="map-scroll">
+      <div class="map-canvas" style="width: {{ layout.width }}px; height: {{ layout.height }}px;">
+        <svg class="map-svg" width="{{ layout.width }}" height="{{ layout.height }}" viewBox="0 0 {{ layout.width }} {{ layout.height }}">
+          {% for edge in layout.edges %}
+          <path d="{{ edge }}"></path>
+          {% endfor %}
+        </svg>
+
+        <div class="node root" style="left: {{ layout.root.x }}px; top: {{ layout.root.y }}px; width: {{ layout.root.w }}px; height: {{ layout.root.h }}px;">{{ layout.root.name }}</div>
+
+        {% for cat in layout.categories %}
+        <div class="node cat {{ cat.status }}" style="left: {{ cat.x }}px; top: {{ cat.y }}px; width: {{ cat.w }}px; height: {{ cat.h }}px;">
+          {% if cat.icon %}<span>{{ cat.icon }}</span>{% endif %}{{ cat.name }}
+        </div>
+        {% for n in cat.nodes %}
+        <a class="node {{ n.status }}{% if learned_node and n.id == learned_node.id %} just-learned{% endif %}"
+           href="{{ url_for('job_knowledge_point_page', job_id=job_id, node_id=n.id) }}{{ q }}"
+           title="{{ n.name }}"
+           style="left: {{ n.x }}px; top: {{ n.y }}px; width: {{ n.w }}px; height: {{ n.h }}px;">
+          <span class="badge-dot"></span><span>{{ n.name }}</span>
+        </a>
+        {% endfor %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- 小屏幕兜底树形列表 -->
+    <div class="km-mobile-tree">
+      {% for cat in layout.categories %}
+      <details {% if loop.first %}open{% endif %}>
+        <summary>{{ cat.icon }} {{ cat.name }}（{{ cat.nodes|length }} 个知识点）</summary>
+        {% for n in cat.nodes %}
+        <a class="m-node" href="{{ url_for('job_knowledge_point_page', job_id=job_id, node_id=n.id) }}{{ q }}">
+          <span>{{ n.name }}</span>
+          <span class="st {{ n.status }}">{{ '已学会' if n.status == 'done' else ('学习中' if n.status == 'learning' else '未学习') }}</span>
+        </a>
+        {% endfor %}
+      </details>
+      {% endfor %}
+    </div>
+
+    {% if learned_node %}
+    {% set lq = graph.node_index[learned_node.id][1]['quiz']|length %}
+    <div class="toast">
+      <div class="icon">✓</div>
+      <div>
+        <div class="t">已标记为已学会 · {{ learned_node.name }}</div>
+        <div class="d">节点已变为绿色，学习进度更新为 {{ summary.learned }} / {{ summary.node_count }}</div>
+      </div>
+    </div>
+
+    <aside class="panel">
+      <div class="crumb">{{ learned_node.category }} › {{ learned_node.name }}</div>
+      <div class="name">{{ learned_node.name }} <span class="badge done">已学会</span></div>
+      <div class="meta">
+        <span class="tag">{{ learned_node.category }}</span>
+        <span class="tag">难度 {{ '★' * (graph.node_index[learned_node.id][1]['difficulty']|int) }}</span>
+        {% if learned_node.completed_at %}<span class="tag">{{ learned_node.completed_at }}</span>{% endif %}
+      </div>
+
+      <div class="success-card">
+        <div class="big">🎉</div>
+        <div class="t">这块知识已经学会啦</div>
+        <div class="d">练习题全部通过，节点已变为绿色</div>
+      </div>
+
+      <div class="stat-row"><span>本知识点掌握度</span><span><b>100%</b></span></div>
+      <div class="stat-bar"><div></div></div>
+      <div class="stat-sub">之后如有遗忘，可以随时重新练习</div>
+
+      <div class="info-line"><span>所属模块</span><span>{{ learned_node.category }}</span></div>
+      <div class="info-line"><span>练习题</span><span>{{ lq }} 道</span></div>
+      {% if learned_node.next_node %}
+      <div class="info-line"><span>下一个知识点</span><span>{{ learned_node.next_node.name }} →</span></div>
+      {% endif %}
+
+      <div class="panel-actions">
+        {% if lq > 0 %}
+        <a class="btn-ghost" href="{{ url_for('job_knowledge_quiz_page', job_id=job_id, node_id=learned_node.id) }}{{ q }}">再练一次</a>
+        {% else %}
+        <a class="btn-ghost" href="{{ url_for('job_knowledge_point_page', job_id=job_id, node_id=learned_node.id) }}{{ q }}">查看知识点</a>
+        {% endif %}
+        {% if learned_node.next_node %}
+        <a class="btn-primary" href="{{ url_for('job_knowledge_point_page', job_id=job_id, node_id=learned_node.next_node.id) }}{{ q }}">继续下一个 →</a>
+        {% else %}
+        <a class="btn-primary" href="/job-knowledge-map{{ q }}">返回岗位列表</a>
+        {% endif %}
+      </div>
+    </aside>
+    {% endif %}
+  </main>
+
+  <script>
+    const KM_QUERY = {{ q|tojson }};
+    function kmSwitchJob(jobId) {
+      location.href = '/job-knowledge-map/' + encodeURIComponent(jobId) + KM_QUERY;
+    }
+  </script>
+</body>
+</html>

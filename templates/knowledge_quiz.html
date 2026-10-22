@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ node.name }} · 练习题</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='knowledge_map.css') }}">
+</head>
+<body>
+  {% set qs = ('?student_no=' ~ student_no) if is_teacher and student_no else '' %}
+  <header class="brandbar">
+    <a class="back" href="{{ url_for('job_knowledge_point_page', job_id=job_id, node_id=node_id) }}{{ qs }}">← 返回知识点</a>
+    <span class="title">知识图谱 · 练习题</span>
+    <span class="info">{{ '教师端 · 只读查看' if is_teacher else '学生端' }}</span>
+  </header>
+
+  <div class="subbar">
+    <span class="name">{{ node.name }} · 专项练习</span>
+    <span class="crumb">{{ category.name }} › {{ node.name }}</span>
+    <span class="spacer"></span>
+    {% if is_teacher %}<span class="teacher-tip">教师只读</span>{% endif %}
+    <span class="count">第 <b id="qNo">1</b> / {{ quiz|length }} 题</span>
+    <div class="bar"><div id="topBar" style="width: 0%"></div></div>
+  </div>
+
+  <main class="quiz-main">
+    <div class="card quiz-card">
+      <div class="q-head">
+        <span class="no">第 <span id="qNo2">1</span> 题</span>
+        <span class="type">简答题 · AI 评判</span>
+      </div>
+
+      <div class="question" id="questionText"></div>
+
+      <textarea class="answer-area" id="answerBox" placeholder="用自己的话回答，写清楚关键要点…" {% if is_teacher %}disabled{% endif %}></textarea>
+      <div class="answer-tip">至少 10 个字；提交后 AI 会给出评分与点评{% if is_teacher %}（教师只读，无法提交）{% endif %}</div>
+
+      <div class="result-box" id="resultBox"></div>
+
+      <div class="ref-box" id="refBox">
+        <div><b>参考答案：</b><span id="refText"></span></div>
+        <div style="margin-top:6px;"><b>解析：</b><span id="analysisText"></span></div>
+      </div>
+
+      <div class="self-buttons" id="selfButtons">
+        <button class="self-yes" onclick="kmSelfAssess(true)">我答对了</button>
+        <button class="self-no" onclick="kmSelfAssess(false)">我答错了</button>
+      </div>
+
+      {% if not is_teacher %}
+      <div class="quiz-actions">
+        <button class="btn-ghost" id="prevBtn" onclick="kmPrev()">← 上一题</button>
+        <span class="spacer"></span>
+        <button class="btn-primary" id="submitBtn" onclick="kmSubmit()">提交答案</button>
+        <button class="btn-ghost" id="nextBtn" onclick="kmNext()">下一题 →</button>
+      </div>
+      {% else %}
+      <div class="quiz-actions">
+        <button class="btn-ghost" id="prevBtn" onclick="kmPrev()">← 上一题</button>
+        <span class="spacer"></span>
+        <button class="btn-ghost" id="nextBtn" onclick="kmNext()">下一题 →</button>
+      </div>
+      {% endif %}
+    </div>
+
+    <aside class="quiz-side">
+      <div class="card side-card">
+        <div class="h">📝 答题卡</div>
+        <div class="sheet" id="answerSheet">
+          {% for s in quiz_state %}
+          <div class="num" data-index="{{ s.index }}">{{ s.index + 1 }}</div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="card side-card stat">
+        <div class="h">📊 本组练习</div>
+        <div class="row"><span>正确率</span><span id="rateText">0%（0 / 0）</span></div>
+        <div class="bar"><div id="rateBar" style="width:0%"></div></div>
+        <div class="sub" id="progressText">共 {{ quiz|length }} 题，完成并全部答对后可标记为已学会</div>
+      </div>
+
+      {% if is_teacher %}
+      <div class="teacher-tip">教师为只读模式，不能提交答案或标记学会</div>
+      {% else %}
+      <button class="finish-btn" id="finishBtn" onclick="kmFinish()" disabled>完成练习</button>
+      <a class="back-link" href="{{ url_for('job_knowledge_point_page', job_id=job_id, node_id=node_id) }}">返回知识点详情</a>
+      {% endif %}
+    </aside>
+  </main>
+
+  <script>
+    const QUIZ = {{ quiz|tojson }};
+    const STATE = {{ quiz_state|tojson }};
+    const JOB_ID = {{ job_id|tojson }};
+    const NODE_ID = {{ node_id|tojson }};
+    const IS_TEACHER = {{ is_teacher|tojson }};
+    let current = STATE.findIndex(function (s) { return !s.answered; });
+    if (current < 0) current = 0;
+
+    const qText = document.getElementById('questionText');
+    const answerBox = document.getElementById('answerBox');
+    const resultBox = document.getElementById('resultBox');
+    const refBox = document.getElementById('refBox');
+    const refText = document.getElementById('refText');
+    const analysisText = document.getElementById('analysisText');
+    const selfButtons = document.getElementById('selfButtons');
+    const submitBtn = document.getElementById('submitBtn');
+    const finishBtn = document.getElementById('finishBtn');
+
+    function st(i) { return STATE[i] || {}; }
+
+    function renderCurrent() {
+      const s = st(current);
+      document.getElementById('qNo').textContent = current + 1;
+      document.getElementById('qNo2').textContent = current + 1;
+      qText.textContent = QUIZ[current].q;
+      answerBox.value = s.answer || '';
+
+      resultBox.className = 'result-box';
+      refBox.className = 'ref-box';
+      selfButtons.className = 'self-buttons';
+
+      if (s.answered) {
+        if (s.score !== null && s.score !== undefined) {
+          resultBox.classList.add('show', s.correct ? 'good' : 'bad');
+          resultBox.innerHTML = '<div class="score-line">AI 评分：' + s.score + ' 分 · ' + (s.correct ? '通过' : '未通过') + '</div>' +
+            (s.feedback ? '<div>' + escapeHtml(s.feedback) + '</div>' : '');
+        } else if (s.self_correct !== null && s.self_correct !== undefined) {
+          resultBox.classList.add('show', s.self_correct ? 'good' : 'bad');
+          resultBox.innerHTML = '<div class="score-line">自评：' + (s.self_correct ? '答对了' : '答错了') + '</div>' +
+            '<div>可对照下方参考答案继续完善。</div>';
+        } else {
+          resultBox.classList.add('show', 'neutral');
+          resultBox.innerHTML = '<div class="score-line">AI 暂时无法评判</div>' +
+            '<div>请对照参考答案自行判断，选择“我答对了 / 我答错了”。</div>';
+          selfButtons.classList.add('show');
+        }
+        refBox.classList.add('show');
+        refText.textContent = QUIZ[current].a || '（暂无参考答案）';
+        analysisText.textContent = QUIZ[current].analysis || '（暂无解析）';
+      }
+      updateSide();
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function updateSide() {
+      document.querySelectorAll('#answerSheet .num').forEach(function (el) {
+        const i = Number(el.dataset.index);
+        const s = st(i);
+        el.classList.toggle('done', !!(s.answered && s.correct));
+        el.classList.toggle('wrong', !!(s.answered && !s.correct));
+        el.classList.toggle('current', i === current);
+      });
+      const answered = STATE.filter(function (s) { return s.answered; }).length;
+      const correct = STATE.filter(function (s) { return s.correct; }).length;
+      const rate = answered ? Math.round(correct * 100 / answered) : 0;
+      document.getElementById('rateText').textContent = rate + '%（' + correct + ' / ' + answered + '）';
+      document.getElementById('rateBar').style.width = rate + '%';
+      document.getElementById('topBar').style.width = (answered * 100 / QUIZ.length) + '%';
+      document.getElementById('progressText').textContent = '共 ' + QUIZ.length + ' 题，已答 ' + answered + ' 题，答对 ' + correct + ' 题';
+      if (!IS_TEACHER && finishBtn) {
+        finishBtn.disabled = !(answered === QUIZ.length && correct === QUIZ.length);
+      }
+    }
+
+    async function kmSubmit() {
+      if (IS_TEACHER) return;
+      const text = answerBox.value.trim();
+      if (text.length < 10) { alert('答案太短，至少写 10 个字'); return; }
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'AI 评判中…';
+      try {
+        const resp = await fetch('/api/job-knowledge-map/answer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ job_id: JOB_ID, node_id: NODE_ID, index: current, answer: text })
+        });
+        const data = await resp.json();
+        if (!resp.ok || !data.success) { alert(data.error || '提交失败'); return; }
+        const s = st(current);
+        s.answered = true;
+        s.answer = text;
+        s.score = data.score;
+        s.correct = data.correct;
+        s.feedback = data.feedback;
+        s.self_correct = null;
+        renderCurrent();
+      } catch (e) {
+        alert('提交失败，请检查网络后重试');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '提交答案';
+      }
+    }
+
+    async function kmSelfAssess(val) {
+      if (IS_TEACHER) return;
+      try {
+        const resp = await fetch('/api/job-knowledge-map/answer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ job_id: JOB_ID, node_id: NODE_ID, index: current, self_correct: val })
+        });
+        const data = await resp.json();
+        if (!resp.ok || !data.success) { alert(data.error || '保存失败'); return; }
+        const s = st(current);
+        s.self_correct = val;
+        s.correct = data.correct;
+        s.score = null;
+        s.feedback = data.feedback;
+        renderCurrent();
+      } catch (e) {
+        alert('保存失败，请检查网络后重试');
+      }
+    }
+
+    async function kmFinish() {
+      if (IS_TEACHER) return;
+      if (finishBtn.disabled) return;
+      finishBtn.disabled = true;
+      finishBtn.textContent = '正在标记…';
+      try {
+        const resp = await fetch('/api/job-knowledge-map/learn', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ job_id: JOB_ID, node_id: NODE_ID })
+        });
+        const data = await resp.json();
+        if (resp.ok && data.success) { location.href = data.redirect; return; }
+        alert(data.error || '操作失败');
+      } catch (e) {
+        alert('操作失败，请检查网络后重试');
+      }
+      finishBtn.disabled = false;
+      finishBtn.textContent = '完成练习';
+    }
+
+    function kmGo(i) {
+      if (i < 0 || i >= QUIZ.length) return;
+      current = i;
+      renderCurrent();
+    }
+    function kmPrev() { kmGo(current - 1); }
+    function kmNext() { kmGo(current + 1); }
+
+    document.querySelectorAll('#answerSheet .num').forEach(function (el) {
+      el.addEventListener('click', function () { kmGo(Number(el.dataset.index)); });
+    });
+
+    renderCurrent();
+  </script>
+</body>
+</html>

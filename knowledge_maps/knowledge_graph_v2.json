@@ -1,0 +1,2649 @@
+{
+  "version": "2.0",
+  "generated_at": "2026-10-22",
+  "format": "hierarchical_graphs",
+  "graphs": [
+    {
+      "id": "kg_5g_optimization",
+      "name": "5G无线网络优化工程师",
+      "description": "5G网络优化方向核心知识体系，覆盖空口技术、网络架构、优化方法、故障排查四大模块",
+      "total_nodes": 16,
+      "total_quiz": 27,
+      "categories": [
+        {
+          "id": "cat_phy",
+          "name": "空口技术",
+          "icon": "📡",
+          "color": "#3b82f6",
+          "nodes": [
+            {
+              "id": "phy_fourier",
+              "name": "傅里叶变换",
+              "difficulty": 3,
+              "description": "将时域信号转换为频域表示的数学工具，是信号处理和通信系统的核心数学基础。",
+              "key_points": [
+                "时域连续→频域连续，时域离散→频域周期",
+                "满足线性、时移、频移、卷积性质",
+                "频谱分析的数学基础"
+              ],
+              "formula": "X(ω) = ∫_{-∞}^{+∞} x(t)·e^{-jωt} dt",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "傅里叶变换的核心作用是什么？",
+                  "a": "将时域信号分解为不同频率的正弦波叠加",
+                  "analysis": "傅里叶变换揭示了信号的频率成分，是频谱分析、滤波、调制的数学基础。"
+                },
+                {
+                  "q": "时域卷积对应频域的什么运算？",
+                  "a": "频域相乘",
+                  "analysis": "这是傅里叶变换的重要性质之一。"
+                }
+              ],
+              "applications": [
+                "信号分析",
+                "滤波器设计",
+                "调制解调"
+              ]
+            },
+            {
+              "id": "phy_nyquist",
+              "name": "奈奎斯特采样定理",
+              "difficulty": 2,
+              "description": "为了能够从采样信号中完美重建原始连续信号，采样频率必须大于信号最高频率的两倍。",
+              "key_points": [
+                "f_s > 2·f_max",
+                "采样不足会产生混叠(aliasing)",
+                "实际工程中通常取 2.5~3 倍 f_max"
+              ],
+              "formula": "f_s > 2·f_{max}",
+              "prerequisites": [
+                "傅里叶变换"
+              ],
+              "quiz": [
+                {
+                  "q": "采样频率必须满足什么条件？",
+                  "a": "f_s > 2·f_max",
+                  "analysis": "奈奎斯特率保证信号可完美重建，否则会产生混叠。"
+                },
+                {
+                  "q": "抗混叠滤波器的作用？",
+                  "a": "在 ADC 之前限制信号带宽",
+                  "analysis": "确保输入 ADC 的信号频率不超过 f_s/2。"
+                }
+              ],
+              "applications": [
+                "ADC设计",
+                "音频处理",
+                "软件无线电"
+              ]
+            },
+            {
+              "id": "phy_ofdm",
+              "name": "OFDM 正交频分复用",
+              "difficulty": 3,
+              "description": "一种多载波调制技术，将高速数据流分配到多个正交子载波上并行传输，是 LTE/5G/WiFi 的核心空口技术。",
+              "key_points": [
+                "子载波间保持正交，频谱利用率高",
+                "抗频率选择性衰落",
+                "CP 循环前缀解决 ISI/ICI",
+                "峰均比(PAPR)偏高"
+              ],
+              "formula": "s(t) = Σ dₙ·e^(j2πfₙt), t ∈ [0, T]",
+              "prerequisites": [
+                "傅里叶变换",
+                "奈奎斯特采样定理"
+              ],
+              "quiz": [
+                {
+                  "q": "OFDM 中子载波正交的条件？",
+                  "a": "子载波间隔 Δf = 1/T",
+                  "analysis": "T 为 OFDM 符号周期，此时各子载波在一个符号周期内乘积积分为零。"
+                },
+                {
+                  "q": "OFDM 中 CP 的作用？",
+                  "a": "对抗 ISI 和 ICI",
+                  "analysis": "循环前缀保护 OFDM 符号免受前一符号时延扩展的干扰。"
+                },
+                {
+                  "q": "OFDM 的主要缺点？",
+                  "a": "PAPR 峰均比过高",
+                  "analysis": "高 PAPR 对功放线性度要求很高，增加成本和功耗。"
+                }
+              ],
+              "applications": [
+                "LTE",
+                "5G NR",
+                "WiFi 6"
+              ]
+            },
+            {
+              "id": "phy_nr_param",
+              "name": "5G NR 参数集 (Numerology)",
+              "difficulty": 3,
+              "description": "5G NR 支持灵活可配置的子载波间隔，通过 μ 值索引，支持 15/30/60/120/240 kHz 五种配置。",
+              "key_points": [
+                "μ=0→15kHz (与 LTE 兼容)",
+                "μ 值越大 → 子载波间隔越大 → 符号越短",
+                "毫米波频段使用大 μ 值抗多普勒"
+              ],
+              "formula": "Δf = 15·2^μ kHz",
+              "prerequisites": [
+                "OFDM 正交频分复用"
+              ],
+              "quiz": [
+                {
+                  "q": "5G NR 支持哪些子载波间隔？",
+                  "a": "15/30/60/120/240 kHz",
+                  "analysis": "通过 μ=0~4 参数集配置，满足不同频段和场景需求。"
+                },
+                {
+                  "q": "毫米波频段为什么用大的 μ 值？",
+                  "a": "抗多普勒频移",
+                  "analysis": "毫米波频段载波频率高，多普勒频移大，需要更大子载波间隔来容忍。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "phy_mimo",
+              "name": "Massive MIMO 大规模天线",
+              "difficulty": 4,
+              "description": "在基站侧配置数十至数百根天线，通过波束赋形和空间复用显著提升频谱效率和能量效率。",
+              "key_points": [
+                "空间复用增益：多路数据流并行传输",
+                "波束赋形增益：能量集中到用户方向",
+                "3D 波束赋形：水平+垂直平面",
+                "TDD 系统利用信道互易性"
+              ],
+              "formula": "capacity ≈ min(N_t, N_r)·log₂(1+SNR)",
+              "prerequisites": [
+                "OFDM 正交频分复用"
+              ],
+              "quiz": [
+                {
+                  "q": "Massive MIMO 的增益来源？",
+                  "a": "空间复用增益 + 波束赋形增益",
+                  "analysis": "空间复用提升吞吐量，波束赋形提升信号强度和干扰抑制。"
+                },
+                {
+                  "q": "Massive MIMO 在 TDD 中为什么有优势？",
+                  "a": "利用信道互易性简化 CSI 获取",
+                  "analysis": "TDD 上下行共用频率，信道响应可直接估计，无需频分双工的额外开销。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "phy_channel_coding",
+              "name": "5G 信道编码 (LDPC + Polar)",
+              "difficulty": 3,
+              "description": "5G NR 数据信道采用 LDPC 码，控制信道采用 Polar 码，相比 LTE 的 Turbo 码在低码率和高码率场景性能更优。",
+              "key_points": [
+                "LDPC：低码率性能优，解码并行度高",
+                "Polar：极信道理论容量可达 Shannon 极限",
+                "Turbo 码在高码率下复杂度偏高"
+              ],
+              "formula": "R = K/N (码率 = 信息位/编码后总长度)",
+              "prerequisites": [
+                "奈奎斯特采样定理"
+              ],
+              "quiz": [
+                {
+                  "q": "5G NR 数据信道用什么编码？",
+                  "a": "LDPC 码",
+                  "analysis": "LDPC 在低码率和高码率下均有良好性能，且支持并行解码，适合 5G 高速需求。"
+                },
+                {
+                  "q": "控制信道为什么用 Polar 码？",
+                  "a": "极信道理论最优",
+                  "analysis": "Polar 码在短码和低码率下优于 LDPC，且有严格的容量可达证明。"
+                }
+              ],
+              "applications": []
+            }
+          ]
+        },
+        {
+          "id": "cat_arch",
+          "name": "网络架构",
+          "icon": "🏗️",
+          "color": "#10b981",
+          "nodes": [
+            {
+              "id": "arch_lte_eps",
+              "name": "LTE EPC 架构",
+              "difficulty": 2,
+              "description": "LTE 采用全 IP 扁平架构，核心网由 MME/S-GW/P-GW/HSS 等网元组成。",
+              "key_points": [
+                "MME：移动性管理+会话管理",
+                "S-GW：服务网关，eNodeB 与 P-GW 间锚点",
+                "P-GW：PDN 网关，连接外部数据网",
+                "HSS：用户签约服务器"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "MME 的主要功能？",
+                  "a": "移动性管理和会话管理",
+                  "analysis": "处理附着、寻呼、切换等信令。"
+                }
+              ],
+              "applications": [
+                "LTE 网络部署"
+              ]
+            },
+            {
+              "id": "arch_5gc",
+              "name": "5G 服务化架构 (SBA)",
+              "difficulty": 3,
+              "description": "5GC 采用服务化架构，各网元通过 HTTP/2 接口通信，支持灵活部署和切片。",
+              "key_points": [
+                "AMF：接入和移动性管理",
+                "SMF：会话管理",
+                "UPF：用户面功能（可下沉 MEC）",
+                "N1/N2/N11 等服务化接口",
+                "支持网络切片"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "5GC 相比 EPC 最核心的变化？",
+                  "a": "服务化架构 + 控制面/用户面彻底分离",
+                  "analysis": "UPF 可独立部署并下沉边缘，支持 MEC；控制面网元通过 HTTP/2 通信。"
+                },
+                {
+                  "q": "AMF 的前身是什么？",
+                  "a": "MME 的移动性管理部分",
+                  "analysis": "MME 功能拆分为 AMF（接入+移动性）和 SMF（会话管理）。"
+                }
+              ],
+              "applications": [
+                "5G SA 网络"
+              ]
+            },
+            {
+              "id": "arch_slicing",
+              "name": "网络切片",
+              "difficulty": 3,
+              "description": "在同一物理基础设施上虚拟出多个逻辑独立网络，为不同业务场景提供差异化服务质量。",
+              "key_points": [
+                "eMBB：增强移动宽带（高带宽）",
+                "URLLC：超高可靠低时延（工业控制）",
+                "mMTC：海量机器通信（传感器）",
+                "端到端切片：UE→RAN→CN 全链路"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "三大切片类型？",
+                  "a": "eMBB / URLLC / mMTC",
+                  "analysis": "分别对应高带宽、低时延、大连接三种典型业务场景。"
+                },
+                {
+                  "q": "网络切片的实现层次？",
+                  "a": "RAN 切片 + CN 切片 + 传输网切片",
+                  "analysis": "端到端协同，保证资源隔离和业务质量。"
+                }
+              ],
+              "applications": [
+                "5G 行业应用",
+                "智能制造"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "cat_method",
+          "name": "优化方法",
+          "icon": "🔧",
+          "color": "#f59e0b",
+          "nodes": [
+            {
+              "id": "method_mr",
+              "name": "MR 数据分析",
+              "difficulty": 3,
+              "description": "测量报告(MR)是网络优化的核心数据来源，包含 UE 的 RSRP/RS-SINR/邻区测量等信息。",
+              "key_points": [
+                "MR 来源：周期性 + 事件触发",
+                "RSRP：参考信号接收功率",
+                "RS-SINR：参考信号接收质量",
+                "栅格化处理：将 MR 映射到地理栅格"
+              ],
+              "formula": "",
+              "prerequisites": [
+                "OFDM 正交频分复用"
+              ],
+              "quiz": [
+                {
+                  "q": "RSRP 和 RSSI 的区别？",
+                  "a": "RSRP 是参考信号的平均功率，RSSI 是整个带宽的接收功率",
+                  "analysis": "RSRP 更精确反映服务小区信号强度。"
+                }
+              ],
+              "applications": [
+                "覆盖优化",
+                "干扰定位"
+              ]
+            },
+            {
+              "id": "method_coverage",
+              "name": "覆盖优化",
+              "difficulty": 3,
+              "description": "通过调整天线参数、功率、站点位置等手段改善网络覆盖，消除覆盖空洞和越区覆盖。",
+              "key_points": [
+                "调整天线方位角/下倾角",
+                "调整小区发射功率",
+                "新建/搬迁基站",
+                "室内分布系统补充",
+                "避免越区覆盖（长距离覆盖导致切换困难）"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "覆盖空洞的典型解决方案？",
+                  "a": "调整天线下倾角 + 增加扇区功率 + 新建基站",
+                  "analysis": "根据空洞大小和位置选择合适方案，综合考虑成本和效果。"
+                },
+                {
+                  "q": "越区覆盖的危害？",
+                  "a": "导致切换区域过大、干扰邻区、容量浪费",
+                  "analysis": "越区覆盖的小区占用了不该覆盖区域的频率资源。"
+                }
+              ],
+              "applications": [
+                "网络优化"
+              ]
+            },
+            {
+              "id": "method_interference",
+              "name": "干扰排查",
+              "difficulty": 3,
+              "description": "识别并消除网络中的各类干扰，包括同频干扰、邻频干扰、外部干扰源等。",
+              "key_points": [
+                "同频干扰：ICIC 协调",
+                "邻频干扰：ACIR 指标",
+                "模3干扰：PCI 规划",
+                "外部干扰：频谱仪定位",
+                "互调干扰：无源器件排查"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "ICIC 的作用？",
+                  "a": "小区间干扰协调",
+                  "analysis": "通过 X2 接口交换 RNTP 信息，协调边缘用户使用正交频段。"
+                },
+                {
+                  "q": "模3干扰是什么？",
+                  "a": "相邻小区 PCI mod 3 相同",
+                  "analysis": "导致 PSS 干扰，影响小区搜索和下行接收。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "method_capacity",
+              "name": "容量优化",
+              "difficulty": 3,
+              "description": "提升网络容量，解决高负荷小区的拥塞问题。",
+              "key_points": [
+                "扩容：增加载频/扇区/基站",
+                "负载均衡：参数调整 + MLB",
+                "分裂扇区：6 扇区/12 扇区",
+                "载波聚合：CA",
+                "Massive MIMO 提升频谱效率"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "单站容量不足的优先级解决方案？",
+                  "a": "先调负载均衡参数 → 分裂扇区 → 增加载波/基站",
+                  "analysis": "从软件调优到硬件扩容，成本递增。"
+                }
+              ],
+              "applications": []
+            }
+          ]
+        },
+        {
+          "id": "cat_troubleshoot",
+          "name": "故障排查",
+          "icon": "🔍",
+          "color": "#ef4444",
+          "nodes": [
+            {
+              "id": "fault_call_drop",
+              "name": "掉话分析",
+              "difficulty": 3,
+              "description": "定位并解决通话/数据连接异常中断问题。",
+              "key_points": [
+                "切换失败是主要原因之一",
+                "邻区漏配导致切换不及时",
+                "弱覆盖导致上行/下行失步",
+                "干扰导致解码失败",
+                "排查：KPI→单用户信令→MR/路测"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "掉话率升高的排查步骤？",
+                  "a": "先看 KPI 类型 → 拉信令看是切换失败还是无线掉线 → MR 确认覆盖/干扰 → 路测验证",
+                  "analysis": "从宏观到微观逐层定位。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "fault_access_fail",
+              "name": "接入失败分析",
+              "difficulty": 3,
+              "description": "定位用户无法成功接入网络的问题。",
+              "key_points": [
+                "随机接入成功率低：功率/参数问题",
+                "RRC 建立成功率：拥塞/鉴权问题",
+                "E-RAB 建立成功率：核心网/无线问题",
+                "排查：消息统计 → 失败原因码 → 针对性优化"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "随机接入失败的常见原因？",
+                  "a": "前导功率太小、MSG3 功率攀升过快、PRACH 资源冲突",
+                  "analysis": "从物理层参数到 MAC 层配置逐层排查。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "fault_ho_fail",
+              "name": "切换失败分析",
+              "difficulty": 3,
+              "description": "定位切换过程中发生的失败，是掉话的主要原因。",
+              "key_points": [
+                "测量事件触发参数不合理",
+                "邻区漏配/优先级配置错误",
+                "目标小区拥塞无资源",
+                "X2 接口故障（LTE）",
+                "切换过早/过晚"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "提升切换成功率的关键参数？",
+                  "a": "迟滞 Hysteresis + 触发时间 TimeToTrigger + 邻区优先级",
+                  "analysis": "三者配合决定切换触发时机。"
+                }
+              ],
+              "applications": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "kg_core_network",
+      "name": "核心网工程师",
+      "description": "通信核心网方向知识体系，覆盖信令协议、网元架构、故障排查",
+      "total_nodes": 8,
+      "total_quiz": 9,
+      "categories": [
+        {
+          "id": "cat_cn_protocol",
+          "name": "核心网信令协议",
+          "icon": "📋",
+          "color": "#8b5cf6",
+          "nodes": [
+            {
+              "id": "prot_s1ap",
+              "name": "S1AP 协议",
+              "difficulty": 3,
+              "description": "eNodeB 与 MME 之间的信令协议，基于 SCTP，负责 E-UTRAN 与 EPC 之间的信令交互。",
+              "key_points": [
+                "基于 SCTP 可靠传输",
+                "NAS 信令通过 S1AP 透传",
+                "初始 UE 附着、寻呼、切换相关流程",
+                "S1AP 基本过程：UE Context 管理、E-RAB 管理"
+              ],
+              "formula": "",
+              "prerequisites": [
+                "LTE EPC 架构"
+              ],
+              "quiz": [
+                {
+                  "q": "S1AP 使用什么传输层协议？",
+                  "a": "SCTP",
+                  "analysis": "SCTP 是多流可靠传输协议，专为电信信令设计。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "prot_sip",
+              "name": "SIP 协议",
+              "difficulty": 3,
+              "description": "会话初始协议，用于 IP 多媒体子系统(IMS)中的呼叫/会话控制。",
+              "key_points": [
+                "文本协议，类似 HTTP",
+                "REGISTER/INVITE/ACK/BYE 基本方法",
+                "SDP 协商媒体参数",
+                "IMS 注册、呼叫建立、释放"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "SIP 呼叫建立的典型流程？",
+                  "a": "INVITE → 100 Trying → 180 Ringing → 200 OK → ACK",
+                  "analysis": "标准的三次握手建立媒体会话。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "prot_diameter",
+              "name": "Diameter 协议",
+              "difficulty": 3,
+              "description": "AAA(认证/授权/计费)协议，是 RADIUS 的升级，用于 LTE/5G 核心网的用户鉴权和策略控制。",
+              "key_points": [
+                "基于 TCP/SCTP",
+                "AVP 携带属性值对",
+                "应用：HSS、PCRF、SMF 间",
+                "支持代理、重定向、中继"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "Diameter 相比 RADIUS 的优势？",
+                  "a": "TCP 可靠传输 + 更好的扩展性 + 支持代理/中继",
+                  "analysis": "RADIUS 基于 UDP，Diameter 基于 TCP/SCTP，可靠性和功能更强。"
+                }
+              ],
+              "applications": []
+            }
+          ]
+        },
+        {
+          "id": "cat_cn_arch",
+          "name": "核心网架构",
+          "icon": "🏛️",
+          "color": "#14b8a6",
+          "nodes": [
+            {
+              "id": "arch_epc_elem",
+              "name": "LTE EPC 网元详解",
+              "difficulty": 3,
+              "description": "LTE EPC 各网元的职责和接口详解，包括 MME/S-GW/P-GW/HSS/PCRF。",
+              "key_points": [
+                "MME 处理 NAS 信令和移动性",
+                "S-GW 是用户面锚点",
+                "P-GW 是 IP 接入点",
+                "HSS 存储用户签约数据",
+                "PCRF 策略控制"
+              ],
+              "formula": "",
+              "prerequisites": [
+                "LTE EPC 架构"
+              ],
+              "quiz": [
+                {
+                  "q": "P-GW 的核心功能？",
+                  "a": "UE 的 IP 地址分配 + PDN 连接 + 计费数据采集 + 策略执行",
+                  "analysis": "P-GW 是 UE 到外部数据网的网关。"
+                }
+              ],
+              "applications": [
+                "LTE 运维"
+              ]
+            },
+            {
+              "id": "arch_5gc_elem",
+              "name": "5GC 网元详解",
+              "difficulty": 4,
+              "description": "5GC 各服务化网元的职责和接口，包括 AMF/SMF/UPF/PCF/UDM/AUSF/NEF/SMF...",
+              "key_points": [
+                "AMF：接入移动性管理（取代 MME 的 MM 部分）",
+                "SMF：会话管理（取代 MME 的 SM + P-GW 部分）",
+                "UPF：用户面功能（取代 S-GW + P-GW 用户面）",
+                "PCF：策略控制（取代 PCRF）",
+                "UDM：统一数据管理（取代 HSS）",
+                "AUSF：认证服务器",
+                "NEF：网络能力开放"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "5GC 中 UPF 的位置变化？",
+                  "a": "可下沉到 MEC 边缘",
+                  "analysis": "UPF 与 SMF 分离后可灵活部署，支持低时延业务。"
+                },
+                {
+                  "q": "UDM 和 HSS 的主要区别？",
+                  "a": "UDM 支持服务化接口，数据模型更现代",
+                  "analysis": "HSS 基于传统 MAP 协议，UDM 基于 HTTP/2 服务化接口。"
+                }
+              ],
+              "applications": [
+                "5GC 设计与运维"
+              ]
+            },
+            {
+              "id": "arch_n26",
+              "name": "N26 接口 (4G/5G 互操作)",
+              "difficulty": 3,
+              "description": "4G EPC 与 5GC 之间的互操作接口，支持 UE 在 4G 和 5G 间无缝切换。",
+              "key_points": [
+                "N26：AMF ↔ MME，NAS 信令互通",
+                "N26：SMF ↔ P-GW，会话互通",
+                "支持注册区域更新和移动性切换"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "N26 接口解决什么问题？",
+                  "a": "UE 在 4G EPC 和 5GC 间移动时的无缝互操作",
+                  "analysis": "实现 5G SA 与 4G LTE 共存场景下的移动性管理。"
+                }
+              ],
+              "applications": []
+            }
+          ]
+        },
+        {
+          "id": "cat_cn_oa",
+          "name": "运维与故障排查",
+          "icon": "🛠️",
+          "color": "#f97316",
+          "nodes": [
+            {
+              "id": "oa_session",
+              "name": "会话管理与迁移",
+              "difficulty": 3,
+              "description": "PDN 会话/PDU 会话的建立、修改、释放、迁移流程。",
+              "key_points": [
+                "会话建立流程（EPS Session Establishment / PDU Session Establishment）",
+                "会话建立中的关键参数：APN/DNN、QoS",
+                "会话迁移：S1→N2、X2→N26",
+                "会话释放原因码分析"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "PDU Session 和 EPS Bearer 的对应关系？",
+                  "a": "1 PDU Session = 1 Default Bearer + 若干 Dedicated Bearer",
+                  "analysis": "5G PDU Session 对应到 4G 就是一个 PDN 连接及其承载。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "oa_sig_trace",
+              "name": "信令跟踪分析",
+              "difficulty": 3,
+              "description": "通过抓取和分析核心网信令定位故障。",
+              "key_points": [
+                "工具：Wireshark、Omnitrace、Diameter trace",
+                "关键流程：附着、PDN 建立、切换、释放",
+                "失败原因码：cause code 解读",
+                "正常 vs 异常流程对比"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "附着失败 cause #19(EMM_CONGESTION) 的含义？",
+                  "a": "MME过载，需检查容量和负载均衡",
+                  "analysis": "原因码是定位故障的快速入口。"
+                }
+              ],
+              "applications": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "kg_rf_engineer",
+      "name": "射频工程师",
+      "description": "射频通信方向核心知识体系",
+      "total_nodes": 9,
+      "total_quiz": 12,
+      "categories": [
+        {
+          "id": "cat_rf_fund",
+          "name": "射频基础",
+          "icon": "📻",
+          "color": "#ec4899",
+          "nodes": [
+            {
+              "id": "rf_s_param",
+              "name": "S 参数与 Smith 圆图",
+              "difficulty": 3,
+              "description": "网络分析仪测量的散射参数，Smith 圆图用于阻抗匹配设计。",
+              "key_points": [
+                "S11：输入反射系数 → 匹配程度",
+                "S21：正向传输系数 → 增益",
+                "S22：输出反射系数",
+                "S12：反向隔离",
+                "Smith 圆图：归一化阻抗平面，L/C 匹配网络设计"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "S11 的物理含义？",
+                  "a": "输入反射系数，越小匹配越好",
+                  "analysis": "S11 < -10dB 通常认为匹配良好。"
+                },
+                {
+                  "q": "Smith 圆图上的 50Ω 点在哪里？",
+                  "a": "圆心处",
+                  "analysis": "圆心代表理想匹配点，电阻圆和电抗圆都通过它。"
+                }
+              ],
+              "applications": [
+                "阻抗匹配设计",
+                "滤波器设计",
+                "功放调试"
+              ]
+            },
+            {
+              "id": "rf_matching",
+              "name": "阻抗匹配网络设计",
+              "difficulty": 3,
+              "description": "设计 L 型/π 型/T 型等无源匹配网络实现源和负载的共轭匹配。",
+              "key_points": [
+                "L 型：简单，两个元件，Q 值固定",
+                "π 型：带宽更宽，三个元件",
+                "T 型：与 π 型对偶",
+                "宽频匹配：多节/渐变线",
+                "目标：最小反射 + 最大功率传输"
+              ],
+              "formula": "",
+              "prerequisites": [
+                "S 参数与 Smith 圆图"
+              ],
+              "quiz": [
+                {
+                  "q": "什么时候用 π 型匹配而不是 L 型？",
+                  "a": "需要宽带匹配或特定 Q 值控制时",
+                  "analysis": "L 型 Q 值由阻抗比唯一确定，π 型可以独立调节 Q 值。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "rf_noise",
+              "name": "噪声系数与接收机灵敏度",
+              "difficulty": 3,
+              "description": "接收机噪声特性和灵敏度计算，是射频前端设计的核心指标。",
+              "key_points": [
+                "噪声系数 NF = SNR_in/SNR_out",
+                "级联噪声系数公式（Friis 公式）",
+                "灵敏度 = -174dBm/Hz + 10logB + NF + SNR_req",
+                "LNA 是决定接收机噪声的关键级"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "Friis 级联噪声公式说明什么？",
+                  "a": "前级 NF 对总 NF 影响最大",
+                  "analysis": "第一级 LNA 的 NF 是接收机总噪声系数的主要决定因素。"
+                },
+                {
+                  "q": "提高接收机灵敏度的优先手段？",
+                  "a": "降低第一级 LNA 的 NF",
+                  "analysis": "或者降低后续级的增益（让 LNA 增益足够）。"
+                }
+              ],
+              "applications": [
+                "接收机设计",
+                "前端选型"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "cat_rf_frontend",
+          "name": "射频前端设计",
+          "icon": "🔬",
+          "color": "#d946ef",
+          "nodes": [
+            {
+              "id": "rf_lna",
+              "name": "低噪声放大器 LNA",
+              "difficulty": 4,
+              "description": "接收机第一级，决定接收机噪声性能。",
+              "key_points": [
+                "指标：NF<3dB，增益 15-25dB，IIP3 足够高",
+                "常见拓扑：共源极、cascode、差分对",
+                "功耗和噪声的 trade-off",
+                "输入匹配优化"
+              ],
+              "formula": "",
+              "prerequisites": [
+                "噪声系数与接收机灵敏度"
+              ],
+              "quiz": [
+                {
+                  "q": "LNA 设计的核心 trade-off？",
+                  "a": "噪声系数 vs 增益 vs 功耗 vs 线性度",
+                  "analysis": "全平衡 LNA 提供更好的线性和噪声性能，但功耗更高。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "rf_pa",
+              "name": "功率放大器 PA",
+              "difficulty": 4,
+              "description": "发射机核心，驱动天线辐射能量。",
+              "key_points": [
+                "指标：输出功率、效率、EVM、ACLR",
+                "线性 PA (Class A/AB) vs 非线性 PA (Class D/E/F)",
+                "Doherty 架构：峰值效率提升",
+                "DPD 数字预失真：线性化功放非线性"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "为什么手机 5G NR PA 用 Doherty？",
+                  "a": "峰值效率高 + 包络跟踪",
+                  "analysis": "5G PAPR 高，Doherty 在 back-off 时效率比普通 Class AB 高很多。"
+                },
+                {
+                  "q": "DPD 的作用？",
+                  "a": "补偿 PA 的非线性，改善 EVM 和 ACLR",
+                  "analysis": "DPD 让 PA 看起来像线性器件。"
+                }
+              ],
+              "applications": [
+                "手机、基站射频前端"
+              ]
+            },
+            {
+              "id": "rf_filter",
+              "name": "射频滤波器",
+              "difficulty": 3,
+              "description": "射频前端中用于选择特定频段、抑制带外干扰的关键器件，直接影响接收机灵敏度和发射机杂散指标。",
+              "key_points": [
+                "SAW 滤波器：体积小、Q 值高、集成度好",
+                "TC-SAW：性能优于传统 SAW",
+                "BAW：更高 Q 值、更高频率能力",
+                "腔体滤波器/介质滤波器：基站使用",
+                "指标：插入损耗、带外抑制、群延迟"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "手机射频前端为什么用大量滤波器？",
+                  "a": "多频段共存时抑制杂散和互调",
+                  "analysis": "5G NR 频段多（n1/n3/n41/n77/n78/n79…），每个频段都需要独立滤波器。"
+                }
+              ],
+              "applications": [
+                "手机前端",
+                "基站射频单元"
+              ]
+            },
+            {
+              "id": "rf_antenna",
+              "name": "天线设计基础",
+              "difficulty": 3,
+              "description": "研究电磁波辐射与接收的原理，包括天线基本参数、方向图、极化方式以及阵列设计，是无线通信空口的核心环节。",
+              "key_points": [
+                "基本辐射元：电偶极子 (λ/2 dipole)",
+                "增益：方向性 + 效率",
+                "方向图：主瓣/副瓣",
+                "极化：线极化/圆极化",
+                "天线阵列：相控阵、Massive MIMO 阵列"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "为什么 Massive MIMO 用大天线阵列？",
+                  "a": "提升波束赋形增益和空间复用能力",
+                  "analysis": "天线数越多，波束越窄，干扰抑制越好。"
+                }
+              ],
+              "applications": [
+                "基站天线",
+                "手机天线设计"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "cat_rf_test",
+          "name": "射频测试",
+          "icon": "📈",
+          "color": "#a855f7",
+          "nodes": [
+            {
+              "id": "test_vna",
+              "name": "矢量网络分析仪使用",
+              "difficulty": 3,
+              "description": "S 参数测试的主要仪器，支持反射/传输测试。",
+              "key_points": [
+                "全双端口校准（SOLT/LRM）",
+                "迹线设置与显示",
+                "时域/频域分析",
+                "Smith 圆图显示"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "VNA 校准为什么重要？",
+                  "a": "消除测试夹具和线缆的损耗和反射影响",
+                  "analysis": "不校准的 S 参数结果是错的。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "test_power",
+              "name": "功率与频谱测量",
+              "difficulty": 2,
+              "description": "用频谱分析仪和功率计测量发射信号质量。",
+              "key_points": [
+                "EVM 误差向量幅度",
+                "ACLR 邻道功率比",
+                "PAPR 峰均比测量",
+                "SEM 频谱发射模板"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "EVM 差通常由什么引起？",
+                  "a": "PA 非线性 / 载波泄漏 / I/Q 不平衡",
+                  "analysis": "是发射机整体质量的综合指标。"
+                }
+              ],
+              "applications": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "kg_transmission",
+      "name": "传输/光通信工程师",
+      "description": "光纤通信与传输网络方向知识体系",
+      "total_nodes": 8,
+      "total_quiz": 11,
+      "categories": [
+        {
+          "id": "cat_trans_optical",
+          "name": "光通信基础",
+          "icon": "🔤",
+          "color": "#0ea5e9",
+          "nodes": [
+            {
+              "id": "opt_fiber",
+              "name": "光纤基础",
+              "difficulty": 2,
+              "description": "光纤是光通信系统的传输介质，基于全反射原理传输光信号，具有带宽大、损耗低、抗电磁干扰等优势。",
+              "key_points": [
+                "纤芯/包层/涂覆层结构",
+                "单模 vs 多模光纤",
+                "衰减系数 (dB/km)",
+                "色散：材料/波导/偏振模",
+                "非线性效应：SPM/XPM/FWM"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "单模光纤和多模光纤的区别？",
+                  "a": "单模只有一个传播模式，带宽高、距离远；多模有多个模式，色散大",
+                  "analysis": "5G 前传用单模（25G/100G），数据中心用多模（多模 OM3/OM4）。"
+                },
+                {
+                  "q": "光纤的主要损耗来源？",
+                  "a": "吸收 + 散射 + 弯曲损耗",
+                  "analysis": "吸收（OH 离子、材料固有）、散射（瑞利散射、米氏散射）、弯曲（宏弯/微弯）。"
+                }
+              ],
+              "applications": [
+                "光传输网"
+              ]
+            },
+            {
+              "id": "opt_wdm",
+              "name": "WDM 波分复用",
+              "difficulty": 3,
+              "description": "在一根光纤上同时传输多个不同波长的光信号，大幅提升容量。",
+              "key_points": [
+                "CWDM：粗波分，波长间隔 20nm，低成本",
+                "DWDM：密集波分，波长间隔 0.8nm，高容量",
+                "波长锁定器 (ITU-T G.694.1)",
+                "光分插复用器 OADM",
+                "ROADM：可重构光分插复用"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "CWDM 和 DWDM 的主要区别？",
+                  "a": "波长间隔和容量不同（CWDM ~20nm，DWDM ~0.8nm）",
+                  "analysis": "DWDM 用窄线宽激光器和波长锁定器，成本高但容量大。"
+                },
+                {
+                  "q": "ROADM 的意义？",
+                  "a": "远程动态上下任意波长，替代人工光纤跳线",
+                  "analysis": "软件定义光网络 (SDON) 的核心技术。"
+                }
+              ],
+              "applications": [
+                "长途传输网",
+                "骨干网"
+              ]
+            },
+            {
+              "id": "opt_edfa",
+              "name": "EDFA 掺铒光纤放大器",
+              "difficulty": 3,
+              "description": "光域直接放大，无需光-电-光转换，是 DWDM 的关键器件。",
+              "key_points": [
+                "工作窗口：1530-1565nm C 波段",
+                "增益平坦度：用增益均衡器 GFF",
+                "ASE 噪声：自发辐射噪声",
+                "饱和功率/小信号增益"
+              ],
+              "formula": "",
+              "prerequisites": [
+                "光纤基础"
+              ],
+              "quiz": [
+                {
+                  "q": "EDFA 的 ASE 噪声问题如何解决？",
+                  "a": "增益均衡滤波器 + 合适的泵浦功率 + 控制链路总增益",
+                  "analysis": "ASE 在级联 EDFA 中累积，限制传输距离。"
+                }
+              ],
+              "applications": []
+            }
+          ]
+        },
+        {
+          "id": "cat_trans_net",
+          "name": "传输网络技术",
+          "icon": "🌐",
+          "color": "#22d3ee",
+          "nodes": [
+            {
+              "id": "net_otn",
+              "name": "OTN 光传送网",
+              "difficulty": 3,
+              "description": "面向分组的下一代光传输技术，支持以太网/IP 业务。",
+              "key_points": [
+                "OTU1/2/3/4 光通道",
+                "ODU1/2/3/4 光数据单元",
+                "电层调度 (OTN 交叉)",
+                "ASON/GMPLS 智能控制"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "OTN 和 SDH 的主要区别？",
+                  "a": "OTN 以分组/光通道为核心，SDH 以时隙为核心",
+                  "analysis": "OTN 支持更灵活的带宽分配和光层调度。"
+                }
+              ],
+              "applications": [
+                "骨干传输网"
+              ]
+            },
+            {
+              "id": "net_sdh",
+              "name": "SDH 同步数字体系",
+              "difficulty": 2,
+              "description": "传统传输技术，SONET 是北美版本。",
+              "key_points": [
+                "STM-1(155Mbps) → STM-64(10Gbps)",
+                "SDH 帧结构：9行270列字节块",
+                "指针调整 + 通道保护环",
+                "VC12/VC3/VC4 虚容器"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "SDH 保护环的倒换时间？",
+                  "a": "< 50ms",
+                  "analysis": "复用段保护环 (MSP) 和通道保护环 (PP) 都在 50ms 内完成倒换。"
+                }
+              ],
+              "applications": [
+                "传统传输网",
+                "2G/3G 基站回传"
+              ]
+            },
+            {
+              "id": "net_pon",
+              "name": "PON 无源光网络",
+              "difficulty": 2,
+              "description": "点到多点光接入技术，FTTH/FTTB 的核心。",
+              "key_points": [
+                "GPON：吉比特无源光网络 (2.5Gbps)",
+                "EPON：以太网无源光网络 (1.25Gbps)",
+                "XG-PON / XGS-PON (10Gbps)",
+                "OLT ←→ 分光器 ←→ ONU/ONT",
+                "测距 (Ranging) 和 DBA 动态带宽分配"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "GPON 上行带宽分配机制？",
+                  "a": "DBA 动态带宽分配 + TDM",
+                  "analysis": "OLT 统一调度所有 ONT 的上行发送时刻和带宽。"
+                },
+                {
+                  "q": "PON 为什么用 P2MP 树形？",
+                  "a": "无源器件成本低，节省光纤资源",
+                  "analysis": "分光器是无源器件，不需要供电。"
+                }
+              ],
+              "applications": [
+                "FTTH",
+                "校园网",
+                "企业接入"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "cat_trans_switch",
+          "name": "光纤交换机与数据中心",
+          "icon": "🏢",
+          "color": "#14b8a6",
+          "nodes": [
+            {
+              "id": "switch_spf",
+              "name": "光模块 SFP/SFP+/QSFP",
+              "difficulty": 2,
+              "description": "数据中心和传输网中常用的可插拔光收发模块，实现电信号和光信号的相互转换。",
+              "key_points": [
+                "SFP：1G/10G 小型封装可插拔",
+                "SFP+：10Gbps 高功率",
+                "QSFP+：40Gbps（4×10G）",
+                "QSFP28：100Gbps（4×25G）",
+                "QSFP-DD/OSFP：400G/800G 下一代",
+                "光接口类型：SR/DR/LR/ER"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "100G 常用哪种光模块？",
+                  "a": "QSFP28（4×25G）",
+                  "analysis": "QSFP-DD 和 OSFP 也用于 100G，但 QSFP28 更主流。"
+                }
+              ],
+              "applications": [
+                "数据中心",
+                "5G 前传"
+              ]
+            },
+            {
+              "id": "switch_dc",
+              "name": "数据中心网络架构",
+              "difficulty": 2,
+              "description": "数据中心内部服务器互联的网络拓扑设计，直接影响带宽利用、延迟和可扩展性。",
+              "key_points": [
+                "Spine-Leaf 架构（标准现代）",
+                "三层架构（Core-Aggregation-Access）",
+                "TOR 交换机（Top of Rack）",
+                "东西向流量优化",
+                "VXLAN Overlay 网络"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "现代数据中心为什么用 Spine-Leaf？",
+                  "a": "所有服务器间 2 跳可达，延迟确定，易于横向扩展",
+                  "analysis": "三层架构东西向流量受限，Spine-Leaf 是标准现代架构。"
+                }
+              ],
+              "applications": [
+                "云数据中心",
+                "运营商 IDC"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "kg_network_planning",
+      "name": "网络规划工程师",
+      "description": "网络规划与设计方向知识体系",
+      "total_nodes": 6,
+      "total_quiz": 5,
+      "categories": [
+        {
+          "id": "cat_plan_method",
+          "name": "规划方法论",
+          "icon": "📊",
+          "color": "#f59e0b",
+          "nodes": [
+            {
+              "id": "plan_capacity",
+              "name": "容量规划",
+              "difficulty": 3,
+              "description": "根据业务预测设计网络容量。",
+              "key_points": [
+                "KPI 目标：接通率/掉话率/吞吐率",
+                "Traffic model：Erlang B/C 公式",
+                "增长预测：3GPP 数据流量预测模型",
+                "关键容量指标：小区吞吐量/用户面/控制面资源"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "Erlang B 和 Erlang C 分别适合什么场景？",
+                  "a": "Erlang B：电话呼叫阻塞系统；Erlang C：带排队的呼叫中心",
+                  "analysis": "移动通信核心网和无线接入网容量规划的基础。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "plan_coverage",
+              "name": "覆盖规划",
+              "difficulty": 3,
+              "description": "设计站点分布确保目标覆盖。",
+              "key_points": [
+                "链路预算：从发射功率到接收灵敏度",
+                "Okumura-Hata / COST231-Hata 传播模型",
+                "射线追踪 (Ray Tracing) 仿真",
+                "栅格仿真 + 站点放置优化",
+                "室内覆盖：分布系统/DAS + 微微基站"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "Okumura-Hata 公式中城市和郊区的区别？",
+                  "a": "公式参数有修正项，郊区衰减比城市大",
+                  "analysis": "Okumura-Hata 是经验公式，城市/郊区/农村参数不同。"
+                }
+              ],
+              "applications": []
+            }
+          ]
+        },
+        {
+          "id": "cat_plan_5g",
+          "name": "5G 规划专项",
+          "icon": "🛰️",
+          "color": "#f97316",
+          "nodes": [
+            {
+              "id": "plan_sa_nsa",
+              "name": "SA/NSA 部署策略",
+              "difficulty": 3,
+              "description": "5G 网络部署存在独立组网(SA)和非独立组网(NSA)两大路线，各有优劣和适用场景。",
+              "key_points": [
+                "NSA Option 3x：LTE 锚点 + 5G NR（快速部署，控制面在 LTE）",
+                "SA Option 2：纯 5GC + 5G NR（长期目标，独立控制面）",
+                "Option 4/5/7：其他过渡方案",
+                "中国：先 NSA 再 SA"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "NSA 5G 为什么用 LTE 做锚点？",
+                  "a": "利用现有 LTE 覆盖和 MME 控制面，5G NR 只需部署用户面",
+                  "analysis": "快速 5G 商用的最现实路径。"
+                }
+              ],
+              "applications": [
+                "5G 网络建设规划"
+              ]
+            },
+            {
+              "id": "plan_mmw",
+              "name": "毫米波规划",
+              "difficulty": 3,
+              "description": "毫米波(FR2, 24-52GHz)是 5G/6G 的高频段方案，具有超大带宽但传播特性与 sub-6GHz 差异巨大。",
+              "key_points": [
+                "传播特性：绕射差、穿透差、带宽极大",
+                "部署策略：密集小站（街道级）",
+                "波束赋形：3D 精准覆盖",
+                "需要精准选址和波束仿真"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "毫米波需要哪些特殊规划手段？",
+                  "a": "更密集的站点部署 + 3D 波束仿真 + 精准选址",
+                  "analysis": "毫米波传播特性与 sub-6GHz 差异巨大。"
+                }
+              ],
+              "applications": [
+                "毫米波 5G 部署"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "cat_plan_tools",
+          "name": "常用工具",
+          "icon": "🛠️",
+          "color": "#64748b",
+          "nodes": [
+            {
+              "id": "tool_mapinfo",
+              "name": "MapInfo / Atoll",
+              "difficulty": 3,
+              "description": "无线通信规划领域的商用专业软件，集成传播仿真、干扰分析、参数规划等核心功能。",
+              "key_points": [
+                "Atoll：专业无线规划软件，支持 LTE/5G/WiFi",
+                "MapInfo：GIS 地理信息分析",
+                "操作：导入地图→传播模型→仿真→出图"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "Atoll 的核心功能？",
+                  "a": "传播仿真 + 干扰分析 + 参数规划",
+                  "analysis": "运营商 5G 规划的主力工具。"
+                }
+              ],
+              "applications": [
+                "运营商 5G 规划"
+              ]
+            },
+            {
+              "id": "tool_cad",
+              "name": "CAD / 天正 / ArcGIS",
+              "difficulty": 2,
+              "description": "站点设计、网络拓扑制图和地理信息系统的通用工具集，用于辅助网络规划的图纸和地图工作。",
+              "key_points": [
+                "ArcGIS：专业 GIS 平台",
+                "AutoCAD：站点设计图",
+                "网络拓扑制图"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [],
+              "applications": [
+                "站点设计",
+                "GIS 分析"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "kg_ai_engineer",
+      "name": "AI算法工程师(通信AI方向)",
+      "description": "面向通信网络的人工智能算法知识体系，覆盖机器学习基础、深度学习、通信AI应用",
+      "total_nodes": 12,
+      "total_quiz": 19,
+      "categories": [
+        {
+          "id": "cat_ai_ml",
+          "name": "机器学习基础",
+          "icon": "🤖",
+          "color": "#6366f1",
+          "nodes": [
+            {
+              "id": "ml_supervised",
+              "name": "监督学习",
+              "difficulty": 3,
+              "description": "利用标注数据训练模型预测输出，是机器学习最主流的范式。",
+              "key_points": [
+                "分类问题 vs 回归问题",
+                "训练集/验证集/测试集划分",
+                "过拟合与欠拟合",
+                "交叉验证 (K-Fold)",
+                "偏差-方差权衡"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "监督学习和无监督学习的核心区别？",
+                  "a": "训练数据是否有标签",
+                  "analysis": "监督学习用标注数据，无监督学习用无标签数据发现结构。"
+                },
+                {
+                  "q": "过拟合的典型表现和解决办法？",
+                  "a": "训练集准确率高但测试集准确率低；解决：正则化/早停/增加数据/降维",
+                  "analysis": "过拟合是模型记住了噪声而非学到了通用规律。"
+                }
+              ],
+              "applications": [
+                "网络异常检测",
+                "用户行为预测"
+              ]
+            },
+            {
+              "id": "ml_algo",
+              "name": "经典 ML 算法",
+              "difficulty": 3,
+              "description": "包括线性回归、逻辑回归、决策树、随机森林、SVM、KNN 等经典算法的原理和适用场景。",
+              "key_points": [
+                "线性回归：梯度下降求解",
+                "逻辑回归：Sigmoid 输出概率",
+                "决策树：信息增益/基尼指数分裂",
+                "随机森林：Bagging + 多树投票",
+                "SVM：最大间隔分类器 + 核技巧",
+                "XGBoost/LightGBM：梯度提升树"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "随机森林相比单棵决策树的优势？",
+                  "a": "减少过拟合 + 更高准确率 + 可并行训练",
+                  "analysis": "Bagging + 特征采样让模型更鲁棒。"
+                },
+                {
+                  "q": "SVM 核技巧的作用？",
+                  "a": "将数据映射到高维空间解决非线性问题",
+                  "analysis": "高斯核/RBF 核是最常用的非线性核函数。"
+                }
+              ],
+              "applications": [
+                "KPI 预测",
+                "故障分类"
+              ]
+            },
+            {
+              "id": "ml_eval",
+              "name": "模型评估与调优",
+              "difficulty": 3,
+              "description": "模型性能衡量指标、超参数搜索和特征工程。",
+              "key_points": [
+                "分类指标：Accuracy/Precision/Recall/F1/AUC",
+                "回归指标：MAE/MSE/R²",
+                "混淆矩阵解读",
+                "超参数搜索：Grid Search / Random Search / Bayes Opt",
+                "特征工程：归一化/标准化/特征选择/PCA"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "类别不平衡场景下为什么不用 Accuracy？",
+                  "a": "多数类预测正确就能获得高 Accuracy，掩盖少数类性能",
+                  "analysis": "应使用 F1、AUC 或 Precision-Recall 曲线。"
+                },
+                {
+                  "q": "PCA 的核心作用？",
+                  "a": "降维 + 去除特征相关性 + 可视化",
+                  "analysis": "保留方差最大的前 N 个主成分。"
+                }
+              ],
+              "applications": []
+            }
+          ]
+        },
+        {
+          "id": "cat_ai_dl",
+          "name": "深度学习",
+          "icon": "🧠",
+          "color": "#8b5cf6",
+          "nodes": [
+            {
+              "id": "dl_nn",
+              "name": "神经网络基础",
+              "difficulty": 3,
+              "description": "多层感知机 (MLP) 的结构、前向传播、反向传播和梯度下降优化。",
+              "key_points": [
+                "输入层→隐藏层→输出层",
+                "激活函数：ReLU/Sigmoid/Tanh/GELU",
+                "反向传播链式法则",
+                "梯度下降变体：SGD/Momentum/Adam",
+                "损失函数：Cross-Entropy/MSE"
+              ],
+              "formula": "",
+              "prerequisites": [
+                "监督学习"
+              ],
+              "quiz": [
+                {
+                  "q": "ReLU 相比 Sigmoid 的优势？",
+                  "a": "缓解梯度消失 + 计算更快",
+                  "analysis": "Sigmoid 在两端梯度趋近于零，深层网络训练困难。"
+                },
+                {
+                  "q": "Adam 优化器的特点？",
+                  "a": "结合 Momentum + RMSprop，自适应学习率，收敛快",
+                  "analysis": "是目前最常用的优化器之一。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "dl_cnn",
+              "name": "CNN 卷积神经网络",
+              "difficulty": 4,
+              "description": "擅长处理网格状数据（图像），通过卷积层提取空间局部特征。",
+              "key_points": [
+                "卷积层：局部连接 + 权值共享",
+                "池化层：降采样 (MaxPool/AvgPool)",
+                "经典架构：LeNet/AlexNet/VGG/ResNet/EfficientNet",
+                "Batch Normalization 加速训练",
+                "在通信中的应用：频谱感知/调制识别"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "CNN 中 ResNet 残差连接的作用？",
+                  "a": "缓解深层网络梯度消失，支持超深架构",
+                  "analysis": "H(x) = F(x) + x，让梯度可以直接回传。"
+                },
+                {
+                  "q": "CNN 在通信中的一个典型应用？",
+                  "a": "调制方式识别 / 频谱感知 / 干扰分类",
+                  "analysis": "原始 IQ 数据或频谱图作为输入。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "dl_rnn",
+              "name": "RNN / Transformer 序列模型",
+              "difficulty": 4,
+              "description": "处理时序数据的神经网络架构，Transformer 是当前主流。",
+              "key_points": [
+                "RNN/LSTM/GRU：循环结构处理序列",
+                "Transformer：自注意力机制 (Self-Attention)",
+                "Encoder-Decoder 架构",
+                "位置编码 (Positional Encoding)",
+                "在通信中的应用：流量预测/信道估计"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "Transformer 相比 LSTM 的核心优势？",
+                  "a": "并行训练 + 长程依赖建模能力强",
+                  "analysis": "自注意力让每个位置直接看到所有其他位置。"
+                },
+                {
+                  "q": "Self-Attention 的计算流程？",
+                  "a": "Q/K/V 矩阵 → Attention(Q,K,V) = softmax(QKᵀ/√dₖ)V",
+                  "analysis": "缩放点积注意力，√dₖ 防止梯度消失。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "dl_generation",
+              "name": "生成式 AI 与 LLM",
+              "difficulty": 4,
+              "description": "大语言模型和生成式 AI 的原理，在通信领域的应用。",
+              "key_points": [
+                "LLM 基础：Transformer Decoder + 大规模预训练",
+                "Fine-tuning 方法：Full / LoRA / QLoRA",
+                "Prompt Engineering 技巧",
+                "RAG 检索增强生成",
+                "通信 AI Agent：意图识别+自动运维"
+              ],
+              "formula": "",
+              "prerequisites": [
+                "RNN / Transformer 序列模型"
+              ],
+              "quiz": [
+                {
+                  "q": "LoRA 微调的核心思想？",
+                  "a": "冻结预训练权重，只训练低秩分解的增量矩阵，参数少、效率高",
+                  "analysis": "LoRA 让消费级 GPU 也能微调 7B 模型。"
+                },
+                {
+                  "q": "RAG 解决什么问题？",
+                  "a": "LLM 的知识时效性和领域特定性问题",
+                  "analysis": "检索外部知识源后再生成，减少幻觉。"
+                }
+              ],
+              "applications": []
+            }
+          ]
+        },
+        {
+          "id": "cat_ai_comm",
+          "name": "通信 AI 应用",
+          "icon": "📡",
+          "color": "#06b6d4",
+          "nodes": [
+            {
+              "id": "ai_opt",
+              "name": "AI 网络优化",
+              "difficulty": 4,
+              "description": "利用 AI 技术实现通信网络的智能化和自动化优化。",
+              "key_points": [
+                "智能参数调优：AI 自动优化邻区/切换/功率参数",
+                "故障根因分析：告警关联 + 自动定位",
+                "容量预测：基于历史流量预测扩容需求",
+                "节能优化：AI 智能关断闲时基站/载频",
+                "意图驱动网络 (IBN)"
+              ],
+              "formula": "",
+              "prerequisites": [
+                "AI 网络优化需要 ML 基础"
+              ],
+              "quiz": [
+                {
+                  "q": "AI 在网络故障根因分析中的典型方法？",
+                  "a": "图神经网络 (GNN) 建模网元依赖关系 + 异常检测定位根因",
+                  "analysis": "传统规则引擎无法处理跨域复杂告警关联。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "ai_wireless",
+              "name": "AI 无线传输",
+              "difficulty": 4,
+              "description": "将 AI 技术应用于物理层和链路层，突破传统通信极限。",
+              "key_points": [
+                "智能波束赋形：AI 预测最优波束方向",
+                "信道估计：深度学习估计 CSI",
+                "端到端通信系统：NN 替代传统调制/编码/解码",
+                "MIMO 预编码优化",
+                "6G 愿景：原生 AI 通信"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "端到端神经网络通信系统相比传统系统的优势？",
+                  "a": "联合优化各环节，理论上可逼近容量极限",
+                  "analysis": "传统系统模块独立设计，整体非最优。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "ai_scheduler",
+              "name": "AI 调度与资源分配",
+              "difficulty": 3,
+              "description": "用强化学习等技术优化无线资源调度。",
+              "key_points": [
+                "强化学习：Agent-Environment 交互学习最优策略",
+                "DQN / DDPG / PPO 算法",
+                "无线资源调度：时频资源块分配",
+                "切片资源动态调度",
+                "MEC 计算卸载决策"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "强化学习在资源调度中的优势？",
+                  "a": "可以学习复杂动态环境下的长期最优策略",
+                  "analysis": "传统算法基于固定规则，难以适应动态变化。"
+                }
+              ],
+              "applications": []
+            }
+          ]
+        },
+        {
+          "id": "cat_ai_deploy",
+          "name": "AI 工程化部署",
+          "icon": "🛠️",
+          "color": "#f97316",
+          "nodes": [
+            {
+              "id": "deploy_mlflow",
+              "name": "MLOps 与模型管理",
+              "difficulty": 2,
+              "description": "机器学习模型的工程化生命周期管理。",
+              "key_points": [
+                "模型版本管理与回溯",
+                "特征存储 (Feature Store)",
+                "模型监控与漂移检测",
+                "A/B 测试与灰度发布",
+                "MLflow / Kubeflow / SageMaker"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "为什么需要模型漂移检测？",
+                  "a": "线上数据分布随时间变化，模型性能会逐渐下降",
+                  "analysis": "需要持续监控输入分布和预测输出分布的变化。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "deploy_edge",
+              "name": "边缘 AI 推理优化",
+              "difficulty": 3,
+              "description": "在资源受限的边缘设备上部署深度学习模型的技术。",
+              "key_points": [
+                "模型压缩：量化 (INT8/INT4) + 剪枝 + 知识蒸馏",
+                "推理框架：ONNX Runtime / TensorRT / TFLite",
+                "NPU / 专用 AI 加速硬件",
+                "通信场景：基站侧 AI / MEC 推理"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "INT8 量化对模型精度的影响？",
+                  "a": "通常精度损失 < 1%，但推理速度提升 2-4 倍、内存减半",
+                  "analysis": "是边缘部署最常用的优化手段。"
+                }
+              ],
+              "applications": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "kg_iot_engineer",
+      "name": "物联网工程师",
+      "description": "物联网(IoT)方向知识体系，覆盖通信协议、架构设计、边缘计算、安全",
+      "total_nodes": 11,
+      "total_quiz": 14,
+      "categories": [
+        {
+          "id": "cat_iot_proto",
+          "name": "物联网通信协议",
+          "icon": "📡",
+          "color": "#10b981",
+          "nodes": [
+            {
+              "id": "iot_lpwan",
+              "name": "LPWAN 低功耗广域协议",
+              "difficulty": 3,
+              "description": "面向低功耗大范围物联网应用的无线通信协议家族。",
+              "key_points": [
+                "LoRa：扩频调制，自组网，开源",
+                "NB-IoT：蜂窝授权频段，3GPP 标准化",
+                "Sigfox：超窄带，运营商网络",
+                "LoRaWAN 架构：End Node → Gateway → Network Server → Application Server",
+                "典型应用：智能表计、资产追踪、环境监测"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "LoRa 和 NB-IoT 的核心区别？",
+                  "a": "LoRa 非授权频段自组网 / NB-IoT 授权频段蜂窝网络",
+                  "analysis": "LoRa 成本低、自建；NB-IoT 有运营商覆盖、QoS 更好。"
+                },
+                {
+                  "q": "LoRaWAN 的通信架构？",
+                  "a": "End Node → Gateway → Network Server → Application Server",
+                  "analysis": "Gateway 只做转发，Network Server 处理协议栈和鉴权。"
+                }
+              ],
+              "applications": [
+                "智慧城市",
+                "抄表系统"
+              ]
+            },
+            {
+              "id": "iot_wireless",
+              "name": "短距离无线协议",
+              "difficulty": 2,
+              "description": "近距离通信的主流无线技术，用于智能家居和可穿戴设备。",
+              "key_points": [
+                "BLE 5.x：低功耗蓝牙，Mesh 组网",
+                "Zigbee：IEEE 802.15.4，自组网",
+                "Thread：基于 6LoWPAN，Matter 协议底层",
+                "WiFi HaLow (802.11ah)：远距离低功耗 WiFi",
+                "UWB：超宽带精准定位"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "Matter 协议的意义？",
+                  "a": "统一智能家居设备互联互通标准，基于 Thread 网络层",
+                  "analysis": "Google/Apple/Amazon 共同推动，解决智能家居碎片化问题。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "iot_5g_redcap",
+              "name": "5G RedCap 与 IoT",
+              "difficulty": 3,
+              "description": "5G 面向中速率物联网场景的轻量化技术，替代 2G/3G IoT。",
+              "key_points": [
+                "RedCap (Reduced Capability)：3GPP Rel-18 标准化",
+                "定位：速率高于 NB-IoT/eMTC，低于 eMBB",
+                "带宽：5MHz/10MHz/20MHz",
+                "应用：工业传感器、可穿戴、安防摄像头",
+                "相比 LTE：功耗降低、成本降低"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "5G RedCap 的定位？",
+                  "a": "填补 NB-IoT 和 LTE Cat-4 之间的速率/成本空白",
+                  "analysis": "2025 年左右逐步商用，用于取代部分 Cat.1/Cat.4 设备。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "iot_mqtt",
+              "name": "MQTT 与 CoAP 协议",
+              "difficulty": 2,
+              "description": "物联网应用层最常用的两种消息协议。",
+              "key_points": [
+                "MQTT：发布/订阅模型，TCP 传输，轻量",
+                "CoAP：RESTful 模型，UDP 传输，类 HTTP",
+                "MQTT QoS 0/1/2 三级保障",
+                "消息 broker：EMQX / Mosquitto",
+                "典型应用：遥测数据上报 / 远程控制"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "MQTT 和 CoAP 分别适合什么场景？",
+                  "a": "MQTT 适合高可靠性遥测 / CoAP 适合资源受限 REST 式交互",
+                  "analysis": "MQTT 基于 TCP 可靠但开销大；CoAP 基于 UDP 更轻量。"
+                },
+                {
+                  "q": "MQTT QoS 1 的含义？",
+                  "a": "消息至少送达一次，可能重复，需要应用层去重",
+                  "analysis": "QoS 2 保证恰好一次，但握手开销大。"
+                }
+              ],
+              "applications": []
+            }
+          ]
+        },
+        {
+          "id": "cat_iot_arch",
+          "name": "物联网架构设计",
+          "icon": "🏗️",
+          "color": "#0ea5e9",
+          "nodes": [
+            {
+              "id": "iot_ref_arch",
+              "name": "物联网参考架构",
+              "difficulty": 2,
+              "description": "IoT 系统的分层架构和关键组件。",
+              "key_points": [
+                "感知层：传感器/执行器/标签",
+                "网络层：各种通信协议",
+                "平台层：设备管理/数据管理/应用使能",
+                "应用层：行业应用",
+                "云-边-端协同架构"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "物联网平台的核心功能？",
+                  "a": "设备接入管理 + 数据存储分析 + 规则引擎 + API 开放",
+                  "analysis": "阿里云 IoT / AWS IoT / 华为云 IoTDA 都是这类平台。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "iot_device_mgmt",
+              "name": "设备管理与 OTA",
+              "difficulty": 3,
+              "description": "海量 IoT 设备的生命周期管理。",
+              "key_points": [
+                "设备注册/鉴权/绑定",
+                "设备影子 (Device Shadow)：离线状态缓存",
+                "OTA 固件升级：批量/灰度/回滚",
+                "设备分组与标签管理",
+                "异常设备检测与自动隔离"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "Device Shadow 的作用？",
+                  "a": "缓存设备最近一次上报的状态，App 可离线查询",
+                  "analysis": "设备离线时 App 读影子，设备上线后同步实际状态。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "iot_data",
+              "name": "时序数据处理",
+              "difficulty": 3,
+              "description": "IoT 产生的海量时序数据的存储和分析。",
+              "key_points": [
+                "时序数据库：InfluxDB / TimescaleDB / TDengine",
+                "数据清洗：去重/插值/异常值过滤",
+                "流处理：Flink / Spark Streaming",
+                "规则引擎：实时告警触发",
+                "数据湖：冷热分级存储"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "为什么 IoT 数据适合时序数据库？",
+                  "a": "IoT 数据天然带时间戳、写入密集、查询按时间范围过滤",
+                  "analysis": "TDengine 在物联网场景写入性能比 MySQL 高 10 倍以上。"
+                }
+              ],
+              "applications": []
+            }
+          ]
+        },
+        {
+          "id": "cat_iot_edge",
+          "name": "边缘计算",
+          "icon": "⚡",
+          "color": "#f59e0b",
+          "nodes": [
+            {
+              "id": "edge_mec",
+              "name": "MEC 移动边缘计算",
+              "difficulty": 3,
+              "description": "5G 网络边缘部署计算能力，实现低时延业务处理。",
+              "key_points": [
+                "ETSI MEC 架构：ME Host + ME Platform + ME App",
+                "UPF 下沉 + MEC 服务器部署",
+                "典型场景：AR/VR、工业控制、车联网 V2X",
+                "与切片协同：eMBB/URLLC 切片资源隔离",
+                "硬件：MEC 服务器 / 工业边缘盒子"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "MEC 相比云端计算的核心优势？",
+                  "a": "时延从几十毫秒降到几毫秒，带宽节省 70% 以上",
+                  "analysis": "URLLC 业务（如工业控制）必须依赖 MEC。"
+                },
+                {
+                  "q": "MEC 和 CDN 的区别？",
+                  "a": "CDN 只缓存静态内容 / MEC 能运行动态应用",
+                  "analysis": "MEC 是计算能力下沉，CDN 是内容缓存。"
+                }
+              ],
+              "applications": [
+                "工业互联网",
+                "车联网"
+              ]
+            },
+            {
+              "id": "edge_fog",
+              "name": "Fog Computing 雾计算",
+              "difficulty": 2,
+              "description": "在云-端之间增加多层中间计算节点的架构。",
+              "key_points": [
+                "Fog 节点更靠近终端设备",
+                "层级化处理：端→雾→云",
+                "适合大规模分散 IoT 场景",
+                "思科推动的概念"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "Fog 和 Edge 的概念差异？",
+                  "a": "Fog 强调多层级中间节点，Edge 更宽泛指靠近用户的计算",
+                  "analysis": "实际工程中两者经常混用。"
+                }
+              ],
+              "applications": []
+            }
+          ]
+        },
+        {
+          "id": "cat_iot_security",
+          "name": "物联网安全",
+          "icon": "🔒",
+          "color": "#ef4444",
+          "nodes": [
+            {
+              "id": "iot_sensor_sec",
+              "name": "感知层安全",
+              "difficulty": 3,
+              "description": "传感器和标签层面的安全威胁和防护。",
+              "key_points": [
+                "物理攻击：侧信道攻击、故障注入",
+                "RFID/NFC 克隆",
+                "传感器数据篡改",
+                "轻量级加密算法：AES-CCM / ChaCha20",
+                "硬件安全模块 (HSE/SE)"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "物联网设备为什么用轻量级加密？",
+                  "a": "传感器算力/内存极其有限，无法运行标准 TLS",
+                  "analysis": "用 ChaCha20-Poly1305 或 AES-CCM 等轻量方案。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "iot_cloud_sec",
+              "name": "云端与平台安全",
+              "difficulty": 3,
+              "description": "IoT 平台和云端的安全防护。",
+              "key_points": [
+                "设备身份认证：X.509 证书 / 预共享密钥",
+                "API 安全：OAuth2 / API Key",
+                "数据加密：传输 (TLS) + 存储 (AES-256)",
+                "访问控制：RBAC + 细粒度权限",
+                "异常流量检测：DDoS / 恶意指令"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "Mirai 僵尸网络攻击利用了什么弱点？",
+                  "a": "大量 IoT 设备使用默认用户名密码 / 无认证",
+                  "analysis": "2016 年 Mirai 感染 10 万+ IoT 设备发动 DDoS。"
+                }
+              ],
+              "applications": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "kg_cloud_engineer",
+      "name": "云计算/边缘计算工程师",
+      "description": "云原生与边缘计算方向知识体系，覆盖容器化、Kubernetes、微服务、云架构",
+      "total_nodes": 11,
+      "total_quiz": 15,
+      "categories": [
+        {
+          "id": "cat_cloud_container",
+          "name": "容器化技术",
+          "icon": "🐳",
+          "color": "#2563eb",
+          "nodes": [
+            {
+              "id": "cont_docker",
+              "name": "Docker 容器",
+              "difficulty": 2,
+              "description": "容器化的事实标准，轻量级应用打包和运行方案。",
+              "key_points": [
+                "Docker 架构：Client → Daemon → Registry",
+                "镜像 vs 容器：镜像是只读模板，容器是运行实例",
+                "Dockerfile 编写：FROM/RUN/COPY/CMD/ENTRYPOINT",
+                "Docker Compose：多容器编排",
+                "容器 vs 虚拟机：共享内核，秒级启动"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "容器和虚拟机的核心区别？",
+                  "a": "容器共享宿主内核 / VM 有独立内核",
+                  "analysis": "容器秒级启动，VM 分钟级；容器更轻量但隔离性稍弱。"
+                },
+                {
+                  "q": "Docker 镜像分层的意义？",
+                  "a": "复用基础层 + 减少存储占用 + 加速分发",
+                  "analysis": "多个镜像共享相同基础层，只存储一份。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "cont_k8s",
+              "name": "Kubernetes 容器编排",
+              "difficulty": 4,
+              "description": "云原生时代的容器编排标准，自动化部署、扩缩和管理。",
+              "key_points": [
+                "K8s 架构：Master (API Server/etcd/Scheduler/Controller) + Worker (Kubelet/kube-proxy)",
+                "核心概念：Pod / Deployment / Service / Ingress / ConfigMap / Secret",
+                "调度与扩缩：HPA 水平自动扩缩",
+                "持久化：PV/PVC + StorageClass",
+                "Service Mesh：Istio 流量管理"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "K8s Pod 和 Deployment 的关系？",
+                  "a": "Deployment 管理 Pod 的副本数和更新策略",
+                  "analysis": "直接创建 Pod 会在节点故障时丢失，Deployment 保证副本恢复。"
+                },
+                {
+                  "q": "K8s Service 的类型和区别？",
+                  "a": "ClusterIP(集群内) / NodePort(节点端口) / LoadBalancer(云厂商) / ExternalName",
+                  "analysis": "Service 为 Pod 提供稳定访问入口，Pod IP 会变。"
+                }
+              ],
+              "applications": [
+                "云原生应用部署",
+                "MEC 应用编排"
+              ]
+            },
+            {
+              "id": "cont_oci",
+              "name": "OCI 标准与 Runtime",
+              "difficulty": 2,
+              "description": "容器运行时的标准化组织和技术实现。",
+              "key_points": [
+                "OCI 三大标准：Image Spec / Runtime Spec / Distribution Spec",
+                "containerd：K8s 默认 runtime (CRI)",
+                "CRI-O：轻量级 K8s runtime",
+                "Docker → containerd → runc 调用链"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "K8s CRI 接口的作用？",
+                  "a": "K8s 和容器运行时之间的标准化接口，支持 containerd/CRI-O 等多种后端",
+                  "analysis": "不再依赖 Docker 作为底层 runtime。"
+                }
+              ],
+              "applications": []
+            }
+          ]
+        },
+        {
+          "id": "cat_cloud_native",
+          "name": "云原生架构",
+          "icon": "☁️",
+          "color": "#06b6d4",
+          "nodes": [
+            {
+              "id": "cloud_microservice",
+              "name": "微服务架构",
+              "difficulty": 3,
+              "description": "将单体应用拆分为小型独立服务的架构风格。",
+              "key_points": [
+                "服务拆分：限界上下文 (Bounded Context)",
+                "服务注册发现：Consul / Eureka / etcd",
+                "API Gateway：流量入口 + 路由 + 限流",
+                "配置中心：Nacos / Apollo / Spring Cloud Config",
+                "分布式事务：Saga / TCC / 本地消息表"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "微服务相比单体的优势和挑战？",
+                  "a": "优势：独立部署扩展、技术异构；挑战：分布式复杂性、运维成本",
+                  "analysis": "适合大型复杂系统，小团队单体更高效。"
+                },
+                {
+                  "q": "分布式事务 Saga 模式？",
+                  "a": "每个服务有补偿操作，失败时依次回滚已完成步骤",
+                  "analysis": "长流程业务最常用的最终一致性方案。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "cloud_serverless",
+              "name": "Serverless 无服务器架构",
+              "difficulty": 3,
+              "description": "按量付费、自动扩缩的函数即服务 (FaaS) 架构。",
+              "key_points": [
+                "FaaS：AWS Lambda / 阿里云函数计算 / 腾讯云 SCF",
+                "BaaS：后端即服务 (数据库/存储/鉴权托管)",
+                "冷启动问题与优化",
+                "典型应用：事件驱动、定时任务、Webhook"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "Serverless 的冷启动问题？",
+                  "a": "长时间空闲后首次请求需要初始化运行环境，延迟可能达 100-500ms",
+                  "analysis": "解决方案：Provisioned Concurrency / 保持最小实例数。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "cloud_service_mesh",
+              "name": "Service Mesh 服务网格",
+              "difficulty": 3,
+              "description": "通过 Sidecar 代理实现服务间通信的透明管理。",
+              "key_points": [
+                "Istio / Linkerd / Consul Connect",
+                "核心功能：流量管理 (灰度/金丝雀)、安全 (mTLS)、可观测性",
+                "Sidecar 模式：每个 Pod 注入 envoy 代理",
+                "与 K8s 集成：CRD 定义路由策略"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "Service Mesh 解决了什么问题？",
+                  "a": "微服务通信的统一管理：灰度发布、链路加密、熔断重试、监控",
+                  "analysis": "业务代码零侵入，基础设施层解决分布式复杂性。"
+                }
+              ],
+              "applications": []
+            }
+          ]
+        },
+        {
+          "id": "cat_cloud_infra",
+          "name": "云基础设施",
+          "icon": "🏢",
+          "color": "#64748b",
+          "nodes": [
+            {
+              "id": "cloud_iaas",
+              "name": "IaaS 基础设施服务",
+              "difficulty": 2,
+              "description": "云计算基础设施层，提供虚拟计算/存储/网络资源。",
+              "key_points": [
+                "计算：ECS/VM 实例、GPU 实例、弹性伸缩组",
+                "存储：块存储/对象存储/文件存储",
+                "网络：VPC/子网/路由/安全组/NAT",
+                "腾讯云/阿里云/AWS 主流产品对比",
+                "OpenStack 开源 IaaS"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "对象存储和块存储的区别？",
+                  "a": "对象存储适合非结构化数据(S3/OSS) / 块存储适合磁盘挂载(云盘)",
+                  "analysis": "对象存储按需无限扩展，块存储有固定大小上限。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "cloud_sdwan",
+              "name": "SD-WAN / 云网络",
+              "difficulty": 3,
+              "description": "软件定义广域网，企业多分支互联的现代方案。",
+              "key_points": [
+                "SD-WAN：集中控制器 + 边缘 CPE，智能选路",
+                "优势：降本 (Internet 替代 MPLS) + 智能路由 + 云接入优化",
+                "Underlay vs Overlay 网络",
+                "MPLS VPN vs SD-WAN 对比",
+                "与 5G 切片协同"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "SD-WAN 相比传统 MPLS 的优势？",
+                  "a": "成本降低 30-50% / 动态路径选择 / 云应用加速 / 部署快",
+                  "analysis": "用廉价 Internet + 智能调度替代昂贵 MPLS 专线。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "cloud_sre",
+              "name": "SRE 与可观测性",
+              "difficulty": 3,
+              "description": "站点可靠性工程，保障云服务高可用的工程实践。",
+              "key_points": [
+                "SLI/SLO/SLA：服务等级指标/目标/协议",
+                "错误预算 (Error Budget)：SLO 内的故障容忍额度",
+                "四大黄金指标：延迟/流量/错误/饱和度",
+                "可观测性三大支柱：Metrics / Logging / Tracing",
+                "Prometheus + Grafana + ELK + Jaeger 技术栈"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "SLO 和 SLA 的区别？",
+                  "a": "SLO 是内部技术目标 / SLA 是对客户的合同承诺",
+                  "analysis": "SLA 通常更保守，SLO 是团队实际追求的水平。"
+                },
+                {
+                  "q": "错误预算的作用？",
+                  "a": "量化团队可花多少时间在新功能 vs 维护稳定性",
+                  "analysis": "错误预算快用完时应暂停发版、集中修复稳定性问题。"
+                }
+              ],
+              "applications": []
+            }
+          ]
+        },
+        {
+          "id": "cat_cloud_mec",
+          "name": "通信云与 MEC",
+          "icon": "📡",
+          "color": "#a855f7",
+          "nodes": [
+            {
+              "id": "mec_platform",
+              "name": "MEC 平台架构",
+              "difficulty": 3,
+              "description": "运营商边缘云平台的技术实现。",
+              "key_points": [
+                "MEP (MEC Platform)：应用使能层 + 基础设施层",
+                "能力开放 API：位置/带宽/RAN 信息",
+                "MEC Host 硬件：服务器 + 加速卡",
+                "应用场景：AR/VR/工业控制/视频分析"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "MEC 平台的 API 开放了什么能力？",
+                  "a": "RAN 侧信息(小区负载/用户位置) + 网络能力(带宽保障/时延)",
+                  "analysis": "让边缘应用能感知网络状态、动态调整策略。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "mec_edge_stack",
+              "name": "边缘云技术栈",
+              "difficulty": 3,
+              "description": "边缘侧计算基础设施的技术栈。",
+              "key_points": [
+                "轻量级虚拟化：Kata Containers / Firecracker MicroVM",
+                "边缘 K8s：KubeEdge / OpenYurt / SuperEdge",
+                "离线自治：边缘节点断网后本地自治运行",
+                "云边协同：云端控制 + 边缘执行",
+                "硬件加速：GPU/NPU 边缘推理"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "KubeEdge 的架构特点？",
+                  "a": "云端 CloudCore + 边缘 EdgeCore，支持离线自治",
+                  "analysis": "EdgeCore 是轻量化 K8s Agent，断网后本地 Pod 继续运行。"
+                }
+              ],
+              "applications": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "kg_power_engineer",
+      "name": "通信电源工程师",
+      "description": "通信电源方向知识体系，覆盖基站/机房供电、电池技术、配电、节能",
+      "total_nodes": 8,
+      "total_quiz": 11,
+      "categories": [
+        {
+          "id": "cat_power_basic",
+          "name": "电源基础",
+          "icon": "⚡",
+          "color": "#eab308",
+          "nodes": [
+            {
+              "id": "power_ac_dc",
+              "name": "AC/DC 基础与整流",
+              "difficulty": 2,
+              "description": "通信电源的交流电输入和整流转换基础。",
+              "key_points": [
+                "交流电基础：三相四线制 / 单相",
+                "整流电路：三相桥式整流",
+                "功率因数校正 (PFC)",
+                "谐波及其抑制 (THD)",
+                "直流母线设计"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "通信电源为什么需要 PFC？",
+                  "a": "提高功率因数，减少谐波污染，满足电网入网要求",
+                  "analysis": "不做 PFC 的话 THD 可能超过 30%，电网会拒绝接入。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "power_converter",
+              "name": "DC/DC 变换器",
+              "difficulty": 3,
+              "description": "DC/DC 变换的拓扑和控制技术。",
+              "key_points": [
+                "Buck 降压 / Boost 升压 / Buck-Boost 升降压",
+                "硬开关 vs 软开关 (ZVS/ZCS)",
+                "LLC 谐振变换器：高效、高频",
+                "多相并联：大电流输出",
+                "数字控制：MCU/FPGA 实现闭环"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "软开关 (ZVS/ZCS) 的意义？",
+                  "a": "降低开关损耗，提高效率，允许更高开关频率",
+                  "analysis": "LLC 变换器实现全范围 ZVS，效率可达 96%+。"
+                },
+                {
+                  "q": "Buck 变换器输出电压公式？",
+                  "a": "V_out = D × V_in (D 为占空比)",
+                  "analysis": "Duty Cycle = t_on / T。"
+                }
+              ],
+              "applications": []
+            }
+          ]
+        },
+        {
+          "id": "cat_power_battery",
+          "name": "储能与电池技术",
+          "icon": "🔋",
+          "color": "#22c55e",
+          "nodes": [
+            {
+              "id": "bat_lead",
+              "name": "铅酸电池",
+              "difficulty": 2,
+              "description": "通信机房传统备用电源，性价比高但重量大、寿命短。",
+              "key_points": [
+                "VRLA 阀控式密封铅酸电池：免维护",
+                "AGM 玻璃毡隔板 vs GEL 胶体",
+                "标称电压 2V/6V/12V",
+                "浮充电压 2.23-2.27V/cell",
+                "循环寿命约 500-1000 次",
+                "基站后备时间：按负载计算容量"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "铅酸电池浮充电压过高会有什么后果？",
+                  "a": "过充电导致电解液分解产气，电池鼓包甚至爆炸",
+                  "analysis": "浮充电压必须严格控制在 2.23-2.27V/cell 范围。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "bat_lithium",
+              "name": "磷酸铁锂电池 (LFP)",
+              "difficulty": 3,
+              "description": "通信电源新型储能方案，寿命长、能量密度高。",
+              "key_points": [
+                "LFP vs NCM/NCA：LFP 更安全、循环寿命更长",
+                "标称电压 3.2V/cell",
+                "充放电电压范围 2.5-3.65V",
+                "循环寿命 >3000 次 @80%DOD",
+                "BMS 电池管理系统：均衡/保护/监控",
+                "通信基站 48V 磷酸铁锂储能方案"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "磷酸铁锂相比铅酸的优势？",
+                  "a": "循环寿命 3-5 倍 / 能量密度 3 倍 / 无污染",
+                  "analysis": "缺点是成本较高，低温性能较差。"
+                },
+                {
+                  "q": "BMS 的核心功能？",
+                  "a": "SOC/SOH 估算 + 充放电保护 + 均衡管理 + 温度管理 + 通信",
+                  "analysis": "没有 BMS 锂电池组会非常危险。"
+                }
+              ],
+              "applications": [
+                "5G 基站备电",
+                "新能源储能"
+              ]
+            },
+            {
+              "id": "bat_sizing",
+              "name": "电池容量计算与选型",
+              "difficulty": 3,
+              "description": "根据负载和备电需求计算电池容量。",
+              "key_points": [
+                "容量公式：C = (P × t) / (V × η × DOD)",
+                "P：负载功率 (W)",
+                "t：备电时间 (h)",
+                "V：电池电压 (V)",
+                "η： inverter 效率 (≈0.95)",
+                "DOD：放电深度 (铅酸 0.8 / 磷酸铁锂 0.9)",
+                "串并联设计：电压匹配 + 容量扩展"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "一个 500W 基站备电 4 小时需要多大容量的 48V 电池？",
+                  "a": "C = (500 × 4) / (48 × 0.95 × 0.8) ≈ 55Ah → 选 60Ah",
+                  "analysis": "要留余量，实际选型要乘 1.2 安全系数。"
+                }
+              ],
+              "applications": []
+            }
+          ]
+        },
+        {
+          "id": "cat_power_distribution",
+          "name": "配电与节能",
+          "icon": "🏠",
+          "color": "#f97316",
+          "nodes": [
+            {
+              "id": "dist_ups",
+              "name": "UPS 不间断电源",
+              "difficulty": 2,
+              "description": "关键机房的不间断供电保障。",
+              "key_points": [
+                "UPS 拓扑：离线/在线互动/双变换在线式",
+                "双变换在线式：AC→DC→AC 全程稳压",
+                "电池后备时间管理",
+                "N+X 冗余配置",
+                "并机技术：多台 UPS 并联供电"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "在线式 UPS 和离线式的区别？",
+                  "a": "在线式始终 AC→DC→AC 变换，稳压精度高但效率稍低",
+                  "analysis": "关键机房必须用在线式，离线式只在断电时才切换。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "dist_energy_saving",
+              "name": "基站节能技术",
+              "difficulty": 3,
+              "description": "运营商降本增效的核心手段，电费占 OPEX 30-40%。",
+              "key_points": [
+                "智能温控：空调变频 + 自然冷源利用",
+                "能效比 PUE：数据中心 <1.4 / 基站 <1.2",
+                "蓄电池温控柜：延长电池寿命",
+                "AI 节能：闲时自动关断载频/功放",
+                "光伏+储能：分布式新能源供电",
+                "能耗监控与管理平台"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "PUE 是什么？目标值多少？",
+                  "a": "Power Usage Effectiveness = 总能耗/IT 设备能耗，目标 <1.4",
+                  "analysis": "腾讯数据中心已做到 1.09，接近理论极限。"
+                },
+                {
+                  "q": "5G 基站相比 4G 能耗翻倍，节能手段？",
+                  "a": "Massive MIMO 功放优化 + AI 关断闲时通道 + 高能效硬件",
+                  "analysis": "运营商 5G 能耗是核心痛点，节能技术是必选项。"
+                }
+              ],
+              "applications": []
+            },
+            {
+              "id": "dist_monitor",
+              "name": "动力环境监控",
+              "difficulty": 2,
+              "description": "机房/基站的实时监控和告警系统。",
+              "key_points": [
+                "监控对象：市电/电池/空调/烟感/门禁/视频",
+                "告警机制：短信/邮件/APP/工单系统",
+                "监控平台：动环监控系统",
+                "数据采集：Modbus / IEC 104 / MQTT 协议",
+                "智能分析：AI 预测性维护"
+              ],
+              "formula": "",
+              "prerequisites": [],
+              "quiz": [
+                {
+                  "q": "动力环境监控的典型架构？",
+                  "a": "前端传感器 → RTU 采集单元 → 传输网络 → 中心监控平台",
+                  "analysis": "传输常用光纤/4G/NB-IoT。"
+                }
+              ],
+              "applications": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "area_map": {
+    "5G无线网络优化工程师": "kg_5g_optimization",
+    "核心网工程师": "kg_core_network",
+    "射频工程师": "kg_rf_engineer",
+    "传输/光通信工程师": "kg_transmission",
+    "网络规划工程师": "kg_network_planning",
+    "AI算法工程师(通信AI方向)": "kg_ai_engineer",
+    "物联网工程师": "kg_iot_engineer",
+    "云计算/边缘计算工程师": "kg_cloud_engineer",
+    "通信电源工程师": "kg_power_engineer"
+  }
+}
