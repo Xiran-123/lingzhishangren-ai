@@ -774,8 +774,9 @@
 
         .scene-plate {
             position: relative;
-            width: min(100vw, calc(100vh * 1.7795));
-            height: min(100vh, calc(100vw / 1.7795));
+            /* 底图 1824x1052，宽高比 1.7338，按此锁定比例避免拉伸导致热区错位 */
+            width: min(100vw, calc(100vh * 1.7338));
+            height: min(100vh, calc(100vw / 1.7338));
             background: #05122b url("{{ url_for('static', filename='img/scenario_map.jpg') }}") center center / 100% 100% no-repeat;
             box-shadow: 0 0 90px rgba(0, 92, 190, .45);
             overflow: hidden;
@@ -5070,22 +5071,22 @@
 
             <a class="scene-hot" href="/scenario-cluster"
                onclick="pickScenario(event,'/scenario-cluster','5G 簇优化')"
-               style="left:19.3%;top:29.7%;width:15.5%;height:9.2%"
+               style="left:19.8%;top:29.8%;width:14.7%;height:8.5%"
                aria-label="进入 5G 簇优化实训" title="5G 簇优化（簇2）· 10 步"></a>
 
             <a class="scene-hot" href="/scenario-grid"
                onclick="pickScenario(event,'/scenario-grid','5G 网格优化')"
-               style="left:59.3%;top:27.6%;width:16.8%;height:9.4%"
+               style="left:59.8%;top:27.1%;width:15.7%;height:8.9%"
                aria-label="进入 5G 网格优化实训" title="5G 网格优化（网格1）· 10 步"></a>
 
             <a class="scene-hot" href="/scenario-demo"
                onclick="pickScenario(event,'/scenario-demo','5G 单站验证')"
-               style="left:30.9%;top:44.3%;width:15.2%;height:9.5%"
+               style="left:31.1%;top:44.5%;width:14.6%;height:8.7%"
                aria-label="进入 5G 单站验证实训" title="5G 单站验证 · 8 步"></a>
 
             <a class="scene-hot" href="/scenario-ai"
                onclick="pickScenario(event,'/scenario-ai','AI 自定义剧情')"
-               style="left:53.6%;top:59.3%;width:16.0%;height:8.3%"
+               style="left:53.0%;top:59.3%;width:16.4%;height:8.7%"
                aria-label="进入 AI 模拟剧情" title="AI 自定义剧情 · 自动生成"></a>
 
             <div class="scene-tip">点击场景中的蓝色标注进入对应实训 · Esc 关闭</div>
