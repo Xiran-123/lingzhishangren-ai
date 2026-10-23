@@ -25,6 +25,44 @@ DATA_DIR = "data"
 CREDENTIAL_FILE = os.path.join(DATA_DIR, "credentials.json")
 AUDIT_FILE = os.path.join(DATA_DIR, "audit_log.jsonl")
 
+# ====================== TiDB 数据库支持 ======================
+try:
+    import pymysql as _pymysql
+    _DB_AVAILABLE = True
+except ImportError:
+    _DB_AVAILABLE = False
+    _pymysql = None
+
+_SEC_DB_CONFIG = {
+    'host': os.environ.get('DB_HOST', '8.155.130.156'),
+    'port': int(os.environ.get('DB_PORT', '4000')),
+    'user': os.environ.get('DB_USER', 'root'),
+    'password': os.environ.get('DB_PASSWORD', ''),
+    'database': os.environ.get('DB_NAME', 'lingzhishangren'),
+    'charset': 'utf8mb4',
+    'connect_timeout': 5,
+}
+
+_sec_db_ready = False
+
+
+def _sec_get_db():
+    global _sec_db_ready
+    if not _DB_AVAILABLE:
+        return None
+    if not _sec_db_ready:
+        try:
+            _pymysql.connect(**_SEC_DB_CONFIG).close()
+            _sec_db_ready = True
+        except Exception:
+            _sec_db_ready = False
+            return None
+    try:
+        return _pymysql.connect(**_SEC_DB_CONFIG, cursorclass=_pymysql.cursors.DictCursor)
+    except Exception:
+        _sec_db_ready = False
+        return None
+
 AUDIT_MAX_BYTES = 5 * 1024 * 1024   # 审计日志超过 5MB 自动滚动，只保留最近 2000 条
 AUDIT_KEEP_LINES = 2000
 
@@ -89,6 +127,46 @@ def is_hashed(value: str) -> bool:
 # ============================ 凭据存储 ============================
 
 def _load_store() -> dict:
+    """加载凭据库（DB 优先 + JSON 降级 + DB 空表自动从 JSON 迁移）"""
+    db = _sec_get_db()
+    if db is not None:
+        try:
+            cur = db.cursor()
+            # 懒迁移：DB 空 → 从 JSON 文件导入
+            _migrated = False
+            if os.path.exists(CREDENTIAL_FILE):
+                cur.execute('SELECT COUNT(*) FROM teachers')
+                teacher_count = cur.fetchone()['COUNT(*)']
+                cur.execute("SELECT COUNT(*) FROM system_configs WHERE config_key='access_password'")
+                config_count = cur.fetchone()['COUNT(*)']
+                if teacher_count == 0 or config_count == 0:
+                    with open(CREDENTIAL_FILE, 'r', encoding='utf-8') as _f:
+                        _jdata = json.load(_f)
+                    if teacher_count == 0:
+                        for _uname, _pw in _jdata.get('teachers', {}).items():
+                            cur.execute("""INSERT INTO teachers (username, password_hash, created_at)
+                                VALUES (%s, %s, NOW())""", (_uname, _pw))
+                    if config_count == 0:
+                        _ap = _jdata.get('access_password', '')
+                        if _ap:
+                            cur.execute("""INSERT INTO system_configs (config_key, config_value, updated_at)
+                                VALUES ('access_password', %s, NOW())""", (_ap,))
+                    db.commit()
+                    _migrated = True
+                    print("[Security] 从 credentials.json 导入到 TiDB")
+            cur.execute("SELECT config_value FROM system_configs WHERE config_key='access_password'")
+            row = cur.fetchone()
+            access_pw = row['config_value'] if row else ''
+            cur.execute('SELECT username, password_hash FROM teachers')
+            teachers = {r['username']: r['password_hash'] for r in cur.fetchall()}
+            db.close()
+            return {"version": 1, "access_password": access_pw, "teachers": teachers,
+                    "created_at": _now(), "migrated_at": _now()}
+        except Exception as e:
+            print(f"[Security] DB 凭据读取失败（降级 JSON）: {e}")
+            try: db.close()
+            except Exception: pass
+    # --- 降级 JSON ---
     _ensure_dir()
     if os.path.exists(CREDENTIAL_FILE):
         try:
@@ -103,6 +181,27 @@ def _load_store() -> dict:
 
 
 def _save_store(store: dict):
+    """保存凭据库（DB 优先 + JSON 降级）"""
+    db = _sec_get_db()
+    if db is not None:
+        try:
+            cur = db.cursor()
+            cur.execute("""INSERT INTO system_configs (config_key, config_value, updated_at)
+                VALUES ('access_password', %s, NOW())
+                ON DUPLICATE KEY UPDATE config_value=%s, updated_at=NOW()""",
+                (store.get('access_password', ''), store.get('access_password', '')))
+            cur.execute('DELETE FROM teachers')
+            for uname, pw_hash in store.get('teachers', {}).items():
+                cur.execute("""INSERT INTO teachers (username, password_hash, created_at)
+                    VALUES (%s, %s, NOW())""", (uname, pw_hash))
+            db.commit()
+            db.close()
+            return
+        except Exception as e:
+            print(f"[Security] DB 凭据保存失败（降级 JSON）: {e}")
+            try: db.close()
+            except Exception: pass
+    # --- 降级 JSON ---
     _ensure_dir()
     tmp = CREDENTIAL_FILE + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:
@@ -214,7 +313,7 @@ def _rotate_if_needed():
 
 def audit(action: str, target: str = "", detail: str = "", before=None, after=None,
           actor: str = "", role: str = "", ip: str = "") -> dict:
-    """写入一条审计记录。action 建议取 AUDIT_ACTIONS 中的键"""
+    """写入一条审计记录（DB 优先 + JSONL 降级）"""
     ctx = _actor_from_context()
     entry = {
         "ts": _now(),
@@ -230,6 +329,31 @@ def audit(action: str, target: str = "", detail: str = "", before=None, after=No
         entry["before"] = before
     if after is not None:
         entry["after"] = after
+    db = _sec_get_db()
+    if db is not None:
+        try:
+            cur = db.cursor()
+            cur.execute("""INSERT INTO audit_logs (ts, action, action_label, actor, role, ip, target, detail, before_val, after_val)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                (entry.get("ts"), action, AUDIT_ACTIONS.get(action, action),
+                 actor or ctx["actor"], role or ctx["role"], ip or ctx["ip"],
+                 target, detail,
+                 json.dumps(before, ensure_ascii=False) if before is not None else None,
+                 json.dumps(after, ensure_ascii=False) if after is not None else None))
+            db.commit()
+            db.close()
+        except Exception as e:
+            print(f"[Security] DB 审计写入失败（降级 JSONL）: {e}")
+            try: db.close()
+            except Exception: pass
+            _write_audit_jsonl(entry)
+    else:
+        _write_audit_jsonl(entry)
+    return entry
+
+
+def _write_audit_jsonl(entry: dict):
+    """降级写入 JSONL"""
     try:
         _ensure_dir()
         with _lock:
@@ -238,11 +362,53 @@ def audit(action: str, target: str = "", detail: str = "", before=None, after=No
             _rotate_if_needed()
     except OSError as e:
         print(f"[Security] 审计写入失败: {e}")
-    return entry
 
 
 def read_audit(limit: int = 200, action: str = "", keyword: str = "") -> list:
-    """读取审计记录（倒序，最新在前）"""
+    """读取审计记录（DB 优先 + JSONL 降级，倒序最新在前）"""
+    db = _sec_get_db()
+    if db is not None:
+        try:
+            cur = db.cursor()
+            sql = 'SELECT * FROM audit_logs WHERE 1=1'
+            params = []
+            if action:
+                sql += ' AND action=%s'
+                params.append(action)
+            if keyword:
+                sql += ' AND (detail LIKE %s OR target LIKE %s OR actor LIKE %s)'
+                params.extend([f'%{keyword}%'] * 3)
+            sql += ' ORDER BY ts DESC LIMIT %s'
+            params.append(limit)
+            cur.execute(sql, params)
+            rows = cur.fetchall()
+            db.close()
+            import datetime as _dt
+            result = []
+            for r in rows:
+                entry = {
+                    "ts": r.get("ts").strftime("%Y-%m-%d %H:%M:%S") if isinstance(r.get("ts"), _dt.datetime) else r.get("ts"),
+                    "action": r.get("action"),
+                    "action_label": r.get("action_label"),
+                    "actor": r.get("actor"),
+                    "role": r.get("role"),
+                    "ip": r.get("ip"),
+                    "target": r.get("target"),
+                    "detail": r.get("detail"),
+                }
+                bv = r.get("before_val")
+                if bv:
+                    entry["before"] = json.loads(bv) if isinstance(bv, str) else bv
+                av = r.get("after_val")
+                if av:
+                    entry["after"] = json.loads(av) if isinstance(av, str) else av
+                result.append(entry)
+            return result
+        except Exception as e:
+            print(f"[Security] DB 审计读取失败（降级 JSONL）: {e}")
+            try: db.close()
+            except Exception: pass
+    # --- 降级 JSONL ---
     if not os.path.exists(AUDIT_FILE):
         return []
     try:

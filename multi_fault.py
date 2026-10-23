@@ -39,6 +39,44 @@ from datetime import datetime, timedelta
 DATA_DIR = "data"
 STATE_FILE = os.path.join(DATA_DIR, "multi_fault_state.json")
 
+# ====================== TiDB 数据库支持 ======================
+try:
+    import pymysql as _pymysql
+    _DB_AVAILABLE = True
+except ImportError:
+    _DB_AVAILABLE = False
+    _pymysql = None
+
+_MF_DB_CONFIG = {
+    'host': os.environ.get('DB_HOST', '8.155.130.156'),
+    'port': int(os.environ.get('DB_PORT', '4000')),
+    'user': os.environ.get('DB_USER', 'root'),
+    'password': os.environ.get('DB_PASSWORD', ''),
+    'database': os.environ.get('DB_NAME', 'lingzhishangren'),
+    'charset': 'utf8mb4',
+    'connect_timeout': 5,
+}
+
+_mf_db_ready = False
+
+
+def _mf_get_db():
+    global _mf_db_ready
+    if not _DB_AVAILABLE:
+        return None
+    if not _mf_db_ready:
+        try:
+            _pymysql.connect(**_MF_DB_CONFIG).close()
+            _mf_db_ready = True
+        except Exception:
+            _mf_db_ready = False
+            return None
+    try:
+        return _pymysql.connect(**_MF_DB_CONFIG, cursorclass=_pymysql.cursors.DictCursor)
+    except Exception:
+        _mf_db_ready = False
+        return None
+
 LEVELS = {1: "入门", 2: "工程师", 3: "专家"}
 
 LEVEL_RULES = {
@@ -196,14 +234,52 @@ def _ensure_dir():
 
 
 def init_multi_fault_data():
-    """初始化状态文件（首次运行自动创建）"""
+    """初始化状态文件（首次运行自动创建 + DB 空表自动迁移）"""
     _ensure_dir()
     if not os.path.exists(STATE_FILE):
         _save({"version": 1, "created_at": _now(), "updated_at": _now(),
                "levels": {}, "sessions": {}, "history": []})
+    db = _mf_get_db()
+    if db is not None:
+        try:
+            cur = db.cursor()
+            cur.execute('SELECT COUNT(*) FROM multi_fault_state')
+            if cur.fetchone()['COUNT(*)'] == 0 and os.path.exists(STATE_FILE):
+                with open(STATE_FILE, 'r', encoding='utf-8') as f:
+                    jdata = json.load(f)
+                cur.execute("""INSERT INTO multi_fault_state (state_json, version, created_at, updated_at)
+                    VALUES (%s, %s, %s, %s)""",
+                    (json.dumps(jdata, ensure_ascii=False), jdata.get('version', 1),
+                     jdata.get('created_at') or None, jdata.get('updated_at') or None))
+                db.commit()
+                print("[多故障] 从 JSON 导入状态到 TiDB")
+            db.close()
+        except Exception as e:
+            print(f"[多故障] DB 迁移失败: {e}")
+            try: db.close()
+            except Exception: pass
 
 
 def _load() -> dict:
+    db = _mf_get_db()
+    if db is not None:
+        try:
+            cur = db.cursor()
+            cur.execute('SELECT state_json FROM multi_fault_state ORDER BY id DESC LIMIT 1')
+            row = cur.fetchone()
+            db.close()
+            if row:
+                state = json.loads(row['state_json']) if isinstance(row['state_json'], str) else row['state_json']
+                if isinstance(state, dict):
+                    state.setdefault("levels", {})
+                    state.setdefault("sessions", {})
+                    state.setdefault("history", [])
+                    return state
+        except Exception as e:
+            print(f"[多故障] DB 读取失败（降级 JSON）: {e}")
+            try: db.close()
+            except Exception: pass
+    # --- 降级 JSON ---
     _ensure_dir()
     if not os.path.exists(STATE_FILE):
         return {"version": 1, "created_at": _now(), "updated_at": _now(),
@@ -224,9 +300,32 @@ def _load() -> dict:
 
 
 def _save(data: dict):
-    """原子写入，避免中途崩溃损坏状态"""
-    _ensure_dir()
+    """保存状态（DB 优先 + JSON 降级）"""
     data["updated_at"] = _now()
+    db = _mf_get_db()
+    if db is not None:
+        try:
+            cur = db.cursor()
+            cur.execute('SELECT id FROM multi_fault_state ORDER BY id DESC LIMIT 1')
+            existing = cur.fetchone()
+            state_json = json.dumps(data, ensure_ascii=False)
+            if existing:
+                cur.execute("""UPDATE multi_fault_state
+                    SET state_json=%s, version=%s, updated_at=%s WHERE id=%s""",
+                    (state_json, data.get('version', 1), data.get('updated_at'), existing['id']))
+            else:
+                cur.execute("""INSERT INTO multi_fault_state (state_json, version, created_at, updated_at)
+                    VALUES (%s, %s, %s, %s)""",
+                    (state_json, data.get('version', 1), data.get('created_at'), data.get('updated_at')))
+            db.commit()
+            db.close()
+            return
+        except Exception as e:
+            print(f"[多故障] DB 保存失败（降级 JSON）: {e}")
+            try: db.close()
+            except Exception: pass
+    # --- 降级 JSON ---
+    _ensure_dir()
     tmp = STATE_FILE + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)

@@ -94,6 +94,17 @@ _check_*.py
 # ================= 本地测试/冒烟脚本（不提交） =================
 _smoke_test*.py
 
+# ================= 所有 _*.py 临时脚本（含密码、测试、一次性工具） =================
+_*.py
+
+# ================= 运行期自动生成的根目录 JSON =================
+job_config.json
+job_recruitments.json
+conversations.json
+students.json
+homework.json
+knowledge_map_progress.json
+
 # ================= 本地设计稿（不提交） =================
 主页改版模板*
 

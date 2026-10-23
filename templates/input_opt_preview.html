@@ -6,8 +6,11 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: system-ui, -apple-system, "PingFang SC", sans-serif; background: #06080f; color: #e5e5e5; padding: 40px 24px; min-height: 100vh; }
+  .page-header { max-width: 1400px; margin: 0 auto 28px; display: flex; justify-content: space-between; align-items: flex-start; }
   h1 { font-size: 20px; font-weight: 600; margin-bottom: 6px; }
-  p.sub { font-size: 13px; color: #6b7a99; margin-bottom: 28px; }
+  p.sub { font-size: 13px; color: #6b7a99; }
+  .back-btn { padding: 8px 16px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); border-radius: 10px; color: #a0b4ff; font-size: 13px; cursor: pointer; text-decoration: none; white-space: nowrap; }
+  .back-btn:hover { background: rgba(255,255,255,.14); color: #fff; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(460px, 1fr)); gap: 20px; max-width: 1400px; margin: 0 auto; }
   .card { background: #101422; border: 1px solid rgba(255,255,255,.06); border-radius: 14px; padding: 18px; transition: border-color .2s; }
   .card:hover { border-color: rgba(102,126,234,.4); }
@@ -18,8 +21,13 @@
 </style>
 </head>
 <body>
-  <h1>💬 聊天输入框 · 5 款优化方案</h1>
-  <p class="sub">点击方案卡片查看大图，选中后告诉我编号即可落地</p>
+  <div class="page-header">
+    <div>
+      <h1>💬 聊天输入框 · 5 款优化方案</h1>
+      <p class="sub">点击方案卡片查看大图，选中后告诉我编号即可落地</p>
+    </div>
+    <a href="/" class="back-btn">← 返回首页</a>
+  </div>
   <div class="grid">
     <div class="card" onclick="this.classList.toggle('selected')">
       <img src="/static/opt_input_01_minimal.svg" alt="方案1">

@@ -21,6 +21,44 @@ from datetime import datetime
 DATA_DIR = "data"
 CREDENTIAL_FILE = os.path.join(DATA_DIR, "credential_chain.json")
 
+# ====================== TiDB 数据库支持 ======================
+try:
+    import pymysql as _pymysql
+    _DB_AVAILABLE = True
+except ImportError:
+    _DB_AVAILABLE = False
+    _pymysql = None
+
+_CC_DB_CONFIG = {
+    'host': os.environ.get('DB_HOST', '8.155.130.156'),
+    'port': int(os.environ.get('DB_PORT', '4000')),
+    'user': os.environ.get('DB_USER', 'root'),
+    'password': os.environ.get('DB_PASSWORD', ''),
+    'database': os.environ.get('DB_NAME', 'lingzhishangren'),
+    'charset': 'utf8mb4',
+    'connect_timeout': 5,
+}
+
+_cc_db_ready = False
+
+
+def _cc_get_db():
+    global _cc_db_ready
+    if not _DB_AVAILABLE:
+        return None
+    if not _cc_db_ready:
+        try:
+            _pymysql.connect(**_CC_DB_CONFIG).close()
+            _cc_db_ready = True
+        except Exception:
+            _cc_db_ready = False
+            return None
+    try:
+        return _pymysql.connect(**_CC_DB_CONFIG, cursorclass=_pymysql.cursors.DictCursor)
+    except Exception:
+        _cc_db_ready = False
+        return None
+
 # 创世指纹：每个学生链的第一条记录的前驱
 GENESIS_HASH = "0" * 64
 
@@ -64,13 +102,49 @@ def _ensure_dir():
 
 
 def init_credential_data():
-    """初始化档案文件（首次运行自动创建）"""
+    """初始化档案文件（首次运行自动创建 + DB 空表自动迁移）"""
     _ensure_dir()
     if not os.path.exists(CREDENTIAL_FILE):
         _cc_save({"version": 1, "created_at": _now(), "updated_at": _now(), "chains": {}})
+    db = _cc_get_db()
+    if db is not None:
+        try:
+            cur = db.cursor()
+            cur.execute('SELECT COUNT(*) FROM credential_chain_state')
+            if cur.fetchone()['COUNT(*)'] == 0 and os.path.exists(CREDENTIAL_FILE):
+                with open(CREDENTIAL_FILE, 'r', encoding='utf-8') as f:
+                    jdata = json.load(f)
+                cur.execute("""INSERT INTO credential_chain_state (state_json, version, created_at, updated_at)
+                    VALUES (%s, %s, %s, %s)""",
+                    (json.dumps(jdata, ensure_ascii=False), jdata.get('version', 1),
+                     jdata.get('created_at') or None, jdata.get('updated_at') or None))
+                db.commit()
+                print("[成长档案] 从 JSON 导入状态到 TiDB")
+            db.close()
+        except Exception as e:
+            print(f"[成长档案] DB 迁移失败: {e}")
+            try: db.close()
+            except Exception: pass
 
 
 def _cc_load() -> dict:
+    db = _cc_get_db()
+    if db is not None:
+        try:
+            cur = db.cursor()
+            cur.execute('SELECT state_json FROM credential_chain_state ORDER BY id DESC LIMIT 1')
+            row = cur.fetchone()
+            db.close()
+            if row:
+                state = json.loads(row['state_json']) if isinstance(row['state_json'], str) else row['state_json']
+                if isinstance(state, dict):
+                    state.setdefault("chains", {})
+                    return state
+        except Exception as e:
+            print(f"[成长档案] DB 读取失败（降级 JSON）: {e}")
+            try: db.close()
+            except Exception: pass
+    # --- 降级 JSON ---
     _ensure_dir()
     if not os.path.exists(CREDENTIAL_FILE):
         return {"version": 1, "created_at": _now(), "updated_at": _now(), "chains": {}}
@@ -87,9 +161,32 @@ def _cc_load() -> dict:
 
 
 def _cc_save(data: dict):
-    """原子写入，避免中途崩溃导致档案损坏"""
-    _ensure_dir()
+    """保存成长档案（DB 优先 + JSON 降级）"""
     data["updated_at"] = _now()
+    db = _cc_get_db()
+    if db is not None:
+        try:
+            cur = db.cursor()
+            cur.execute('SELECT id FROM credential_chain_state ORDER BY id DESC LIMIT 1')
+            existing = cur.fetchone()
+            state_json = json.dumps(data, ensure_ascii=False)
+            if existing:
+                cur.execute("""UPDATE credential_chain_state
+                    SET state_json=%s, version=%s, updated_at=%s WHERE id=%s""",
+                    (state_json, data.get('version', 1), data.get('updated_at'), existing['id']))
+            else:
+                cur.execute("""INSERT INTO credential_chain_state (state_json, version, created_at, updated_at)
+                    VALUES (%s, %s, %s, %s)""",
+                    (state_json, data.get('version', 1), data.get('created_at'), data.get('updated_at')))
+            db.commit()
+            db.close()
+            return
+        except Exception as e:
+            print(f"[成长档案] DB 保存失败（降级 JSON）: {e}")
+            try: db.close()
+            except Exception: pass
+    # --- 降级 JSON ---
+    _ensure_dir()
     tmp = CREDENTIAL_FILE + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)

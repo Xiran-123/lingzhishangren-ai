@@ -10,6 +10,11 @@ services:
       - FLASK_ENV=production
       - SECRET_KEY=your-production-secret-key-change-this
       - WORKER_INDEX=0
+      - DB_HOST=8.155.130.156
+      - DB_PORT=4000
+      - DB_USER=root
+      - DB_PASSWORD=
+      - DB_NAME=lingzhishangren
     restart: unless-stopped
     volumes:
       - ./data:/app/data

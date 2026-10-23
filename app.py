@@ -51,6 +51,57 @@ try:
 except ImportError:
     pass
 
+# ====================== TiDB 数据库连接 ======================
+try:
+    import pymysql
+    _DB_AVAILABLE = True
+except ImportError:
+    _DB_AVAILABLE = False
+    pymysql = None
+
+DB_CONFIG = {
+    'host': os.environ.get('DB_HOST', '8.155.130.156'),
+    'port': int(os.environ.get('DB_PORT', '4000')),
+    'user': os.environ.get('DB_USER', 'root'),
+    'password': os.environ.get('DB_PASSWORD', ''),
+    'database': os.environ.get('DB_NAME', 'lingzhishangren'),
+    'charset': 'utf8mb4',
+    'connect_timeout': 5,
+    'read_timeout': 30,
+    'write_timeout': 30,
+}
+
+_db_ready = False
+_db_lock = threading.Lock()
+
+
+def _test_db_connection() -> bool:
+    """尝试连接 TiDB，成功返回 True，失败返回 False（降级时用）"""
+    global _db_ready
+    if not _DB_AVAILABLE:
+        return False
+    try:
+        conn = pymysql.connect(**DB_CONFIG)
+        conn.close()
+        _db_ready = True
+        print(f"[DB] TiDB 连接成功 {DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['database']}")
+        return True
+    except Exception as e:
+        _db_ready = False
+        print(f"[DB] TiDB 连接失败（降级到 JSON）: {e}")
+        return False
+
+
+def _get_db_conn():
+    """获取数据库连接（每次新建，简单可靠，Gunicorn 多 worker 场景不需要连接池）"""
+    if not _db_ready and not _test_db_connection():
+        return None
+    try:
+        return pymysql.connect(**DB_CONFIG, cursorclass=pymysql.cursors.DictCursor)
+    except Exception as e:
+        print(f"[DB] 获取连接失败: {e}")
+        return None
+
 # ====================== SiliconFlow API 配置 ======================
 def _load_siliconflow_key():
     """密钥读取优先级：环境变量 SILICONFLOW_API_KEY > api_key.local 文件 > 硬编码默认值。"""
@@ -1636,7 +1687,52 @@ def save_wrong_questions(questions: List[Dict]):
 
 
 def load_learning_records() -> Dict:
-    """加载学习记录"""
+    """加载学习记录（DB 优先 + JSON 降级，DB 扁平行 → JSON 按学生分组）"""
+    conn = _get_db_conn()
+    if conn is not None:
+        try:
+            if os.path.exists(LEARNING_RECORDS_FILE):
+                with open(LEARNING_RECORDS_FILE, 'r', encoding='utf-8') as _f:
+                    _json_data = json.load(_f)
+                def _migrate(cur):
+                    for _sn, _rec_list in _json_data.items():
+                        for rec in _rec_list:
+                            cur.execute("""INSERT INTO learning_records
+                                (student_no, activity_type, knowledge_point, score, activity_date, timestamp)
+                                VALUES (%s, %s, %s, %s, %s, %s)""",
+                                (_sn, rec.get('activity_type'), rec.get('knowledge_point'),
+                                 rec.get('score'), rec.get('date') or None, rec.get('timestamp') or None))
+                _ensure_filled(conn, 'learning_records', _migrate, '学习记录')
+            cur = conn.cursor()
+            cur.execute('SELECT * FROM learning_records ORDER BY timestamp DESC')
+            rows = cur.fetchall()
+            conn.close()
+            import datetime as _dt
+            result = {}
+            for r in rows:
+                sn = r.get('student_no') or 'unknown'
+                record = {
+                    'activity_type': r.get('activity_type'),
+                    'knowledge_point': r.get('knowledge_point'),
+                    'score': float(r['score']) if r.get('score') is not None else None,
+                }
+                ts = r.get('timestamp')
+                if isinstance(ts, _dt.datetime):
+                    record['timestamp'] = ts.strftime('%Y-%m-%d %H:%M:%S')
+                elif ts:
+                    record['timestamp'] = str(ts)
+                ad = r.get('activity_date')
+                if isinstance(ad, (_dt.date, _dt.datetime)):
+                    record['date'] = ad.strftime('%Y-%m-%d')
+                elif ad:
+                    record['date'] = str(ad)
+                result.setdefault(sn, []).append(record)
+            return result
+        except Exception as e:
+            print(f"[学习记录] DB 读取失败（降级 JSON）: {e}")
+            try: conn.close()
+            except Exception: pass
+    # --- 降级 JSON ---
     try:
         if os.path.exists(LEARNING_RECORDS_FILE):
             with open(LEARNING_RECORDS_FILE, "r", encoding="utf-8") as f:
@@ -1648,7 +1744,27 @@ def load_learning_records() -> Dict:
 
 
 def save_learning_records(records: Dict):
-    """保存学习记录"""
+    """保存学习记录（DB 优先 + JSON 降级，JSON 按学生分组 → DB 扁平行）"""
+    conn = _get_db_conn()
+    if conn is not None:
+        try:
+            cur = conn.cursor()
+            cur.execute('DELETE FROM learning_records')
+            for sn, rec_list in records.items():
+                for rec in rec_list:
+                    cur.execute("""INSERT INTO learning_records
+                        (student_no, activity_type, knowledge_point, score, activity_date, timestamp)
+                        VALUES (%s, %s, %s, %s, %s, %s)""",
+                        (sn, rec.get('activity_type'), rec.get('knowledge_point'),
+                         rec.get('score'), rec.get('date') or None, rec.get('timestamp') or None))
+            conn.commit()
+            conn.close()
+            return
+        except Exception as e:
+            print(f"[学习记录] DB 保存失败（降级 JSON）: {e}")
+            try: conn.close()
+            except Exception: pass
+    # --- 降级 JSON ---
     try:
         atomic_save_json(LEARNING_RECORDS_FILE, records)
     except Exception as e:
@@ -1948,8 +2064,55 @@ def is_content_duplicate(new_content: str) -> bool:
     return False
 
 
+def _ensure_filled(conn, table, migrate_fn, log_tag=""):
+    """DB 空表时从 JSON 自动迁移（懒迁移，第一次 load 时触发）"""
+    try:
+        cur = conn.cursor()
+        cur.execute(f'SELECT COUNT(*) FROM {table}')
+        if cur.fetchone()['COUNT(*)'] == 0:
+            migrate_fn(cur)
+            conn.commit()
+            if log_tag:
+                print(f"[{log_tag}] 从 JSON 导入到 TiDB")
+    except Exception:
+        pass
+
+
 def load_search_logs() -> List[Dict]:
-    """加载搜索日志"""
+    """加载搜索日志（DB 优先 + JSON 降级）"""
+    conn = _get_db_conn()
+    if conn is not None:
+        try:
+            if os.path.exists(SEARCH_LOG_FILE):
+                with open(SEARCH_LOG_FILE, 'r', encoding='utf-8') as _f:
+                    _json_data = json.load(_f)
+                def _migrate(cur):
+                    for log in _json_data:
+                        cur.execute("""INSERT INTO search_logs (id, query, content, is_from_kb, timestamp, reviewed, note)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+                            (log.get('id'), log.get('query'), log.get('content'),
+                             1 if log.get('is_from_kb') else 0,
+                             log.get('timestamp') or None,
+                             1 if log.get('reviewed') else 0,
+                             log.get('note')))
+                _ensure_filled(conn, 'search_logs', _migrate, '搜索日志')
+            cur = conn.cursor()
+            cur.execute('SELECT * FROM search_logs ORDER BY timestamp DESC')
+            rows = cur.fetchall()
+            conn.close()
+            result = []
+            for r in rows:
+                import datetime as _dt
+                for k, v in list(r.items()):
+                    if isinstance(v, _dt.datetime):
+                        r[k] = v.strftime('%Y-%m-%d %H:%M:%S')
+                result.append(dict(r))
+            return result
+        except Exception as e:
+            print(f"[搜索日志] DB 读取失败（降级 JSON）: {e}")
+            try: conn.close()
+            except Exception: pass
+    # --- 降级 JSON ---
     try:
         if os.path.exists(SEARCH_LOG_FILE):
             with open(SEARCH_LOG_FILE, "r", encoding="utf-8") as f:
@@ -1962,7 +2125,28 @@ def load_search_logs() -> List[Dict]:
 
 
 def save_search_logs(logs: List[Dict]):
-    """保存搜索日志"""
+    """保存搜索日志（DB 优先 + JSON 降级）"""
+    conn = _get_db_conn()
+    if conn is not None:
+        try:
+            cur = conn.cursor()
+            cur.execute('DELETE FROM search_logs')
+            for log in logs:
+                cur.execute("""INSERT INTO search_logs (id, query, content, is_from_kb, timestamp, reviewed, note)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+                    (log.get('id'), log.get('query'), log.get('content'),
+                     1 if log.get('is_from_kb') else 0,
+                     log.get('timestamp') or None,
+                     1 if log.get('reviewed') else 0,
+                     log.get('note')))
+            conn.commit()
+            conn.close()
+            return
+        except Exception as e:
+            print(f"[搜索日志] DB 保存失败（降级 JSON）: {e}")
+            try: conn.close()
+            except Exception: pass
+    # --- 降级 JSON ---
     try:
         atomic_save_json(SEARCH_LOG_FILE, logs)
     except Exception as e:
@@ -1976,39 +2160,167 @@ _students_cache_mtime = -1.0
 _students_cache_lock = threading.Lock()
 
 
+def _row_to_student(row: dict) -> dict:
+    """数据库 students 行 → 内存 student dict（补齐旧字段默认值）"""
+    import datetime as _dt
+    ca = row.get('competence_analysis')
+    if isinstance(ca, str):
+        try:
+            ca = json.loads(ca)
+        except (json.JSONDecodeError, TypeError):
+            ca = {}
+    # datetime → str
+    created_at = row.get('created_at')
+    if isinstance(created_at, _dt.datetime):
+        created_at = created_at.strftime('%Y-%m-%d %H:%M:%S')
+    last_login = row.get('last_login')
+    if isinstance(last_login, _dt.datetime):
+        last_login = last_login.strftime('%Y-%m-%d %H:%M:%S')
+    return {
+        'id': str(row.get('id', '')),
+        'student_no': row.get('student_no', ''),
+        'name': row.get('name', ''),
+        'class_name': row.get('class_name', ''),
+        'competence_analysis': ca or {area['id']: {'count': 0, 'score': 0.0} for area in COMPETENCE_AREAS},
+        'total_questions': row.get('total_questions', 0) or 0,
+        'created_at': created_at or '',
+        'last_login': last_login or '',
+        # 旧版 JSON 里的字段，数据库暂不存，给默认值
+        'major': '',
+        'grade': '',
+        'grade_level': '',
+        'conversation_history': [],
+    }
+
+
 def load_students() -> List[Dict]:
-    """加载学生档案（带 mtime 缓存：文件未变化时直接返回内存副本）"""
-    global _students_cache, _students_cache_mtime
+    """加载学生档案（数据库优先 + JSON 降级兜底）"""
+    conn = _get_db_conn()
+    if conn is not None:
+        try:
+            cur = conn.cursor()
+            cur.execute('SELECT * FROM students ORDER BY id')
+            rows = cur.fetchall()
+            conn.close()
+            if rows:
+                return [_row_to_student(r) for r in rows]
+            # 数据库空表，尝试从 JSON 导入
+            print('[DB] students 表为空，尝试从 JSON 导入...')
+            _migrate_json_to_db()
+            conn2 = _get_db_conn()
+            if conn2:
+                cur2 = conn2.cursor()
+                cur2.execute('SELECT * FROM students ORDER BY id')
+                rows2 = cur2.fetchall()
+                conn2.close()
+                return [_row_to_student(r) for r in rows2]
+        except Exception as e:
+            print(f"[DB] 从数据库加载学生失败（降级 JSON）: {e}")
+    # --- 降级到 JSON ---
     try:
         if not os.path.exists(STUDENTS_FILE):
             return []
-        mtime = os.path.getmtime(STUDENTS_FILE)
-        if _students_cache is not None and mtime == _students_cache_mtime:
-            return copy.deepcopy(_students_cache)
         with open(STUDENTS_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        with _students_cache_lock:
-            _students_cache = data
-            _students_cache_mtime = mtime
-        return copy.deepcopy(data)
+            return json.load(f)
     except Exception as e:
         print(f"学生档案加载失败: {e}")
         return []
 
 
 def save_students(students: List[Dict]):
-    """保存学生档案（写盘后同步刷新缓存与 mtime）"""
-    global _students_cache, _students_cache_mtime
+    """保存学生档案（数据库优先 + JSON 降级兜底）"""
+    conn = _get_db_conn()
+    if conn is not None:
+        try:
+            cur = conn.cursor()
+            for s in students:
+                sid = s.get('id')
+                student_no = s.get('student_no', '')
+                name = s.get('name', '')
+                class_name = s.get('class_name', '')
+                ca = json.dumps(s.get('competence_analysis', {}), ensure_ascii=False)
+                total_q = s.get('total_questions', 0) or 0
+                # datetime 空值要传 None (NULL)
+                created_at = s.get('created_at') or None
+                last_login = s.get('last_login') or None
+                if sid and str(sid).isdigit():
+                    cur.execute("SELECT id FROM students WHERE id = %s", (int(sid),))
+                    exists = cur.fetchone()
+                    if exists:
+                        cur.execute("""UPDATE students
+                            SET student_no=%s, name=%s, class_name=%s,
+                                competence_analysis=%s, total_questions=%s,
+                                created_at=%s, last_login=%s WHERE id=%s""",
+                            (student_no, name, class_name, ca, total_q, created_at, last_login, int(sid)))
+                    else:
+                        cur.execute("""INSERT INTO students
+                            (id, student_no, name, class_name, competence_analysis, total_questions, created_at, last_login)
+                            VALUES (%s,%s,%s,%s,%s,%s,%s,%s)""",
+                            (int(sid), student_no, name, class_name, ca, total_q, created_at, last_login))
+                else:
+                    cur.execute("""INSERT INTO students
+                        (student_no, name, class_name, competence_analysis, total_questions, created_at, last_login)
+                        VALUES (%s,%s,%s,%s,%s,%s,%s)""",
+                        (student_no, name, class_name, ca, total_q, created_at, last_login))
+            conn.commit()
+            conn.close()
+            return  # 数据库写入成功，不再写 JSON
+        except Exception as e:
+            print(f"[DB] 保存学生到数据库失败（降级 JSON）: {e}")
+    # --- 降级到 JSON ---
     try:
         atomic_save_json(STUDENTS_FILE, students)
-        with _students_cache_lock:
-            _students_cache = copy.deepcopy(students)
-            try:
-                _students_cache_mtime = os.path.getmtime(STUDENTS_FILE)
-            except OSError:
-                _students_cache_mtime = -1.0
     except Exception as e:
         print(f"学生档案保存失败: {e}")
+
+
+def _migrate_json_to_db():
+    """首次启动：JSON 文件有数据但数据库空表时，导入到 TiDB"""
+    if not os.path.exists(STUDENTS_FILE):
+        return
+    try:
+        with open(STUDENTS_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception:
+        return
+    if not data:
+        return
+    conn = _get_db_conn()
+    if not conn:
+        return
+    try:
+        cur = conn.cursor()
+        imported = 0
+        for s in data:
+            student_no = s.get('student_no', '')
+            if not student_no:
+                continue
+            cur.execute('SELECT id FROM students WHERE student_no = %s', (student_no,))
+            if cur.fetchone():
+                continue  # 已存在跳过
+            sid = s.get('id')
+            ca = json.dumps(s.get('competence_analysis', {}), ensure_ascii=False)
+            # datetime 空值要传 None (NULL)，不能传空字符串
+            created_at = s.get('created_at') or None
+            last_login = s.get('last_login') or None
+            if sid and str(sid).isdigit():
+                cur.execute("""INSERT INTO students
+                    (id, student_no, name, class_name, competence_analysis, total_questions, created_at, last_login)
+                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s)""",
+                    (int(sid), student_no, s.get('name', ''), s.get('class_name', ''),
+                     ca, s.get('total_questions', 0), created_at, last_login))
+            else:
+                cur.execute("""INSERT INTO students
+                    (student_no, name, class_name, competence_analysis, total_questions, created_at, last_login)
+                    VALUES (%s,%s,%s,%s,%s,%s,%s)""",
+                    (student_no, s.get('name', ''), s.get('class_name', ''),
+                     ca, s.get('total_questions', 0), created_at, last_login))
+            imported += 1
+        conn.commit()
+        conn.close()
+        print(f"[DB] 从 JSON 导入了 {imported} 个学生到 TiDB")
+    except Exception as e:
+        print(f"[DB] JSON 导入失败: {e}")
 
 
 def next_student_id(students: List[Dict]) -> str:
@@ -3851,16 +4163,164 @@ MAX_CONVS_PER_USER = 50        # 每用户最多保留会话数
 MAX_MSGS_PER_CONV = 200        # 每会话最多消息数
 MAX_CONTENT_LEN = 8000         # 单条消息文本上限
 
-def load_conversations():
+def _conv_row_to_dict(row, msgs=None):
+    """ai_conversations 表行 + 消息 → 会话 dict"""
+    import datetime as _dt
+    created_at = row.get('created_at')
+    if isinstance(created_at, _dt.datetime):
+        created_at = created_at.strftime('%Y-%m-%dT%H:%M:%S')
+    updated_at = row.get('updated_at')
+    if isinstance(updated_at, _dt.datetime):
+        updated_at = updated_at.strftime('%Y-%m-%dT%H:%M:%S')
+    return {
+        'id': row['id'],
+        'title': row.get('title', '') or '',
+        'created_at': created_at,
+        'updated_at': updated_at,
+        'messages': msgs or [],
+    }
+
+
+def _load_convs_from_db() -> dict:
+    """从两张表读完整会话结构"""
+    conn = _get_db_conn()
+    if conn is None:
+        return None
+    try:
+        cur = conn.cursor()
+        cur.execute('SELECT * FROM ai_conversations ORDER BY updated_at DESC')
+        conv_rows = cur.fetchall()
+        if not conv_rows:
+            conn.close()
+            return None  # 空表，触发 JSON 迁移
+        # 一次性把所有消息读出来按 conv_id 分组
+        cur.execute('SELECT * FROM ai_conversation_messages ORDER BY conv_id, sort_order, id')
+        msg_rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        # 组装
+        convs_by_id = {r['id']: _conv_row_to_dict(r) for r in conv_rows}
+        for mr in msg_rows:
+            cid = mr['conv_id']
+            if cid in convs_by_id:
+                is_user = mr.get('is_user', 0)
+                convs_by_id[cid]['messages'].append({
+                    'content': mr.get('content', '') or '',
+                    'is_user': bool(is_user),
+                    'image': mr.get('image') or None,
+                    'timestamp_ms': mr.get('timestamp_ms') or 0,
+                })
+        # 按 user_key 分组
+        result = {}
+        for r in conv_rows:
+            uk = r['user_key']
+            result.setdefault(uk, {'convs': []})['convs'].append(convs_by_id[r['id']])
+        return result
+    except Exception as e:
+        print(f"[DB] load_conversations 失败: {e}")
+        try: conn.close()
+        except Exception: pass
+        return None
+
+
+def _save_convs_to_db(data: dict):
+    """把完整会话结构拆成两张表保存"""
+    conn = _get_db_conn()
+    if conn is None:
+        return False
+    try:
+        cur = conn.cursor()
+        # 1. 收集所有 conv_id，准备全量 replace
+        all_conv_ids = set()
+        for uk, block in data.items():
+            for c in block.get('convs', []):
+                all_conv_ids.add(c['id'])
+                # upsert ai_conversations
+                cur.execute('SELECT id FROM ai_conversations WHERE id=%s', (c['id'],))
+                exists = cur.fetchone()
+                title = c.get('title', '')[:512] if c.get('title') else ''
+                created_at = c.get('created_at') or None
+                updated_at = c.get('updated_at') or None
+                if exists:
+                    cur.execute("""UPDATE ai_conversations SET title=%s, updated_at=%s WHERE id=%s""",
+                                (title, updated_at, c['id']))
+                else:
+                    cur.execute("""INSERT INTO ai_conversations (id, user_key, title, created_at, updated_at)
+                        VALUES (%s, %s, %s, %s, %s)""",
+                        (c['id'], uk, title, created_at, updated_at))
+        # 2. DELETE 所有要 replace 的 conv 的消息
+        if all_conv_ids:
+            cur.execute(f"DELETE FROM ai_conversation_messages WHERE conv_id IN ({','.join(['%s'] * len(all_conv_ids))})",
+                        list(all_conv_ids))
+        # 3. INSERT 所有消息
+        for uk, block in data.items():
+            for c in block.get('convs', []):
+                for i, m in enumerate(c.get('messages', [])):
+                    cur.execute("""INSERT INTO ai_conversation_messages
+                        (conv_id, content, is_user, image, timestamp_ms, sort_order)
+                        VALUES (%s, %s, %s, %s, %s, %s)""",
+                        (c['id'], (m.get('content') or '')[:10000],
+                         1 if m.get('is_user') else 0,
+                         (m.get('image') or None)[:512] if m.get('image') else None,
+                         m.get('timestamp_ms') or 0,
+                         i))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"[DB] save_conversations 失败: {e}")
+        try: conn.close()
+        except Exception: pass
+        return False
+
+
+def _migrate_convs_json_to_db():
+    """DB 空表时从 conversations.json 迁移"""
+    if not os.path.exists(CONVERSATIONS_FILE):
+        return False
     try:
         with open(CONVERSATIONS_FILE, 'r', encoding='utf-8') as f:
             data = json.load(f)
-            return data if isinstance(data, dict) else {}
+    except Exception:
+        return False
+    if not isinstance(data, dict) or not data:
+        return False
+    if _save_convs_to_db(data):
+        print(f"[DB] 从 JSON 导入会话到 TiDB")
+        return True
+    return False
+
+
+def load_conversations():
+    """加载会话历史（DB 优先 + JSON 降级）"""
+    # 先尝试 DB
+    data = _load_convs_from_db()
+    if data is not None:
+        return data
+    # DB 空表，尝试迁移
+    _migrate_convs_json_to_db()
+    data = _load_convs_from_db()
+    if data is not None:
+        return data
+    # 降级 JSON
+    try:
+        with open(CONVERSATIONS_FILE, 'r', encoding='utf-8') as f:
+            raw = json.load(f)
+            return raw if isinstance(raw, dict) else {}
     except (FileNotFoundError, json.JSONDecodeError):
         return {}
 
+
 def save_conversations(data):
-    atomic_save_json(CONVERSATIONS_FILE, data)
+    """保存会话历史（DB 优先 + JSON 降级）"""
+    if _save_convs_to_db(data):
+        return
+    # 降级 JSON
+    try:
+        atomic_save_json(CONVERSATIONS_FILE, data)
+    except Exception as e:
+        print(f"会话历史保存失败: {e}")
 
 def get_user_key():
     role = session.get('role', 'student')
@@ -5410,7 +5870,54 @@ CUSTOM_EXERCISE_FILE = "data/custom_exercises.json"
 
 
 def load_custom_exercises():
-    """加载教师自定义练习题"""
+    """加载教师自定义练习题（DB 优先 + JSON 降级，DB 扁平行 → JSON 按知识点分组）"""
+    conn = _get_db_conn()
+    if conn is not None:
+        try:
+            if os.path.exists(CUSTOM_EXERCISE_FILE):
+                with open(CUSTOM_EXERCISE_FILE, 'r', encoding='utf-8') as _f:
+                    _json_data = json.load(_f)
+                def _migrate(cur):
+                    for _kp, _ex_list in _json_data.items():
+                        for ex in _ex_list:
+                            _opts = ex.get('options')
+                            cur.execute("""INSERT INTO custom_exercises
+                                (id, knowledge_point, type, difficulty, question, answer, analysis, options, created_by, created_at)
+                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                                (ex.get('id'), _kp, ex.get('type'), ex.get('difficulty'),
+                                 ex.get('question'), ex.get('answer'), ex.get('analysis'),
+                                 json.dumps(_opts, ensure_ascii=False) if _opts else None,
+                                 ex.get('created_by'), ex.get('created_at') or None))
+                _ensure_filled(conn, 'custom_exercises', _migrate, '自定义题库')
+            cur = conn.cursor()
+            cur.execute('SELECT * FROM custom_exercises')
+            rows = cur.fetchall()
+            conn.close()
+            import datetime as _dt
+            result = {}
+            for r in rows:
+                kp = r.get('knowledge_point') or '未分类'
+                ex = {
+                    'id': r['id'],
+                    'type': r['type'],
+                    'difficulty': r.get('difficulty'),
+                    'question': r['question'],
+                    'answer': r.get('answer'),
+                    'analysis': r.get('analysis'),
+                    'created_by': r.get('created_by'),
+                }
+                if isinstance(r.get('created_at'), _dt.datetime):
+                    ex['created_at'] = r['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+                opts = r.get('options')
+                if opts:
+                    ex['options'] = json.loads(opts) if isinstance(opts, str) else opts
+                result.setdefault(kp, []).append(ex)
+            return result
+        except Exception as e:
+            print(f"[自定义题库] DB 读取失败（降级 JSON）: {e}")
+            try: conn.close()
+            except Exception: pass
+    # --- 降级 JSON ---
     try:
         if os.path.exists(CUSTOM_EXERCISE_FILE):
             with open(CUSTOM_EXERCISE_FILE, "r", encoding="utf-8") as f:
@@ -5422,7 +5929,30 @@ def load_custom_exercises():
 
 
 def save_custom_exercises(exercises):
-    """保存教师自定义练习题"""
+    """保存教师自定义练习题（DB 优先 + JSON 降级，JSON 按知识点分组 → DB 扁平行）"""
+    conn = _get_db_conn()
+    if conn is not None:
+        try:
+            cur = conn.cursor()
+            cur.execute('DELETE FROM custom_exercises')
+            for kp, ex_list in exercises.items():
+                for ex in ex_list:
+                    opts = ex.get('options')
+                    opts_str = json.dumps(opts, ensure_ascii=False) if opts else None
+                    cur.execute("""INSERT INTO custom_exercises
+                        (id, knowledge_point, type, difficulty, question, answer, analysis, options, created_by, created_at)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                        (ex.get('id'), kp, ex.get('type'), ex.get('difficulty'),
+                         ex.get('question'), ex.get('answer'), ex.get('analysis'),
+                         opts_str, ex.get('created_by'), ex.get('created_at') or None))
+            conn.commit()
+            conn.close()
+            return
+        except Exception as e:
+            print(f"[自定义题库] DB 保存失败（降级 JSON）: {e}")
+            try: conn.close()
+            except Exception: pass
+    # --- 降级 JSON ---
     try:
         os.makedirs(os.path.dirname(CUSTOM_EXERCISE_FILE), exist_ok=True)
         atomic_save_json(CUSTOM_EXERCISE_FILE, exercises)
@@ -9604,7 +10134,38 @@ def api_save_self_assessment():
 # ====================== AI模拟面试 + 面试案例知识库模块 ======================
 
 def load_interview_cases() -> List[Dict]:
-    """加载面试案例列表"""
+    """加载面试案例列表（DB 优先 + JSON 降级）"""
+    conn = _get_db_conn()
+    if conn is not None:
+        try:
+            if os.path.exists(INTERVIEW_CASES_FILE):
+                with open(INTERVIEW_CASES_FILE, 'r', encoding='utf-8') as _f:
+                    _raw = json.load(_f)
+                _json_data = _raw.get('cases', []) if isinstance(_raw, dict) else _raw
+                def _migrate(cur):
+                    for c in _json_data:
+                        cur.execute("""INSERT INTO interview_cases (id, company, position, interview_type, difficulty, description)
+                            VALUES (%s, %s, %s, %s, %s, %s)""",
+                            (c.get('id'), c.get('company'), c.get('position'),
+                             c.get('interview_type'), c.get('difficulty'), c.get('description')))
+                _ensure_filled(conn, 'interview_cases', _migrate, '面试案例')
+            cur = conn.cursor()
+            cur.execute('SELECT * FROM interview_cases')
+            rows = cur.fetchall()
+            conn.close()
+            import datetime as _dt
+            result = []
+            for r in rows:
+                c = dict(r)
+                if isinstance(c.get('created_at'), _dt.datetime):
+                    c['created_at'] = c['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+                result.append(c)
+            return result
+        except Exception as e:
+            print(f"[面试案例] DB 读取失败（降级 JSON）: {e}")
+            try: conn.close()
+            except Exception: pass
+    # --- 降级 JSON ---
     try:
         if os.path.exists(INTERVIEW_CASES_FILE):
             with open(INTERVIEW_CASES_FILE, "r", encoding="utf-8") as f:
@@ -9616,7 +10177,25 @@ def load_interview_cases() -> List[Dict]:
 
 
 def save_interview_cases(cases: List[Dict]):
-    """保存面试案例"""
+    """保存面试案例（DB 优先 + JSON 降级，只存 DB 有字段，questions/tags 存 JSON）"""
+    conn = _get_db_conn()
+    if conn is not None:
+        try:
+            cur = conn.cursor()
+            cur.execute('DELETE FROM interview_cases')
+            for c in cases:
+                cur.execute("""INSERT INTO interview_cases (id, company, position, interview_type, difficulty, description)
+                    VALUES (%s, %s, %s, %s, %s, %s)""",
+                    (c.get('id'), c.get('company'), c.get('position'),
+                     c.get('interview_type'), c.get('difficulty'), c.get('description')))
+            conn.commit()
+            conn.close()
+            return
+        except Exception as e:
+            print(f"[面试案例] DB 保存失败（降级 JSON）: {e}")
+            try: conn.close()
+            except Exception: pass
+    # --- 降级 JSON ---
     try:
         atomic_save_json(INTERVIEW_CASES_FILE, {"cases": cases})
     except Exception as e:
@@ -9624,7 +10203,35 @@ def save_interview_cases(cases: List[Dict]):
 
 
 def load_interview_records() -> List[Dict]:
-    """加载面试记录"""
+    """加载面试记录（DB 优先 + JSON 降级，record_json blob 模式）"""
+    conn = _get_db_conn()
+    if conn is not None:
+        try:
+            if os.path.exists(INTERVIEW_RECORDS_FILE):
+                with open(INTERVIEW_RECORDS_FILE, 'r', encoding='utf-8') as _f:
+                    _raw = json.load(_f)
+                _json_data = _raw.get('records', []) if isinstance(_raw, dict) else _raw
+                def _migrate(cur):
+                    for r in _json_data:
+                        cur.execute("""INSERT INTO interview_records (record_json, created_at)
+                            VALUES (%s, NOW())""", (json.dumps(r, ensure_ascii=False),))
+                _ensure_filled(conn, 'interview_records', _migrate, '面试记录')
+            cur = conn.cursor()
+            cur.execute('SELECT record_json FROM interview_records ORDER BY id DESC')
+            rows = cur.fetchall()
+            conn.close()
+            import datetime as _dt
+            result = []
+            for r in rows:
+                obj = json.loads(r['record_json']) if isinstance(r['record_json'], str) else r['record_json']
+                if isinstance(obj, dict):
+                    result.append(obj)
+            return result
+        except Exception as e:
+            print(f"[面试记录] DB 读取失败（降级 JSON）: {e}")
+            try: conn.close()
+            except Exception: pass
+    # --- 降级 JSON ---
     try:
         if os.path.exists(INTERVIEW_RECORDS_FILE):
             with open(INTERVIEW_RECORDS_FILE, "r", encoding="utf-8") as f:
@@ -9636,7 +10243,23 @@ def load_interview_records() -> List[Dict]:
 
 
 def save_interview_records(records: List[Dict]):
-    """保存面试记录"""
+    """保存面试记录（DB 优先 + JSON 降级）"""
+    conn = _get_db_conn()
+    if conn is not None:
+        try:
+            cur = conn.cursor()
+            cur.execute('DELETE FROM interview_records')
+            for r in records:
+                cur.execute("""INSERT INTO interview_records (record_json, created_at)
+                    VALUES (%s, NOW())""", (json.dumps(r, ensure_ascii=False),))
+            conn.commit()
+            conn.close()
+            return
+        except Exception as e:
+            print(f"[面试记录] DB 保存失败（降级 JSON）: {e}")
+            try: conn.close()
+            except Exception: pass
+    # --- 降级 JSON ---
     try:
         atomic_save_json(INTERVIEW_RECORDS_FILE, {"records": records})
     except Exception as e:

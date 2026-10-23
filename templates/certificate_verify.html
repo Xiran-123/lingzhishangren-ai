@@ -12,9 +12,15 @@
         min-height: 100vh; padding: 22px 14px; color: #2d3748;
     }
     .shell { max-width: 620px; margin: 0 auto; }
-    .brand { color: #fff; text-align: center; margin-bottom: 16px; }
+    .brand { color: #fff; text-align: center; margin-bottom: 16px; position: relative; }
     .brand h1 { font-size: 17px; font-weight: 600; letter-spacing: 1px; }
     .brand .sub { font-size: 12px; opacity: .85; margin-top: 5px; }
+    .brand .back-btn {
+        position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+        padding: 7px 14px; background: rgba(255,255,255,0.2); border: none; border-radius: 8px;
+        color: #fff; font-size: 13px; cursor: pointer; text-decoration: none;
+    }
+    .brand .back-btn:hover { background: rgba(255,255,255,0.35); }
     .card { background: #fff; border-radius: 16px; padding: 24px 22px; box-shadow: 0 10px 40px rgba(0,0,0,.18); }
     .badge {
         text-align: center; padding: 20px 16px; border-radius: 13px; margin-bottom: 20px;
@@ -47,6 +53,7 @@
 <body>
 <div class="shell">
     <div class="brand">
+        <button class="back-btn" onclick="if(history.length>1)history.back();else location.href='/'">← 返回</button>
         <h1>灵智尚人 · 可信成长证书验真</h1>
         <div class="sub">哈希链存证 · 实时校验 · 脱敏展示</div>
     </div>
