@@ -9455,7 +9455,11 @@ def teacher_download_lesson_plan_docx(plan_id):
         filename = f"{safe_topic}_{datetime.now().strftime('%Y%m%d')}.docx"
         resp = make_response(data)
         resp.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-        resp.headers['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{_urlparse.quote(filename)}'
+        # 用 ASCII 文件名 + filename* 做 UTF-8 编码，避免双引号/转义等奇葩问题
+        ascii_name = filename.encode('ascii', 'replace').decode('ascii')
+        utf8_name = _urlparse.quote(filename)
+        cd_value = 'attachment; filename="' + ascii_name + '"; filename*=UTF-8\'\'' + utf8_name
+        resp.headers['Content-Disposition'] = cd_value
         return resp
     finally:
         try: _os.unlink(tmp_path)
