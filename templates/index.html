@@ -4466,9 +4466,12 @@
                 <div style="background:#fff;border-radius:18px;max-width:620px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,.35);animation:slideUp .3s ease;">
                     <div style="background:linear-gradient(135deg,#2f54eb,#13c2c2);padding:18px 24px;color:#fff;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;border-radius:18px 18px 0 0;">
                         <div style="font-size:17px;font-weight:700;">📑 一键生成教案</div>
-                        <button onclick="document.getElementById('lessonPlanInputOverlay').remove()" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:18px;cursor:pointer;border-radius:50%;width:32px;height:32px;">×</button>
+                        <div style="display:flex;gap:10px;">
+                            <button onclick="toggleLessonPlanHistory()" id="lpHistoryBtn" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:13px;cursor:pointer;border-radius:8px;padding:6px 12px;">📚 历史记录</button>
+                            <button onclick="document.getElementById('lessonPlanInputOverlay').remove()" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:18px;cursor:pointer;border-radius:50%;width:32px;height:32px;">×</button>
+                        </div>
                     </div>
-                    <div style="padding:22px 26px;">
+                    <div id="lpMainBody" style="padding:22px 26px;">
                         <div style="font-size:13px;color:#888;margin-bottom:6px;">课程 / 章节主题 <span style="color:#ff4d4f;">*</span></div>
                         <input id="lpTopic" type="text" placeholder="如：5G移动通信——Massive MIMO原理与应用" style="width:100%;padding:10px 12px;border:1px solid #d9d9d9;border-radius:8px;font-size:14px;box-sizing:border-box;margin-bottom:16px;" />
                         <div style="font-size:13px;color:#888;margin-bottom:6px;">教学目标 / 学生情况 / 课时 / 特殊要求</div>
@@ -4479,7 +4482,85 @@
                         <div id="lpErr" style="color:#d32f2f;font-size:13px;margin-bottom:10px;display:none;"></div>
                         <button onclick="generateLessonPlan()" style="width:100%;padding:12px;background:linear-gradient(135deg,#2f54eb,#13c2c2);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;">✨ 生成教案</button>
                     </div>
+                    <div id="lpHistoryPanel" style="display:none;padding:0;"></div>
                 </div>`;
+        }
+        async function toggleLessonPlanHistory() {
+            const panel = document.getElementById('lpHistoryPanel');
+            const btn = document.getElementById('lpHistoryBtn');
+            const mainBody = document.getElementById('lpMainBody');
+            if (panel.style.display !== 'none') {
+                panel.style.display = 'none';
+                mainBody.style.display = '';
+                btn.textContent = '📚 历史记录';
+                return;
+            }
+            panel.style.display = 'block';
+            mainBody.style.display = 'none';
+            btn.textContent = '✖ 返回生成';
+            panel.innerHTML = '<div style="padding:30px;text-align:center;color:#999;">加载中…</div>';
+            try {
+                const resp = await fetch('/api/teacher/lesson-plans');
+                const j = await resp.json();
+                const plans = j.plans || [];
+                if (plans.length === 0) {
+                    panel.innerHTML = '<div style="padding:40px;text-align:center;color:#999;"><div style="font-size:40px;margin-bottom:10px;">📭</div><div>还没有历史教案</div><div style="font-size:12px;margin-top:6px;">去生成第一份吧～</div></div>';
+                    return;
+                }
+                let html = '<div style="padding:12px 16px;font-size:13px;color:#888;border-bottom:1px solid #f0f0f0;display:flex;justify-content:space-between;align-items:center;"><span>📚 共 ' + plans.length + ' 份历史教案</span><span style="font-size:11px;">点击查看详情</span></div>';
+                for (const p of plans) {
+                    const preview = (p.content_preview || '').replace(/[#*`>\-]/g, '').slice(0, 80);
+                    html += '<div class="lpHistoryItem" data-id="' + p.id + '" style="padding:14px 18px;border-bottom:1px solid #f5f5f5;cursor:pointer;transition:background .15s;" onmouseover="this.style.background=\'#f5f7fa\'" onmouseout="this.style.background=\'\'">' +
+                        '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">' +
+                        '<div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:600;color:#2f54eb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📑 ' + (p.topic || '(无主题)') + '</div>' +
+                        '<div style="font-size:11px;color:#aaa;margin-top:4px;">🕐 ' + (p.created_at || '') + '</div>' +
+                        '<div style="font-size:12px;color:#666;margin-top:6px;line-height:1.5;">' + preview + '…</div></div>' +
+                        '<button style="background:#ff4d4f22;color:#ff4d4f;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap;" onclick="event.stopPropagation();deleteLessonPlan(\'' + p.id + '\', this)">删除</button>' +
+                        '</div></div>';
+                }
+                panel.innerHTML = html;
+                // 点击查看详情
+                panel.querySelectorAll('.lpHistoryItem').forEach(el => {
+                    el.onclick = () => openLessonPlanDetail(el.dataset.id);
+                });
+            } catch (err) {
+                panel.innerHTML = '<div style="padding:30px;text-align:center;color:#d32f2f;">加载失败：' + err.message + '</div>';
+            }
+        }
+        async function openLessonPlanDetail(planId) {
+            try {
+                const resp = await fetch('/api/teacher/lesson-plans/' + planId);
+                const j = await resp.json();
+                if (!j.id) { alert('教案不存在'); return; }
+                const modal = document.createElement('div');
+                modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);backdrop-filter:blur(3px);z-index:100010;display:flex;justify-content:center;align-items:center;padding:20px;';
+                modal.onclick = e => { if (e.target === modal) modal.remove(); };
+                modal.innerHTML = `
+                    <div style="background:#fff;border-radius:16px;max-width:760px;width:100%;max-height:85vh;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.35);display:flex;flex-direction:column;animation:slideUp .3s ease;">
+                        <div style="background:linear-gradient(135deg,#2f54eb,#13c2c2);padding:14px 22px;color:#fff;display:flex;justify-content:space-between;align-items:center;">
+                            <div><div style="font-size:15px;font-weight:700;">📑 ${j.topic || '(无主题)'}</div><div style="font-size:11px;opacity:.85;margin-top:3px;">🕐 ${j.created_at || ''}</div></div>
+                            <button onclick="this.closest('[style*=position\\:fixed]').remove()" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:18px;cursor:pointer;border-radius:50%;width:30px;height:30px;">×</button>
+                        </div>
+                        <div style="padding:20px 26px;overflow-y:auto;flex:1;background:#fafbfc;">
+                            ${j.requirements ? '<div style="background:#fffbe6;border-left:3px solid #faad14;padding:10px 14px;border-radius:6px;font-size:13px;color:#874d00;margin-bottom:16px;">📝 要求：' + j.requirements.replace(/\n/g, '<br>') + '</div>' : ''}
+                            ${renderLessonPlanText(j.content || '')}
+                        </div>
+                    </div>`;
+                document.body.appendChild(modal);
+            } catch (err) { alert('加载教案失败：' + err.message); }
+        }
+        async function deleteLessonPlan(planId, btnEl) {
+            if (!confirm('确定删除这份教案？此操作不可恢复')) return;
+            try {
+                const resp = await fetch('/api/teacher/lesson-plans/' + planId, { method: 'DELETE' });
+                const j = await resp.json();
+                if (j.success) {
+                    btnEl.closest('.lpHistoryItem').style.display = 'none';
+                    // 重新渲染历史面板
+                    setTimeout(toggleLessonPlanHistory, 100);
+                    setTimeout(toggleLessonPlanHistory, 120);
+                } else { alert('删除失败'); }
+            } catch (err) { alert('删除失败：' + err.message); }
         }
         async function generateLessonPlan() {
             const topicEl = document.getElementById('lpTopic');

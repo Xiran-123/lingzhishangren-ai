@@ -9179,12 +9179,13 @@ def ai_student_analysis(student_id):
 
 @app.route('/api/teacher/lesson-plan', methods=['POST'])
 def teacher_lesson_plan():
-    """教师一键生成教案（SSE流式）：根据教师提供的主题/要求/资料文件生成结构化教案"""
+    """教师一键生成教案（SSE流式 + 自动存历史记录）"""
     if not session.get('authenticated'):
         return jsonify({'error': '请先登录'}), 401
     if session.get('role') != 'teacher':
         return jsonify({'error': '仅教师可使用教案生成'}), 403
 
+    teacher_username = session.get('username') or session.get('student_no') or 'unknown'
     topic = (request.form.get('topic') or '').strip()
     requirements = (request.form.get('requirements') or '').strip()
     if not topic:
@@ -9238,7 +9239,143 @@ def teacher_lesson_plan():
         prompt += f"\n【教师提供的参考资料（PPT/Word/TXT 提取文本）】\n{material_text}\n"
     prompt += "\n请根据以上信息生成一份完整教案。"
 
-    return analysis_sse_generator(system_content, prompt, max_tokens=2000, temperature=0.7)
+    # 包装 SSE generator：边流式吐出边累积完整内容，流完后自动存库
+    raw_stream_response = analysis_sse_generator(system_content, prompt, max_tokens=2000, temperature=0.7)
+
+    plan_id = uuid.uuid4().hex
+    full_content_parts = []
+
+    def wrapped_generate():
+        # 直接从原始 stream response 迭代行
+        for raw_line in raw_stream_response.response.iter_lines(decode_unicode=True):
+            if not raw_line:
+                continue
+            line = raw_line
+            if isinstance(line, bytes):
+                line = line.decode('utf-8')
+            if not line.startswith('data: '):
+                continue
+            data = line[6:]
+            if data == '[DONE]':
+                break
+            try:
+                chunk_json = json.loads(data)
+                content = chunk_json.get('content', '')
+                if content:
+                    full_content_parts.append(content)
+            except Exception:
+                pass
+            yield f"data: {data}\n\n"
+        # 流完了——异步存库
+        full_content = ''.join(full_content_parts)
+        if full_content:
+            _save_lesson_plan_async(plan_id, teacher_username, topic, requirements, full_content)
+        yield "data: [DONE]\n\n"
+
+    return Response(wrapped_generate(), content_type='text/event-stream',
+                    headers={'Cache-Control': 'no-cache, no-transform', 'X-Accel-Buffering': 'no'})
+
+
+def _save_lesson_plan_async(plan_id, teacher_username, topic, requirements, content):
+    """异步存教案到 TiDB（不阻塞 SSE 流结束响应）"""
+    import threading
+    def _worker():
+        conn = _get_db_conn()
+        if conn is None:
+            return
+        try:
+            cur = conn.cursor()
+            cur.execute("""INSERT INTO lesson_plans (id, teacher_username, topic, requirements, content, created_at)
+                VALUES (%s, %s, %s, %s, %s, NOW())""",
+                (plan_id, teacher_username, topic, requirements or None, content))
+            conn.commit()
+            print(f"[教案历史] 已保存 {plan_id[:8]}  教师={teacher_username}  主题={topic[:20]}")
+        except Exception as e:
+            print(f"[教案历史] 保存失败: {e}")
+        finally:
+            try: conn.close()
+            except Exception: pass
+    threading.Thread(target=_worker, daemon=True).start()
+
+
+@app.route('/api/teacher/lesson-plans', methods=['GET'])
+def teacher_list_lesson_plans():
+    """列出当前账号的教案历史记录"""
+    if not session.get('authenticated') or session.get('role') != 'teacher':
+        return jsonify({'error': '仅教师可访问'}), 403
+    teacher_username = session.get('username') or 'unknown'
+
+    conn = _get_db_conn()
+    if conn is not None:
+        try:
+            cur = conn.cursor()
+            cur.execute("SELECT id, topic, LEFT(requirements, 100) AS requirements_preview, LEFT(content, 200) AS content_preview, created_at FROM lesson_plans WHERE teacher_username=%s ORDER BY created_at DESC LIMIT 50",
+                        (teacher_username,))
+            import datetime as _dt
+            results = []
+            for r in cur.fetchall():
+                d = dict(r)
+                if isinstance(d.get('created_at'), _dt.datetime):
+                    d['created_at'] = d['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+                results.append(d)
+            conn.close()
+            return jsonify({'plans': results})
+        except Exception as e:
+            print(f"[教案历史] 列表读取失败: {e}")
+            try: conn.close()
+            except Exception: pass
+    # 降级：返回空
+    return jsonify({'plans': []})
+
+
+@app.route('/api/teacher/lesson-plans/<string:plan_id>', methods=['GET'])
+def teacher_get_lesson_plan(plan_id):
+    """获取单条教案详情"""
+    if not session.get('authenticated') or session.get('role') != 'teacher':
+        return jsonify({'error': '仅教师可访问'}), 403
+    teacher_username = session.get('username') or 'unknown'
+
+    conn = _get_db_conn()
+    if conn is not None:
+        try:
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM lesson_plans WHERE id=%s AND teacher_username=%s", (plan_id, teacher_username))
+            row = cur.fetchone()
+            conn.close()
+            if row:
+                import datetime as _dt
+                d = dict(row)
+                if isinstance(d.get('created_at'), _dt.datetime):
+                    d['created_at'] = d['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+                return jsonify(d)
+            return jsonify({'error': '教案不存在'}), 404
+        except Exception as e:
+            print(f"[教案历史] 详情读取失败: {e}")
+            try: conn.close()
+            except Exception: pass
+    return jsonify({'error': '数据库暂不可用'}), 503
+
+
+@app.route('/api/teacher/lesson-plans/<string:plan_id>', methods=['DELETE'])
+def teacher_delete_lesson_plan(plan_id):
+    """删除一条教案历史"""
+    if not session.get('authenticated') or session.get('role') != 'teacher':
+        return jsonify({'error': '仅教师可访问'}), 403
+    teacher_username = session.get('username') or 'unknown'
+
+    conn = _get_db_conn()
+    if conn is not None:
+        try:
+            cur = conn.cursor()
+            cur.execute("DELETE FROM lesson_plans WHERE id=%s AND teacher_username=%s", (plan_id, teacher_username))
+            conn.commit()
+            conn.close()
+            return jsonify({'success': True})
+        except Exception as e:
+            print(f"[教案历史] 删除失败: {e}")
+            try: conn.close()
+            except Exception: pass
+    return jsonify({'error': '数据库暂不可用'}), 503
 
 
 # ====================== 教师发布作业 / AI 批改 ======================
