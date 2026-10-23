@@ -13573,6 +13573,10 @@ def weekly_tasks_page():
 
 # 启动时初始化招聘调度器（后台线程，不阻塞Flask启动）
 def init_job_scheduler_async():
+    # 环境变量开关：DISABLE_AUTO_AI_FETCH=true 时关掉所有自动 AI 调用
+    if os.environ.get('DISABLE_AUTO_AI_FETCH', '').strip().lower() in ('true','1','yes'):
+        print("[调度器] DISABLE_AUTO_AI_FETCH 已启用，跳过招聘调度器启动（省钱模式）")
+        return
     if JOB_MODULE_AVAILABLE:
         try:
             import threading
@@ -14113,7 +14117,10 @@ def frontier_update_page():
     if not session.get('authenticated'):
         return render_template('login.html')
     if FRONTIER_MODULE_AVAILABLE:
-        frontier_scheduler.autostart()   # 首次访问时懒启动定时抓取
+        if os.environ.get('DISABLE_AUTO_AI_FETCH', '').strip().lower() not in ('true','1','yes'):
+            frontier_scheduler.autostart()   # 首次访问时懒启动定时抓取
+        else:
+            print("[调度器] DISABLE_AUTO_AI_FETCH 已启用，跳过前沿调度器启动（省钱模式）")
     return render_template('frontier_update.html')
 
 
@@ -14404,7 +14411,8 @@ def api_frontier_scheduler_status():
         return jsonify({'error': '请先登录'}), 401
     if not FRONTIER_MODULE_AVAILABLE:
         return jsonify({'success': False, 'error': '前沿知识模块未加载'}), 503
-    frontier_scheduler.autostart()
+    if os.environ.get('DISABLE_AUTO_AI_FETCH', '').strip().lower() not in ('true','1','yes'):
+        frontier_scheduler.autostart()
     return jsonify({'success': True, 'status': frontier_scheduler.frontier_scheduler.get_status()})
 
 
