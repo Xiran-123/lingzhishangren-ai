@@ -4510,9 +4510,15 @@
                 let html = '<div style="padding:12px 16px;font-size:13px;color:#888;border-bottom:1px solid #f0f0f0;display:flex;justify-content:space-between;align-items:center;"><span>📚 共 ' + plans.length + ' 份历史教案</span><span style="font-size:11px;">点击查看详情</span></div>';
                 for (const p of plans) {
                     const preview = (p.content_preview || '').replace(/[#*`>\-]/g, '').slice(0, 80);
+                    const score = parseInt(p.total_score || 0);
+                    // 总分徽章:>0 绿色,=0 灰色,<0 红色
+                    let scoreBadge = '';
+                    if (score >= 5) scoreBadge = '<span style="background:#f6ffed;color:#389e0d;border:1px solid #b7eb8f;border-radius:6px;padding:2px 6px;font-size:10px;font-weight:600;">⭐ 高分 +' + score + '</span>';
+                    else if (score > 0) scoreBadge = '<span style="background:#f0f5ff;color:#2f54eb;border:1px solid #adc6ff;border-radius:6px;padding:2px 8px;font-size:10px;">⭐ +' + score + '</span>';
+                    else if (score < 0) scoreBadge = '<span style="background:#fff1f0;color:#cf1322;border:1px solid #ffa39e;border-radius:6px;padding:2px 8px;font-size:10px;">⭐ ' + score + '</span>';
                     html += '<div class="lpHistoryItem" data-id="' + p.id + '" style="padding:14px 18px;border-bottom:1px solid #f5f5f5;cursor:pointer;transition:background .15s;" onmouseover="this.style.background=\'#f5f7fa\'" onmouseout="this.style.background=\'\'">' +
                         '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">' +
-                        '<div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:600;color:#2f54eb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📑 ' + (p.topic || '(无主题)') + '</div>' +
+                        '<div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:600;color:#2f54eb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📑 ' + (p.topic || '(无主题)') + ' ' + scoreBadge + '</div>' +
                         '<div style="font-size:11px;color:#aaa;margin-top:4px;">🕐 ' + (p.created_at || '') + '</div>' +
                         '<div style="font-size:12px;color:#666;margin-top:6px;line-height:1.5;">' + preview + '…</div></div>' +
                         '<button style="background:#ff4d4f22;color:#ff4d4f;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap;" onclick="event.stopPropagation();deleteLessonPlan(\'' + p.id + '\', this)">删除</button>' +
@@ -4539,7 +4545,7 @@
                 modal.innerHTML = `
                     <div style="background:#fff;border-radius:16px;max-width:760px;width:100%;max-height:85vh;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.35);display:flex;flex-direction:column;animation:slideUp .3s ease;">
                         <div style="background:linear-gradient(135deg,#2f54eb,#13c2c2);padding:14px 22px;color:#fff;display:flex;justify-content:space-between;align-items:center;">
-                            <div><div style="font-size:15px;font-weight:700;">📑 ${j.topic || '(无主题)'}</div><div style="font-size:11px;opacity:.85;margin-top:3px;">🕐 ${j.created_at || ''}</div></div>
+                            <div><div style="font-size:15px;font-weight:700;">📑 ${j.topic || '(无主题)'}</div><div style="font-size:11px;opacity:.85;margin-top:3px;">🕐 ${j.created_at || ''} &nbsp;·&nbsp; ⭐ 总分 ${(j.total_score > 0 ? '+' : '') + (j.total_score || 0)}</div></div>
                             <div style="display:flex;gap:8px;align-items:center;">
                                 <button onclick="downloadLessonPlanDocx('${j.id}', '${(j.topic || '').replace(/'/g, "\\'")}')" style="background:#fff;color:#2f54eb;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;">📄 下载 Word</button>
                                 <button onclick="this.closest('.lpDetailModal').remove()" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:18px;cursor:pointer;border-radius:50%;width:30px;height:30px;">×</button>
@@ -4548,6 +4554,12 @@
                         <div style="padding:20px 26px;overflow-y:auto;flex:1;background:#fafbfc;">
                             ${j.requirements ? '<div style="background:#fffbe6;border-left:3px solid #faad14;padding:10px 14px;border-radius:6px;font-size:13px;color:#874d00;margin-bottom:16px;">📝 要求：' + j.requirements.replace(/\n/g, '<br>') + '</div>' : ''}
                             ${renderLessonPlanText(j.content || '')}
+                            <div style="margin-top:20px;background:linear-gradient(135deg,#fff7e6,#fffbe6);border:1px solid #ffd591;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                                <span style="font-size:13px;color:#874d00;font-weight:600;">🤖 这份教案质量怎么样？(会用于训练 AI):</span>
+                                <button onclick="rateLessonPlan('${j.id}','rate_up', this)" style="background:#52c41a;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer;">👍 有用</button>
+                                <button onclick="rateLessonPlan('${j.id}','rate_down', this)" style="background:#ff4d4f;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer;">👎 不行</button>
+                                <span class="lpRateFeedback" style="font-size:12px;color:#666;margin-left:auto;"></span>
+                            </div>
                         </div>
                     </div>`;
                 document.body.appendChild(modal);
@@ -4642,11 +4654,20 @@
                         (requirements ? '<div style="font-size:12px;color:#666;background:#fff;border-radius:6px;padding:8px 12px;margin-top:6px;">📝 ' + requirements.replace(/\n/g,'<br>') + '</div>' : '') +
                         '</div>';
                     const contentHtml = renderLessonPlanText(raw);
+                    // 评分区(👍/👎 + 当前总分)
+                    const rateZone = planId ? (
+                        '<div id="lpRateZone" style="margin-top:14px;background:linear-gradient(135deg,#fff7e6,#fffbe6);border:1px solid #ffd591;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
+                        '<span style="font-size:13px;color:#874d00;font-weight:600;">🤖 这份教案对你有帮助吗？评分会用来训练 AI：</span>' +
+                        '<button onclick="rateLessonPlan(\'' + planId + '\',\'rate_up\', this)" style="background:#52c41a;color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:14px;font-weight:600;cursor:pointer;">👍 有用</button>' +
+                        '<button onclick="rateLessonPlan(\'' + planId + '\',\'rate_down\', this)" style="background:#ff4d4f;color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:14px;font-weight:600;cursor:pointer;">👎 不行</button>' +
+                        '<span id="lpRateResult" style="font-size:12px;color:#666;margin-left:auto;"></span>' +
+                        '</div>'
+                    ) : '';
                     const footer = '<div id="lpGenFooter" style="margin-top:22px;padding-top:18px;border-top:1px dashed #d9d9d9;display:flex;gap:10px;flex-wrap:wrap;">' +
                         (planId ? '<button onclick="downloadLessonPlanDocx(\'' + planId + '\', \'' + (topic || '').replace(/'/g, "\\'") + '\')" style="flex:1;min-width:160px;padding:12px;background:linear-gradient(135deg,#52c41a,#389e0d);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;">📄 生成 Word 文档 (.docx)</button>' : '') +
                         '<button onclick="showLessonPlanGenerator();document.getElementById(\'lessonPlanInputOverlay\')?.remove();showLessonPlanGenerator();" style="flex:1;min-width:160px;padding:12px;background:#fff;border:1px solid #2f54eb;color:#2f54eb;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;">🔄 重新生成</button>' +
                         '<button onclick="document.getElementById(\'aiAnalysisGlobalModal\')?.remove();document.getElementById(\'lessonPlanInputOverlay\')?.remove();showLessonPlanGenerator();" style="flex:1;min-width:160px;padding:12px;background:rgba(0,0,0,.04);border:1px solid #d9d9d9;color:#555;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;">📚 历史记录</button>' +
-                        '</div>' +
+                        '</div>' + rateZone +
                         (planId ? '<div style="margin-top:10px;font-size:12px;color:#874d00;background:#fffbe6;border-radius:6px;padding:8px 12px;">✅ 本教案已自动保存到历史记录，下载时需要等待 1-2 秒入库</div>' : '');
                     body.innerHTML = infoCard + contentHtml + footer;
                 } else {
@@ -4676,6 +4697,45 @@
             }).catch(err => {
                 alert('下载失败：' + err.message);
             });
+        }
+
+        function rateLessonPlan(planId, action, btn) {
+            if (!planId) return;
+            fetch('/api/teacher/lesson-plans/' + planId + '/feedback', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: action })
+            }).then(r => r.json()).then(j => {
+                if (j.success) {
+                    const score = j.total_score || 0;
+                    const emoji = action === 'rate_up' ? '🎉' : '📝';
+                    const text = emoji + ' 已记录！当前总分: ' + (score > 0 ? '+' : '') + score;
+                    const color = action === 'rate_up' ? '#389e0d' : '#d4380d';
+
+                    // 场景1: 生成完毕的预览页 (有 #lpRateZone)
+                    const zone = document.getElementById('lpRateZone');
+                    const result = document.getElementById('lpRateResult');
+                    if (zone) {
+                        zone.querySelectorAll('button').forEach(b => { b.disabled = true; b.style.opacity = '.5'; b.style.cursor = 'not-allowed'; });
+                        if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.style.boxShadow = '0 0 0 3px rgba(47,84,235,.3)'; }
+                        if (result) { result.textContent = text; result.style.color = color; }
+                    }
+                    // 场景2: 历史详情弹窗 (有 .lpRateFeedback)
+                    if (btn) {
+                        const fb = btn.closest('.lpDetailModal')?.querySelector('.lpRateFeedback');
+                        if (fb) { fb.textContent = text; fb.style.color = color; }
+                        // 高亮当前点的按钮
+                        const wrap = btn.closest('div');
+                        if (wrap) {
+                            wrap.querySelectorAll('button').forEach(b => { if (b !== btn) { b.style.opacity = '.5'; } });
+                            btn.style.boxShadow = '0 0 0 3px rgba(47,84,235,.3)';
+                        }
+                    }
+                } else {
+                    alert('评分失败：' + (j.error || '未知错误'));
+                }
+            }).catch(e => alert('评分失败：' + e.message));
         }
         async function showStudentAiAnalysis(studentId, studentName) {
             await streamAiAnalysisToModal(

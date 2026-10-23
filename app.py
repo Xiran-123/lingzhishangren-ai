@@ -9234,6 +9234,31 @@ def teacher_lesson_plan():
         "5. 末尾另起一行输出标识：✨ 本教案由 AI 生成，仅供参考"
     )
 
+    # ===== 训练数据库:从历史高分教案提取风格偏好,注入 prompt =====
+    try:
+        style_summary = _get_teacher_style_summary(teacher_username)
+        if style_summary and style_summary.get('has_data'):
+            sample_n = style_summary.get('sample_count', 0)
+            avg_len = style_summary.get('avg_length', 0)
+            sections = '、'.join(style_summary.get('top_sections', [])[:5])
+            terms = '、'.join(style_summary.get('top_terms', [])[:8])
+            keywords = '、'.join(style_summary.get('top_keywords', [])[:6])
+            style_hint = (
+                f"\n\n【该教师历史偏好（基于过去 {sample_n} 份高分教案自动总结）】\n"
+                f"- 偏好平均长度约 {avg_len} 字\n"
+            )
+            if sections:
+                style_hint += f"- 常用模块结构：{sections}\n"
+            if terms:
+                style_hint += f"- 高频使用专业术语：{terms}\n"
+            if keywords:
+                style_hint += f"- 教学要求中常见关键词：{keywords}\n"
+            style_hint += "请参考以上偏好生成更贴合该教师风格的教案。"
+            system_content += style_hint
+            print(f"[训练库] 教师 {teacher_username} 的风格摘要已注入 prompt (样本 {sample_n} 份)")
+    except Exception as e:
+        print(f"[训练库] 风格摘要注入失败(不影响主流程): {e}")
+
     prompt = f"【教学主题】{topic}\n"
     if requirements:
         prompt += f"\n【教学要求/学生情况/课时/特殊说明】\n{requirements}\n"
@@ -9275,6 +9300,160 @@ def teacher_lesson_plan():
                     headers={'Cache-Control': 'no-cache, no-transform', 'X-Accel-Buffering': 'no'})
 
 
+def _ensure_lesson_plan_feedback_table():
+    """启动时确保 lesson_plan_feedback 表存在 + lesson_plans 加 deleted_at 字段"""
+    conn = _get_db_conn()
+    if conn is None:
+        return
+    try:
+        cur = conn.cursor()
+        # 反馈事件表
+        cur.execute("""CREATE TABLE IF NOT EXISTS lesson_plan_feedback (
+            id BIGINT PRIMARY KEY AUTO_INCREMENT,
+            plan_id VARCHAR(64) NOT NULL,
+            teacher_username VARCHAR(64) NOT NULL,
+            action VARCHAR(20) NOT NULL,
+            score_delta INT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_plan (plan_id),
+            INDEX idx_teacher (teacher_username)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4""")
+        # lesson_plans 加软删除字段（容错，已存在会报错就忽略）
+        try:
+            cur.execute("ALTER TABLE lesson_plans ADD COLUMN deleted_at DATETIME NULL DEFAULT NULL")
+        except Exception:
+            pass
+        conn.commit()
+        conn.close()
+        print("[训练库] lesson_plan_feedback 表已就绪")
+    except Exception as e:
+        print(f"[训练库] 建表失败: {e}")
+        try: conn.close()
+        except Exception: pass
+
+
+# 反馈事件分数定义
+_LP_FEEDBACK_SCORE = {
+    'rate_up': 5,        # 显式点赞
+    'rate_down': -5,     # 显式点踩
+    'download': 3,       # 隐式:下载了 docx
+    'delete': -10,       # 隐式:删除了
+    'view': 0,           # 隐式:只是查看(中性)
+}
+
+def _record_lp_feedback(plan_id, teacher_username, action):
+    """记录一条教案反馈事件"""
+    score = _LP_FEEDBACK_SCORE.get(action, 0)
+    conn = _get_db_conn()
+    if conn is None:
+        return
+    try:
+        cur = conn.cursor()
+        cur.execute("""INSERT INTO lesson_plan_feedback (plan_id, teacher_username, action, score_delta)
+            VALUES (%s, %s, %s, %s)""", (plan_id, teacher_username, action, score))
+        conn.commit()
+        conn.close()
+        print(f"[训练库] 反馈 {action}({score:+d}) → 教案 {plan_id[:8]}")
+    except Exception as e:
+        print(f"[训练库] 反馈记录失败: {e}")
+        try: conn.close()
+        except Exception: pass
+
+
+def _get_plan_total_score(plan_id):
+    """聚合某份教案的总分"""
+    conn = _get_db_conn()
+    if conn is None:
+        return 0
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT COALESCE(SUM(score_delta), 0) AS total FROM lesson_plan_feedback WHERE plan_id=%s", (plan_id,))
+        row = cur.fetchone()
+        conn.close()
+        return int(row.get('total') or 0) if row else 0
+    except Exception:
+        try: conn.close()
+        except Exception: pass
+        return 0
+
+
+def _get_teacher_style_summary(teacher_username):
+    """
+    从该教师的高分历史教案中提取"风格摘要",作为下次生成的 prompt 指导。
+    纯统计不调 AI,省钱。
+    返回 dict: {has_data, sample_count, avg_length, top_sections, top_terms, top_keywords}
+    """
+    conn = _get_db_conn()
+    if conn is None:
+        return None
+    try:
+        cur = conn.cursor()
+        # 查该教师所有未被软删除的教案 + 它们的总分
+        cur.execute("""
+            SELECT p.id, p.topic, p.requirements, p.content,
+                   COALESCE((SELECT SUM(f.score_delta) FROM lesson_plan_feedback f WHERE f.plan_id = p.id), 0) AS total_score
+            FROM lesson_plans p
+            WHERE p.teacher_username = %s AND p.deleted_at IS NULL
+            ORDER BY p.created_at DESC LIMIT 100
+        """, (teacher_username,))
+        plans = cur.fetchall()
+        conn.close()
+
+        # 只要总分 >= 3 的(至少是下载过一次或点赞过的)
+        high_score = [p for p in plans if (p.get('total_score') or 0) >= 3]
+        if not high_score:
+            return None
+
+        # 统计指标
+        lengths = [len(p.get('content') or '') for p in high_score]
+        avg_length = sum(lengths) // max(len(lengths), 1)
+
+        # 提取模块标题(## 一、xxx)
+        from collections import Counter
+        section_counter = Counter()
+        for p in high_score:
+            content = p.get('content') or ''
+            for line in content.split('\n'):
+                line = line.strip()
+                if line.startswith('## '):
+                    section_counter[line[3:].strip()[:30]] += 1
+
+        # 提取高频术语(简单分词:连续 2-6 个字母/汉字的词)
+        term_counter = Counter()
+        for p in high_score:
+            content = p.get('content') or ''
+            for m in re.finditer(r'[A-Za-z][A-Za-z0-9]{1,15}|[一-龥]{2,6}', content):
+                w = m.group(0)
+                # 过滤停用词
+                if w.lower() in ('the', 'and', 'for', 'with', '通过', '进行', '学生', '教师', '教学', '课堂', '能够', '掌握', '理解'):
+                    continue
+                term_counter[w] += 1
+
+        # 提取 requirements 里的关键词(教师偏好)
+        req_keywords = Counter()
+        for p in high_score:
+            req = p.get('requirements') or ''
+            for m in re.finditer(r'\d+\s*课时|[一-龥]{2,6}', req):
+                w = m.group(0)
+                if w in ('学生', '教师', '教学'):
+                    continue
+                req_keywords[w] += 1
+
+        return {
+            'has_data': True,
+            'sample_count': len(high_score),
+            'avg_length': avg_length,
+            'top_sections': [s for s, _ in section_counter.most_common(8)],
+            'top_terms': [t for t, _ in term_counter.most_common(10)],
+            'top_keywords': [k for k, _ in req_keywords.most_common(8)],
+        }
+    except Exception as e:
+        print(f"[训练库] 风格摘要生成失败: {e}")
+        try: conn.close()
+        except Exception: pass
+        return None
+
+
 def _save_lesson_plan_async(plan_id, teacher_username, topic, requirements, content):
     """异步存教案到 TiDB（不阻塞 SSE 流结束响应）"""
     import threading
@@ -9299,7 +9478,7 @@ def _save_lesson_plan_async(plan_id, teacher_username, topic, requirements, cont
 
 @app.route('/api/teacher/lesson-plans', methods=['GET'])
 def teacher_list_lesson_plans():
-    """列出当前账号的教案历史记录"""
+    """列出当前账号的教案历史记录（排除已软删除,带反馈总分）"""
     if not session.get('authenticated') or session.get('role') != 'teacher':
         return jsonify({'error': '仅教师可访问'}), 403
     teacher_username = session.get('username') or 'unknown'
@@ -9308,7 +9487,14 @@ def teacher_list_lesson_plans():
     if conn is not None:
         try:
             cur = conn.cursor()
-            cur.execute("SELECT id, topic, LEFT(requirements, 100) AS requirements_preview, LEFT(content, 200) AS content_preview, created_at FROM lesson_plans WHERE teacher_username=%s ORDER BY created_at DESC LIMIT 50",
+            cur.execute("""SELECT p.id, p.topic,
+                                  LEFT(p.requirements, 100) AS requirements_preview,
+                                  LEFT(p.content, 200) AS content_preview,
+                                  p.created_at,
+                                  COALESCE((SELECT SUM(f.score_delta) FROM lesson_plan_feedback f WHERE f.plan_id = p.id), 0) AS total_score
+                           FROM lesson_plans p
+                           WHERE p.teacher_username=%s AND p.deleted_at IS NULL
+                           ORDER BY p.created_at DESC LIMIT 50""",
                         (teacher_username,))
             import datetime as _dt
             results = []
@@ -9329,7 +9515,7 @@ def teacher_list_lesson_plans():
 
 @app.route('/api/teacher/lesson-plans/<string:plan_id>', methods=['GET'])
 def teacher_get_lesson_plan(plan_id):
-    """获取单条教案详情"""
+    """获取单条教案详情（含训练反馈总分）"""
     if not session.get('authenticated') or session.get('role') != 'teacher':
         return jsonify({'error': '仅教师可访问'}), 403
     teacher_username = session.get('username') or 'unknown'
@@ -9338,7 +9524,11 @@ def teacher_get_lesson_plan(plan_id):
     if conn is not None:
         try:
             cur = conn.cursor()
-            cur.execute("SELECT * FROM lesson_plans WHERE id=%s AND teacher_username=%s", (plan_id, teacher_username))
+            cur.execute("""SELECT p.*,
+                                  COALESCE((SELECT SUM(f.score_delta) FROM lesson_plan_feedback f WHERE f.plan_id = p.id), 0) AS total_score
+                           FROM lesson_plans p
+                           WHERE p.id=%s AND p.teacher_username=%s AND p.deleted_at IS NULL""",
+                        (plan_id, teacher_username))
             row = cur.fetchone()
             conn.close()
             if row:
@@ -9346,6 +9536,8 @@ def teacher_get_lesson_plan(plan_id):
                 d = dict(row)
                 if isinstance(d.get('created_at'), _dt.datetime):
                     d['created_at'] = d['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+                if isinstance(d.get('deleted_at'), _dt.datetime):
+                    d['deleted_at'] = d['deleted_at'].strftime('%Y-%m-%d %H:%M:%S')
                 return jsonify(d)
             return jsonify({'error': '教案不存在'}), 404
         except Exception as e:
@@ -9357,7 +9549,7 @@ def teacher_get_lesson_plan(plan_id):
 
 @app.route('/api/teacher/lesson-plans/<string:plan_id>', methods=['DELETE'])
 def teacher_delete_lesson_plan(plan_id):
-    """删除一条教案历史"""
+    """删除一条教案历史（软删除 + 记录反馈事件供训练用）"""
     if not session.get('authenticated') or session.get('role') != 'teacher':
         return jsonify({'error': '仅教师可访问'}), 403
     teacher_username = session.get('username') or 'unknown'
@@ -9366,15 +9558,50 @@ def teacher_delete_lesson_plan(plan_id):
     if conn is not None:
         try:
             cur = conn.cursor()
-            cur.execute("DELETE FROM lesson_plans WHERE id=%s AND teacher_username=%s", (plan_id, teacher_username))
+            # 软删除
+            cur.execute("UPDATE lesson_plans SET deleted_at=NOW() WHERE id=%s AND teacher_username=%s AND deleted_at IS NULL", (plan_id, teacher_username))
             conn.commit()
             conn.close()
+            # 记录反馈事件
+            _record_lp_feedback(plan_id, teacher_username, 'delete')
             return jsonify({'success': True})
         except Exception as e:
             print(f"[教案历史] 删除失败: {e}")
             try: conn.close()
             except Exception: pass
     return jsonify({'error': '数据库暂不可用'}), 503
+
+
+@app.route('/api/teacher/lesson-plans/<string:plan_id>/feedback', methods=['POST'])
+def teacher_feedback_lesson_plan(plan_id):
+    """教师对教案显式评分(rate_up/rate_down)"""
+    if not session.get('authenticated') or session.get('role') != 'teacher':
+        return jsonify({'error': '仅教师可访问'}), 403
+    teacher_username = session.get('username') or 'unknown'
+    data = request.get_json(silent=True) or {}
+    action = (data.get('action') or '').strip()
+    if action not in ('rate_up', 'rate_down'):
+        return jsonify({'error': '无效的评分动作'}), 400
+
+    # 校验该教案属于当前教师
+    conn = _get_db_conn()
+    if conn is None:
+        return jsonify({'error': '数据库暂不可用'}), 503
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT id FROM lesson_plans WHERE id=%s AND teacher_username=%s", (plan_id, teacher_username))
+        if not cur.fetchone():
+            conn.close()
+            return jsonify({'error': '教案不存在'}), 404
+        conn.close()
+    except Exception as e:
+        try: conn.close()
+        except Exception: pass
+        return jsonify({'error': str(e)}), 500
+
+    _record_lp_feedback(plan_id, teacher_username, action)
+    total = _get_plan_total_score(plan_id)
+    return jsonify({'success': True, 'total_score': total})
 
 
 @app.route('/api/teacher/lesson-plans/<string:plan_id>/docx', methods=['GET'])
@@ -9460,6 +9687,11 @@ def teacher_download_lesson_plan_docx(plan_id):
         utf8_name = _urlparse.quote(filename)
         cd_value = 'attachment; filename="' + ascii_name + '"; filename*=UTF-8\'\'' + utf8_name
         resp.headers['Content-Disposition'] = cd_value
+        # 记录下载反馈(隐式 +3)
+        try:
+            _record_lp_feedback(plan_id, teacher_username, 'download')
+        except Exception:
+            pass
         return resp
     finally:
         try: _os.unlink(tmp_path)
@@ -15113,6 +15345,12 @@ def api_fault_chain_chat():
 # 初始化故障链状态文件
 if FAULT_CHAIN_AVAILABLE:
     fault_chain.init_fault_chain_data()
+
+# 初始化 AI 训练数据库（教案反馈表 + lesson_plans 软删除字段）
+try:
+    _ensure_lesson_plan_feedback_table()
+except Exception as e:
+    print(f"[训练库] 启动初始化失败(不影响主流程): {e}")
 
 
 # ====================== 多故障并发优先级决策 ======================
