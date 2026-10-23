@@ -129,6 +129,108 @@ MODEL_KIMI  = "Pro/moonshotai/Kimi-K2.6"
 MODEL_FLASH = "deepseek-ai/DeepSeek-V4.1-Flash"
 MODEL_NAME  = MODEL_FLASH  # 默认走 Flash，只有剧情 AI 对话 (is_scenario=True) 保留 Kimi
 
+# ====================== 单设备登录互踢 ======================
+# 同一账号在新设备登录后，旧设备的会话立即失效
+LOGIN_TOKENS_FILE = "data/login_tokens.json"
+_login_tokens_cache = {"mtime": 0.0, "data": {}}
+
+
+def _load_login_tokens() -> dict:
+    """读取登录令牌表（mtime 缓存，避免每个请求都 IO）"""
+    try:
+        mtime = os.path.getmtime(LOGIN_TOKENS_FILE)
+    except OSError:
+        return _login_tokens_cache["data"]
+    if mtime != _login_tokens_cache["mtime"]:
+        try:
+            with open(LOGIN_TOKENS_FILE, "r", encoding="utf-8") as f:
+                _login_tokens_cache["data"] = json.load(f)
+            _login_tokens_cache["mtime"] = mtime
+        except (OSError, ValueError):
+            pass
+    return _login_tokens_cache["data"]
+
+
+def _register_login_token(identity: str) -> str:
+    """登录成功时调用：为该身份生成新令牌（旧设备随之失效）"""
+    token = uuid.uuid4().hex
+    tokens = dict(_load_login_tokens())
+    tokens[identity] = token
+    try:
+        os.makedirs(os.path.dirname(LOGIN_TOKENS_FILE), exist_ok=True)
+        tmp = LOGIN_TOKENS_FILE + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(tokens, f, ensure_ascii=False)
+        os.replace(tmp, LOGIN_TOKENS_FILE)
+        _login_tokens_cache["data"] = tokens
+        _login_tokens_cache["mtime"] = os.path.getmtime(LOGIN_TOKENS_FILE)
+    except OSError as e:
+        print(f"[LoginToken] 写入失败: {e}")
+    return token
+
+
+def _clear_login_token(identity: str):
+    tokens = dict(_load_login_tokens())
+    if identity in tokens:
+        tokens.pop(identity)
+        try:
+            tmp = LOGIN_TOKENS_FILE + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(tokens, f, ensure_ascii=False)
+            os.replace(tmp, LOGIN_TOKENS_FILE)
+            _login_tokens_cache["data"] = tokens
+            _login_tokens_cache["mtime"] = os.path.getmtime(LOGIN_TOKENS_FILE)
+        except OSError:
+            pass
+
+
+# 互踢检查的豁免路径（登录/登出/静态资源/公开验真/健康检查）
+_SINGLE_SESSION_EXEMPT_PREFIXES = (
+    "/login", "/logout", "/static", "/avatars", "/uploads", "/images",
+    "/verify", "/api/v1/health", "/favicon",
+)
+
+# 豁免身份：登录页预填的演示账号，允许多人同时在线，避免演示时互相抢占
+_SINGLE_SESSION_EXEMPT_IDENTITIES = {
+    "student:2024001001001",   # 预填学号
+    "student:张三",            # 只填姓名时的兜底身份
+    "teacher:teacher1",        # 预填教师账号
+}
+
+
+@app.before_request
+def enforce_single_session():
+    """已登录会话校验：令牌与服务端不一致 => 已在别处登录，强制下线"""
+    if not session.get("authenticated"):
+        return None
+    path = request.path or "/"
+    if any(path.startswith(p) for p in _SINGLE_SESSION_EXEMPT_PREFIXES):
+        return None
+    identity = session.get("login_identity")
+    token = session.get("login_token")
+    if not identity or not token:
+        # 老会话（本次升级前登录的）没有令牌：补发一个，不强制下线
+        role = session.get("role", "student")
+        if role == "teacher":
+            identity = f"teacher:{session.get('student_name', '')}"
+        else:
+            identity = f"student:{session.get('student_no') or session.get('student_name', '')}"
+        token = _register_login_token(identity)
+        session["login_identity"] = identity
+        session["login_token"] = token
+        return None
+    if identity in _SINGLE_SESSION_EXEMPT_IDENTITIES:
+        return None
+    current = _load_login_tokens().get(identity)
+    if current != token:
+        session.clear()
+        if path.startswith("/api") or request.method != "GET":
+            return jsonify({"success": False, "kicked": True,
+                            "message": "该账号已在其他设备登录，当前设备已退出"}), 401
+        return redirect("/login")
+    return None
+
+
 # ====================== 访问密码配置 ======================
 ACCESS_PASSWORD = "tongxin2024"  # 可以改成你想要的密码
 
@@ -2164,19 +2266,19 @@ _students_cache_lock = threading.Lock()
 def _row_to_student(row: dict) -> dict:
     """数据库 students 行 → 内存 student dict（补齐旧字段默认值）"""
     import datetime as _dt
-    ca = row.get('competence_analysis')
-    if isinstance(ca, str):
-        try:
-            ca = json.loads(ca)
-        except (json.JSONDecodeError, TypeError):
-            ca = {}
-    # datetime → str
-    created_at = row.get('created_at')
-    if isinstance(created_at, _dt.datetime):
-        created_at = created_at.strftime('%Y-%m-%d %H:%M:%S')
-    last_login = row.get('last_login')
-    if isinstance(last_login, _dt.datetime):
-        last_login = last_login.strftime('%Y-%m-%d %H:%M:%S')
+
+    def _parse_json_field(val, default):
+        if isinstance(val, str):
+            try:
+                return json.loads(val)
+            except (json.JSONDecodeError, TypeError):
+                return default
+        return val if val is not None else default
+
+    def _fmt_dt(val):
+        return val.strftime('%Y-%m-%d %H:%M:%S') if isinstance(val, _dt.datetime) else (val or '')
+
+    ca = _parse_json_field(row.get('competence_analysis'), {})
     return {
         'id': str(row.get('id', '')),
         'student_no': row.get('student_no', ''),
@@ -2184,13 +2286,15 @@ def _row_to_student(row: dict) -> dict:
         'class_name': row.get('class_name', ''),
         'competence_analysis': ca or {area['id']: {'count': 0, 'score': 0.0} for area in COMPETENCE_AREAS},
         'total_questions': row.get('total_questions', 0) or 0,
-        'created_at': created_at or '',
-        'last_login': last_login or '',
-        # 旧版 JSON 里的字段，数据库暂不存，给默认值
-        'major': '',
-        'grade': '',
-        'grade_level': '',
-        'conversation_history': [],
+        'created_at': _fmt_dt(row.get('created_at')),
+        'last_login': _fmt_dt(row.get('last_login')),
+        'target_job': row.get('target_job', '') or '',
+        'target_set_time': _fmt_dt(row.get('target_set_time')),
+        'major': row.get('major', '') or '',
+        'grade': row.get('grade', '') or '',
+        'grade_level': row.get('grade_level', '') or '',
+        'weekly_tasks': _parse_json_field(row.get('weekly_tasks'), {}),
+        'conversation_history': _parse_json_field(row.get('conversation_history'), []),
     }
 
 
@@ -2244,6 +2348,13 @@ def save_students(students: List[Dict]):
                 # datetime 空值要传 None (NULL)
                 created_at = s.get('created_at') or None
                 last_login = s.get('last_login') or None
+                target_job = s.get('target_job', '') or ''
+                target_set_time = s.get('target_set_time') or None
+                major = s.get('major', '') or ''
+                grade = s.get('grade', '') or ''
+                grade_level = s.get('grade_level', '') or ''
+                weekly = json.dumps(s.get('weekly_tasks', {}) or {}, ensure_ascii=False)
+                convs = json.dumps(s.get('conversation_history', []) or [], ensure_ascii=False)
                 if sid and str(sid).isdigit():
                     cur.execute("SELECT id FROM students WHERE id = %s", (int(sid),))
                     exists = cur.fetchone()
@@ -2251,18 +2362,30 @@ def save_students(students: List[Dict]):
                         cur.execute("""UPDATE students
                             SET student_no=%s, name=%s, class_name=%s,
                                 competence_analysis=%s, total_questions=%s,
-                                created_at=%s, last_login=%s WHERE id=%s""",
-                            (student_no, name, class_name, ca, total_q, created_at, last_login, int(sid)))
+                                created_at=%s, last_login=%s,
+                                target_job=%s, target_set_time=%s,
+                                major=%s, grade=%s, grade_level=%s,
+                                weekly_tasks=%s, conversation_history=%s
+                            WHERE id=%s""",
+                            (student_no, name, class_name, ca, total_q, created_at, last_login,
+                             target_job, target_set_time, major, grade, grade_level,
+                             weekly, convs, int(sid)))
                     else:
                         cur.execute("""INSERT INTO students
-                            (id, student_no, name, class_name, competence_analysis, total_questions, created_at, last_login)
-                            VALUES (%s,%s,%s,%s,%s,%s,%s,%s)""",
-                            (int(sid), student_no, name, class_name, ca, total_q, created_at, last_login))
+                            (id, student_no, name, class_name, competence_analysis, total_questions,
+                             created_at, last_login, target_job, target_set_time,
+                             major, grade, grade_level, weekly_tasks, conversation_history)
+                            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                            (int(sid), student_no, name, class_name, ca, total_q, created_at, last_login,
+                             target_job, target_set_time, major, grade, grade_level, weekly, convs))
                 else:
                     cur.execute("""INSERT INTO students
-                        (student_no, name, class_name, competence_analysis, total_questions, created_at, last_login)
-                        VALUES (%s,%s,%s,%s,%s,%s,%s)""",
-                        (student_no, name, class_name, ca, total_q, created_at, last_login))
+                        (student_no, name, class_name, competence_analysis, total_questions,
+                         created_at, last_login, target_job, target_set_time,
+                         major, grade, grade_level, weekly_tasks, conversation_history)
+                        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                        (student_no, name, class_name, ca, total_q, created_at, last_login,
+                         target_job, target_set_time, major, grade, grade_level, weekly, convs))
             conn.commit()
             conn.close()
             return  # 数据库写入成功，不再写 JSON
@@ -2304,18 +2427,31 @@ def _migrate_json_to_db():
             # datetime 空值要传 None (NULL)，不能传空字符串
             created_at = s.get('created_at') or None
             last_login = s.get('last_login') or None
+            target_job = s.get('target_job', '') or ''
+            target_set_time = s.get('target_set_time') or None
+            major = s.get('major', '') or ''
+            grade = s.get('grade', '') or ''
+            grade_level = s.get('grade_level', '') or ''
+            weekly = json.dumps(s.get('weekly_tasks', {}) or {}, ensure_ascii=False)
+            convs = json.dumps(s.get('conversation_history', []) or [], ensure_ascii=False)
             if sid and str(sid).isdigit():
                 cur.execute("""INSERT INTO students
-                    (id, student_no, name, class_name, competence_analysis, total_questions, created_at, last_login)
-                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s)""",
+                    (id, student_no, name, class_name, competence_analysis, total_questions,
+                     created_at, last_login, target_job, target_set_time,
+                     major, grade, grade_level, weekly_tasks, conversation_history)
+                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
                     (int(sid), student_no, s.get('name', ''), s.get('class_name', ''),
-                     ca, s.get('total_questions', 0), created_at, last_login))
+                     ca, s.get('total_questions', 0), created_at, last_login,
+                     target_job, target_set_time, major, grade, grade_level, weekly, convs))
             else:
                 cur.execute("""INSERT INTO students
-                    (student_no, name, class_name, competence_analysis, total_questions, created_at, last_login)
-                    VALUES (%s,%s,%s,%s,%s,%s,%s)""",
+                    (student_no, name, class_name, competence_analysis, total_questions,
+                     created_at, last_login, target_job, target_set_time,
+                     major, grade, grade_level, weekly_tasks, conversation_history)
+                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
                     (student_no, s.get('name', ''), s.get('class_name', ''),
-                     ca, s.get('total_questions', 0), created_at, last_login))
+                     ca, s.get('total_questions', 0), created_at, last_login,
+                     target_job, target_set_time, major, grade, grade_level, weekly, convs))
             imported += 1
         conn.commit()
         conn.close()
@@ -3356,6 +3492,9 @@ def login():
             session['authenticated'] = True
             session['role'] = 'teacher'
             session['student_name'] = teacher_identity
+            # 单设备登录：注册新令牌，旧设备会话失效
+            session['login_identity'] = f'teacher:{teacher_identity}'
+            session['login_token'] = _register_login_token(session['login_identity'])
             if SECURITY_MODULE_AVAILABLE:
                 security.audit('login', target=f'teacher:{teacher_identity}', detail='老师登录成功')
             return jsonify({'success': True})
@@ -3457,6 +3596,9 @@ def login():
         if SECURITY_MODULE_AVAILABLE:
             security.audit('login', target=f"student:{student_no or student_name}",
                            detail=f"学生登录成功（{'新用户' if is_new_user else '老用户'}）")
+        # 单设备登录：注册新令牌，旧设备会话失效
+        session['login_identity'] = f'student:{student_no or student_name}'
+        session['login_token'] = _register_login_token(session['login_identity'])
         return jsonify({'success': True, 'is_new_user': is_new_user, 'student_name': student_name})
     else:
         if SECURITY_MODULE_AVAILABLE:
@@ -3467,10 +3609,16 @@ def login():
 
 @app.route('/logout', methods=['POST'])
 def logout():
+    identity = session.get('login_identity')
+    if identity:
+        _clear_login_token(identity)
     session.pop('authenticated', None)
     session.pop('role', None)
     session.pop('student_name', None)
     session.pop('class_name', None)
+    session.pop('student_no', None)
+    session.pop('login_identity', None)
+    session.pop('login_token', None)
     return jsonify({'success': True})
 
 

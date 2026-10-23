@@ -2054,6 +2054,26 @@
     </div><!-- /hxChatView -->
 
     <script>
+        // ===== 单设备登录互踢：全局 fetch 拦截，被踢时提示并跳回登录页 =====
+        (function () {
+            const _origFetch = window.fetch.bind(window);
+            let _kickedAlerted = false;
+            window.fetch = async function (...args) {
+                const res = await _origFetch(...args);
+                if (res.status === 401 && !_kickedAlerted) {
+                    try {
+                        const data = await res.clone().json();
+                        if (data && data.kicked) {
+                            _kickedAlerted = true;
+                            alert('该账号已在其他设备登录，当前设备已退出');
+                            location.href = '/';
+                        }
+                    } catch (e) { /* 非JSON响应忽略 */ }
+                }
+                return res;
+            };
+        })();
+
         const messagesArea = document.getElementById('messagesArea');
         const userInput = document.getElementById('userInput');
         const sendBtn = document.getElementById('sendBtn');

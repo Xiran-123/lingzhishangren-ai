@@ -1308,7 +1308,8 @@
             }
 
             if (!data.success) {
-                alert(data.message || '加载失败');
+                if (res.status === 401) { location.href = '/login'; return; }
+                alert(data.message || data.error || '加载失败');
                 return;
             }
 
