@@ -3345,21 +3345,22 @@ def login():
     class_name = data.get('class_name', '')
     
     if role == 'teacher':
-        # 老师登录：校验哈希密码（历史明文已在启动时迁移为哈希，明文不再落盘）
+        # 老师登录：校验哈希密码（兼容 username 和 student_name 两种前端字段名）
+        teacher_identity = data.get('username', '') or data.get('student_name', '')
         if SECURITY_MODULE_AVAILABLE:
-            ok = security.verify_teacher(student_name, password)
+            ok = security.verify_teacher(teacher_identity, password)
         else:
-            ok = TEACHER_ACCOUNTS.get(student_name) == password
+            ok = TEACHER_ACCOUNTS.get(teacher_identity) == password
         if ok:
             session['authenticated'] = True
             session['role'] = 'teacher'
-            session['student_name'] = student_name
+            session['student_name'] = teacher_identity
             if SECURITY_MODULE_AVAILABLE:
-                security.audit('login', target=f'teacher:{student_name}', detail='老师登录成功')
+                security.audit('login', target=f'teacher:{teacher_identity}', detail='老师登录成功')
             return jsonify({'success': True})
         else:
             if SECURITY_MODULE_AVAILABLE:
-                security.audit('login_failed', target=f'teacher:{student_name}', detail='老师账号或密码错误')
+                security.audit('login_failed', target=f'teacher:{teacher_identity}', detail='老师账号或密码错误')
             return jsonify({'success': False, 'message': '老师账号或密码错误'})
     
     # 学生登录：使用统一访问密码（哈希校验）
@@ -9240,37 +9241,31 @@ def teacher_lesson_plan():
     prompt += "\n请根据以上信息生成一份完整教案。"
 
     # 包装 SSE generator：边流式吐出边累积完整内容，流完后自动存库
-    raw_stream_response = analysis_sse_generator(system_content, prompt, max_tokens=2000, temperature=0.7)
+    raw_sse_response = analysis_sse_generator(system_content, prompt, max_tokens=2000, temperature=0.7)
 
     plan_id = uuid.uuid4().hex
     full_content_parts = []
 
     def wrapped_generate():
-        # 直接从原始 stream response 迭代行
-        for raw_line in raw_stream_response.response.iter_lines(decode_unicode=True):
-            if not raw_line:
-                continue
-            line = raw_line
-            if isinstance(line, bytes):
-                line = line.decode('utf-8')
-            if not line.startswith('data: '):
-                continue
-            data = line[6:]
-            if data == '[DONE]':
-                break
-            try:
-                chunk_json = json.loads(data)
-                content = chunk_json.get('content', '')
-                if content:
-                    full_content_parts.append(content)
-            except Exception:
-                pass
-            yield f"data: {data}\n\n"
+        # analysis_sse_generator 返回的 Flask Response，内部 .response 才是 generator
+        for chunk in raw_sse_response.response:
+            # chunk 已经是完整的 "data: {...}\n\n" 字符串
+            if isinstance(chunk, bytes):
+                chunk = chunk.decode('utf-8')
+            # 解析 content 部分累存，原样 yield 出去
+            if chunk.startswith('data: ') and chunk != 'data: [DONE]\n\n':
+                try:
+                    j = json.loads(chunk[6:].strip())
+                    c = j.get('content', '')
+                    if c:
+                        full_content_parts.append(c)
+                except Exception:
+                    pass
+            yield chunk
         # 流完了——异步存库
         full_content = ''.join(full_content_parts)
         if full_content:
             _save_lesson_plan_async(plan_id, teacher_username, topic, requirements, full_content)
-        yield "data: [DONE]\n\n"
 
     return Response(wrapped_generate(), content_type='text/event-stream',
                     headers={'Cache-Control': 'no-cache, no-transform', 'X-Accel-Buffering': 'no'})
