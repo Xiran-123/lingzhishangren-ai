@@ -4658,15 +4658,23 @@
         }
         function downloadLessonPlanDocx(planId, topic) {
             if (!planId) { alert('教案 ID 无效'); return; }
-            // 等待后端异步存库完成（最多等 2 秒轮询）
             const url = '/api/teacher/lesson-plans/' + planId + '/docx';
-            // 先尝试直接下载（大多数情况下已经存完了）
-            const a = document.createElement('a');
-            a.href = url;
-            a.target = '_blank';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            // fetch + blob 下载，不跳新标签页
+            fetch(url, { credentials: 'same-origin' }).then(resp => {
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                return resp.blob();
+            }).then(blob => {
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                const fname = (topic ? topic.replace(/[\\/:*?"<>|\s]/g, '_').slice(0,30) : 'lesson_plan') + '_' + new Date().toISOString().slice(0,10) + '.docx';
+                a.download = fname;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(a.href);
+            }).catch(err => {
+                alert('下载失败：' + err.message);
+            });
         }
         async function showStudentAiAnalysis(studentId, studentName) {
             await streamAiAnalysisToModal(
