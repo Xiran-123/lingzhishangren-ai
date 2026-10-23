@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, Response, session, send_from_directory, redirect, url_for
+from flask import Flask, render_template, request, jsonify, Response, session, send_from_directory, redirect, url_for, make_response
 import requests
 import base64
 import copy
@@ -15,6 +15,7 @@ import random
 import threading
 import hashlib
 import difflib
+import urllib.parse as _urlparse
 from datetime import datetime, timedelta
 from typing import Dict, List
 from werkzeug.utils import secure_filename
@@ -9262,10 +9263,13 @@ def teacher_lesson_plan():
                 except Exception:
                     pass
             yield chunk
-        # 流完了——异步存库
+        # 流完了——异步存库 + 把 plan_id 通过 SSE 发给前端
         full_content = ''.join(full_content_parts)
         if full_content:
             _save_lesson_plan_async(plan_id, teacher_username, topic, requirements, full_content)
+        # 追加一个元信息事件，前端拿到 plan_id 就能立即下载 docx
+        yield f"data: {json.dumps({'plan_id': plan_id, 'done': True})}\n\n"
+        yield "data: [DONE]\n\n"
 
     return Response(wrapped_generate(), content_type='text/event-stream',
                     headers={'Cache-Control': 'no-cache, no-transform', 'X-Accel-Buffering': 'no'})
@@ -9371,6 +9375,91 @@ def teacher_delete_lesson_plan(plan_id):
             try: conn.close()
             except Exception: pass
     return jsonify({'error': '数据库暂不可用'}), 503
+
+
+@app.route('/api/teacher/lesson-plans/<string:plan_id>/docx', methods=['GET'])
+def teacher_download_lesson_plan_docx(plan_id):
+    """把已存 DB 的教案渲染成 Word 文档下载"""
+    if not session.get('authenticated') or session.get('role') != 'teacher':
+        return jsonify({'error': '仅教师可访问'}), 403
+    teacher_username = session.get('username') or 'unknown'
+
+    conn = _get_db_conn()
+    topic = ''
+    requirements = ''
+    content = ''
+    if conn is not None:
+        try:
+            cur = conn.cursor()
+            cur.execute("SELECT topic, requirements, content FROM lesson_plans WHERE id=%s AND teacher_username=%s", (plan_id, teacher_username))
+            row = cur.fetchone()
+            conn.close()
+            if not row:
+                return jsonify({'error': '教案不存在'}), 404
+            topic = row.get('topic', '') or ''
+            requirements = row.get('requirements', '') or ''
+            content = row.get('content', '') or ''
+        except Exception as e:
+            print(f"[教案下载] 查询失败: {e}")
+            try: conn.close()
+            except Exception: pass
+    else:
+        return jsonify({'error': '数据库暂不可用'}), 503
+
+    import tempfile, os as _os
+    tmp = tempfile.NamedTemporaryFile(suffix='.docx', delete=False)
+    tmp_path = tmp.name
+    tmp.close()
+    try:
+        doc = DocxDocument()
+        # 标题
+        doc.add_heading(topic or 'AI 生成教案', level=0)
+        doc.add_paragraph(f'生成时间：{datetime.now().strftime("%Y-%m-%d %H:%M")}  ·  教师：{teacher_username}')
+        if requirements:
+            doc.add_paragraph('')
+            doc.add_paragraph('📝 教学要求').runs[0].bold = True
+            for line in requirements.strip().split('\n'):
+                if line.strip():
+                    doc.add_paragraph(line.strip(), style='List Bullet')
+
+        doc.add_paragraph('')
+        doc.add_paragraph('—' * 40)
+
+        # 解析 Markdown 内容
+        for raw_line in content.split('\n'):
+            line = raw_line.rstrip()
+            if not line.strip():
+                doc.add_paragraph('')
+                continue
+            if line.startswith('## '):
+                doc.add_heading(line[3:].strip(), level=1)
+            elif line.startswith('### '):
+                doc.add_heading(line[4:].strip(), level=2)
+            elif line.startswith('#### '):
+                doc.add_heading(line[5:].strip(), level=3)
+            elif line.startswith('- ') or line.startswith('• ') or line.startswith('* '):
+                doc.add_paragraph(line[2:].strip(), style='List Bullet')
+            elif re.match(r'^\d+[\.、]\s', line):
+                txt = re.sub(r'^\d+[\.、]\s+', '', line)
+                doc.add_paragraph(txt, style='List Number')
+            else:
+                # 去除 markdown 粗体标记
+                clean = re.sub(r'\*\*(.+?)\*\*', r'\1', line)
+                clean = re.sub(r'`([^`]+)`', r'\1', clean)
+                doc.add_paragraph(clean)
+
+        doc.save(tmp_path)
+        with open(tmp_path, 'rb') as f:
+            data = f.read()
+        safe_topic = re.sub(r'[\\/:*?"<>|\s]', '_', topic)[:40] or 'lesson_plan'
+        filename = f"{safe_topic}_{datetime.now().strftime('%Y%m%d')}.docx"
+        resp = make_response(data)
+        resp.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        resp.headers['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{_urlparse.quote(filename)}'
+        return resp
+    finally:
+        try: _os.unlink(tmp_path)
+        except Exception: pass
 
 
 # ====================== 教师发布作业 / AI 批改 ======================
