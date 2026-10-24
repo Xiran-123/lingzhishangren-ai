@@ -105,7 +105,8 @@ def _get_db_conn():
 
 # ====================== SiliconFlow API 配置 ======================
 def _load_siliconflow_key():
-    """密钥读取优先级：环境变量 SILICONFLOW_API_KEY > api_key.local 文件 > 硬编码默认值。"""
+    """密钥读取优先级：环境变量 SILICONFLOW_API_KEY > api_key.local 文件。
+    两者都没有时返回空串，AI 功能降级但不崩溃。代码中不再硬编码任何密钥。"""
     key = os.environ.get('SILICONFLOW_API_KEY', '').strip()
     if key:
         return key
@@ -120,8 +121,9 @@ def _load_siliconflow_key():
                 return key
     except OSError:
         pass
-    # 硬编码默认密钥（比赛演示用）
-    return 'sk-sdfaoxkrbsmmnueekypiqjgxtcrscmrmajrzvtdjkgnjieyi'
+    # 没有配置密钥：打印警告，AI 功能将返回错误
+    print("[SiliconFlow] 未配置 API_KEY（环境变量 SILICONFLOW_API_KEY 或 api_key.local 均缺失），AI 功能暂不可用")
+    return ''
 
 API_KEY = _load_siliconflow_key()
 API_URL = "https://api.siliconflow.cn/v1/chat/completions"
@@ -227,7 +229,7 @@ def enforce_single_session():
         if path.startswith("/api") or request.method != "GET":
             return jsonify({"success": False, "kicked": True,
                             "message": "该账号已在其他设备登录，当前设备已退出"}), 401
-        return redirect("/login")
+        return redirect("/login?kicked=1")
     return None
 
 
@@ -3491,6 +3493,7 @@ def login():
         if ok:
             session['authenticated'] = True
             session['role'] = 'teacher'
+            session['username'] = teacher_identity
             session['student_name'] = teacher_identity
             # 单设备登录：注册新令牌，旧设备会话失效
             session['login_identity'] = f'teacher:{teacher_identity}'
@@ -9335,7 +9338,7 @@ def teacher_lesson_plan():
     if session.get('role') != 'teacher':
         return jsonify({'error': '仅教师可使用教案生成'}), 403
 
-    teacher_username = session.get('username') or session.get('student_no') or 'unknown'
+    teacher_username = session.get('username') or session.get('student_name') or 'unknown'
     topic = (request.form.get('topic') or '').strip()
     requirements = (request.form.get('requirements') or '').strip()
     if not topic:
@@ -9422,20 +9425,28 @@ def teacher_lesson_plan():
 
     def wrapped_generate():
         # analysis_sse_generator 返回的 Flask Response，内部 .response 才是 generator
-        for chunk in raw_sse_response.response:
-            # chunk 已经是完整的 "data: {...}\n\n" 字符串
-            if isinstance(chunk, bytes):
-                chunk = chunk.decode('utf-8')
-            # 解析 content 部分累存，原样 yield 出去
-            if chunk.startswith('data: ') and chunk != 'data: [DONE]\n\n':
-                try:
-                    j = json.loads(chunk[6:].strip())
-                    c = j.get('content', '')
-                    if c:
-                        full_content_parts.append(c)
-                except Exception:
-                    pass
-            yield chunk
+        try:
+            for chunk in raw_sse_response.response:
+                # chunk 已经是完整的 "data: {...}\n\n" 字符串
+                if isinstance(chunk, bytes):
+                    chunk = chunk.decode('utf-8')
+                # 解析 content 部分累存，原样 yield 出去
+                if chunk.startswith('data: ') and chunk != 'data: [DONE]\n\n':
+                    try:
+                        j = json.loads(chunk[6:].strip())
+                        c = j.get('content', '')
+                        if c:
+                            full_content_parts.append(c)
+                    except Exception:
+                        pass
+                yield chunk
+        except GeneratorExit:
+            # 客户端提前断开：不保存不完整内容，安静结束，避免 "generator ignored GeneratorExit"
+            try:
+                raw_sse_response.response.close()
+            except Exception:
+                pass
+            return
         # 流完了——异步存库 + 把 plan_id 通过 SSE 发给前端
         full_content = ''.join(full_content_parts)
         if full_content:
@@ -9629,7 +9640,7 @@ def teacher_list_lesson_plans():
     """列出当前账号的教案历史记录（排除已软删除,带反馈总分）"""
     if not session.get('authenticated') or session.get('role') != 'teacher':
         return jsonify({'error': '仅教师可访问'}), 403
-    teacher_username = session.get('username') or 'unknown'
+    teacher_username = session.get('username') or session.get('student_name') or 'unknown'
 
     conn = _get_db_conn()
     if conn is not None:
@@ -9666,7 +9677,7 @@ def teacher_get_lesson_plan(plan_id):
     """获取单条教案详情（含训练反馈总分）"""
     if not session.get('authenticated') or session.get('role') != 'teacher':
         return jsonify({'error': '仅教师可访问'}), 403
-    teacher_username = session.get('username') or 'unknown'
+    teacher_username = session.get('username') or session.get('student_name') or 'unknown'
 
     conn = _get_db_conn()
     if conn is not None:
@@ -9700,7 +9711,7 @@ def teacher_delete_lesson_plan(plan_id):
     """删除一条教案历史（软删除 + 记录反馈事件供训练用）"""
     if not session.get('authenticated') or session.get('role') != 'teacher':
         return jsonify({'error': '仅教师可访问'}), 403
-    teacher_username = session.get('username') or 'unknown'
+    teacher_username = session.get('username') or session.get('student_name') or 'unknown'
 
     conn = _get_db_conn()
     if conn is not None:
@@ -9725,7 +9736,7 @@ def teacher_feedback_lesson_plan(plan_id):
     """教师对教案显式评分(rate_up/rate_down)"""
     if not session.get('authenticated') or session.get('role') != 'teacher':
         return jsonify({'error': '仅教师可访问'}), 403
-    teacher_username = session.get('username') or 'unknown'
+    teacher_username = session.get('username') or session.get('student_name') or 'unknown'
     data = request.get_json(silent=True) or {}
     action = (data.get('action') or '').strip()
     if action not in ('rate_up', 'rate_down'):
@@ -9757,7 +9768,7 @@ def teacher_download_lesson_plan_docx(plan_id):
     """把已存 DB 的教案渲染成 Word 文档下载"""
     if not session.get('authenticated') or session.get('role') != 'teacher':
         return jsonify({'error': '仅教师可访问'}), 403
-    teacher_username = session.get('username') or 'unknown'
+    teacher_username = session.get('username') or session.get('student_name') or 'unknown'
 
     conn = _get_db_conn()
     topic = ''
