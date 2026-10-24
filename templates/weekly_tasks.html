@@ -14,6 +14,7 @@
         }
         .container { max-width: 900px; margin: 0 auto; }
         .header {
+            position: relative;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 28px 32px;
@@ -206,6 +207,53 @@
             border-radius: 8px;
             font-size: 13px;
         }
+        /* 可点击技能标签（双写类名提升优先级，覆盖 global_buttons.css 的 [class*="tag"] !important 误命中） */
+        .skill-tag.skill-tag {
+            background: #e8ecfd !important;
+            color: #667eea !important;
+            padding: 4px 12px !important;
+            border-radius: 8px !important;
+            border: none !important;
+            cursor: pointer !important;
+            transition: all 0.2s;
+        }
+        .skill-tag.skill-tag:hover {
+            background: #667eea !important;
+            color: #fff !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(102,126,234,0.35);
+        }
+        .skill-tag.skill-tag.tag-green {
+            background: #f6ffed !important;
+            color: #389e0d !important;
+        }
+        .skill-tag.skill-tag.tag-green:hover {
+            background: #52c41a !important;
+            color: #fff !important;
+            box-shadow: 0 4px 10px rgba(82,196,26,0.35);
+        }
+        /* 任务目的 */
+        .task-purpose {
+            margin-top: 8px;
+            font-size: 12.5px;
+            color: #7a6a2f;
+            background: #fffbe6;
+            border-left: 3px solid #fadb14;
+            padding: 7px 10px;
+            border-radius: 0 8px 8px 0;
+            line-height: 1.6;
+        }
+        .purpose-box {
+            background: linear-gradient(135deg,#fffbe6,#fff7e0);
+            border: 2px solid #ffd591;
+            border-left: 5px solid #fa8c16;
+            border-radius: 12px;
+            padding: 18px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(250,140,22,0.1);
+        }
+        .purpose-box .purpose-title { font-size: 15px; font-weight: 700; color: #d46b08; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .purpose-box .purpose-text { font-size: 14px; color: #5c4a1f; line-height: 1.8; }
         .career-path-text { font-size: 13px; color: #888; margin-top: 12px; }
         .week-nav { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
         .week-tab {
@@ -521,8 +569,13 @@
             color: white;
         }
 
-        .task-clickable { cursor: pointer; }
-        .task-clickable:hover { border-color: #667eea; }
+        .task-clickable { cursor: pointer; transition: all 0.25s ease; }
+        .task-clickable:hover {
+            border-color: #667eea;
+            box-shadow: 0 6px 20px rgba(102,126,234,0.15);
+            transform: translateY(-2px);
+        }
+        .task-clickable:active { transform: translateY(0); }
         .quiz-passed-badge {
             background: #f6ffed;
             color: #389e0d;
@@ -1397,16 +1450,114 @@
             await loadWeeklyTasks(weekKey);
         }
 
+        // ===== 任务目的 / 技能标签说明 =====
+        // 根据任务字段生成"任务目的"文案（基础摸底 vs 精准提升两种口径）
+        function taskPurpose(t) {
+            const area = t.area || '该领域';
+            const isBasic = currentWeekData && currentWeekData.stage === 'basic';
+            if (isBasic) {
+                return `覆盖「${area}」核心概念，帮助系统评估你在该领域的真实水平，为第 3 周起的精准提升方案提供数据基础。`;
+            }
+            if (t.gap !== undefined && t.gap !== null) {
+                return `针对你在「${area}」与目标岗位的差距（${t.gap}），定向补齐短板，完成后该领域能力画像将相应提升。`;
+            }
+            return `巩固「${area}」核心能力，向「${(currentWeekData && currentWeekData.target_job) || '目标岗位'}」的胜任力要求稳步靠近。`;
+        }
+
+        // 核心技能 → 关联能力领域（用于在本周任务中找相关任务）
+        const SKILL_AREA_MAP = {
+            '设备调试': ['设备操作', '安全规范'],
+            '故障排查': ['故障排查', '安全规范'],
+            '网络运维': ['网络协议', '故障排查'],
+            '协议分析': ['网络协议', '通信原理'],
+            '网络规划': ['网络协议', '通信原理'],
+            '数据分析': ['数字信号处理', '网络协议'],
+            '参数优化': ['调制技术', '通信原理'],
+            '路测分析': ['射频工程', '网络协议'],
+            '射频设计': ['射频工程'],
+            '天线仿真': ['天线', '射频工程'],
+            '阻抗匹配': ['射频工程'],
+            'EMC设计': ['安全规范', '射频工程'],
+            '算法设计': ['数字信号处理', '信号与系统'],
+            '仿真建模': ['数字信号处理', '信号与系统'],
+            '编程开发': ['数字信号处理'],
+            '专利撰写': ['前沿', '创新']
+        };
+
+        // 技能/学习重点一句话说明（命中不了时用兜底文案）
+        const SKILL_DESC = {
+            '设备调试': '独立完成通信设备的安装、参数配置与开通调测，是通信工程师的上岗基本功。',
+            '故障排查': '按照分层定位法快速找到故障根因并恢复业务，直接决定网络可用性。',
+            '网络运维': '保障网络长期稳定运行，包括告警监控、性能分析与日常巡检。',
+            '协议分析': '读懂信令流程与协议交互，是定位疑难网络问题的核心手段。',
+            '网络规划': '根据覆盖与容量需求规划站点、频率与参数，决定网络先天质量。',
+            '数据分析': '从话统、路测数据中挖掘网络问题，用数据驱动优化决策。',
+            '参数优化': '通过调整无线参数改善覆盖、切换与容量指标。',
+            '路测分析': '通过实地路测采集 RSRP/SINR 等指标，验证并定位覆盖问题。',
+            '射频设计': '设计射频链路与前端的器件选型、链路预算，决定设备的射频性能。',
+            '天线仿真': '利用仿真工具设计天线方向图与增益，是射频工程师的核心技能。',
+            '阻抗匹配': '通过匹配网络让功率高效传输，直接影响射频指标。',
+            'EMC设计': '保证设备电磁兼容、满足防雷与防护规范，关乎入网认证与安全。',
+            '算法设计': '设计通信算法（均衡、编码、调度等），是研发岗的核心竞争力。',
+            '仿真建模': '用仿真验证算法与系统设计的正确性，降低试错成本。',
+            '编程开发': '用代码实现算法与工具，是研发工程师的基本功。',
+            '专利撰写': '把技术创新沉淀为知识产权，是研发岗的重要产出。',
+            '通信原理': '理解调制、编码、信道等核心概念，是所有岗位的理论根基。',
+            '设备操作': '熟悉基站与网管设备的操作流程，是安全实训的前提。',
+            '安全规范': '掌握防雷接地、高压与机房安全规范，是工程现场的红线。',
+            '调制技术': '掌握 ASK/FSK/PSK/QAM 与 OFDM 原理，理解 4G/5G 物理层的基础。',
+            '网络协议': '理解 OSI/TCP-IP 模型与信令流程，是分析与排障的共同语言。',
+            '射频工程': '理解频率、阻抗、链路预算等概念，是射频与路测工作的基础。',
+            '天线设计': '掌握增益、方向图、极化等参数，直接影响覆盖效果。',
+            '电磁场': '理解电磁波传播与场强分析，是射频与天线设计的理论底座。',
+            '信号与系统': '时域频域分析方法是通信一切后续课程的数学基础。',
+            '数字信号处理': '采样、滤波、FFT 是通信算法实现的核心工具。',
+            '创新思维': '跟踪前沿技术并提出改进方案，是研发与高阶岗位的差异化能力。'
+        };
+
+        // 点击技能/学习重点标签：弹出说明 + 本周相关任务（可点进任务详情）
+        function showSkillInfo(name, type) {
+            const typeLabel = type === 'skill' ? '核心技能' : '学习重点';
+            const desc = SKILL_DESC[name] || `「${name}」是${(currentWeekData && currentWeekData.target_job) || '目标岗位'}岗位要求的${typeLabel}之一，完成相关任务可持续提升该项能力。`;
+            const kws = [name].concat(SKILL_AREA_MAP[name] || []);
+            const tasks = ((currentWeekData && currentWeekData.tasks) || []).filter(t => {
+                const a = t.area || '';
+                return kws.some(k => a.includes(k) || k.includes(a));
+            });
+            const tasksHtml = tasks.length ? tasks.map(t => `
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8f9fc;border-radius:10px;margin-bottom:8px;cursor:pointer;" onclick="openTaskDetail('${t.id}')">
+                    <span style="flex:1;font-size:13.5px;color:#333;">${t.completed ? '✅' : '📌'} ${t.title}</span>
+                    <span style="font-size:12px;color:#999;white-space:nowrap;">⏱️ ${t.estimated_time || ''}</span>
+                </div>`).join('')
+                : '<div style="color:#999;font-size:13px;padding:12px 0;">本周任务暂无直接关联内容，可在后续周次或互动练习中针对性提升。</div>';
+
+            document.getElementById('modalTitle').textContent = `${typeLabel} · ${name}`;
+            document.getElementById('completeTaskBtn').style.display = 'none';
+            document.getElementById('modalBody').innerHTML = `
+                <div class="purpose-box">
+                    <div class="purpose-title">${type === 'skill' ? '🛠️ 这项技能是做什么的' : '📚 为什么学这个'}</div>
+                    <div class="purpose-text">${desc}</div>
+                </div>
+                <div class="detail-section">
+                    <h3><span class="icon">📋</span> 本周相关任务（${tasks.length}）</h3>
+                    ${tasksHtml}
+                </div>
+            `;
+            document.getElementById('taskModal').classList.add('active');
+        }
+
         function renderCareerInfo(detail) {
             if (!detail.icon) { document.getElementById('careerInfo').style.display = 'none'; return; }
-            const skillsHtml = (detail.skills || []).map(s => `<span class="skill-tag">${s}</span>`).join('');
-            const focusHtml = (detail.learning_focus || []).map(s => `<span class="skill-tag" style="background:#f6ffed;color:#389e0d;">${s}</span>`).join('');
+            const skillsHtml = (detail.skills || []).map(s =>
+                `<span class="skill-tag" title="点击查看技能说明与相关任务" onclick="showSkillInfo('${s}','skill')">${s}</span>`).join('');
+            const focusHtml = (detail.learning_focus || []).map(s =>
+                `<span class="skill-tag tag-green" title="点击查看学习重点说明与相关任务" onclick="showSkillInfo('${s}','focus')">${s}</span>`).join('');
             document.getElementById('careerInfo').innerHTML = `
                 <h3> ${detail.icon || ''} ${currentWeekData.target_job} - 岗位信息</h3>
                 <p style="font-size:14px;color:#666;margin-bottom:12px;">${detail.description || ''}</p>
-                <div style="margin-bottom:8px;"><span style="font-size:13px;color:#999;">核心技能：</span></div>
+                <div style="margin-bottom:8px;"><span style="font-size:13px;color:#999;">核心技能（点击查看说明）：</span></div>
                 <div class="career-skills" style="margin-bottom:12px;">${skillsHtml}</div>
-                <div style="margin-bottom:8px;"><span style="font-size:13px;color:#999;">学习重点：</span></div>
+                <div style="margin-bottom:8px;"><span style="font-size:13px;color:#999;">学习重点（点击查看说明）：</span></div>
                 <div class="career-skills" style="margin-bottom:12px;">${focusHtml}</div>
                 <div class="career-path-text">💼 职业路径：${detail.career_path || ''}</div>
             `;
@@ -1429,6 +1580,7 @@
                     <div class="task-content" style="width:100%;">
                         <div class="task-title">${t.title} ${quizBadge}</div>
                         <div class="task-detail">${t.detail}</div>
+                        <div class="task-purpose">🎯 任务目的：${taskPurpose(t)}</div>
                         <div class="task-meta">
                             <span class="task-tag tag-area">📘 ${t.area}</span>
                             ${gapTag}
@@ -1451,18 +1603,26 @@
             document.getElementById('taskModal').classList.add('active');
 
             try {
-                const res = await fetch(`/api/weekly-tasks/${taskId}/detail`);
+                const res = await fetch(`/api/weekly-tasks/${taskId}/detail`, { credentials: 'same-origin' });
+
+                if (res.status === 401) {
+                    document.getElementById('modalBody').innerHTML = '<div style="padding:20px;color:#ff4d4f;">⚠️ 登录已过期，请重新登录</div>';
+                    setTimeout(() => location.href = '/login', 1500);
+                    return;
+                }
+
                 const detail = await res.json();
 
                 if (!detail.success) {
-                    document.getElementById('modalBody').innerHTML = `<div style="padding:20px;color:#ff4d4f;">${detail.error || '加载失败'}</div>`;
+                    const errMsg = detail.error || detail.message || '加载失败';
+                    document.getElementById('modalBody').innerHTML = `<div style="padding:20px;color:#ff4d4f;">❌ ${errMsg}</div>`;
                     return;
                 }
 
                 currentDetailData = detail;
                 renderDetailContent(detail);
 
-                const quizRes = await fetch(`/api/weekly-tasks/${taskId}/quiz`);
+                const quizRes = await fetch(`/api/weekly-tasks/${taskId}/quiz`, { credentials: 'same-origin' });
                 const quizData = await quizRes.json();
                 currentQuizData = quizData;
 
@@ -1471,7 +1631,8 @@
                 updateCompleteButton(task, quizData);
 
             } catch (err) {
-                document.getElementById('modalBody').innerHTML = `<div style="padding:20px;color:#ff4d4f;">加载失败：${err.message}</div>`;
+                console.error('任务详情加载失败:', err);
+                document.getElementById('modalBody').innerHTML = `<div style="padding:20px;color:#ff4d4f;">❌ 加载失败：${err.message}<br><small>请检查网络连接后重试</small></div>`;
             }
         }
 
@@ -1553,6 +1714,10 @@
             }
 
             body.innerHTML = `
+                <div class="purpose-box">
+                    <div class="purpose-title">🎯 任务目的</div>
+                    <div class="purpose-text">${taskPurpose(task)}</div>
+                </div>
                 <div class="detail-section">
                     <h3><span class="icon">📋</span> 任务描述</h3>
                     <p style="font-size:14px;color:#555;line-height:1.7;">${task.detail}</p>
@@ -2312,14 +2477,22 @@
             const modalBody = document.getElementById('modalBody');
             document.getElementById('modalTitle').textContent = '🎯 岗位胜任力画像';
             document.getElementById('completeTaskBtn').style.display = 'none';
-            modalBody.innerHTML = '<div style="text-align:center;padding:40px;color:#999;">正在生成岗位胜任力画像...</div>';
+            modalBody.innerHTML = '<div style="text-align:center;padding:40px;color:#999;"><div style="font-size:32px;margin-bottom:12px;">⏳</div>正在生成岗位胜任力画像...</div>';
             document.getElementById('taskModal').classList.add('active');
 
             try {
-                const res = await fetch('/api/competency-profile');
+                const res = await fetch('/api/competency-profile', { credentials: 'same-origin' });
+
+                if (res.status === 401) {
+                    modalBody.innerHTML = '<div class="empty-tip" style="color:#ff4d4f;">⚠️ 登录已过期，请重新登录</div>';
+                    setTimeout(() => location.href = '/login', 1500);
+                    return;
+                }
+
                 const data = await res.json();
                 if (!data.success) {
-                    modalBody.innerHTML = '<div class="empty-tip">获取画像失败</div>';
+                    const errMsg = data.error || data.message || '获取画像失败';
+                    modalBody.innerHTML = `<div class="empty-tip" style="color:#ff4d4f;">❌ ${errMsg}</div>`;
                     return;
                 }
 
@@ -2468,7 +2641,8 @@
                     </div>
                 `;
             } catch (err) {
-                modalBody.innerHTML = '<div class="empty-tip">加载失败：' + err.message + '</div>';
+                console.error('胜任力画像加载失败:', err);
+                modalBody.innerHTML = `<div class="empty-tip" style="color:#ff4d4f;">❌ 加载失败：${err.message}<br><small>请检查网络连接后重试</small></div>`;
             }
         }
 
